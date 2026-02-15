@@ -1,0 +1,54 @@
+{
+  "id": "defaut",
+  "label": {
+    "enabled": true,
+    "visibleByDefault": false,
+    "field": "ref",
+    "font": {
+      "family": "Open Sans",
+      "sizePt": 6,
+      "weight": 50,
+      "bold": false,
+      "italic": false
+    },
+    "color": "#323232",
+    "opacity": 1,
+    "buffer": {
+      "enabled": true,
+      "color": "#fafafa",
+      "opacity": 1,
+      "sizePx": 3.78
+    },
+    "background": {
+      "enabled": false
+    },
+    "offset": {
+      "distancePx": 0
+    }
+  },
+  "description": "",
+  "layerScale": {
+    "minScale": 7500000,
+    "maxScale": 100000
+  },
+  "labelScale": {
+    "minScale": 4500000,
+    "maxScale": 0
+  },
+  "style": {
+    "stroke": {
+      "color": "#ffffff",
+      "opacity": 1,
+      "widthPx": 3.25
+    },
+    "casing": {
+      "enabled": true,
+      "color": "#000000",
+      "opacity": 1,
+      "widthPx": 4.01
+    }
+  },
+  "legend": {
+    "label": "routes principales"
+  }
+}

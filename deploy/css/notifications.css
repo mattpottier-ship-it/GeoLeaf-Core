@@ -1,0 +1,390 @@
+/**
+ * GeoLeaf Notification System Styles
+ * Système de notifications toast et overlays
+ * @version 4.4.1
+ * @updated 2026-01-23 - Ajout animations de réorganisation
+ */
+
+/* ========================================
+   Container principal
+   ======================================== */
+:root {
+    --gl-toast-bg: var(--gl-color-bg-surface, #ffffff);
+    --gl-toast-text: var(--gl-color-text-main, #0f172a);
+    --gl-toast-shadow: var(--gl-shadow-medium, 0 4px 16px rgba(0, 0, 0, 0.15));
+    --gl-toast-close-hover: color-mix(in srgb, var(--gl-color-text-main, #0f172a) 8%, transparent);
+}
+
+body.gl-theme-dark,
+.gl-theme-dark {
+    --gl-toast-bg: color-mix(in srgb, var(--gl-color-bg-surface, #0b1120) 82%, #0b0f1a 18%);
+    --gl-toast-text: var(--gl-color-text-main, #e5e7eb);
+    --gl-toast-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+    --gl-toast-close-hover: color-mix(in srgb, var(--gl-color-text-main, #e5e7eb) 12%, transparent);
+}
+
+.gl-notifications {
+    position: fixed;
+    z-index: 10000; /* Au-dessus de tout (tableau: 1000, toggle: 1001) */
+    pointer-events: none; /* Ne bloque pas les clics */
+    display: flex;
+    flex-direction: column-reverse; /* Stack qui monte (nouvelles en bas) */
+    gap: 8px;
+    max-height: 300px;
+    overflow: visible;
+    transition: bottom 0.3s ease; /* Transition si tableau s'ouvre */
+}
+
+/* ========================================
+   Positions disponibles
+   ======================================== */
+
+/* Position par défaut : bottom-center (recommandée) */
+.gl-notifications--bottom-center {
+    bottom: 70px; /* 20px marge + 50px bouton tableau */
+    left: 50%;
+    transform: translateX(-50%);
+    width: auto;
+    min-width: 320px;
+    max-width: 500px;
+}
+
+/* Alternative : top-right */
+.gl-notifications--top-right {
+    top: 90px; /* Sous le header */
+    right: 20px;
+    width: 360px;
+}
+
+/* Alternative : bottom-right */
+.gl-notifications--bottom-right {
+    bottom: 20px;
+    right: 20px;
+    width: 360px;
+}
+
+/* Alternative : top-center */
+.gl-notifications--top-center {
+    top: 90px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: auto;
+    min-width: 320px;
+    max-width: 500px;
+}
+
+/* ========================================
+   Ajustements dynamiques
+   ======================================== */
+
+/* Décalage si le panneau de détail POI est ouvert */
+body.gl-poi-sidepanel-open .gl-notifications--top-right,
+body.gl-poi-sidepanel-open .gl-notifications--bottom-right {
+    right: calc(420px + 20px);
+}
+
+/* Décalage si le tableau est déployé (variable CSS dynamique) */
+body.gl-table-open .gl-notifications--bottom-center {
+    bottom: calc(var(--gl-table-height, 300px) + 20px);
+}
+
+/* ========================================
+   Toast individuel
+   ======================================== */
+.gl-toast {
+    pointer-events: auto; /* Réactiver les clics sur le toast */
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 42px 14px 16px; /* Espace pour bouton fermeture */
+    background: var(--gl-toast-bg);
+    border-left: 4px solid var(--gl-accent);
+    border-radius: 6px;
+    box-shadow: var(--gl-toast-shadow);
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--gl-toast-text);
+    line-height: 1.5;
+
+    /* Animation d'entrée (état initial) */
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* État visible */
+.gl-toast--visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+/* Animation de sortie */
+.gl-toast--removing {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+    transition: all 0.2s ease-out;
+}
+
+/* ========================================
+   Animations de réorganisation (queue prioritaire)
+   ======================================== */
+
+/* Animation slide-up (toast remplacé par un plus prioritaire) */
+.gl-toast--sliding-up {
+    animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+}
+
+/* Animation slide-down (toast descendu dans la pile) */
+.gl-toast--sliding-down {
+    animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-20px);
+        opacity: 0.5;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* ========================================
+   Message du toast
+   ======================================== */
+.gl-toast__message {
+    flex: 1;
+    word-wrap: break-word;
+    word-break: break-word;
+}
+
+/* ========================================
+   Bouton de fermeture
+   ======================================== */
+.gl-toast__close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--gl-color-text-muted, #6b7280);
+    font-size: 20px;
+    font-weight: 300;
+    line-height: 1;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Thème sombre explicite (au cas où les variables ne sont pas injectées) */
+body.gl-theme-dark .gl-toast,
+.gl-theme-dark .gl-toast {
+    background: var(--gl-toast-bg, #0b0f1a);
+    color: var(--gl-toast-text, #e5e7eb);
+    box-shadow: var(--gl-toast-shadow, 0 6px 20px rgba(0, 0, 0, 0.35));
+}
+
+.gl-toast__close:hover {
+    background: var(--gl-toast-close-hover);
+    color: var(--gl-toast-text);
+}
+
+.gl-toast__close:active {
+    transform: scale(0.9);
+}
+
+/* ========================================
+   Types de notifications
+   ======================================== */
+
+/* Success (vert) */
+.gl-toast--success {
+    border-left-color: #10b981;
+}
+
+.gl-toast--success::before {
+    content: "✓";
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    color: #10b981;
+    font-weight: bold;
+    font-size: 16px;
+    margin-top: 1px;
+}
+
+/* Error (rouge) */
+.gl-toast--error {
+    border-left-color: #ef4444;
+}
+
+.gl-toast--error::before {
+    content: "✗";
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    color: #ef4444;
+    font-weight: bold;
+    font-size: 16px;
+    margin-top: 1px;
+}
+
+/* Warning (orange) */
+.gl-toast--warning {
+    border-left-color: #f59e0b;
+}
+
+.gl-toast--warning::before {
+    content: "⚠";
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    color: #f59e0b;
+    font-weight: bold;
+    font-size: 16px;
+    margin-top: 1px;
+}
+
+/* Info (bleu) */
+.gl-toast--info {
+    border-left-color: #3b82f6;
+}
+
+.gl-toast--info::before {
+    content: "ℹ";
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    color: #3b82f6;
+    font-weight: bold;
+    font-size: 16px;
+    margin-top: 1px;
+}
+
+/* ========================================
+   Thème sombre (Dark mode)
+   ======================================== */
+body.gl-theme-dark .gl-toast {
+    background: rgba(43, 43, 43, 0.95);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+}
+
+body.gl-theme-dark .gl-toast__close:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* ========================================
+   Responsive Mobile
+   ======================================== */
+@media (max-width: 768px) {
+    .gl-notifications--bottom-center {
+        left: 10px;
+        right: 10px;
+        transform: none;
+        min-width: auto;
+        max-width: none;
+        bottom: 60px;
+    }
+
+    .gl-notifications--top-right,
+    .gl-notifications--bottom-right,
+    .gl-notifications--top-center {
+        left: 10px;
+        right: 10px;
+        transform: none;
+        width: auto;
+    }
+
+    .gl-toast {
+        font-size: 13px;
+        padding: 12px 38px 12px 14px;
+    }
+
+    .gl-toast__close {
+        width: 26px;
+        height: 26px;
+        font-size: 18px;
+    }
+}
+
+/* ========================================
+   États d'accessibilité
+   ======================================== */
+.gl-toast:focus-within {
+    outline: 2px solid var(--gl-accent);
+    outline-offset: 2px;
+}
+
+/* Mode reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .gl-toast,
+    .gl-notifications {
+        transition: none !important;
+    }
+}
+
+/* ========================================
+   Overlays (pour futures extensions)
+   ======================================== */
+.gl-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.gl-overlay--visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.gl-overlay__content {
+    background: var(--gl-bg-primary);
+    padding: 24px;
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    max-width: 500px;
+    text-align: center;
+}

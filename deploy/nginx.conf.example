@@ -1,0 +1,76 @@
+# ============================================================
+# GeoLeaf — Example Nginx Configuration
+# ============================================================
+#
+# Template de configuration Nginx pour un déploiement GeoLeaf.
+# Copiez ce fichier et adaptez les chemins à votre serveur.
+#
+# Prérequis :
+#   - Copier le contenu de deploy/ dans le document root
+#   - Configurer les certificats SSL (Let's Encrypt ou autre)
+#
+# ============================================================
+
+server {
+    listen 80;
+    server_name example.geoleaf.dev;
+
+    # Redirection HTTPS
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name example.geoleaf.dev;
+
+    # ── SSL (adapter les chemins) ──
+    ssl_certificate     /etc/letsencrypt/live/example.geoleaf.dev/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/example.geoleaf.dev/privkey.pem;
+
+    # ── Document root ──
+    # Tout le contenu de deploy/ doit être copié ici
+    root /var/www/example.geoleaf.dev;
+    index index.html;
+
+    # ── Types MIME critiques ──────────────────────────────────
+    # GeoLeaf vérifie le Content-Type des réponses JSON (strictContentType).
+    # Si Nginx sert les .json en text/plain, le loader JS rejettera la réponse.
+    # Ces blocs garantissent le bon Content-Type.
+
+    location ~* \.json$ {
+        default_type application/json;
+        add_header Cache-Control "no-cache, must-revalidate";
+    }
+
+    location ~* \.geojson$ {
+        default_type application/geo+json;
+        add_header Cache-Control "no-cache, must-revalidate";
+    }
+
+    # ── Cache statique (JS, CSS, images, fonts) ──────────────
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+        expires 7d;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # ── Gzip ──────────────────────────────────────────────────
+    gzip on;
+    gzip_types
+        application/json
+        application/geo+json
+        application/javascript
+        text/css
+        text/plain
+        image/svg+xml;
+    gzip_min_length 256;
+
+    # ── SPA fallback ──────────────────────────────────────────
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # ── Sécurité headers ──────────────────────────────────────
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+}

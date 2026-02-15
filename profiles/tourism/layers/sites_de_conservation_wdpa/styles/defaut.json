@@ -1,0 +1,54 @@
+{
+  "id": "defaut",
+  "label": {
+    "enabled": true,
+    "visibleByDefault": false,
+    "field": "NAME_ENG",
+    "font": {
+      "family": "Segoe UI",
+      "sizePt": 7,
+      "weight": 50,
+      "bold": false,
+      "italic": true
+    },
+    "color": "#323232",
+    "opacity": 1,
+    "buffer": {
+      "enabled": true,
+      "color": "#fafafa",
+      "opacity": 1,
+      "sizePx": 3.78
+    },
+    "background": {
+      "enabled": false
+    },
+    "offset": {
+      "distancePx": 0
+    }
+  },
+  "description": "",
+  "layerScale": {
+    "minScale": 20000000,
+    "maxScale": 0
+  },
+  "labelScale": {
+    "minScale": 500000,
+    "maxScale": 500
+  },
+  "style": {
+    "shape": "circle",
+    "sizePx": 4.16,
+    "fill": {
+      "color": "#21b735",
+      "opacity": 0.9
+    },
+    "stroke": {
+      "color": "#ffffff",
+      "opacity": 0.9,
+      "widthPx": 2.27
+    }
+  },
+  "legend": {
+    "label": "Sites de conservation wdpa"
+  }
+}

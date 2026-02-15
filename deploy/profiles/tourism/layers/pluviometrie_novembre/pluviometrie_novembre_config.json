@@ -1,0 +1,29 @@
+﻿{
+  "id": "pluviometrie_novembre",
+  "label": "Pluviométrie - Novembre",
+  "zIndex": 77,
+  "geometry": "polygon",
+  "data": {
+    "directory": "data",
+    "file": "pluviometrie_novembre.geojson"
+  },
+  "styles": {
+    "directory": "styles",
+    "default": "defaut.json",
+    "available": [
+      {
+        "id": "defaut",
+        "label": "défaut",
+        "file": "defaut.json"
+      }
+    ]
+  },
+  "table": {
+    "enabled": false
+  },
+  "clustering": {
+    "enabled": false,
+    "maxClusterRadius": 80,
+    "disableClusteringAtZoom": 12
+  }
+}

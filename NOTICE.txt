@@ -1,0 +1,76 @@
+================================================================================
+GeoLeaf JS - Notice and License Attribution
+================================================================================
+
+GeoLeaf Core
+© 2026 Mattieu Pottier
+Released under the MIT License
+https://geoleaf.dev
+
+================================================================================
+LICENSE
+================================================================================
+
+GeoLeaf Core is released under the MIT License. See the LICENCE file for the
+complete license text.
+
+================================================================================
+CORE vs MODULES
+================================================================================
+
+CORE (Open Source)
+------------------
+The GeoLeaf Core library is an open-source JavaScript mapping library released
+under the MIT License. This includes:
+
+- Framework bootstrap and initialization
+- Core mapping functionality (Leaflet wrapper)
+- Configuration system
+- Logging and error handling
+- Base UI components
+- Security utilities
+- Essential utilities and helpers
+
+The Core is perpetually open source and available under the MIT License.
+
+FUTURE MODULES
+--------------
+GeoLeaf may provide additional modules in the future that extend Core
+functionality. These modules may operate under different licensing models
+and commercial terms, without affecting the perpetual open-source nature
+of the Core library.
+
+Any such future modules will be:
+- Clearly documented as separate modules
+- Independently licensed
+- Optional additions to the Core
+- Backward compatible with the Core
+
+The open-source Core remains unaffected by any licensing changes to
+future modules.
+
+================================================================================
+DEPENDENCIES
+================================================================================
+
+GeoLeaf depends on the following open-source libraries:
+
+- Leaflet (https://leafletjs.com) - MIT License
+- And other dependencies as listed in package.json
+
+Please see package.json and documentation for complete dependency information.
+
+================================================================================
+THIRD-PARTY ACKNOWLEDGMENTS
+================================================================================
+
+GeoLeaf uses code patterns, design principles, and inspiration from:
+
+- Leaflet.js community
+- OpenStreetMap community
+- And the broader JavaScript mapping community
+
+We acknowledge and thank these communities for their contributions to
+the ecosystem.
+
+================================================================================

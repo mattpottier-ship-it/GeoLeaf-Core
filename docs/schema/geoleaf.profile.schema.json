@@ -1,0 +1,291 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://geoleaf.dev/schemas/geoleaf.profile.schema.json",
+  "title": "GeoLeaf – Profile Panel Layout Schema",
+  "description": "Schéma officiel des blocs UI utilisables dans profile.json (panneau detail.layout).",
+  "type": "object",
+  "properties": {
+    "panels": {
+      "type": "object",
+      "properties": {
+        "detail": {
+          "type": "object",
+          "properties": {
+            "layout": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/panelBlock"
+              }
+            }
+          },
+          "required": ["layout"],
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "required": ["panels"],
+  "additionalProperties": true,
+  "$defs": {
+    "panelBlockBase": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string" },
+        "label": { "type": "string" },
+        "field": { "type": "string" },
+        "accordion": {
+          "type": "boolean",
+          "description": "Si true, le bloc est rendu dans un accordéon.",
+          "default": false
+        },
+        "defaultOpen": {
+          "type": "boolean",
+          "description": "Si true, l’accordéon est ouvert par défaut.",
+          "default": false
+        }
+      },
+      "required": ["type"],
+      "additionalProperties": true
+    },
+
+    "textBlock": {
+      "allOf": [
+        { "$ref": "#/$defs/panelBlockBase" },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "text" },
+            "variant": {
+              "type": "string",
+              "enum": ["short", "multiline"],
+              "default": "short"
+            }
+          }
+        }
+      ]
+    },
+
+    "imageBlock": {
+      "allOf": [
+        { "$ref": "#/$defs/panelBlockBase" },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "image" },
+            "variant": {
+              "type": "string",
+              "enum": ["hero", "standard"],
+              "default": "hero"
+            }
+          },
+          "required": ["field"]
+        }
+      ]
+    },
+
+    "galleryBlock": {
+      "allOf": [
+        { "$ref": "#/$defs/panelBlockBase" },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "gallery" }
+          },
+          "required": ["field"]
+        }
+      ]
+    },
+
+    "badgeBlock": {
+      "allOf": [
+        { "$ref": "#/$defs/panelBlockBase" },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "badge" },
+            "style": {
+              "type": "string",
+              "enum": ["category", "subcategory", "neutral"],
+              "default": "neutral"
+            }
+          },
+          "required": ["field"]
+        }
+      ]
+    },
+
+    "tagsBlock": {
+      "allOf": [
+        { "$ref": "#/$defs/panelBlockBase" },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "tags" }
+          },
+          "required": ["field"]
+        }
+      ]
+    },
+
+    "linkBlock": {
+      "allOf": [
+        { "$ref": "#/$defs/panelBlockBase" },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "link" },
+            "iconId": { "type": "string" }
+          },
+          "required": ["field"]
+        }
+      ]
+    },
+
+    "reviewsBlock": {
+      "allOf": [
+        { "$ref": "#/$defs/panelBlockBase" },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "reviews" },
+            "maxCount": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 5
+            }
+          },
+          "required": ["field"]
+        }
+      ]
+    },
+
+    "listBlock": {
+      "allOf": [
+        { "$ref": "#/$defs/panelBlockBase" },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "list" },
+            "listStyle": {
+              "type": "string",
+              "enum": ["bullet", "numbered"],
+              "default": "bullet"
+            }
+          },
+          "required": ["field"]
+        }
+      ]
+    },
+
+    "tableBlock": {
+      "allOf": [
+        { "$ref": "#/$defs/panelBlockBase" },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "table" },
+            "columns": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "key": { "type": "string" },
+                  "label": { "type": "string" }
+                },
+                "required": ["key", "label"],
+                "additionalProperties": false
+              },
+              "minItems": 1
+            },
+            "borders": {
+              "type": "object",
+              "properties": {
+                "outer": { "type": "boolean", "default": true },
+                "row": { "type": "boolean", "default": true },
+                "column": { "type": "boolean", "default": false },
+                "color": {
+                  "type": "string",
+                  "description": "Couleur des bordures (peut être une variable CSS ou une couleur CSS).",
+                  "default": "var(--gl-panel-border)"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": ["field", "columns"]
+        }
+      ]
+    },
+
+    "checkboxGroupBlock": {
+      "allOf": [
+        { "$ref": "#/$defs/panelBlockBase" },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "checkbox-group" },
+            "layout": {
+              "type": "string",
+              "enum": ["grid", "inline", "stacked"],
+              "default": "grid"
+            },
+            "columns": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 2
+            }
+          },
+          "required": ["field"]
+        }
+      ]
+    },
+
+    "radioGroupBlock": {
+      "allOf": [
+        { "$ref": "#/$defs/panelBlockBase" },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "radio-group" },
+            "options": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "value": { "type": "string" },
+                  "label": { "type": "string" }
+                },
+                "required": ["value", "label"],
+                "additionalProperties": false
+              },
+              "minItems": 1
+            },
+            "layout": {
+              "type": "string",
+              "enum": ["inline", "stacked"],
+              "default": "inline"
+            }
+          },
+          "required": ["field", "options"]
+        }
+      ]
+    },
+
+    "panelBlock": {
+      "oneOf": [
+        { "$ref": "#/$defs/textBlock" },
+        { "$ref": "#/$defs/imageBlock" },
+        { "$ref": "#/$defs/galleryBlock" },
+        { "$ref": "#/$defs/badgeBlock" },
+        { "$ref": "#/$defs/tagsBlock" },
+        { "$ref": "#/$defs/linkBlock" },
+        { "$ref": "#/$defs/reviewsBlock" },
+        { "$ref": "#/$defs/listBlock" },
+        { "$ref": "#/$defs/tableBlock" },
+        { "$ref": "#/$defs/checkboxGroupBlock" },
+        { "$ref": "#/$defs/radioGroupBlock" }
+      ]
+    }
+  }
+}

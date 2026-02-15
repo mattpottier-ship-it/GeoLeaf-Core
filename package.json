@@ -1,0 +1,109 @@
+{
+  "name": "geoleaf",
+  "version": "3.2.0",
+  "description": "GeoLeaf — Modular JavaScript mapping library built on Leaflet. v3.1: 75.7% smaller bundle, comprehensive documentation. Features: Security (XSS protection), Performance (optimized build pipeline), Typed Errors, Validators, and comprehensive TypeScript support.",
+  "main": "dist/geoleaf.umd.js",
+  "unpkg": "dist/geoleaf.min.js",
+  "jsdelivr": "dist/geoleaf.min.js",
+  "types": "index.d.ts",
+  "browser": "dist/geoleaf.umd.js",
+  "scripts": {
+    "build": "rollup -c",
+    "build:watch": "rollup -c -w",
+    "clean": "rimraf dist && mkdir dist",
+    "test": "node scripts/smoke-test.cjs",
+    "test:all": "npm run test && npm run test:jest",
+    "test:jest": "jest --config jest.config.js",
+    "test:bundle": "jest __tests__/bundle.test.js --no-coverage",
+    "test:watch": "jest --config jest.config.js --watch",
+    "test:coverage": "jest --config jest.config.js --coverage --coverageDirectory=coverage",
+    "test:ci": "npm run test:coverage && npm run test",
+    "benchmark": "node scripts/benchmark.cjs",
+    "benchmark:baseline": "node scripts/benchmark.cjs --baseline",
+    "lint": "eslint src/**/*.js __tests__/**/*.js",
+    "lint:fix": "eslint src/**/*.js __tests__/**/*.js --fix",
+    "format": "prettier --write \"src/**/*.js\" \"__tests__/**/*.js\" \"*.{json,md}\"",
+    "format:check": "prettier --check \"src/**/*.js\" \"__tests__/**/*.js\" \"*.{json,md}\"",
+    "build:css": "postcss src/static/css/geoleaf-main.css -o dist/geoleaf-main.min.css --map",
+    "build:all": "npm run clean && npm run build && npm run build:css",
+    "verify": "npm run build:all && npm run test:bundle",
+    "build:deploy": "node scripts/build-deploy.cjs",
+    "build:deploy:full": "node scripts/build-deploy.cjs --full",
+    "prepublishOnly": "npm run lint && npm run build:all && npm run test:all",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "src/**/*.js": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "__tests__/**/*.js": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
+  },
+  "peerDependencies": {
+    "leaflet": "^1.9.4",
+    "leaflet.markercluster": "^1.5.3"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^29.0.0",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.4.2",
+    "@types/jest": "^29.5.12",
+    "cssnano": "^7.1.2",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-security": "^3.0.1",
+    "husky": "^9.0.11",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "lint-staged": "^15.2.2",
+    "postcss": "^8.5.6",
+    "postcss-cli": "^11.0.1",
+    "postcss-import": "^16.1.1",
+    "prettier": "^3.2.5",
+    "rimraf": "^5.0.5",
+    "rollup": "^4.12.0",
+    "rollup-plugin-filesize": "^10.0.0",
+    "rollup-plugin-visualizer": "^6.0.5"
+  },
+  "files": [
+    "dist/",
+    "index.d.ts",
+    "README.md",
+    "docs/"
+  ],
+  "keywords": [
+    "leaflet",
+    "map",
+    "mapping",
+    "gis",
+    "geospatial",
+    "frontend",
+    "geoleaf",
+    "geojson",
+    "gpx",
+    "security",
+    "xss-protection",
+    "typescript",
+    "performance",
+    "debounce",
+    "throttle"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mattpottier-ship-it/GeoLeaf-Core.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mattpottier-ship-it/GeoLeaf-Core/issues"
+  },
+  "homepage": "https://github.com/mattpottier-ship-it/GeoLeaf-Core#readme",
+  "author": "GeoLeaf Project",
+  "license": "MIT"
+}

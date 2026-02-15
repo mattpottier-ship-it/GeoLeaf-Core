@@ -1,0 +1,114 @@
+/**
+ * GeoLeaf - Contrôles Leaflet Unifiés
+ * Style commun pour tous les boutons de contrôle (zoom, fullscreen, géolocalisation, POI, cache)
+ */
+
+/* =====================================================
+   CONTENEUR COMMUN POUR TOUS LES CONTRÔLES TOPLEFT
+   Tous les boutons seront automatiquement alignés
+===================================================== */
+.leaflet-top.leaflet-left {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-top: 1rem;
+    margin-left: 1rem;
+}
+
+/* Reset neutre pour tous les contrôles
+   !important justifié : nécessaire pour outrepasser les styles Leaflet par défaut */
+.leaflet-control-zoom,
+.leaflet-control-fullscreen,
+.leaflet-control-geolocation,
+.leaflet-control-poi-add,
+.leaflet-control-cache-button {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+    margin: 0 !important; /* Supprime toutes les marges individuelles */
+}
+
+/* Style de base commun à tous les boutons de contrôle */
+.leaflet-control-zoom a,
+.leaflet-control-fullscreen a,
+.leaflet-control-geolocation a,
+.leaflet-control-poi-add a,
+.leaflet-control-cache-button a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 32px;
+    height: 32px;
+    line-height: 32px;
+    text-align: center;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+
+    border: none;
+    border-radius: 0;
+
+    /* Couleurs 100 % pilotées par les variables de thème */
+    background-color: var(--gl-color-bg-surface);
+    color: var(--gl-color-text-main);
+
+    transition:
+        background-color 0.15s ease,
+        color 0.15s ease,
+        box-shadow 0.15s ease,
+        transform 0.12s ease;
+}
+
+/* Hover commun */
+body.gl-theme-light .leaflet-control-zoom a:hover,
+body.gl-theme-light .leaflet-control-fullscreen a:hover,
+body.gl-theme-light .leaflet-control-geolocation a:hover,
+body.gl-theme-light .leaflet-control-poi-add a:hover,
+body.gl-theme-light .leaflet-control-cache-button a:hover,
+body.gl-theme-dark .leaflet-control-zoom a:hover,
+body.gl-theme-dark .leaflet-control-fullscreen a:hover,
+body.gl-theme-dark .leaflet-control-geolocation a:hover,
+body.gl-theme-dark .leaflet-control-poi-add a:hover,
+body.gl-theme-dark .leaflet-control-cache-button a:hover {
+    background-color: var(--gl-color-bg-surface-muted);
+    color: var(--gl-color-text-main);
+    box-shadow: var(--gl-shadow-medium);
+    transform: translateY(-1px);
+}
+
+/* Active state commun */
+.leaflet-control-zoom a:active,
+.leaflet-control-fullscreen a:active,
+.leaflet-control-geolocation a:active,
+.leaflet-control-poi-add a:active,
+.leaflet-control-cache-button a:active {
+    transform: translateY(0) scale(0.96);
+}
+
+/* =====================================================
+   ZOOM CONTROL - Styles spécifiques
+===================================================== */
+
+/* Séparation visuelle entre + et - (dans le même contrôle) */
+.leaflet-control-zoom a + a {
+    margin-top: 0.35rem;
+}
+
+/* =====================================================
+   SVG ICONS - Couleur uniforme et centrage
+===================================================== */
+
+.leaflet-control-zoom svg,
+.leaflet-control-fullscreen svg,
+.leaflet-control-geolocation svg,
+.leaflet-control-poi-add svg,
+.leaflet-control-cache-button svg {
+    display: block;
+    color: currentColor;
+    stroke: currentColor;
+    margin: auto;
+}

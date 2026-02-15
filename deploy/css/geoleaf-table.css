@@ -1,0 +1,421 @@
+/**
+ * GeoLeaf Table - Styles CSS
+ * Style du bottom-sheet drawer et du tableau de données
+ */
+
+/* ========================================================================== */
+/* 1. Conteneur principal (bottom-sheet)                                      */
+/* ========================================================================== */
+
+.gl-table-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 40%;
+    background: var(--gl-color-bg-surface);
+    border-top: 1px solid var(--gl-color-border-soft);
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(100%);
+    transition: transform 0.3s ease-in-out;
+    z-index: 1100;
+    display: flex;
+    flex-direction: column;
+}
+
+.gl-table-panel.is-visible {
+    transform: translateY(0);
+}
+
+/* Barre de redimensionnement */
+.gl-table-panel__resize-handle {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 8px;
+    cursor: ns-resize;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+.gl-table-panel__resize-handle:hover .gl-table-panel__resize-bar {
+    background: var(--gl-color-accent);
+}
+
+.gl-table-panel__resize-bar {
+    width: 40px;
+    height: 3px;
+    background: var(--gl-color-border-soft);
+    border-radius: 2px;
+    transition: background 0.2s ease;
+}
+
+/* ========================================================================== */
+/* 2. Barre d'outils (toolbar)                                                */
+/* ========================================================================== */
+
+.gl-table-panel__toolbar {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.3rem !important;
+    padding: 0.75rem 0.5rem !important;
+    background: var(--gl-color-bg-surface-muted);
+    border-bottom: 1px solid var(--gl-color-border-soft);
+    flex-shrink: 0 !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+}
+
+/* Sélecteur de couche */
+.gl-table-panel__layer-selector {
+    display: flex !important;
+    align-items: center !important;
+    flex-shrink: 0 !important;
+}
+
+.gl-table-panel__label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--gl-color-text-main);
+    white-space: nowrap;
+}
+
+.gl-table-panel__select {
+    padding: 0.375rem 0.5rem !important;
+    border: 1px solid var(--gl-color-border-soft);
+    border-radius: 4px;
+    background: var(--gl-color-bg-surface);
+    color: var(--gl-color-text-main);
+    font-size: 0.875rem;
+    width: 150px !important;
+    margin-right: 0.5rem !important;
+    cursor: pointer;
+}
+
+.gl-table-panel__select:focus {
+    outline: none;
+    border-color: var(--gl-color-accent);
+    box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.15);
+}
+
+/* Champ de recherche */
+.gl-table-panel__search {
+    flex: 0 0 auto !important;
+    width: 140px !important;
+    margin-right: 1.5rem !important;
+    position: relative !important;
+}
+
+.gl-table-panel__search-input {
+    width: 100% !important;
+    padding: 0.375rem 0.5rem !important;
+    border: 1px solid var(--gl-color-border-soft);
+    border-radius: 4px;
+    background: var(--gl-color-bg-surface);
+    color: var(--gl-color-text-main);
+    font-size: 0.8125rem !important;
+    position: relative !important;
+}
+
+.gl-table-panel__search-input::placeholder {
+    color: var(--gl-color-text-muted);
+}
+
+.gl-table-panel__search-input:focus {
+    outline: none;
+    border-color: var(--gl-color-accent);
+    box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.15);
+}
+
+/* Boutons de la toolbar */
+.gl-table-panel__btn {
+    padding: 0.375rem 0.625rem !important;
+    border: 1px solid var(--gl-color-border-soft);
+    border-radius: 4px;
+    background: var(--gl-color-bg-surface);
+    color: var(--gl-color-text-main);
+    font-size: 0.8125rem !important;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    position: relative !important;
+}
+
+.gl-table-panel__btn:hover:not(:disabled) {
+    background: var(--gl-color-bg-surface-muted);
+    border-color: var(--gl-color-border-strong);
+}
+
+.gl-table-panel__btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.gl-table-panel__btn.is-active {
+    background: var(--gl-color-accent);
+    color: var(--gl-color-text-inverse);
+    border-color: var(--gl-color-accent);
+}
+
+/* ========================================================================== */
+/* 3. Wrapper du tableau (scrollable)                                         */
+/* ========================================================================== */
+
+.gl-table-panel__wrapper {
+    flex: 1;
+    overflow: auto;
+    position: relative;
+}
+
+/* ========================================================================== */
+/* 4. Tableau (table)                                                         */
+/* ========================================================================== */
+
+.gl-table-panel__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+    table-layout: fixed;
+}
+
+/* En-tête du tableau */
+.gl-table-panel__th {
+    position: sticky;
+    top: 0;
+    background: var(--gl-color-bg-surface-muted);
+    color: var(--gl-color-text-main);
+    font-weight: 600;
+    text-align: left;
+    padding: 0.75rem 1rem;
+    border-bottom: 2px solid var(--gl-color-border-strong);
+    z-index: 10;
+    white-space: nowrap;
+}
+
+.gl-table-panel__th--checkbox {
+    width: 30px !important;
+    min-width: 30px !important;
+    max-width: 30px !important;
+    text-align: center;
+    padding: 0.5rem 0.25rem;
+    overflow: hidden;
+}
+
+.gl-table-panel__th--sortable {
+    cursor: pointer;
+    user-select: none;
+}
+
+.gl-table-panel__th--sortable:hover {
+    background: var(--gl-color-bg-surface);
+}
+
+.gl-table-panel__sort-icon {
+    opacity: 0.5;
+    margin-left: 0.25rem;
+}
+
+.gl-table-panel__th--sortable.is-sorted-asc .gl-table-panel__sort-icon,
+.gl-table-panel__th--sortable.is-sorted-desc .gl-table-panel__sort-icon {
+    opacity: 1;
+}
+
+/* Cellules du tableau */
+.gl-table-panel__td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--gl-color-border-soft);
+    color: var(--gl-color-text-main);
+}
+
+.gl-table-panel__td--checkbox {
+    width: 30px !important;
+    min-width: 30px !important;
+    max-width: 30px !important;
+    text-align: center;
+    padding: 0.5rem 0.25rem;
+    overflow: hidden;
+}
+
+.gl-table-panel__td--number {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Lignes */
+.gl-table-panel__table tbody tr {
+    transition: background-color 0.15s ease;
+    cursor: pointer;
+}
+
+.gl-table-panel__table tbody tr:hover {
+    background: var(--gl-color-bg-surface-muted);
+}
+
+.gl-table-panel__table tbody tr.is-selected {
+    background: rgba(249, 115, 22, 0.1);
+}
+
+.gl-table-panel__table tbody tr.is-selected:hover {
+    background: rgba(249, 115, 22, 0.15);
+}
+
+/* Checkboxes */
+.gl-table-panel__checkbox-all,
+.gl-table-panel__checkbox {
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+}
+
+/* Force minimale pour la colonne checkbox - règle la plus spécifique */
+.gl-table-panel__table .gl-table-panel__th--checkbox,
+.gl-table-panel__table .gl-table-panel__td--checkbox {
+    width: 30px !important;
+    min-width: 30px !important;
+    max-width: 30px !important;
+}
+
+/* ========================================================================== */
+/* 5. Boutons toggle                                                          */
+/* ========================================================================== */
+
+/* Bouton toggle dans le toolbar (masquer le tableau) */
+.gl-table-panel__toggle-btn {
+    padding: 0.375rem 0.5rem !important;
+    border: 1px solid var(--gl-color-border-soft);
+    border-radius: 4px;
+    background: var(--gl-color-bg-surface);
+    color: var(--gl-color-text-main);
+    cursor: pointer;
+    transition: background 0.2s ease, box-shadow 0.2s ease;
+    flex-shrink: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.gl-table-panel__toggle-btn:hover {
+    background: var(--gl-color-bg-surface-muted);
+    box-shadow: var(--gl-shadow-soft);
+}
+
+.gl-table-panel__toggle-btn:focus-visible {
+    outline: 2px solid var(--gl-color-focus-ring);
+    outline-offset: 2px;
+}
+
+.gl-table-panel__toggle-btn__icon {
+    color: var(--gl-color-text-main);
+    transition: transform 0.2s ease;
+}
+
+/* Bouton flottant pour afficher le tableau (visible quand tableau masqué) */
+.gl-table-panel__floating-show-btn {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 950;
+
+    width: 50px;
+    height: 28px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: var(--gl-color-bg-surface);
+    border: 1px solid var(--gl-color-border-soft);
+    border-bottom: none;
+    border-radius: 12px 12px 0 0;
+
+    cursor: pointer;
+    box-shadow: var(--gl-shadow-medium);
+
+    transition: background 0.2s ease, height 0.2s ease, box-shadow 0.2s ease;
+    margin-left: 200px;
+}
+
+.gl-table-panel__floating-show-btn:hover {
+    background: var(--gl-color-bg-surface-muted);
+    height: 32px;
+    box-shadow: var(--gl-shadow-medium);
+}
+
+.gl-table-panel.is-visible ~ .gl-table-panel__floating-show-btn {
+    display: none;
+}
+
+/* ========================================================================== */
+/* 6. Responsive                                                              */
+/* ========================================================================== */
+
+@media (max-width: 768px) {
+    .gl-table-panel {
+        height: 40%;
+    }
+
+    /* Position gérée dynamiquement par JavaScript */
+
+    .gl-table-panel__toolbar {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding: 0.5rem;
+    }
+
+    .gl-table-panel__search {
+        max-width: 100%;
+        flex: 1 1 100%;
+    }
+
+    .gl-table-panel__select {
+        min-width: 150px;
+    }
+
+    .gl-table-panel__th,
+    .gl-table-panel__td {
+        padding: 0.5rem;
+        font-size: 0.8125rem;
+    }
+}
+
+/* ========================================================================== */
+/* 7. Mode sombre (déjà géré par les variables CSS du thème)                  */
+/* ========================================================================== */
+
+body.gl-theme-dark .gl-table-panel {
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.35);
+}
+
+/* ========================================================================== */
+/* 8. États de chargement et messages                                         */
+/* ========================================================================== */
+
+.gl-table-panel__empty {
+    padding: 2rem;
+    text-align: center;
+    color: var(--gl-color-text-muted);
+    font-size: 0.875rem;
+}
+
+.gl-table-panel__loading {
+    padding: 2rem;
+    text-align: center;
+    color: var(--gl-color-text-muted);
+    font-size: 0.875rem;
+}
+
+.gl-table-panel__error {
+    padding: 1rem;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #991b1b;
+    font-size: 0.875rem;
+    border-radius: 4px;
+    margin: 1rem;
+}

@@ -1,0 +1,29 @@
+﻿{
+  "id": "temperature_decembre",
+  "label": "Température - Décembre",
+  "zIndex": 56,
+  "geometry": "polygon",
+  "data": {
+    "directory": "data",
+    "file": "temperature_decembre.geojson"
+  },
+  "styles": {
+    "directory": "styles",
+    "default": "defaut.json",
+    "available": [
+      {
+        "id": "defaut",
+        "label": "défaut",
+        "file": "defaut.json"
+      }
+    ]
+  },
+  "table": {
+    "enabled": false
+  },
+  "clustering": {
+    "enabled": false,
+    "maxClusterRadius": 80,
+    "disableClusteringAtZoom": 12
+  }
+}

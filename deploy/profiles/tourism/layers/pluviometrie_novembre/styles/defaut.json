@@ -1,0 +1,240 @@
+{
+  "id": "defaut",
+  "label": "défaut",
+  "description": "",
+  "layerScale": {
+    "minScale": null,
+    "maxScale": null
+  },
+  "labelScale": {
+    "minScale": null,
+    "maxScale": null
+  },
+  "style": {
+    "fill": {
+      "opacity": 0
+    },
+    "stroke": {
+      "color": "#4681cb",
+      "opacity": 1,
+      "widthPx": 1.51
+    }
+  },
+  "styleRules": [
+    {
+      "when": {
+        "field": "properties.class_id",
+        "operator": "==",
+        "value": 1
+      },
+      "style": {
+        "fill": {
+          "opacity": 0
+        },
+        "stroke": {
+          "color": "#4681cb",
+          "opacity": 1,
+          "widthPx": 1.51
+        }
+      },
+      "legend": {
+        "label": "Pluviométrie Novembre"
+      }
+    },
+    {
+      "when": {
+        "field": "properties.class_id",
+        "operator": "==",
+        "value": 2
+      },
+      "style": {
+        "fill": {
+          "opacity": 0
+        },
+        "stroke": {
+          "color": "#4681cb",
+          "opacity": 1,
+          "widthPx": 1.51
+        },
+        "hatch": {
+          "enabled": true,
+          "type": "dot",
+          "angleDeg": null,
+          "spacingPx": 14,
+          "stroke": {
+            "color": "#c1eaff",
+            "opacity": 1,
+            "widthPx": 1
+          },
+          "renderMode": "pattern_only"
+        }
+      },
+      "legend": {
+        "label": "Pluviométrie Novembre"
+      }
+    },
+    {
+      "when": {
+        "field": "properties.class_id",
+        "operator": "==",
+        "value": 3
+      },
+      "style": {
+        "fill": {
+          "opacity": 0
+        },
+        "stroke": {
+          "color": "#4681cb",
+          "opacity": 1,
+          "widthPx": 1.51
+        },
+        "hatch": {
+          "enabled": true,
+          "type": "dot",
+          "angleDeg": null,
+          "spacingPx": 12,
+          "stroke": {
+            "color": "#2e83de",
+            "opacity": 1,
+            "widthPx": 1
+          },
+          "renderMode": "pattern_only"
+        }
+      },
+      "legend": {
+        "label": "Pluviométrie Novembre"
+      }
+    },
+    {
+      "when": {
+        "field": "properties.class_id",
+        "operator": "==",
+        "value": 4
+      },
+      "style": {
+        "fill": {
+          "opacity": 0
+        },
+        "stroke": {
+          "color": "#4681cb",
+          "opacity": 1,
+          "widthPx": 1.51
+        },
+        "hatch": {
+          "enabled": true,
+          "type": "dot",
+          "angleDeg": null,
+          "spacingPx": 12,
+          "stroke": {
+            "color": "#2f77c5",
+            "opacity": 1,
+            "widthPx": 1
+          },
+          "renderMode": "pattern_only"
+        }
+      },
+      "legend": {
+        "label": "Pluviométrie Novembre"
+      }
+    },
+    {
+      "when": {
+        "field": "properties.class_id",
+        "operator": "==",
+        "value": 5
+      },
+      "style": {
+        "fill": {
+          "opacity": 0
+        },
+        "stroke": {
+          "color": "#4681cb",
+          "opacity": 1,
+          "widthPx": 1.51
+        },
+        "hatch": {
+          "enabled": true,
+          "type": "dot",
+          "angleDeg": null,
+          "spacingPx": 10,
+          "stroke": {
+            "color": "#2065b0",
+            "opacity": 1,
+            "widthPx": 1
+          },
+          "renderMode": "pattern_only"
+        }
+      },
+      "legend": {
+        "label": "Pluviométrie Novembre"
+      }
+    },
+    {
+      "when": {
+        "field": "properties.class_id",
+        "operator": "==",
+        "value": 6
+      },
+      "style": {
+        "fill": {
+          "opacity": 0
+        },
+        "stroke": {
+          "color": "#4681cb",
+          "opacity": 1,
+          "widthPx": 1.51
+        },
+        "hatch": {
+          "enabled": true,
+          "type": "dot",
+          "angleDeg": null,
+          "spacingPx": 10,
+          "stroke": {
+            "color": "#3a6695",
+            "opacity": 1,
+            "widthPx": 1
+          },
+          "renderMode": "pattern_only"
+        }
+      },
+      "legend": {
+        "label": "Pluviométrie Novembre"
+      }
+    },
+    {
+      "when": {
+        "field": "properties.class_id",
+        "operator": "==",
+        "value": 7
+      },
+      "style": {
+        "fill": {
+          "opacity": 0
+        },
+        "stroke": {
+          "color": "#4681cb",
+          "opacity": 1,
+          "widthPx": 1.51
+        },
+        "hatch": {
+          "enabled": true,
+          "type": "dot",
+          "angleDeg": null,
+          "spacingPx": 8,
+          "stroke": {
+            "color": "#22e3ff",
+            "opacity": 1,
+            "widthPx": 1
+          },
+          "renderMode": "pattern_only"
+        }
+      },
+      "legend": {
+        "label": "Pluviométrie Novembre"
+      }
+    }
+  ],
+  "legend": {
+    "label": "Pluviométrie Novembre"
+  }
+}

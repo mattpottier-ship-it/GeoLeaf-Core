@@ -1,0 +1,29 @@
+﻿{
+  "id": "pluviometrie_janvier",
+  "label": "Pluviométrie - Janvier",
+  "zIndex": 93,
+  "geometry": "polygon",
+  "data": {
+    "directory": "data",
+    "file": "pluviometrie_janvier.geojson"
+  },
+  "styles": {
+    "directory": "styles",
+    "default": "defaut.json",
+    "available": [
+      {
+        "id": "defaut",
+        "label": "défaut",
+        "file": "defaut.json"
+      }
+    ]
+  },
+  "table": {
+    "enabled": false
+  },
+  "clustering": {
+    "enabled": false,
+    "maxClusterRadius": 80,
+    "disableClusteringAtZoom": 12
+  }
+}

@@ -1,0 +1,596 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://geoleaf.io/schemas/style.schema.json",
+  "title": "GeoLeaf Style Schema",
+  "description": "Schéma de validation pour les fichiers de style GeoLeaf (points, lignes, polygones) avec labels intégrés",
+  "type": "object",
+  "required": ["id", "layerScale"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Identifiant unique du style",
+      "pattern": "^[a-zA-Z0-9_-]+$"
+    },
+    "label": {
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "Nom d'affichage du style dans l'UI"
+        },
+        {
+          "type": "object",
+          "description": "Configuration des labels/étiquettes",
+          "required": ["enabled"],
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Active/désactive les labels pour ce style"
+            },
+            "visibleByDefault": {
+              "type": "boolean",
+              "default": false,
+              "description": "Labels visibles dès le chargement de la couche"
+            },
+            "field": {
+              "type": "string",
+              "description": "Nom du champ GeoJSON properties à afficher"
+            },
+            "font": {
+              "type": "object",
+              "properties": {
+                "family": {
+                  "type": "string",
+                  "default": "Arial"
+                },
+                "sizePt": {
+                  "type": "number",
+                  "minimum": 1,
+                  "maximum": 72,
+                  "default": 12
+                },
+                "weight": {
+                  "type": "number",
+                  "minimum": 1,
+                  "maximum": 100,
+                  "default": 50
+                },
+                "bold": {
+                  "type": "boolean",
+                  "default": false
+                },
+                "italic": {
+                  "type": "boolean",
+                  "default": false
+                }
+              }
+            },
+            "color": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$",
+              "default": "#000000"
+            },
+            "opacity": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "default": 1
+            },
+            "buffer": {
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "default": false
+                },
+                "color": {
+                  "type": "string",
+                  "pattern": "^#[0-9a-fA-F]{6}$",
+                  "default": "#ffffff"
+                },
+                "opacity": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1,
+                  "default": 1
+                },
+                "sizePx": {
+                  "type": "number",
+                  "minimum": 0,
+                  "default": 2
+                }
+              }
+            },
+            "background": {
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "default": false
+                },
+                "color": {
+                  "type": "string",
+                  "pattern": "^#[0-9a-fA-F]{6}$"
+                },
+                "opacity": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "paddingPx": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              }
+            },
+            "offset": {
+              "type": "object",
+              "properties": {
+                "distancePx": {
+                  "type": "number",
+                  "default": 0
+                },
+                "angleDeg": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 360
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "description": {
+      "type": "string",
+      "description": "Description détaillée du style"
+    },
+    "layerScale": {
+      "type": "object",
+      "description": "Échelles de visibilité de la couche",
+      "properties": {
+        "minScale": {
+          "oneOf": [
+            {"type": "number", "minimum": 0},
+            {"type": "null"}
+          ]
+        },
+        "maxScale": {
+          "oneOf": [
+            {"type": "number", "minimum": 0},
+            {"type": "null"}
+          ]
+        }
+      },
+      "required": ["minScale", "maxScale"]
+    },
+    "labelScale": {
+      "type": "object",
+      "description": "Échelles de visibilité des labels (si différent de layerScale)",
+      "properties": {
+        "minScale": {
+          "oneOf": [
+            {"type": "number", "minimum": 0},
+            {"type": "null"}
+          ]
+        },
+        "maxScale": {
+          "oneOf": [
+            {"type": "number", "minimum": 0},
+            {"type": "null"}
+          ]
+        }
+      }
+    },
+    "style": {
+      "type": "object",
+      "description": "Style de base (sans règles conditionnelles) - supporte format plat ou imbriqué",
+      "oneOf": [
+        {
+          "description": "Format plat (ancien format)",
+          "properties": {
+            "shape": {
+              "type": "string",
+              "enum": ["circle", "square", "triangle", "diamond", "star", "cross"],
+              "description": "Forme du marqueur (géométries POINT)"
+            },
+            "sizePx": {
+              "type": "number",
+              "minimum": 1,
+              "description": "Taille du marqueur en pixels (POINT)"
+            },
+            "fillColor": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$",
+              "description": "Couleur de remplissage (POINT, POLYGON)"
+            },
+            "fillOpacity": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Opacité du remplissage (POINT, POLYGON)"
+            },
+            "color": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$",
+              "description": "Couleur du contour/trait (POINT, LINE, POLYGON)"
+            },
+            "opacity": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Opacité du contour/trait"
+            },
+            "weight": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Épaisseur du trait en pixels (LINE, POLYGON)"
+            },
+            "radius": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Rayon en pixels (POINT)"
+            },
+            "dashArray": {
+              "type": "string",
+              "pattern": "^[0-9\\s,]+$",
+              "description": "Motif de tirets (LINE) ex: '5, 10'"
+            },
+            "lineCap": {
+              "type": "string",
+              "enum": ["butt", "round", "square"],
+              "description": "Style des extrémités de ligne"
+            },
+            "lineJoin": {
+              "type": "string",
+              "enum": ["miter", "round", "bevel"],
+              "description": "Style des jonctions de ligne"
+            },
+            "fillPattern": {
+              "type": "string",
+              "description": "Motif de remplissage (POLYGON)"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "description": "Format imbriqué (nouveau format v3.1+)",
+          "properties": {
+            "shape": {
+              "type": "string",
+              "enum": ["circle", "square", "triangle", "diamond", "star", "cross"],
+              "description": "Forme du marqueur (géométries POINT)"
+            },
+            "sizePx": {
+              "type": "number",
+              "minimum": 1,
+              "description": "Taille du marqueur en pixels (POINT)"
+            },
+            "fill": {
+              "type": "object",
+              "description": "Propriétés de remplissage (POINT, POLYGON)",
+              "properties": {
+                "color": {
+                  "type": "string",
+                  "pattern": "^#[0-9a-fA-F]{6}$",
+                  "description": "Couleur de remplissage"
+                },
+                "opacity": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Opacité du remplissage"
+                },
+                "pattern": {
+                  "type": "string",
+                  "description": "Motif de remplissage"
+                }
+              },
+              "additionalProperties": false
+            },
+            "stroke": {
+              "type": "object",
+              "description": "Propriétés de contour/trait (POINT, LINE, POLYGON)",
+              "properties": {
+                "color": {
+                  "type": "string",
+                  "pattern": "^#[0-9a-fA-F]{6}$",
+                  "description": "Couleur du contour/trait"
+                },
+                "opacity": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Opacité du contour/trait"
+                },
+                "widthPx": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "Épaisseur du trait en pixels"
+                },
+                "dashArray": {
+                  "type": "string",
+                  "pattern": "^[0-9\\s,]+$",
+                  "description": "Motif de tirets ex: '5, 10'"
+                },
+                "lineCap": {
+                  "type": "string",
+                  "enum": ["butt", "round", "square"],
+                  "description": "Style des extrémités de ligne"
+                },
+                "lineJoin": {
+                  "type": "string",
+                  "enum": ["miter", "round", "bevel"],
+                  "description": "Style des jonctions de ligne"
+                }
+              },
+              "additionalProperties": false
+            },
+            "hatch": {
+              "type": "object",
+              "description": "Hachurage pour les polygones",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "description": "Active/désactive le hachurage"
+                },
+                "type": {
+                  "type": "string",
+                  "enum": ["diagonal", "horizontal", "vertical", "cross", "diagonal_cross", "x", "dot"],
+                  "description": "Type de hachurage"
+                },
+                "angleDeg": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 360,
+                  "description": "Angle du hachurage en degrés"
+                },
+                "spacingPx": {
+                  "type": "number",
+                  "minimum": 1,
+                  "description": "Espacement entre les hachures en pixels"
+                },
+                "stroke": {
+                  "type": "object",
+                  "description": "Style du trait de hachurage",
+                  "properties": {
+                    "color": {
+                      "type": "string",
+                      "pattern": "^#[0-9a-fA-F]{6}$",
+                      "description": "Couleur du hachurage"
+                    },
+                    "opacity": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1,
+                      "description": "Opacité du hachurage"
+                    },
+                    "widthPx": {
+                      "type": "number",
+                      "minimum": 0,
+                      "description": "Épaisseur du trait de hachurage"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "renderMode": {
+                  "type": "string",
+                  "enum": ["pattern_only", "pattern_with_fill"],
+                  "description": "Mode de rendu: pattern_only masque la couleur de fond, pattern_with_fill affiche les deux"
+                },
+                "qgisBrushStyle": {
+                  "type": "string",
+                  "description": "Style de brosse QGIS équivalent"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "defaultStyle": {
+      "type": "object",
+      "description": "Style par défaut utilisé quand aucune styleRules ne correspond - supporte format plat ou imbriqué",
+      "oneOf": [
+        {
+          "description": "Format plat",
+          "properties": {
+            "shape": {"type": "string"},
+            "sizePx": {"type": "number"},
+            "fillColor": {"type": "string"},
+            "fillOpacity": {"type": "number"},
+            "color": {"type": "string"},
+            "opacity": {"type": "number"},
+            "weight": {"type": "number"},
+            "radius": {"type": "number"},
+            "dashArray": {"type": "string"},
+            "lineCap": {"type": "string"},
+            "lineJoin": {"type": "string"},
+            "fillPattern": {"type": "string"}
+          }
+        },
+        {
+          "description": "Format imbriqué",
+          "properties": {
+            "shape": {"type": "string"},
+            "sizePx": {"type": "number"},
+            "fill": {
+              "type": "object",
+              "properties": {
+                "color": {"type": "string"},
+                "opacity": {"type": "number"},
+                "pattern": {"type": "string"}
+              }
+            },
+            "stroke": {
+              "type": "object",
+              "properties": {
+                "color": {"type": "string"},
+                "opacity": {"type": "number"},
+                "widthPx": {"type": "number"},
+                "dashArray": {"type": "string"},
+                "lineCap": {"type": "string"},
+                "lineJoin": {"type": "string"}
+              }
+            },
+            "hatch": {
+              "type": "object",
+              "properties": {
+                "enabled": {"type": "boolean"},
+                "type": {"type": "string"},
+                "angleDeg": {"type": "number"},
+                "spacingPx": {"type": "number"},
+                "stroke": {
+                  "type": "object",
+                  "properties": {
+                    "color": {"type": "string"},
+                    "opacity": {"type": "number"},
+                    "widthPx": {"type": "number"}
+                  }
+                },
+                "renderMode": {"type": "string"},
+                "qgisBrushStyle": {"type": "string"}
+              }
+            }
+          }
+        }
+      ]
+    },
+    "styleRules": {
+      "type": "array",
+      "description": "Règles conditionnelles de style basées sur les propriétés GeoJSON",
+      "items": {
+        "type": "object",
+        "required": ["when", "style"],
+        "properties": {
+          "when": {
+            "type": "object",
+            "required": ["field", "operator", "value"],
+            "properties": {
+              "field": {
+                "type": "string",
+                "description": "Chemin vers la propriété (ex: properties.category)"
+              },
+              "operator": {
+                "type": "string",
+                "enum": ["==", "!=", ">", "<", ">=", "<=", "in", "contains"],
+                "description": "Opérateur de comparaison"
+              },
+              "value": {
+                "oneOf": [
+                  {"type": "string"},
+                  {"type": "number"},
+                  {"type": "boolean"},
+                  {"type": "array"}
+                ],
+                "description": "Valeur de référence pour la comparaison"
+              }
+            }
+          },
+          "style": {
+            "oneOf": [
+              {
+                "description": "Format plat",
+                "type": "object",
+                "properties": {
+                  "shape": {"type": "string"},
+                  "sizePx": {"type": "number"},
+                  "fillColor": {"type": "string"},
+                  "fillOpacity": {"type": "number"},
+                  "color": {"type": "string"},
+                  "opacity": {"type": "number"},
+                  "weight": {"type": "number"},
+                  "radius": {"type": "number"},
+                  "dashArray": {"type": "string"},
+                  "lineCap": {"type": "string"},
+                  "lineJoin": {"type": "string"},
+                  "fillPattern": {"type": "string"}
+                }
+              },
+              {
+                "description": "Format imbriqué",
+                "type": "object",
+                "properties": {
+                  "shape": {"type": "string"},
+                  "sizePx": {"type": "number"},
+                  "fill": {
+                    "type": "object",
+                    "properties": {
+                      "color": {"type": "string"},
+                      "opacity": {"type": "number"},
+                      "pattern": {"type": "string"}
+                    }
+                  },
+                  "stroke": {
+                    "type": "object",
+                    "properties": {
+                      "color": {"type": "string"},
+                      "opacity": {"type": "number"},
+                      "widthPx": {"type": "number"},
+                      "dashArray": {"type": "string"},
+                      "lineCap": {"type": "string"},
+                      "lineJoin": {"type": "string"}
+                    }
+                  },
+                  "hatch": {
+                    "type": "object",
+                    "properties": {
+                      "enabled": {"type": "boolean"},
+                      "type": {"type": "string"},
+                      "angleDeg": {"type": "number"},
+                      "spacingPx": {"type": "number"},
+                      "stroke": {
+                        "type": "object",
+                        "properties": {
+                          "color": {"type": "string"},
+                          "opacity": {"type": "number"},
+                          "widthPx": {"type": "number"}
+                        }
+                      },
+                      "renderMode": {"type": "string"},
+                      "qgisBrushStyle": {"type": "string"}
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "legend": {
+            "type": "object",
+            "description": "Informations pour la légende",
+            "properties": {
+              "label": {
+                "type": "string",
+                "description": "Libellé dans la légende"
+              },
+              "order": {
+                "type": "integer",
+                "description": "Ordre d'affichage dans la légende"
+              }
+            }
+          }
+        }
+      }
+    },
+    "legend": {
+      "type": "object",
+      "description": "Configuration de l'élément dans la légende (styles simples)",
+      "properties": {
+        "label": {
+          "type": "string",
+          "description": "Libellé dans la légende"
+        },
+        "order": {
+          "type": "integer",
+          "description": "Ordre d'affichage"
+        },
+        "icon": {
+          "type": "string",
+          "description": "URL ou code d'icône"
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,636 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://geoleaf.local/schemas/profile.schema.json",
+  "title": "GeoLeaf Profile Configuration Schema",
+  "description": "JSON Schema for validating GeoLeaf profile.json files (v3.0.0). Generated: 2026-01-28",
+  "version": "3.0.0",
+  "type": "object",
+  "required": ["id", "label", "version", "Files", "basemaps"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the profile",
+      "pattern": "^[a-zA-Z0-9_-]+$",
+      "minLength": 1,
+      "maxLength": 50,
+      "examples": ["tourism", "my-custom-profile"]
+    },
+    "label": {
+      "type": "string",
+      "description": "Display name for the profile in user interface",
+      "minLength": 1,
+      "maxLength": 100,
+      "examples": ["Profil tourisme", "My Custom Profile"]
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of the profile and its usage",
+      "maxLength": 500,
+      "default": "",
+      "examples": ["Profil optimisé pour les POI touristiques (hébergements, activités, nature…). Version 3.0 avec structure modulaire."]
+    },
+    "version": {
+      "type": "string",
+      "description": "Profile version following semantic versioning",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "examples": ["3.0.0", "1.2.5"]
+    },
+    "Files": {
+      "type": "object",
+      "description": "Paths to associated configuration files",
+      "required": ["taxonomyFile", "themesFile"],
+      "additionalProperties": false,
+      "properties": {
+        "taxonomyFile": {
+          "type": "string",
+          "description": "Path to taxonomy file (categories/subcategories)",
+          "default": "taxonomy.json",
+          "examples": ["taxonomy.json", "data/taxonomy.json"]
+        },
+        "themesFile": {
+          "type": "string",
+          "description": "Path to themes file (layer visibility presets)",
+          "default": "themes.json",
+          "examples": ["themes.json", "data/themes.json"]
+        },
+        "layersFile": {
+          "type": "string",
+          "description": "Path to layers definition file (GeoJSON)",
+          "default": "layers.json",
+          "examples": ["layers.json", "data/layers.json"]
+        }
+      }
+    },
+    "ui": {
+      "type": "object",
+      "description": "User interface configuration and component visibility",
+      "additionalProperties": false,
+      "properties": {
+        "theme": {
+          "type": "string",
+          "description": "Visual theme of the application",
+          "enum": ["light", "dark"],
+          "default": "light"
+        },
+        "language": {
+          "type": "string",
+          "description": "Interface language (ISO 639-1 code)",
+          "default": "fr",
+          "examples": ["fr", "en", "es", "de"]
+        },
+        "showBaseLayerControls": {
+          "type": "boolean",
+          "description": "Display basemap selection controls",
+          "default": false
+        },
+        "showLayerManager": {
+          "type": "boolean",
+          "description": "Display layer manager component",
+          "default": true
+        },
+        "showFilterPanel": {
+          "type": "boolean",
+          "description": "Display POI filtering panel",
+          "default": true
+        },
+        "enableGeolocation": {
+          "type": "boolean",
+          "description": "Enable geolocation control",
+          "default": true
+        },
+        "showCoordinates": {
+          "type": "boolean",
+          "description": "Display coordinate indicator",
+          "default": true
+        },
+        "showThemeSelector": {
+          "type": "boolean",
+          "description": "Display theme selector",
+          "default": true
+        },
+        "showLegend": {
+          "type": "boolean",
+          "description": "Display legend component",
+          "default": true
+        },
+        "showCacheButton": {
+          "type": "boolean",
+          "description": "Display offline cache management button",
+          "default": false
+        },
+        "showAddPoi": {
+          "type": "boolean",
+          "description": "Display POI add button",
+          "default": false
+        },
+        "interactiveShapes": {
+          "type": "boolean",
+          "description": "Make geometric shapes (polygons, lines) interactive/clickable",
+          "default": false
+        }
+      }
+    },
+    "basemaps": {
+      "type": "object",
+      "description": "Available basemaps (tile layers)",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "required": ["id", "label", "url", "attribution"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique basemap identifier",
+            "pattern": "^[a-zA-Z0-9_-]+$"
+          },
+          "label": {
+            "type": "string",
+            "description": "Display name in user interface"
+          },
+          "url": {
+            "type": "string",
+            "description": "Tile URL template with {s}, {z}, {x}, {y} placeholders",
+            "pattern": ".*\\{[szxy]\\}.*"
+          },
+          "attribution": {
+            "type": "string",
+            "description": "Attribution/copyright text (HTML allowed)"
+          },
+          "minZoom": {
+            "type": "integer",
+            "description": "Minimum zoom level",
+            "minimum": 0,
+            "maximum": 20,
+            "default": 0
+          },
+          "maxZoom": {
+            "type": "integer",
+            "description": "Maximum zoom level",
+            "minimum": 1,
+            "maximum": 20,
+            "default": 19
+          },
+          "defaultBasemap": {
+            "type": "boolean",
+            "description": "Is this basemap selected by default",
+            "default": false
+          },
+          "offline": {
+            "type": "boolean",
+            "description": "Is this basemap available for offline caching",
+            "default": false
+          },
+          "offlineBounds": {
+            "type": "object",
+            "description": "Geographic bounds for offline cache",
+            "required": ["north", "south", "east", "west"],
+            "additionalProperties": false,
+            "properties": {
+              "north": {
+                "type": "number",
+                "description": "Northern latitude boundary (WGS84)",
+                "minimum": -90,
+                "maximum": 90
+              },
+              "south": {
+                "type": "number",
+                "description": "Southern latitude boundary (WGS84)",
+                "minimum": -90,
+                "maximum": 90
+              },
+              "east": {
+                "type": "number",
+                "description": "Eastern longitude boundary (WGS84)",
+                "minimum": -180,
+                "maximum": 180
+              },
+              "west": {
+                "type": "number",
+                "description": "Western longitude boundary (WGS84)",
+                "minimum": -180,
+                "maximum": 180
+              }
+            }
+          },
+          "cacheMinZoom": {
+            "type": "integer",
+            "description": "Minimum zoom level for offline cache",
+            "minimum": 0,
+            "default": 4
+          },
+          "cacheMaxZoom": {
+            "type": "integer",
+            "description": "Maximum zoom level for offline cache",
+            "minimum": 1,
+            "maximum": 20,
+            "default": 12
+          }
+        }
+      }
+    },
+    "performance": {
+      "type": "object",
+      "description": "Performance optimization parameters",
+      "additionalProperties": false,
+      "properties": {
+        "maxConcurrentLayers": {
+          "type": "integer",
+          "description": "Maximum number of layers loading in parallel",
+          "minimum": 1,
+          "maximum": 50,
+          "default": 10
+        },
+        "layerLoadDelay": {
+          "type": "integer",
+          "description": "Delay in milliseconds between layer loads",
+          "minimum": 0,
+          "maximum": 5000,
+          "default": 200
+        },
+        "fitBoundsOnThemeChange": {
+          "type": "boolean",
+          "description": "Auto-fit map view to data bounds on theme change",
+          "default": false
+        }
+      }
+    },
+    "search": {
+      "type": "object",
+      "description": "Search and filtering panel configuration",
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Title of the filtering panel",
+          "default": "Filtres"
+        },
+        "radiusMin": {
+          "type": "number",
+          "description": "Minimum radius (km) for proximity search",
+          "minimum": 0,
+          "default": 1
+        },
+        "radiusMax": {
+          "type": "number",
+          "description": "Maximum radius (km) for proximity search",
+          "minimum": 1,
+          "default": 50
+        },
+        "radiusStep": {
+          "type": "number",
+          "description": "Step increment for radius slider",
+          "minimum": 0,
+          "default": 1
+        },
+        "radiusDefault": {
+          "type": "number",
+          "description": "Default radius (km) for proximity search",
+          "minimum": 1,
+          "default": 10
+        },
+        "searchPlaceholder": {
+          "type": "string",
+          "description": "Placeholder text for text search field",
+          "default": "Rechercher un POI…"
+        },
+        "filters": {
+          "type": "array",
+          "description": "List of available search filters",
+          "items": {
+            "type": "object",
+            "required": ["id", "type", "label"],
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Unique filter identifier",
+                "pattern": "^[a-zA-Z0-9_-]+$"
+              },
+              "type": {
+                "type": "string",
+                "description": "Filter type",
+                "enum": ["search", "proximity", "tree", "multiselect-tags"]
+              },
+              "label": {
+                "type": "string",
+                "description": "Display label for the filter"
+              },
+              "placeholder": {
+                "type": "string",
+                "description": "Placeholder text for input fields"
+              },
+              "searchFields": {
+                "type": "array",
+                "description": "Fields to search in (for search filter type)",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "buttonLabel": {
+                "type": "string",
+                "description": "Label for action button"
+              },
+              "instructionText": {
+                "type": "string",
+                "description": "Instruction text for user"
+              },
+              "field": {
+                "type": "string",
+                "description": "Data field to filter on"
+              }
+            }
+          }
+        },
+        "actions": {
+          "type": "object",
+          "description": "Labels for filter action buttons",
+          "additionalProperties": false,
+          "properties": {
+            "applyLabel": {
+              "type": "string",
+              "description": "Label for apply button",
+              "default": "Appliquer"
+            },
+            "resetLabel": {
+              "type": "string",
+              "description": "Label for reset button",
+              "default": "Réinitialiser"
+            }
+          }
+        }
+      }
+    },
+    "layerManagerConfig": {
+      "type": "object",
+      "description": "Layer manager component configuration",
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Title of the layer manager",
+          "default": "Couches"
+        },
+        "collapsedByDefault": {
+          "type": "boolean",
+          "description": "Is layer manager collapsed by default",
+          "default": true
+        },
+        "sections": {
+          "type": "array",
+          "description": "Sections in the layer manager",
+          "items": {
+            "type": "object",
+            "required": ["id", "label", "order"],
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Section identifier",
+                "pattern": "^[a-zA-Z0-9_-]+$"
+              },
+              "label": {
+                "type": "string",
+                "description": "Section display label"
+              },
+              "order": {
+                "type": "integer",
+                "description": "Display order (lower numbers first)",
+                "minimum": 1
+              },
+              "collapsedByDefault": {
+                "type": "boolean",
+                "description": "Is section collapsed by default",
+                "default": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "legendConfig": {
+      "type": "object",
+      "description": "Legend component configuration",
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Title of the legend",
+          "default": "Légende"
+        },
+        "collapsedByDefault": {
+          "type": "boolean",
+          "description": "Is legend collapsed by default",
+          "default": true
+        },
+        "position": {
+          "type": "string",
+          "description": "Position on map (Leaflet position)",
+          "enum": ["topleft", "topright", "bottomleft", "bottomright"],
+          "default": "bottomleft"
+        }
+      }
+    },
+    "poiConfig": {
+      "type": "object",
+      "description": "Point of Interest (POI) configuration",
+      "additionalProperties": false,
+      "properties": {
+        "clusterStrategy": {
+          "type": "string",
+          "description": "POI clustering strategy",
+          "enum": ["unified", "by-source"],
+          "default": "unified"
+        }
+      }
+    },
+    "brandingConfig": {
+      "type": "object",
+      "description": "Branding banner configuration",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable/disable branding banner",
+          "default": true
+        },
+        "text": {
+          "type": "string",
+          "description": "Branding banner text (HTML allowed)"
+        },
+        "position": {
+          "type": "string",
+          "description": "Position on map (Leaflet position)",
+          "enum": ["topleft", "topright", "bottomleft", "bottomright"],
+          "default": "bottomleft"
+        }
+      }
+    },
+    "tableConfig": {
+      "type": "object",
+      "description": "Data table component configuration",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable/disable table module",
+          "default": true
+        },
+        "defaultVisible": {
+          "type": "boolean",
+          "description": "Is table visible by default",
+          "default": false
+        },
+        "pageSize": {
+          "type": "integer",
+          "description": "Number of rows per page",
+          "minimum": 1,
+          "maximum": 500,
+          "default": 50
+        },
+        "maxRowsPerLayer": {
+          "type": "integer",
+          "description": "Maximum rows to display per layer",
+          "minimum": 1,
+          "maximum": 10000,
+          "default": 1000
+        },
+        "enableExportButton": {
+          "type": "boolean",
+          "description": "Show export to CSV/JSON button",
+          "default": true
+        },
+        "virtualScrolling": {
+          "type": "boolean",
+          "description": "Enable virtual scrolling for large lists",
+          "default": true
+        },
+        "defaultHeight": {
+          "type": "string",
+          "description": "Default table height (CSS value)",
+          "default": "40%",
+          "examples": ["40%", "300px", "auto"]
+        },
+        "minHeight": {
+          "type": "string",
+          "description": "Minimum table height for resizing (CSS value)",
+          "default": "20%"
+        },
+        "maxHeight": {
+          "type": "string",
+          "description": "Maximum table height for resizing (CSS value)",
+          "default": "60%"
+        },
+        "resizable": {
+          "type": "boolean",
+          "description": "Allow manual table resizing by user",
+          "default": true
+        }
+      }
+    },
+    "scaleConfig": {
+      "type": "object",
+      "description": "Map scale control configuration",
+      "additionalProperties": false,
+      "properties": {
+        "scaleGraphic": {
+          "type": "boolean",
+          "description": "Display graphical scale (ruler bar)",
+          "default": true
+        },
+        "scaleNumeric": {
+          "type": "boolean",
+          "description": "Display numeric scale (1:xxxxx ratio)",
+          "default": true
+        },
+        "scaleNumericEditable": {
+          "type": "boolean",
+          "description": "Allow manual zoom by editing numeric scale",
+          "default": true
+        },
+        "scaleNivel": {
+          "type": "boolean",
+          "description": "Display zoom level indicator",
+          "default": true
+        },
+        "position": {
+          "type": "string",
+          "description": "Position on map (Leaflet position)",
+          "enum": ["topleft", "topright", "bottomleft", "bottomright"],
+          "default": "bottomleft"
+        }
+      }
+    },
+    "storage": {
+      "type": "object",
+      "description": "Storage and offline cache configuration",
+      "additionalProperties": false,
+      "properties": {
+        "cache": {
+          "type": "object",
+          "description": "Offline cache configuration",
+          "additionalProperties": false,
+          "properties": {
+            "enableProfileCache": {
+              "type": "boolean",
+              "description": "Enable caching of profile resources (JSON, GeoJSON)",
+              "default": true
+            },
+            "enableTileCache": {
+              "type": "boolean",
+              "description": "Enable caching of basemap tiles",
+              "default": true
+            }
+          }
+        }
+      }
+    },
+    "poiAddConfig": {
+      "type": "object",
+      "description": "POI addition feature configuration",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable/disable POI addition feature",
+          "default": true
+        },
+        "defaultPosition": {
+          "type": "string",
+          "description": "Default method for positioning new POI",
+          "enum": ["geolocation", "placement-mode", "map-center"],
+          "default": "placement-mode"
+        }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "id": "tourism",
+      "label": "Profil tourisme",
+      "description": "Profil optimisé pour les POI touristiques",
+      "version": "3.0.0",
+      "Files": {
+        "taxonomyFile": "taxonomy.json",
+        "themesFile": "themes.json",
+        "layersFile": "layers.json"
+      },
+      "ui": {
+        "theme": "light",
+        "language": "fr",
+        "showLayerManager": true,
+        "showFilterPanel": true
+      },
+      "basemaps": {
+        "street": {
+          "id": "street",
+          "label": "Street",
+          "url": "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+          "attribution": "&copy; OpenStreetMap contributors",
+          "defaultBasemap": true
+        }
+      }
+    }
+  ]
+}

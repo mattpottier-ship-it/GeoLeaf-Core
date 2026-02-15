@@ -1,0 +1,29 @@
+{
+  "id": "zones_de_conservation_wdpa",
+  "label": "Zones de conservation WDPA",
+  "zIndex": 51,
+  "geometry": "polygon",
+  "data": {
+    "directory": "data",
+    "file": "zones_de_conservation_wdpa.geojson"
+  },
+  "styles": {
+    "directory": "styles",
+    "default": "defaut.json",
+    "available": [
+      {
+        "id": "defaut",
+        "label": "défaut",
+        "file": "defaut.json"
+      }
+    ]
+  },
+  "table": {
+    "enabled": false
+  },
+  "clustering": {
+    "enabled": false,
+    "maxClusterRadius": 80,
+    "disableClusteringAtZoom": 12
+  }
+}

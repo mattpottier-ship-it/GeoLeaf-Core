@@ -1,0 +1,29 @@
+﻿{
+  "id": "temperature_septembre",
+  "label": "Température - Septembre",
+  "zIndex": 61,
+  "geometry": "polygon",
+  "data": {
+    "directory": "data",
+    "file": "temperature_septembre.geojson"
+  },
+  "styles": {
+    "directory": "styles",
+    "default": "defaut.json",
+    "available": [
+      {
+        "id": "defaut",
+        "label": "défaut",
+        "file": "defaut.json"
+      }
+    ]
+  },
+  "table": {
+    "enabled": false
+  },
+  "clustering": {
+    "enabled": false,
+    "maxClusterRadius": 80,
+    "disableClusteringAtZoom": 12
+  }
+}

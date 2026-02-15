@@ -1,0 +1,197 @@
+{
+  "id": "aires_protegees_nationales_sib",
+  "label": "Parcs nationaux – Aires protégées",
+  "type": "geojson",
+  "geometry": "polygon",
+  "zIndex": 53,
+  "interactiveShape": true,
+
+  "data": {
+    "directory": "data",
+    "file": "aires_protegees_nationales_sib.geojson"
+  },
+
+  "styles": {
+    "directory": "styles",
+    "default": "defaut.json",
+    "available": [
+      {
+        "id": "defaut",
+        "label": "Défaut",
+        "file": "defaut.json"
+      }
+    ]
+  },
+
+  "tooltip": {
+    "mode": "hover",
+    "fields": [
+      {
+        "type": "text",
+        "field": "properties.Name"
+      }
+    ]
+  },
+
+  "popup": {
+    "enabled": true,
+    "fields": [
+      {
+        "type": "image",
+        "field": "attributes.photo",
+        "variant": "hero"
+      },
+      {
+        "type": "text",
+        "field": "properties.Name",
+        "variant": "title"
+      },
+      {
+        "type": "text",
+        "field": "properties.short_desc"
+      },
+      {
+        "type": "badge",
+        "field": "properties.categoryId"
+      },
+      {
+        "type": "badge",
+        "field": "properties.subCategoryId"
+      }
+    ]
+  },
+
+  "sidepanel": {
+    "enabled": true,
+    "detailLayout": [
+      {
+        "type": "image",
+        "label": "Image principale",
+        "field": "attributes.photo",
+        "variant": "hero",
+        "accordion": false,
+        "defaultOpen": false
+      },
+      {
+        "type": "badge",
+        "label": "Catégorie",
+        "field": "properties.categoryId",
+        "style": "category",
+        "accordion": false,
+        "defaultOpen": false
+      },
+      {
+        "type": "badge",
+        "label": "Sous-catégorie",
+        "field": "properties.subCategoryId",
+        "style": "subcategory",
+        "accordion": false,
+        "defaultOpen": false
+      },
+            {
+        "type": "text",
+        "label": "Nom",
+        "field": "properties.Name",
+        "style": "title",
+        "accordion": false,
+        "defaultOpen": false
+      },
+      {
+        "type": "text",
+        "label": "Résumé",
+        "field": "properties.short_desc",
+        "variant": "multiline",
+        "accordion": true,
+        "defaultOpen": true
+      },
+            {
+        "type": "list",
+        "label": "Informations",
+        "field": "properties.informations",
+        "listStyle": "bullet",
+        "accordion": true,
+        "defaultOpen": false
+      },
+      {
+        "type": "list",
+        "label": "Points forts",
+        "field": "properties.highlights",
+        "listStyle": "bullet",
+        "accordion": true,
+        "defaultOpen": false
+      },
+      {
+        "type": "gallery",
+        "label": "Galerie photos",
+        "field": "attributes.gallery",
+        "accordion": true,
+        "defaultOpen": false
+      },
+      {
+        "type": "link",
+        "label": "Site officiel",
+        "field": "properties.link_official",
+        "iconId": "link_external",
+        "accordion": false,
+        "defaultOpen": false
+      },
+      {
+        "type": "link",
+        "label": "Wikipedia",
+        "field": "properties.link_wikipedia",
+        "iconId": "link_external",
+        "accordion": false,
+        "defaultOpen": false
+      },
+      {
+        "type": "tags",
+        "label": "Tags",
+        "field": "properties.tags",
+        "accordion": false,
+        "defaultOpen": false
+      }
+    ]
+  },
+
+  "search": {
+    "enabled": true,
+    "indexingFields": [
+      "properties.Name",
+      "properties.tags",
+      "properties.categoryId",
+      "properties.subCategoryId"
+    ]
+  },
+
+  "table": {
+    "enabled": true,
+    "columns": [
+      {
+        "field": "properties.Name",
+        "label": "Nom",
+        "sortable": true,
+        "width": "60%"
+      },
+      {
+        "field": "properties.categoryId",
+        "label": "Catégorie",
+        "sortable": true,
+        "width": "20%"
+      },
+      {
+        "field": "properties.subCategoryId",
+        "label": "Sous-catégorie",
+        "sortable": true,
+        "width": "20%"
+      }
+    ],
+    "defaultSort": {
+      "field": "properties.Name",
+      "order": "asc"
+    }
+  },
+
+  "clustering": {
+    "enabled": false
+  }
+}

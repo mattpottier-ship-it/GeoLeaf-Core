@@ -1,0 +1,225 @@
+/* =======================================================================
+   GeoLeaf – Fichier de thème centralisé (Theme v1 – Palette BLEUE)
+   -----------------------------------------------------------------------
+   Variante full-blue : UI en tons bleus cohérents en Light & Dark
+   Structure strictement identique au thème alternatif d’origine.
+   ======================================================================= */
+
+/* -----------------------------------------------------------------------
+   Palette par défaut (fallback) – très proche du thème LIGHT bleu
+   ----------------------------------------------------------------------- */
+:root {
+    /* Couleurs générales */
+    --gl-color-bg-page: #ffffff;
+    --gl-color-bg-surface: #e1ecf8;
+    --gl-color-bg-surface-muted: #f3f7ff;
+    --gl-color-bg-overlay: rgba(255, 255, 255, 0.82);
+
+    --gl-color-text-main: #0f172a;
+    --gl-color-text-muted: #64748b;
+    --gl-color-text-inverse: #f9fafb;
+
+    --gl-color-border-soft: rgba(15, 23, 42, 0.08);
+    --gl-color-border-strong: rgba(15, 23, 42, 0.22);
+
+    /* Accent (boutons, icônes, toggles actifs) – BLEU */
+    --gl-color-accent: #2563eb;              /* Bleu principal */
+    --gl-color-accent-soft: rgba(37, 99, 235, 0.16);
+
+    /* POI – palette bleue */
+    --gl-color-poi-fill: #2563eb;            /* Bleu marqueur */
+    --gl-color-poi-stroke: #ffffff;
+    --gl-color-poi-fill-default: #3b82f6;    /* Couleur par défaut si aucune catégorie */
+    --gl-color-poi-stroke-default: #ffffff;  /* Contour par défaut si aucune catégorie */
+
+    /* Badges POI par défaut (bleus) */
+    --gl-color-badge-category-bg: rgba(37, 99, 235, 0.12);
+    --gl-color-badge-category-border: rgba(37, 99, 235, 0.3);
+    --gl-color-badge-subcategory-bg: rgba(15, 23, 42, 0.04);
+    --gl-color-badge-subcategory-border: rgba(15, 23, 42, 0.08);
+
+    /* Panneau latéral POI */
+    --gl-sidepanel-width: 420px;
+
+    /* Itinéraire – bleu contrasté */
+    --gl-color-route-line: #1d4ed8;
+    --gl-color-route-outline: rgba(15, 23, 42, 0.6);
+
+    /* Légende */
+    --gl-color-legend-bg: rgba(255, 255, 255, 0.78);
+    --gl-color-legend-border: rgba(191, 219, 254, 0.9);
+    --gl-color-legend-text: #0f172a;
+
+    /* Popup POI */
+    --gl-color-popup-bg: rgba(255, 255, 255, 0.8);
+    --gl-color-popup-border: rgba(191, 219, 254, 0.9);
+    --gl-color-popup-text: #0f172a;
+    /* Trait sous le titre de la popup POI (fallback ≈ light) */
+    --gl-poi-title-border: #1f2937;
+
+   /* Cluster POI – dégradé bleu */
+    --gl-color-poi-cluster-center: rgba(37, 99, 235, 1.0);
+    --gl-color-poi-cluster-mid: rgba(37, 99, 235, 0.75);
+    --gl-color-poi-cluster-outer: rgba(37, 99, 235, 0.35);
+    --gl-color-poi-cluster-edge: rgba(37, 99, 235, 0.0);
+    --gl-size-poi-cluster: 40px;
+    --gl-color-poi-cluster-text: #0f172a;
+
+    /* Bouton toggle thème (soleil/lune) */
+    --gl-color-theme-toggle-track: #e2e8f0;
+    --gl-color-theme-toggle-thumb: #0f172a;
+
+    /* Focus ring (accessibilité) – Bleu */
+    --gl-color-focus-ring: #2563eb;
+
+    /* Ombres */
+    --gl-shadow-soft: 0 1px 3px rgba(15, 23, 42, 0.12);
+    --gl-shadow-medium: 0 2px 6px rgba(15, 23, 42, 0.18);
+
+    /* Additional theme-aware variables used across the UI */
+    --gl-shadow-panel: -8px 0 30px rgba(15, 23, 42, 0.30);
+    --gl-color-gallery-item-bg: rgba(15, 23, 42, 0.04);
+    --gl-color-accent-contrast: #f9fafb;
+    --gl-color-accent-hover: #1d4ed8;
+
+    /* Aliases utilitaires pour harmoniser toutes les couches UI */
+    --gl-color-text: var(--gl-color-text-main);
+    --gl-color-text-secondary: var(--gl-color-text-muted);
+    --gl-color-border: var(--gl-color-border-soft);
+    --gl-color-border-subtle: var(--gl-color-border-soft);
+    --gl-panel-border: var(--gl-color-border-soft);
+    --gl-color-surface-elevated: var(--gl-color-bg-surface-muted);
+
+    /* Opacités / overlays génériques dérivés du thème */
+    --gl-color-overlay-soft: color-mix(in srgb, var(--gl-color-bg-overlay) 50%, transparent);
+    --gl-color-overlay-strong: color-mix(in srgb, var(--gl-color-bg-overlay) 85%, transparent);
+    --gl-color-overlay-stronger: color-mix(in srgb, var(--gl-color-bg-overlay) 95%, transparent);
+
+    /* Accent en alpha réutilisable (focus, halos) */
+    --gl-color-accent-alpha: color-mix(in srgb, var(--gl-color-accent) 20%, transparent);
+}
+
+/* -----------------------------------------------------------------------
+   Thème LIGHT – appliqué quand le <body> a la classe .gl-theme-light
+   Aussi disponible directement sur .gl-theme-light pour support fullscreen
+   ----------------------------------------------------------------------- */
+body.gl-theme-light,
+.gl-theme-light {
+    --gl-color-bg-page: #ffffff;                 /* Bleu très clair */
+    --gl-color-bg-surface: #f8f8fd;
+    --gl-color-bg-surface-muted: #f8f8fd;
+    --gl-color-bg-overlay: rgba(255, 255, 255, 0.82);
+
+    --gl-color-text-main: #0f172a;
+    --gl-color-text-muted: #64748b;
+    --gl-color-text-inverse: #f9fafb;
+
+    --gl-color-border-soft: rgba(15, 23, 42, 0.08);
+    --gl-color-border-strong: rgba(15, 23, 42, 0.22);
+
+    /* Accent bleu */
+    --gl-color-accent: #2563eb;
+    --gl-color-accent-soft: rgba(37, 99, 235, 0.16);
+
+    /* POI / itinéraire en bleu */
+    --gl-color-poi-fill: #2563eb;
+    --gl-color-poi-stroke: #ffffff;
+    --gl-color-poi-fill-default: #3b82f6;
+    --gl-color-poi-stroke-default: #ffffff;
+
+    --gl-color-route-line: #1d4ed8;
+    --gl-color-route-outline: rgba(15, 23, 42, 0.6);
+
+    --gl-color-legend-bg: rgba(255, 255, 255, 0.8);
+    --gl-color-legend-border: rgba(191, 219, 254, 0.9);
+    --gl-color-legend-text: #0f172a;
+
+    --gl-color-popup-bg: rgba(255, 255, 255, 0.82);
+    --gl-color-popup-border: rgba(191, 219, 254, 0.9);
+    --gl-color-popup-text: #0f172a;
+    /* Gris anthracite en light */
+    --gl-poi-title-border: #1f2937;
+
+    /* Cluster POI light theme – bleu */
+    --gl-color-poi-cluster-center: rgba(37, 99, 235, 1.0);
+    --gl-color-poi-cluster-mid: rgba(37, 99, 235, 0.75);
+    --gl-color-poi-cluster-outer: rgba(37, 99, 235, 0.35);
+    --gl-color-poi-cluster-edge: rgba(37, 99, 235, 0.0);
+    --gl-size-poi-cluster: 40px;
+    --gl-color-poi-cluster-text: #0f172a;
+
+    --gl-color-theme-toggle-track: #e2e8f0;
+    --gl-color-theme-toggle-thumb: #0f172a;
+
+    /* Badges POI – déclinaison bleu */
+    --gl-color-badge-category-bg: rgba(37, 99, 235, 0.16);
+    --gl-color-badge-category-border: rgba(37, 99, 235, 0.35);
+    --gl-color-badge-subcategory-bg: rgba(15, 23, 42, 0.06);
+    --gl-color-badge-subcategory-border: rgba(15, 23, 42, 0.12);
+
+    /* Focus ring (accessibilité) */
+    --gl-color-focus-ring: #2563eb;
+}
+
+/* -----------------------------------------------------------------------
+   Thème DARK – appliqué quand le <body> a la classe .gl-theme-dark
+   Aussi disponible directement sur .gl-theme-dark pour support fullscreen
+   ----------------------------------------------------------------------- */
+body.gl-theme-dark,
+.gl-theme-dark {
+    --gl-color-bg-page: #0a1a33;                /* Navy / Slate très sombre */
+    --gl-color-bg-surface: #0a1a33;
+    --gl-color-bg-surface-muted: #0a1a33;
+    --gl-color-bg-overlay: rgba(15, 23, 42, 0.78);
+
+    --gl-color-text-main: #e5e7eb;
+    --gl-color-text-muted: #9ca3af;
+    --gl-color-text-inverse: #020617;
+
+    --gl-color-border-soft: rgba(148, 163, 184, 0.35);
+    --gl-color-border-strong: rgba(148, 163, 184, 0.55);
+
+    /* POI / itinéraire bleus, plus lumineux pour le dark */
+    --gl-color-poi-fill: #3b82f6;
+    --gl-color-poi-stroke: #020617;
+    --gl-color-poi-fill-default: #60a5fa;
+    --gl-color-poi-stroke-default: #020617;
+    --gl-color-border-strong: rgba(148, 163, 184, 0.55);
+
+    /* Accent bleu adouci pour le dark */
+    --gl-color-accent: #38bdf8;
+    --gl-color-accent-soft: rgba(56, 189, 248, 0.22);
+
+    --gl-color-route-line: #60a5fa;
+    --gl-color-route-outline: rgba(15, 23, 42, 0.9);
+
+    --gl-color-legend-bg: rgba(15, 23, 42, 0.82);
+    --gl-color-legend-border: rgba(30, 64, 175, 0.9);
+    --gl-color-legend-text: #e5e7eb;
+
+    --gl-color-popup-bg: rgba(15, 23, 42, 0.86);
+    --gl-color-popup-border: rgba(30, 64, 175, 0.9);
+    --gl-color-popup-text: #e5e7eb;
+    /* Blanc en dark */
+    --gl-poi-title-border: #e5e7eb;
+
+    /* Cluster POI dark theme – bleu */
+    --gl-color-poi-cluster-center: rgba(56, 189, 248, 1.0);
+    --gl-color-poi-cluster-mid: rgba(56, 189, 248, 0.8);
+    --gl-color-poi-cluster-outer: rgba(56, 189, 248, 0.4);
+    --gl-color-poi-cluster-edge: rgba(56, 189, 248, 0.0);
+    --gl-size-poi-cluster: 40px;
+    --gl-color-poi-cluster-text: #020617;
+
+    --gl-color-theme-toggle-track: #111827;
+    --gl-color-theme-toggle-thumb: #e5e7eb;
+
+    /* Badges POI – déclinaison bleue en dark */
+    --gl-color-badge-category-bg: rgba(37, 99, 235, 0.45);
+    --gl-color-badge-category-border: rgba(37, 99, 235, 0.75);
+    --gl-color-badge-subcategory-bg: rgba(15, 23, 42, 0.65);
+    --gl-color-badge-subcategory-border: rgba(15, 23, 42, 0.9);
+
+    /* Focus ring (accessibilité) - identique mais bleu */
+    --gl-color-focus-ring: #38bdf8;
+}

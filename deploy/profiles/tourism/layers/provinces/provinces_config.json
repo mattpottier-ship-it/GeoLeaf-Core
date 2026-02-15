@@ -1,0 +1,61 @@
+{
+  "id": "provinces",
+  "label": "Provinces",
+  "zIndex": 43,
+  "geometry": "polygon",
+  "data": {
+    "directory": "data",
+    "file": "provinces.geojson"
+  },
+  "styles": {
+    "directory": "styles",
+    "default": "defaut.json",
+    "available": [
+      {
+        "id": "defaut",
+        "label": "défaut",
+        "file": "defaut.json"
+      },
+      {
+        "id": "par_population",
+        "label": "par population",
+        "file": "par_population.json"
+      }
+    ]
+  },
+  "table": {
+    "enabled": true,
+    "columns": [
+      {
+        "field": "properties.NAM",
+        "label": "Nom",
+        "sortable": true,
+        "width": "40%"
+      },
+      {
+        "field": "properties.GNA",
+        "label": "Type",
+        "sortable": true,
+        "width": "30%"
+      },
+      {
+        "field": "properties.argentina_population_2022",
+        "label": "Population",
+        "sortable": true,
+        "width": "30%"
+      }
+    ],
+    "searchFields": [
+      "properties.NAM"
+    ],
+    "defaultSort": {
+      "field": "properties.NAM",
+      "order": "asc"
+    }
+  },
+  "clustering": {
+    "enabled": false,
+    "maxClusterRadius": 80,
+    "disableClusteringAtZoom": 12
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "id": "pays",
+  "label": "Pays",
+  "zIndex": 40,
+  "geometry": "polyline",
+  "data": {
+    "directory": "data",
+    "file": "pays.geojson"
+  },
+  "styles": {
+    "directory": "styles",
+    "default": "defaut.json",
+    "available": [
+      {
+        "id": "defaut",
+        "label": "défaut",
+        "file": "defaut.json"
+      }
+    ]
+  },
+  "table": {
+    "enabled": false
+  },
+  "clustering": {
+    "enabled": false,
+    "maxClusterRadius": 80,
+    "disableClusteringAtZoom": 12
+  }
+}

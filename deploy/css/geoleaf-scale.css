@@ -1,0 +1,207 @@
+/**
+ * GeoLeaf Scale Control Styles
+ * Style "pill" regroupant : échelle graphique | échelle numérique | niveau de zoom
+ */
+
+/* Conteneur principal : DIV PILL unique pour tous les éléments d'échelle */
+.gl-scale-main-wrapper {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: 22px !important;
+    flex-shrink: 0 !important;
+    background: var(--gl-color-legend-bg) !important;
+    border: 1px solid var(--gl-color-legend-border) !important;
+    border-radius: 11px !important;
+    box-shadow: var(--gl-shadow-soft) !important;
+    overflow: hidden !important;
+    pointer-events: none;
+}
+
+/* Échelle graphique Leaflet */
+.gl-scale-graphic-wrapper {
+    display: flex !important;
+    align-items: flex-end !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 8px !important;
+    pointer-events: auto;
+}
+
+.gl-scale-graphic-wrapper .leaflet-control-scale {
+    margin: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 2px 0 !important;
+    height: 100% !important;
+    display: flex !important;
+    align-items: flex-end !important;
+    box-shadow: none !important;
+}
+
+.gl-scale-graphic-wrapper .leaflet-control-scale-line {
+    border: 2px solid var(--gl-color-text-main) !important;
+    border-top: none !important;
+    background: transparent !important;
+    color: var(--gl-color-text-main) !important;
+    font-size: 10px !important;
+    font-weight: 300 !important;
+    line-height: 1.1 !important;
+    padding: 1px 5px 0 !important;
+    white-space: nowrap !important;
+    text-align: center !important;
+    margin: 0 !important;
+    height: auto !important;
+    box-sizing: border-box !important;
+    text-shadow: none !important;
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+}
+
+/* Séparateur vertical entre échelle graphique et bloc personnalisé */
+.gl-scale-graphic-wrapper::after {
+    content: '';
+    width: 1px;
+    height: 14px;
+    background: var(--gl-color-legend-border);
+    margin-left: 8px;
+    opacity: 0.5;
+}
+
+/* Séparateur avant les coordonnées */
+.gl-scale-separator {
+    width: 1px;
+    height: 14px;
+    background: var(--gl-color-legend-border);
+    opacity: 0.5;
+    flex-shrink: 0;
+    pointer-events: none;
+}
+
+/* Coordonnées intégrées dans le wrapper */
+.gl-scale-coordinates {
+    background: transparent !important;
+    color: var(--gl-color-text-main) !important;
+    border: none !important;
+    padding: 0 10px !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    margin: 0 !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    display: flex !important;
+    align-items: center !important;
+    height: 100% !important;
+    flex-shrink: 0 !important;
+    pointer-events: auto;
+}
+
+/* Bloc personnalisé (échelle numérique + zoom) */
+.gl-scale-control {
+    background: transparent !important;
+    color: var(--gl-color-legend-text) !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 10px !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 10px !important;
+    height: 100% !important;
+    font-size: 10px !important;
+    font-family: monospace !important;
+    white-space: nowrap !important;
+    margin: 0 !important;
+    flex-shrink: 0 !important;
+    pointer-events: auto;
+}
+
+/* Échelle numérique */
+.gl-scale-numeric {
+    background: transparent !important;
+    color: var(--gl-color-text-main) !important;
+    border: none !important;
+    padding: 0 !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    margin: 0 !important;
+    line-height: 1 !important;
+    user-select: none !important;
+}
+
+/* Échelle numérique éditable - conteneur */
+.gl-scale-numeric-editable {
+    display: inline-flex !important;
+    align-items: center !important;
+    position: relative !important;
+    gap: 0 !important;
+}
+
+/* Préfixe "1:" de l'échelle */
+.gl-scale-prefix {
+    background: transparent !important;
+    color: var(--gl-color-text-main) !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    line-height: 1 !important;
+    user-select: none !important;
+}
+
+/* Échelle numérique cliquable (span) */
+.gl-scale-numeric-clickable {
+    background: transparent !important;
+    color: var(--gl-color-text-main) !important;
+    border: none !important;
+    padding: 0 !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    margin: 0 !important;
+    line-height: 1 !important;
+    cursor: pointer !important;
+    text-decoration: underline !important;
+    user-select: none !important;
+    transition: opacity 0.2s ease !important;
+}
+
+.gl-scale-numeric-clickable:hover {
+    opacity: 0.7 !important;
+}
+
+/* Input d'échelle numérique */
+.gl-scale-numeric-input {
+    font-family: monospace !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    padding: 2px 4px !important;
+    border: 1px solid var(--gl-color-border-soft, #ddd) !important;
+    border-radius: 3px !important;
+    background: var(--gl-color-bg-surface, #fff) !important;
+    color: var(--gl-color-text-main) !important;
+    width: 80px !important;
+}
+
+/* Badge de zoom */
+.gl-zoom-badge {
+    background: transparent !important;
+    color: var(--gl-color-text-main) !important;
+    border: none !important;
+    padding: 0 !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    margin: 0 !important;
+    line-height: 1 !important;
+}
+
+/* Séparateur entre les éléments */
+.gl-scale-control > *:not(:last-child)::after {
+    content: '•';
+    margin-left: 8px;
+    opacity: 0.4;
+    font-weight: normal;
+}

@@ -1,0 +1,518 @@
+@import url("./geoleaf-theme.css");
+
+/*!
+ * GeoLeaf Core – Thème global (Light/Dark) + Header
+ * --------------------------------------------------
+ * - Gère les couleurs de fond, textes, liens selon le thème (via variables CSS)
+ * - Style le header (logo, titre, actions)
+ * - Boutons de zoom synchronisés avec le thème
+ * - Le bouton de thème (toggle) est désormais géré dans geoleaf-ui.css
+ */
+
+/* Reset de base */
+html,
+body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+/* Typo générique (peut être adaptée plus tard) */
+body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+}
+
+/* -----------------------------------------------------
+   Thèmes Light / Dark – Niveau global
+----------------------------------------------------- */
+
+body.gl-theme-light,
+body.gl-theme-dark {
+    background-color: var(--gl-color-bg-page);
+    color: var(--gl-color-text-main);
+}
+
+/* Le conteneur principal prend toute la hauteur de la fenêtre
+   (la mise en page fine est gérée dans la démo ou dans d’autres CSS). */
+.gl-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* -----------------------------------------------------
+   Header GeoLeaf
+----------------------------------------------------- */
+
+.gl-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.25rem;
+    box-sizing: border-box;
+
+    background: var(--gl-color-bg-surface);
+    color: var(--gl-color-text-main);
+    border-bottom: 1px solid var(--gl-color-border-soft);
+    box-shadow: var(--gl-shadow-soft);
+}
+
+.gl-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* Logo  "GL" – couleurs dérivées des variables de texte (inverse) */
+.gl-logo {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 0.05em;
+
+    color: var(--gl-color-text-inverse);
+}
+
+/* Titre principal + sous-titre */
+.gl-title {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.gl-title-main {
+    font-size: 1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.gl-title-sub {
+    font-size: 0.8rem;
+    opacity: 0.8;
+}
+
+/* Zone actions header (boutons à droite) */
+.gl-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* -----------------------------------------------------
+   Boutons de zoom — s'adaptent automatiquement au thème
+----------------------------------------------------- */
+
+/* Reset neutre (on retire juste la bordure / ombre par défaut Leaflet)
+   !important justifié : nécessaire pour outrepasser les styles Leaflet par défaut
+   qui utilisent eux-mêmes !important dans leur lib CSS */
+.leaflet-control-zoom {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    border-radius: 0 !important;   /* évite l'arrondi du conteneur */
+    overflow: visible !important;  /* évite toute découpe résiduelle */
+}
+
+/* Positionnement standard en haut à gauche (margin accordée avec le header) */
+.leaflet-top.leaflet-left .leaflet-control-zoom {
+    margin-top: 1rem;
+    margin-left: 1rem;
+}
+
+/* Style de base — toujours visibles même si la classe de thème n’est pas encore appliquée */
+.leaflet-control-zoom a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 32px;
+    height: 32px;
+    line-height: 32px;
+    text-align: center;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+
+    border: none;
+    /* pas de border-radius comme souhaité */
+    border-radius: 0;
+
+    /* Couleurs 100 % pilotées par les variables de thème */
+    background-color: var(--gl-color-bg-surface);
+    color: var(--gl-color-text-main);
+
+    transition:
+        background-color 0.15s ease,
+        color 0.15s ease,
+        box-shadow 0.15s ease,
+        transform 0.12s ease;
+}
+
+/* Séparation visuelle entre + et - */
+.leaflet-control-zoom a + a {
+    margin-top: 0.35rem; /* espace entre les deux boutons */
+}
+
+/* On peut supprimer le séparateur interne si tu veux une vraie “coupure” */
+.leaflet-control-zoom-in {
+    border-bottom: none;
+}
+
+/* Adaptation au thème (réutilise les mêmes variables, pour cohérence) */
+body.gl-theme-light .leaflet-control-zoom a {
+    background-color: var(--gl-color-bg-surface);
+    color: var(--gl-color-text-main);
+}
+
+body.gl-theme-dark .leaflet-control-zoom a {
+    background-color: var(--gl-color-bg-surface);
+    color: var(--gl-color-text-main);
+}
+
+/* Hover : légère élévation et ombre, cohérente avec le reste de l'UI */
+body.gl-theme-light .leaflet-control-zoom a:hover,
+body.gl-theme-dark .leaflet-control-zoom a:hover {
+    background-color: var(--gl-color-bg-surface-muted);
+    color: var(--gl-color-text-main);
+    box-shadow: var(--gl-shadow-medium);
+    transform: translateY(-1px);
+}
+
+/* -----------------------------------------------------
+   Bouton Plein Écran — Repositionné à DROITE de la carte
+----------------------------------------------------- */
+
+/* Contrôle Leaflet pour le plein écran
+   !important justifié : nécessaire pour outrepasser les styles Leaflet par défaut */
+.leaflet-control-fullscreen {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+}
+
+/* Positionnement à GAUCHE : sous les contrôles de zoom */
+.leaflet-top.leaflet-right .leaflet-control-fullscreen,
+.leaflet-top.leaflet-left .leaflet-control-fullscreen {
+    margin-top: 0.5rem;
+    margin-left: 1rem;
+    margin-bottom: 0;
+}
+
+/* Le bouton lui-même */
+.leaflet-control-fullscreen a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 32px;
+    height: 32px;
+    line-height: 32px;
+    text-align: center;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+
+    border: none;
+    border-radius: 0;
+
+    background-color: var(--gl-color-bg-surface);
+    color: var(--gl-color-text-main);
+
+    transition:
+        background-color 0.15s ease,
+        color 0.15s ease,
+        box-shadow 0.15s ease,
+        transform 0.12s ease;
+}
+
+/* Hover cohérent avec les boutons de zoom */
+body.gl-theme-light .leaflet-control-fullscreen a:hover,
+body.gl-theme-dark .leaflet-control-fullscreen a:hover,
+.gl-theme-light .leaflet-control-fullscreen a:hover,
+.gl-theme-dark .leaflet-control-fullscreen a:hover {
+    background-color: var(--gl-color-bg-surface-muted);
+    color: var(--gl-color-text-main);
+    box-shadow: var(--gl-shadow-medium);
+    transform: translateY(-1px);
+}
+
+.leaflet-control-fullscreen a:active {
+    transform: translateY(0);
+}
+
+/* Fullscreen active state */
+.leaflet-control-fullscreen a.is-fullscreen {
+    background-color: var(--gl-color-bg-surface) !important;
+    color: var(--gl-color-text-main) !important;
+}
+
+/* Force le recalcul des couleurs selon le thème */
+body.gl-theme-light .leaflet-control-fullscreen a.is-fullscreen,
+.gl-theme-light .leaflet-control-fullscreen a.is-fullscreen {
+    background-color: var(--gl-color-bg-surface) !important;
+    color: var(--gl-color-text-main) !important;
+}
+
+body.gl-theme-dark .leaflet-control-fullscreen a.is-fullscreen,
+.gl-theme-dark .leaflet-control-fullscreen a.is-fullscreen {
+    background-color: var(--gl-color-bg-surface) !important;
+    color: var(--gl-color-text-main) !important;
+}
+
+/* Hover en mode fullscreen */
+body.gl-theme-light .leaflet-control-fullscreen a.is-fullscreen:hover,
+body.gl-theme-dark .leaflet-control-fullscreen a.is-fullscreen:hover,
+.gl-theme-light .leaflet-control-fullscreen a.is-fullscreen:hover,
+.gl-theme-dark .leaflet-control-fullscreen a.is-fullscreen:hover {
+    background-color: var(--gl-color-bg-surface-muted) !important;
+    color: var(--gl-color-text-main) !important;
+}
+
+/* ========================================================================== */
+/* GEOLOCATION CONTROL                                                        */
+/* ========================================================================== */
+
+/* Contrôle Leaflet pour la géolocalisation
+   !important justifié : nécessaire pour outrepasser les styles Leaflet par défaut */
+.leaflet-control-geolocation {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+}
+
+/* Positionnement à GAUCHE : sous le bouton plein écran */
+.leaflet-top.leaflet-left .leaflet-control-geolocation {
+    margin-top: 0.5rem;
+    margin-left: 1rem;
+    margin-bottom: 0;
+}
+
+/* Le bouton lui-même */
+.leaflet-control-geolocation a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 32px;
+    height: 32px;
+    line-height: 32px;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+
+    border: none;
+    border-radius: 0;
+
+    background-color: var(--gl-color-bg-surface);
+    color: var(--gl-color-text-main);
+
+    transition:
+        background-color 0.15s ease,
+        color 0.15s ease,
+        box-shadow 0.15s ease,
+        transform 0.12s ease;
+}
+
+/* Hover cohérent avec les boutons de zoom */
+body.gl-theme-light .leaflet-control-geolocation a:hover,
+body.gl-theme-dark .leaflet-control-geolocation a:hover,
+.gl-theme-light .leaflet-control-geolocation a:hover,
+.gl-theme-dark .leaflet-control-geolocation a:hover {
+    background-color: var(--gl-color-bg-surface-muted);
+    color: var(--gl-color-text-main);
+    box-shadow: var(--gl-shadow-medium);
+    transform: translateY(-1px);
+}
+
+.leaflet-control-geolocation a:active {
+    transform: translateY(0);
+}
+
+/* Icône SVG de géolocalisation */
+.leaflet-control-geolocation a svg {
+    display: block;
+}
+
+/* État de chargement (en cours de localisation) */
+.leaflet-control-geolocation a.is-locating {
+    opacity: 0.6;
+}
+
+.leaflet-control-geolocation a.is-locating svg {
+    animation: gl-geolocation-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes gl-geolocation-pulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(0.9);
+    }
+}
+
+/* État après localisation réussie (temporaire - 2 secondes) */
+.leaflet-control-geolocation a.is-located {
+    background-color: var(--gl-color-accent) !important;
+    color: var(--gl-color-text-inverse) !important;
+}
+
+body.gl-theme-light .leaflet-control-geolocation a.is-located,
+body.gl-theme-dark .leaflet-control-geolocation a.is-located,
+.gl-theme-light .leaflet-control-geolocation a.is-located,
+.gl-theme-dark .leaflet-control-geolocation a.is-located {
+    background-color: var(--gl-color-accent) !important;
+    color: var(--gl-color-text-inverse) !important;
+}
+
+/* État actif (géolocalisation en mode tracking continu ON) */
+.leaflet-control-geolocation a.is-active {
+    background-color: var(--gl-color-accent) !important;
+    color: var(--gl-color-text-inverse) !important;
+    box-shadow: 0 0 0 2px var(--gl-color-accent-soft);
+}
+
+body.gl-theme-light .leaflet-control-geolocation a.is-active,
+body.gl-theme-dark .leaflet-control-geolocation a.is-active,
+.gl-theme-light .leaflet-control-geolocation a.is-active,
+.gl-theme-dark .leaflet-control-geolocation a.is-active {
+    background-color: var(--gl-color-accent) !important;
+    color: var(--gl-color-text-inverse) !important;
+    box-shadow: 0 0 0 2px var(--gl-color-accent-soft);
+}
+
+/* Animation subtile pour indiquer que le tracking est actif */
+.leaflet-control-geolocation a.is-active svg {
+    animation: gl-geolocation-active-pulse 2s ease-in-out infinite;
+}
+
+@keyframes gl-geolocation-active-pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* S'assurer que les boutons retournent aux bonnes couleurs après les états temporaires */
+body.gl-theme-light .leaflet-control-geolocation a:not(.is-located):not(.is-locating),
+.gl-theme-light .leaflet-control-geolocation a:not(.is-located):not(.is-locating) {
+    background-color: var(--gl-color-bg-surface);
+    color: var(--gl-color-text-main);
+}
+
+body.gl-theme-dark .leaflet-control-geolocation a:not(.is-located):not(.is-locating),
+.gl-theme-dark .leaflet-control-geolocation a:not(.is-located):not(.is-locating) {
+    background-color: var(--gl-color-bg-surface);
+    color: var(--gl-color-text-main);
+}
+
+body.gl-theme-light .leaflet-control-fullscreen a:not(.is-fullscreen),
+.gl-theme-light .leaflet-control-fullscreen a:not(.is-fullscreen) {
+    background-color: var(--gl-color-bg-surface);
+    color: var(--gl-color-text-main);
+}
+
+body.gl-theme-dark .leaflet-control-fullscreen a:not(.is-fullscreen),
+.gl-theme-dark .leaflet-control-fullscreen a:not(.is-fullscreen) {
+    background-color: var(--gl-color-bg-surface);
+    color: var(--gl-color-text-main);
+}
+
+/* ========================================================================== */
+/* USER LOCATION MARKER                                                       */
+/* ========================================================================== */
+
+/* Marqueur de position utilisateur */
+.gl-user-location-marker {
+    background: transparent !important;
+    border: none !important;
+}
+
+.gl-user-location-dot {
+    width: 16px;
+    height: 16px;
+    background: var(--gl-color-accent);
+    border: 3px solid var(--gl-color-text-inverse);
+    border-radius: 50%;
+    box-shadow: var(--gl-shadow-medium);
+    animation: gl-user-location-appear 0.3s ease-out;
+}
+
+@keyframes gl-user-location-appear {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Cercle de précision */
+.gl-user-location-accuracy {
+    pointer-events: none;
+}
+
+/* ========================================================================== */
+/* FULLSCREEN MODE SUPPORT                                                    */
+/* ========================================================================== */
+
+/* En mode plein écran, .gl-main doit être positionné en relatif pour que
+   les panneaux avec position: absolute fonctionnent correctement */
+.gl-main:fullscreen {
+    position: relative;
+}
+
+/* Support pour les préfixes navigateurs */
+.gl-main:-webkit-full-screen {
+    position: relative;
+}
+
+.gl-main:-moz-full-screen {
+    position: relative;
+}
+
+.gl-main:-ms-fullscreen {
+    position: relative;
+}
+
+/* Les panneaux latéraux passent en position absolute en mode plein écran */
+.gl-main:fullscreen #gl-filter-panel.gl-filter-panel,
+.gl-main:-webkit-full-screen #gl-filter-panel.gl-filter-panel,
+.gl-main:-moz-full-screen #gl-filter-panel.gl-filter-panel,
+.gl-main:-ms-fullscreen #gl-filter-panel.gl-filter-panel {
+    position: absolute;
+}
+
+.gl-main:fullscreen .gl-poi-sidepanel,
+.gl-main:-webkit-full-screen .gl-poi-sidepanel,
+.gl-main:-moz-full-screen .gl-poi-sidepanel,
+.gl-main:-ms-fullscreen .gl-poi-sidepanel {
+    position: absolute;
+}
+
+.gl-main:fullscreen .gl-poi-sidepanel-overlay,
+.gl-main:-webkit-full-screen .gl-poi-sidepanel-overlay,
+.gl-main:-moz-full-screen .gl-poi-sidepanel-overlay,
+.gl-main:-ms-fullscreen .gl-poi-sidepanel-overlay {
+    position: absolute;
+}
+

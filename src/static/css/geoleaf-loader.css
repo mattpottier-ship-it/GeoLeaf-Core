@@ -1,0 +1,67 @@
+/* ======================================================================
+   GeoLeaf – Loader / Spinner
+   Plein écran, masqué automatiquement par GeoLeaf.boot() via geoleaf:map:ready
+   ====================================================================== */
+
+#gl-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--gl-color-bg-page, #1a1a2e);
+}
+
+#gl-loader::after {
+    content: '';
+    width: 48px;
+    height: 48px;
+    border: 4px solid var(--gl-color-border-soft, rgba(255, 255, 255, .15));
+    border-top-color: var(--gl-color-accent, #4fc3f7);
+    border-radius: 50%;
+    animation: gl-spin .7s linear infinite;
+}
+
+@keyframes gl-spin {
+    to { transform: rotate(360deg); }
+}
+
+#gl-loader.gl-loader--fade {
+    opacity: 0;
+    transition: opacity 0.35s ease;
+}
+
+/* ======================================================================
+   Toggle Dark/Light — bouton fixé sur la carte (page démo)
+   ====================================================================== */
+
+.gl-theme-toggle--map {
+    position: fixed;
+    top: 80px;
+    right: 10px;
+    z-index: 1000;
+    width: 44px;
+    height: 28px;
+    padding: 4px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: right 0.28s ease, box-shadow 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+body.gl-theme-dark .gl-theme-toggle--map {
+    background: rgba(43, 43, 43, 0.9);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.gl-theme-toggle--map:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Décaler le bouton quand le panneau de détail est ouvert */
+body.gl-poi-sidepanel-open .gl-theme-toggle--map {
+    right: calc(420px + 10px);
+}

@@ -1,0 +1,141 @@
+{
+  "id": "hebergements",
+  "label": "Hébergements",
+  "zIndex": 96,
+  "geometry": "point",
+  "interactiveShape": true,
+  "showIconsOnMap": true,
+  "data": {
+    "directory": "data",
+    "file": "hebergements.geojson"
+  },
+  "styles": {
+    "directory": "styles",
+    "default": "defaut.json",
+    "available": [
+      {
+        "id": "defaut",
+        "label": "défaut",
+        "file": "defaut.json"
+      }
+    ]
+  },
+  "tooltip": {
+    "mode": "hover",
+    "fields": [
+      {
+        "type": "text",
+        "field": "properties.name"
+      }
+    ]
+  },
+  "popup": {
+    "enabled": true,
+    "fields": [
+      {
+        "type": "text",
+        "field": "properties.name",
+        "variant": "title"
+      },
+      {
+        "type": "text",
+        "label": "Type",
+        "field": "properties.fclass"
+      },
+      {
+        "type": "text",
+        "label": "Catégorie",
+        "field": "properties.categoryId"
+      },
+      {
+        "type": "text",
+        "label": "Sous-catégorie",
+        "field": "properties.subcategoryId"
+      }
+    ]
+  },
+  "sidepanel": {
+    "enabled": true,
+    "detailLayout": [
+      {
+        "type": "text",
+        "label": "Nom",
+        "field": "properties.name",
+        "variant": "short",
+        "style": "title",
+        "accordion": false,
+        "defaultOpen": false,
+        "search": true
+      },
+      {
+        "type": "text",
+        "label": "Type",
+        "field": "properties.fclass",
+        "accordion": false,
+        "defaultOpen": false
+      },
+      {
+        "type": "text",
+        "label": "Catégorie",
+        "field": "properties.categoryId",
+        "accordion": false,
+        "defaultOpen": false
+      },
+      {
+        "type": "text",
+        "label": "Sous-catégorie",
+        "field": "properties.subcategoryId",
+        "accordion": false,
+        "defaultOpen": false
+      }
+    ]
+  },
+  "search": {
+    "enabled": true,
+    "indexingFields": [
+      "properties.name",
+      "properties.fclass"
+    ]
+  },
+  "table": {
+    "enabled": true,
+    "columns": [
+      {
+        "field": "properties.name",
+        "label": "Nom",
+        "sortable": true,
+        "width": "40%"
+      },
+      {
+        "field": "properties.fclass",
+        "label": "Type",
+        "sortable": true,
+        "width": "20%"
+      },
+      {
+        "field": "properties.categoryId",
+        "label": "Catégorie",
+        "sortable": true,
+        "width": "20%"
+      },
+      {
+        "field": "properties.subcategoryId",
+        "label": "Sous-catégorie",
+        "sortable": true,
+        "width": "20%"
+      }
+    ],
+    "searchFields": [
+      "properties.name"
+    ],
+    "defaultSort": {
+      "field": "properties.name",
+      "order": "asc"
+    }
+  },
+  "clustering": {
+    "enabled": true,
+    "maxClusterRadius": 80,
+    "disableClusteringAtZoom": 12
+  }
+}
