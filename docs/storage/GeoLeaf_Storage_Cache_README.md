@@ -1,9 +1,10 @@
 ﻿# 💾 GeoLeaf Storage & Cache - Documentation Avancée
 
-**Modules** : `GeoLeaf.CacheManager`, `GeoLeaf.StorageDB`, `GeoLeaf.Storage.Compression`, `GeoLeaf.Storage.CachingStrategy`  
+**Modules** : `GeoLeaf.CacheManager`, `GeoLeaf.StorageDB`, `GeoLeaf.SyncManager`, `GeoLeaf.OfflineDetector`  
+**Modules future-ready** : `GeoLeaf.Storage.Compression`, `GeoLeaf.Storage.CachingStrategy`  
 **Version** : 3.2.0  
-**Fichiers source** : `src/static/js/storage/*.js` (13 fichiers)  
-**Dernière mise à jour** : 14 février 2026
+**Fichiers source** : `src/static/js/storage/` (13 root + 10 cache/ + 4 layer-selector/ + 5 db/ = 32 fichiers)  
+**Dernière mise à jour** : 15 février 2026
 
 ---
 
@@ -22,30 +23,42 @@ Le système de **Storage & Cache** GeoLeaf fournit une solution complète pour :
 ## 🗂️ Architecture du système de storage
 
 ```
-storage/
+storage/                            (13 fichiers root)
 ├── cache-manager.js            // Orchestrateur principal du cache profils
 ├── indexeddb.js                // Gestion IndexedDB (couches, préférences, sync)
-├── compression.js              // Compression/décompression (gzip/deflate)
-├── cache-strategy.js           // Stratégies cache (LRU, LFU, TTL, FIFO)
 ├── cache-control.js            // Contrôle manuel du cache (UI)
 ├── offline-detector.js         // Détection état online/offline
 ├── sync-manager.js             // Gestion synchro online ↔ offline
 ├── telemetry.js                // Collecte statistiques usage
-├── validators.js               // Validation ressources cache
-├── idb-helper.js               // Helpers IndexedDB (transactions, errors)
+├── schema-validators.js        // Validation schémas IndexedDB
+├── idb-helper.js               // Helpers IndexedDB (promisify, transactions)
 ├── storage-helper.js           // Helpers storage (quota, cleanup)
-├── cache/                      // Modules cache spécialisés
-│   ├── downloader-v3.js        // Téléchargement parallèle ressources
+├── sw.js                       // Service Worker (4 stratégies de cache)
+├── sw-register.js              // Enregistrement/mise à jour Service Worker
+├── compression.js              // ⏳ Future-ready — Compression (gzip/deflate)
+├── cache-strategy.js           // ⏳ Future-ready — Stratégies cache (LRU, LFU, TTL, FIFO)
+├── cache/                      // Modules cache spécialisés (10 fichiers)
+│   ├── downloader.js           // Téléchargement parallèle ressources
+│   ├── download-handler.js     // Gestion des téléchargements individuels
+│   ├── fetch-manager.js        // Orchestration des requêtes fetch
+│   ├── retry-handler.js        // Gestion des tentatives de retry
+│   ├── progress-tracker.js     // Suivi de progression
 │   ├── storage.js              // Sauvegarde IndexedDB
 │   ├── calculator.js           // Calcul taille cache
 │   ├── validator.js            // Validation ressources
 │   ├── metrics.js              // Métriques performance
-│   └── resource-enumerator.js  // Énumération ressources profil
-└── db/                         // Modules IndexedDB spécialisés
-    ├── layers-module.js        // CRUD couches GeoJSON
-    ├── preferences-module.js   // CRUD préférences utilisateur
-    ├── sync-module.js          // File de synchro offline
-    └── metadata-module.js      // Métadonnées cache
+│   ├── resource-enumerator.js  // Énumération ressources profil
+│   └── layer-selector/         // Sélection de couches pour cache (4 fichiers)
+│       ├── core.js             // Logique principale sélection
+│       ├── data-fetching.js    // Récupération données couches
+│       ├── row-rendering.js    // Rendu des lignes de sélection
+│       └── selection-cache.js  // Cache de sélection
+└── db/                         // Modules IndexedDB spécialisés (5 fichiers)
+    ├── layers.js               // CRUD couches GeoJSON
+    ├── preferences.js          // CRUD préférences utilisateur
+    ├── sync.js                 // File de synchro offline
+    ├── backups.js              // Sauvegardes de données
+    └── images.js               // Stockage images/icônes
 ```
 
 ---
@@ -359,6 +372,8 @@ console.log('Dernière synchro:', new Date(lastSync));
 
 ## 🧩 Module 3 : `GeoLeaf.Storage.Compression` (compression.js)
 
+> ⏳ **Future-ready** : Ce module est implémenté et présent dans le code source mais **n'est pas encore bundlé** dans `geoleaf-storage.plugin.js`. Il sera activé dans une prochaine version.
+
 ### Rôle
 
 Compression/décompression des données cachées. **Réduit la taille de 40-60%** pour les données JSON.
@@ -463,6 +478,8 @@ console.log(should); // true si > minSize
 ---
 
 ## 🧩 Module 4 : `GeoLeaf.Storage.CachingStrategy` (cache-strategy.js)
+
+> ⏳ **Future-ready** : Ce module est implémenté et présent dans le code source mais **n'est pas encore bundlé** dans `geoleaf-storage.plugin.js`. Il sera activé dans une prochaine version.
 
 ### Rôle
 
@@ -758,6 +775,66 @@ console.log(stats);
 
 ---
 
+## 🧩 Module 8 : Service Worker (sw.js + sw-register.js)
+
+### Rôle
+
+Le **Service Worker** intercepte les requêtes réseau pour fournir un cache automatique des assets et un fonctionnement offline transparent.
+
+> ✅ **Implémenté** : Le Service Worker est fonctionnel depuis la version 3.2.0.
+
+### Stratégies de cache (sw.js)
+
+| Stratégie | Usage | Description |
+|-----------|-------|-------------|
+| `cache-first` | Tuiles, icônes | Cache local prioritaire, réseau en fallback |
+| `network-first` | API, GeoJSON | Réseau prioritaire, cache en fallback |
+| `stale-while-revalidate` | Config, profils | Réponse cache immédiate + mise à jour en arrière-plan |
+| `network-only` | Auth, sync | Toujours réseau, pas de cache |
+
+### API (sw-register.js)
+
+#### `register(options)`
+
+Enregistre le Service Worker.
+
+```javascript
+await GeoLeaf.Storage.ServiceWorker.register({
+  scope: '/',
+  updateOnReload: true
+});
+```
+
+#### `update()`
+
+Force la vérification de mise à jour du Service Worker.
+
+```javascript
+await GeoLeaf.Storage.ServiceWorker.update();
+```
+
+#### `unregister()`
+
+Désenregistre le Service Worker.
+
+```javascript
+await GeoLeaf.Storage.ServiceWorker.unregister();
+```
+
+### Événement
+
+- `geoleaf:sw:updated` : émis quand une nouvelle version du SW est disponible
+
+```javascript
+document.addEventListener('geoleaf:sw:updated', () => {
+  if (confirm('Nouvelle version disponible. Recharger ?')) {
+    window.location.reload();
+  }
+});
+```
+
+---
+
 ## 💡 Exemples d'intégration
 
 ### Exemple 1 : Cache complet d'un profil
@@ -969,12 +1046,14 @@ if (navigator.storage && navigator.storage.persist) {
 
 ## 🚀 Améliorations futures
 
-### Phase 1 (Q1 2026)
-- [ ] Service Worker pour cache automatique des assets
-- [ ] Background Sync API pour synchro en tâche de fond
+### Phase 1 (Q1 2026) — ✅ Réalisé
+- [x] Service Worker pour cache automatique des assets
+- [x] Background Sync API pour synchro en tâche de fond
 - [ ] Cache Busting intelligent (versioning ressources)
 
 ### Phase 2 (Q2 2026)
+- [ ] Activation `compression.js` (gzip/deflate) dans le bundle plugin
+- [ ] Activation `cache-strategy.js` (LRU, LFU, TTL, FIFO) dans le bundle plugin
 - [ ] Compression Brotli (meilleure que gzip)
 - [ ] Cache prédictif (preload couches adjacentes)
 - [ ] Delta sync (synchro incrémentale, pas full)
@@ -987,5 +1066,6 @@ if (navigator.storage && navigator.storage.persist) {
 ---
 
 **Version** : 3.2.0  
-**Dernière mise à jour** : 19 janvier 2026  
-**Sprint 3** : Documentation complète du système Storage & Cache ✅
+**Dernière mise à jour** : 15 février 2026  
+**Sprint 3** : Documentation complète du système Storage & Cache ✅  
+**Sprint 4** : Service Worker implémenté, layer-selector refactorisé, dead code nettoyé ✅

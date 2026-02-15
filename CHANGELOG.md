@@ -9,6 +9,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [3.2.0] - 2026-02-01
 
+### Added (Sprint 4 — Architecture & Documentation)
+
+- **Plugin documentation**: Created `docs/plugins/GeoLeaf_Plugins_README.md` — complete plugin architecture guide (loading, namespaces, guard system)
+- **Storage deep-dive docs**: Created 3 new docs:
+  - `docs/storage/indexeddb.md` — IndexedDB + IDBHelper (5 stores, 11 methods)
+  - `docs/storage/cache-detailed.md` — Cache system + Service Worker (4 strategies, SW register API)
+  - `docs/storage/offline-detector.md` — Offline detector (events, badge UI, SyncManager integration)
+
+### Changed (Sprint 4)
+
+- **Storage plugin imports**: Added 3 missing imports to `geoleaf-storage.plugin.js`: `idb-helper.js`, `schema-validators.js`, `telemetry.js`
+- **Renamed**: `storage/validators.js` → `storage/schema-validators.js` (resolved namespace conflict with `validators/validators.js`)
+- **Documentation overhaul**: Updated 10 documentation files to reflect current architecture:
+  - `PROJECT_TREE.md` — Fixed 13+ discrepancies (phantom dirs, missing files, wrong filenames)
+  - `ARCHITECTURE_GUIDE.md` — Added plugin architecture, boot system, Service Worker sections
+  - `GeoLeaf_Storage_README.md` — Added `enableServiceWorker` option, db/ sub-modules, plugin status
+  - `GeoLeaf_Storage_Cache_README.md` — Fixed filenames, added layer-selector/, SW Phase 1 marked done
+  - `GeoLeaf_core_README.md` — Added boot system section (src/app/), `GeoLeaf.boot()` guide
+  - `INITIALIZATION_FLOW.md` — Added plugin loading + boot phase, Storage/SW init phase
+  - `INDEX.md` — Added plugin docs links, 3 new storage docs, updated architecture topics
+  - `DEVELOPER_GUIDE.md` — Added `src/plugins/`, `src/app/`, plugin build outputs to project tree
+
+### Removed (Sprint 4 — Dead Code Cleanup)
+
+- **6 dead code files** (~3,310 LOC):
+  - `storage/cache/layer-selector/controller.js` (768 lines) — Sprint 4.2 abandoned class refactor
+  - `storage/cache/layer-selector/data-handler.js` (608 lines)
+  - `storage/cache/layer-selector/event-handler.js` (625 lines)
+  - `storage/cache/layer-selector/renderer.js` (549 lines)
+  - `storage/cache/layer-selector/state-manager.js` (537 lines)
+  - `storage/cache/fetch-pool.js` (223 lines) — replaced by `fetch-manager.js`
+
 ### Security (Phase 1)
 
 - **XSS prevention in filter-panel**: Escaped all dynamic values (`catId`, `cat.label`, `subId`, `sub.label`, `tag`) in `_buildCategoryTreeContent` and `_buildTagsListContent` using a new `esc()` helper based on `GeoLeaf.Security.escapeHtml`

@@ -1,16 +1,18 @@
 # GeoLeaf – Architecture Technique
 
 > **Version**: 3.2.0  
-> **Dernière mise à jour**: 14 février 2026  
-> **Architecture**: Modulaire + Content Builder v1.0.0
+> **Dernière mise à jour**: 15 février 2026  
+> **Architecture**: Modulaire + Plugin System + Content Builder v1.0.0
 
 ## Table des Matières
 
 1. [Architecture modulaire](#1-architecture-modulaire)
-2. [Workflow de chargement](#2-workflow-de-chargement)
-3. [Démo commentée (demo.js)](#3-démo-commentée-demojs)
-4. [Architecture Content Builder](#4-architecture-content-builder) ⭐ **Nouveau v1.0.0**
-5. [Résumé](#5-résumé)
+2. [Architecture Plugin](#2-architecture-plugin)
+3. [Boot System (src/app/)](#3-boot-system-srcapp)
+4. [Workflow de chargement](#4-workflow-de-chargement)
+5. [Service Worker & Offline](#5-service-worker--offline)
+6. [Architecture Content Builder](#6-architecture-content-builder) ⭐ **v1.0.0**
+7. [Résumé](#7-résumé)
 
 ---
 
@@ -32,28 +34,55 @@ GeoLeaf est structuré en modules indépendants, chargés en cascade :
   - **GeoLeaf.POI** : markers, popups, clusters, filtrage.  
   - **GeoLeaf.GeoJSON** : couches externes, polygones, styles dynamiques.  
   - **GeoLeaf.Route** : itinéraires, polylignes, GPX.  
-  - **GeoLeaf.LayerManager** : légendes automatiques ou déclaratives.  
-  - **GeoLeaf.API** : future API interne haut‑niveau.  
+  - **GeoLeaf.LayerManager** : gestionnaire de couches (affichage/masquage).  
+  - **GeoLeaf.Legend** : légendes automatiques ou déclaratives.  
+  - **GeoLeaf.Labels** : système de labels sur la carte.  
+  - **GeoLeaf.ThemeSelector** : sélecteur de thèmes (primaire/secondaire).  
+  - **GeoLeaf.Filters** : filtres dynamiques (catégories, proximité, GPS).  
+  - **GeoLeaf.Table** : affichage tabulaire des données.  
+  - **GeoLeaf.API** : API interne haut‑niveau.  
   - **GeoLeaf.Log** : logging unifié (debug/info/warn/error).
+
+- **Plugins optionnels** (chargés séparément)
+  - **GeoLeaf.Storage** : IndexedDB, cache offline, sync, Service Worker.  
+  - **GeoLeaf.POI.AddForm** : formulaire d’ajout/édition/suppression de POI.
 
 ### Diagramme modulaire
 
 ```
 GeoLeaf (namespace global)
 │
-├── Core
+├── Core             (carte Leaflet, thème)
+├── Config           (JSON, profils, validation)
+├── UI               (boutons, panneaux, notifications)
+│   └── _ContentBuilder  (popups, tooltips, panneaux)
+├── BaseLayers       (fonds de carte)
+├── POI              (markers, popups, clusters)
+├── GeoJSON          (couches, styles)
+├── Route            (itinéraires, GPX)
+├── Legend           (légendes)
+├── Labels           (labels carte)
+├── LayerManager     (gestion couches)
+├── ThemeSelector    (sélecteur thèmes)
+├── Filters          (filtres dynamiques)
+├── Table            (affichage tabulaire)
+├── API              (API haut-niveau)
+├── Log              (logging)
 │
-├── Config
+├── 🔌 Storage (plugin)   ← geoleaf-storage.plugin.js
+│   ├── StorageDB        (IndexedDB, 5 object stores)
+│   ├── IDBHelper        (wrapper promise)
+│   ├── CacheManager     (cache offline profils)
+│   ├── SyncManager      (synchronisation)
+│   ├── OfflineDetector  (détection online/offline)
+│   ├── SWRegister       (Service Worker)
+│   └── Telemetry        (métriques)
 │
-├── UI
-│
-├── BaseLayers
-├── POI
-├── GeoJSON
-├── Route
-├── Legend
-├── API
-└── Log
+└── 🔌 AddPOI (plugin)   ← geoleaf-addpoi.plugin.js
+    ├── AddForm          (formulaire POI)
+    ├── SyncHandler      (pont vers Storage)
+    ├── PlacementMode    (sélection coordonnées)
+    └── ImageUpload      (upload images)
 ```
 
 ---
@@ -133,7 +162,7 @@ Voici le parcours logique exécuté dans la démo de référence :
 
 ---
 
-## 4. Architecture Content Builder
+## 6. Architecture Content Builder
 
 ### Vue d'ensemble (v1.0.0 - Sprint 4.5)
 
@@ -269,7 +298,7 @@ GeoLeaf (namespace global)
 ├── Core
 ├── Config
 ├── UI
-│   └── _ContentBuilder (nouveau v1.0.0)
+│   └── _ContentBuilder (v1.0.0)
 │       ├── Core (helpers, validators, badge resolver)
 │       ├── Templates (14 template builders)
 │       ├── Assemblers (popup, tooltip, panel)
@@ -280,8 +309,25 @@ GeoLeaf (namespace global)
 ├── GeoJSON
 ├── Route
 ├── Legend
+├── Labels
+├── LayerManager
+├── ThemeSelector
+├── Filters
+├── Table
 ├── API
-└── Log
+├── Log
+│
+├── 🔌 Storage (plugin optionnel)
+│   ├── StorageDB + IDBHelper
+│   ├── CacheManager + Downloader
+│   ├── SyncManager + OfflineDetector
+│   ├── SWRegister + sw.js
+│   └── Telemetry + CacheControl
+│
+└── 🔌 AddPOI (plugin optionnel)
+    ├── AddForm (orchestrator + renderers)
+    ├── SyncHandler + PlacementMode
+    └── ImageUpload
 ```
 
 ### Documentation Détaillée
@@ -294,13 +340,15 @@ GeoLeaf (namespace global)
 
 ---
 
-## 5. Résumé
+## 7. Résumé
 
 Ce document fournit :
-- Le **diagramme modulaire** complet de GeoLeaf.  
-- Le **workflow de chargement officiel** (DOM → Config → Core → Modules).  
-- La **logique complète de la démo** pour reproduire ou adapter une intégration.
-- **L'architecture Content Builder v1.0.0** (nouveau - Sprint 4.5).  
+- Le **diagramme modulaire complet** de GeoLeaf (core + plugins).  
+- L'**architecture plugin** et le chargement en 3 étapes.
+- Le **boot system** (`src/app/`) et son flow détaillé.
+- Le **workflow de chargement officiel** (Scripts → Boot → Config → Core → Storage → Modules → Reveal).  
+- Le **système offline** (Service Worker, IndexedDB, OfflineDetector).
+- L'**architecture Content Builder v1.0.0** (Sprint 4.5).  
 
 Il constitue la référence pour l'architecture v3.2.0.
 

@@ -1,12 +1,17 @@
 # GeoLeaf-JS - Arborescence Complète du Projet
 
-**Date**: 14 février 2026  
-**Version**: 3.2.0 (Audit Phases 1-3)
+**Date**: 15 février 2026  
+**Version**: 3.2.0 (Audit Phases 1-3 + Plugin Architecture)
 
 > **Note v3.2.0**: 6 fichiers monolithiques éclatés en 23 sous-modules (voir CHANGELOG.md).
 > Fichiers supprimés: `main.js`, `early-loader.js`, `format-utils.js`.
 > Nouveaux dossiers: `geojson/layer-manager/`, `geojson/loader/`, `themes/theme-applier/`,
-> `config/geoleaf-config/`, `app/`, `storage/cache/layer-selector/`.
+> `config/geoleaf-config/`, `app/`, `storage/cache/layer-selector/`, `plugins/`.
+>
+> **Note v3.2.0 (fév 2026)**: Architecture plugin ajoutée (`src/plugins/`).
+> Nettoyage code mort Sprint 4.2 : suppression de 6 fichiers abandonnés (~3 310 lignes)
+> dans `storage/cache/` (5 fichiers class-based layer-selector + fetch-pool.js).
+> Renommage `storage/validators.js` → `storage/schema-validators.js`.
 
 ---
 
@@ -74,7 +79,6 @@ geoleaf-js/
 ├── 📁 demo/ (5 fichiers)
 ├── 📁 docs/ (25+ sous-dossiers)
 ├── 📁 profiles/ (3 profils configurés)
-├── 📁 public/ (1 Service Worker)
 ├── 📁 schema/ ✅ (7 schemas JSON + README - créés jan 2026)
 ├── 📁 reports/ (12 catégories de rapports)
 ├── 📁 scripts/ (8 scripts automatisation)
@@ -160,14 +164,7 @@ profiles/
 
 ---
 
-## 🌐 public/
 
-```
-public/
-└── sw.js (Service Worker pour cache offline)
-```
-
----
 
 ## 📊 reports/ - Rapports et audits (12 catégories)
 
@@ -195,12 +192,12 @@ reports/
 scripts/
 ├── audit-innerhtml.cjs
 ├── benchmark.cjs
-├── detect-ui-duplicates.py
-├── extract-filter-panel.py
-├── integrate-filter-panel.py
-├── refactor-ui-phase6.py
-├── remove-ui-duplicates.py
-└── smoke-test.cjs
+├── build-deploy.cjs
+├── migrate-legend-structure.cjs
+├── reformat-layer-configs.py
+├── smoke-test.cjs
+├── sync-to-public.ps1
+└── update-layer-labels.py
 ```
 
 ---
@@ -212,14 +209,16 @@ scripts/
 ```
 src/
 ├── app/ ⭐ (v3.2.0 - split de geoleaf.app.js)
-│   ├── helpers.js
-│   ├── init.js
-│   └── boot.js
-├── bundle-entry.js ⭐ (point d'entrée Rollup)
+│   ├── helpers.js (AppLog, getProfilesBasePath, checkPlugins, showNotification)
+│   ├── init.js (initApp — orchestrateur d'initialisation, 648 lignes)
+│   └── boot.js (startApp, GeoLeaf.boot() — API publique)
+├── bundle-entry.js ⭐ (point d'entrée Rollup — bundle core)
 ├── load-modules.js
-├── legend/ (vide - legacy)
+├── plugins/ ⭐ (v3.2.0 - architecture plugin)
+│   ├── geoleaf-storage.plugin.js (~45 imports — Storage, Cache, SW, UI)
+│   └── geoleaf-addpoi.plugin.js (~14 imports — POI Add Form, Sync, Upload)
 └── static/
-    ├── css/ (22 fichiers + components/)
+    ├── css/ (24 fichiers + components/)
     ├── icons/ (logos + profiles/sprites SVG)
     └── js/ (modules JavaScript)
 ```
@@ -409,44 +408,39 @@ static/js/
 │   ├── popup-builder.js
 │   └── style-resolver.js
 │
-├── 📁 storage/ (11+ modules) ⭐
+├── 📁 storage/ (14 modules + cache/ + db/) ⭐
 │   ├── cache-control.js
 │   ├── cache-manager.js
-│   ├── cache-strategy.js
-│   ├── compression.js
-│   ├── idb-helper.js
-│   ├── indexeddb.js
+│   ├── cache-strategy.js ⏳ (future-ready — non bundlé, LRU/LFU/TTL/FIFO)
+│   ├── compression.js ⏳ (future-ready — non bundlé, CompressionStream API)
+│   ├── idb-helper.js (wrapper promise IndexedDB)
+│   ├── indexeddb.js (5 object stores, 507 lignes)
 │   ├── offline-detector.js
+│   ├── schema-validators.js (renommé de validators.js — schemas IDB)
 │   ├── storage-helper.js
+│   ├── sw.js (Service Worker — 4 stratégies de cache, 456 lignes)
+│   ├── sw-register.js (register/update/unregister SW)
 │   ├── sync-manager.js
-│   ├── telemetry.js
-│   ├── validators.js
+│   ├── telemetry.js (métriques performance cache)
 │   │
-│   ├── cache/ (12 modules + 4 sous-modules)
+│   ├── cache/ (11 modules + layer-selector/)
 │   │   ├── calculator.js
 │   │   ├── download-handler.js
 │   │   ├── downloader.js
 │   │   ├── fetch-manager.js
-│   │   ├── fetch-pool.js
 │   │   ├── metrics.js
 │   │   ├── progress-tracker.js
 │   │   ├── resource-enumerator.js
 │   │   ├── retry-handler.js
 │   │   ├── storage.js
 │   │   ├── validator.js
-│   │   ├── layer-selector/ (5 modules MVC)
-│   │   │   ├── controller.js
-│   │   │   ├── data-handler.js
-│   │   │   ├── event-handler.js
-│   │   │   ├── renderer.js
-│   │   │   └── state-manager.js
-│   │   └── layer-selector-cache/ ⭐ (v3.2.0 - split plugin)
-│   │       ├── core.js
-│   │       ├── data-fetching.js
-│   │       ├── row-rendering.js
-│   │       └── selection-cache.js
+│   │   └── layer-selector/ (4 modules — Object.assign pattern)
+│   │       ├── core.js (init, populate, cleanup)
+│   │       ├── data-fetching.js (getLayerGeometryType, estimateSize)
+│   │       ├── row-rendering.js (createLayerRow, createBasemapRow)
+│   │       └── selection-cache.js (loadSelection, saveSelection)
 │   │
-│   └── db/ (5 modules IndexedDB)
+│   └── db/ (5 modules IndexedDB spécialisés)
 │       ├── backups.js
 │       ├── images.js
 │       ├── layers.js
@@ -606,11 +600,13 @@ __tests__/
 - Lazy loading des ressources
 - 10 modules + 4 renderers spécialisés
 
-#### 4. Storage Cache System (Phase 1)
-- Cache avancé avec fetch-pool, retry-handler
-- IndexedDB structuré (5 stores)
-- 29 modules total
-- Layer selector avec MVC pattern
+#### 4. Storage Cache System (Phase 1) + Plugin Architecture (v3.2.0)
+- Architecture plugin : chargement optionnel (`geoleaf-storage.plugin.js`)
+- Service Worker avec 4 stratégies de cache (Cache-First, Network-First, Tile, BG Sync)
+- IndexedDB structuré (5 stores) + IDBHelper (wrapper promise)
+- ~30 modules bundlés dans le plugin Storage
+- Layer selector avec Object.assign pattern (4 modules)
+- 2 modules future-ready non bundlés : `compression.js`, `cache-strategy.js`
 
 ### Modules en cours de modularisation
 
@@ -639,7 +635,9 @@ __tests__/
 - **Rapports**: `<SUJET>_REPORT.md`
 
 ### Points d'entrée
-- **Build CDN**: `src/bundle-entry.js` (Rollup)
+- **Build CDN (core)**: `src/bundle-entry.js` → `dist/geoleaf.umd.js` (Rollup)
+- **Build Plugin Storage**: `src/plugins/geoleaf-storage.plugin.js` → `dist/geoleaf-storage.plugin.js`
+- **Build Plugin AddPOI**: `src/plugins/geoleaf-addpoi.plugin.js` → `dist/geoleaf-addpoi.plugin.js`
 - **Index build**: `src/static/js/index.js`
 - **Démo**: `demo/index.html`
 - **Tests E2E**: `tests/e2e/`
@@ -688,6 +686,6 @@ __tests__/
 
 ---
 
-**Dernière mise à jour**: 14 février 2026  
-**Version**: 3.2.0 (Audit Phases 1-3)  
+**Dernière mise à jour**: 15 février 2026  
+**Version**: 3.2.0 (Audit Phases 1-3 + Plugin Architecture)  
 **Responsable**: Assistant AI + Équipe GeoLeaf

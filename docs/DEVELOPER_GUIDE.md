@@ -1,7 +1,7 @@
 # GeoLeaf Developer Guide
 
 **Version:** 3.2.0  
-**Last Updated:** January 2026  
+**Last Updated:** February 2026  
 **Audience:** Contributors and advanced developers
 
 ---
@@ -58,12 +58,21 @@ This installs:
 ```
 geoleaf-js/
 ├── src/
+│   ├── bundle-entry.js      # Rollup entry point
+│   ├── app/                 # Boot system
+│   │   ├── boot.js          # Main entry — checkPlugins() + geoleaf:ready
+│   │   ├── init.js          # Module initialization
+│   │   └── helpers.js       # Shared utilities (DOM, events)
+│   ├── plugins/             # Plugin entry points
+│   │   ├── geoleaf-storage.plugin.js  # Storage plugin (~45 modules)
+│   │   └── geoleaf-addpoi.plugin.js   # AddPOI plugin (~14 modules)
 │   └── static/
 │       ├── js/              # Source code (200+ modules)
 │       │   ├── geoleaf.api.js      # Entry point
 │       │   ├── geoleaf.core.js     # Core initialization
 │       │   ├── geoleaf.poi.js      # POI module
 │       │   ├── geoleaf.geojson.js  # GeoJSON module
+│       │   ├── storage/            # Storage system (32 files)
 │       │   ├── labels/             # Labels system
 │       │   ├── ui/                 # UI components
 │       │   └── ...
@@ -72,9 +81,11 @@ geoleaf-js/
 │           └── components/         # Component styles
 │
 ├── dist/                    # Build output (generated)
-│   ├── geoleaf.umd.js      # UMD bundle (dev)
-│   ├── geoleaf.min.js      # Minified bundle (prod)
-│   └── geoleaf-main.min.css # Minified CSS
+│   ├── geoleaf.umd.js           # UMD bundle core (dev)
+│   ├── geoleaf.min.js           # Minified core (prod)
+│   ├── geoleaf-storage.plugin.js # Storage plugin bundle
+│   ├── geoleaf-addpoi.plugin.js  # AddPOI plugin bundle
+│   └── geoleaf-main.min.css     # Minified CSS
 │
 ├── __tests__/               # Test files (150+ tests)
 │   ├── setup.js            # Jest setup

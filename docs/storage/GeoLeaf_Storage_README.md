@@ -1,12 +1,14 @@
 ﻿# GeoLeaf.Storage â€“ Documentation du module Storage
 **Version**: 3.2.0  
-**Fichier**: `src/static/js/geoleaf.storage.js` + sous-modules `storage/`  
-**DerniÃ¨re mise Ã  jour**: 19 janvier 2026
+**Fichier**: `src/plugins/geoleaf-storage.plugin.js` + sous-modules `src/static/js/storage/`  
+**Dernière mise à jour**: 15 février 2026
 
 ---
-Le module **GeoLeaf.Storage** fournit une API unifiÃ©e pour la gestion du stockage persistant et du mode offline dans GeoLeaf.
+Le module **GeoLeaf.Storage** est un **plugin optionnel** qui fournit une API unifiée pour la gestion du stockage persistant et du mode offline dans GeoLeaf.
 
-Il orchestrate trois sous-modules principaux :
+> **Plugin** : Ce module est chargé via `geoleaf-storage.plugin.js` et n'est pas inclus dans le bundle principal `geoleaf.umd.js`. Voir [Architecture Plugin](../plugins/GeoLeaf_Plugins_README.md).
+
+Il orchestre les sous-modules suivants :
 - **IndexedDB** : cache persistant des couches et donnÃ©es cartographiques
 - **Cache Manager** : gestion des profils mÃ©tier pour usage offline
 - **Offline Detector** : dÃ©tection de l'Ã©tat de connectivitÃ© et affichage d'un badge
@@ -46,8 +48,7 @@ await GeoLeaf.Storage.init(options);
     - `options.offline` : configuration Offline Detector
       - `showBadge` : afficher le badge offline (dÃ©faut : `true`)
       - `badgePosition` : position du badge (dÃ©faut : `'top-right'`)
-    - `options.enableOfflineDetector` : activer le dÃ©tecteur offline (dÃ©faut : `false`)
-
+    - `options.enableOfflineDetector` : activer le dÃ©tecteur offline (dÃ©faut : `false`)      - `options.enableServiceWorker` : activer le Service Worker pour cache réseau (défaut : `false`)
 - **Retour :**
   - `Promise<boolean>` : `true` si l'initialisation rÃ©ussit
 
@@ -77,7 +78,8 @@ await GeoLeaf.Storage.init({
     showBadge: true,
     badgePosition: 'bottom-left'
   },
-  enableOfflineDetector: true
+enableOfflineDetector: true,
+    enableServiceWorker: true
 });
 ```
 
@@ -343,41 +345,55 @@ offlineProfiles.forEach(profileId => {
 ### 3.1 Modules composants
 
 ```
-GeoLeaf.Storage (API publique)
-    â”œâ”€â”€ GeoLeaf._StorageDB (IndexedDB)
-    â”‚   â”œâ”€â”€ Object Stores:
-    â”‚   â”‚   â”œâ”€â”€ layers           (couches GeoJSON)
-    â”‚   â”‚   â”œâ”€â”€ sync_queue       (opÃ©rations diffÃ©rÃ©es)
-    â”‚   â”‚   â”œâ”€â”€ preferences      (prÃ©fÃ©rences utilisateur)
-    â”‚   â”‚   â””â”€â”€ metadata         (mÃ©tadonnÃ©es)
-    â”‚   â””â”€â”€ MÃ©thodes:
-    â”‚       â”œâ”€â”€ init()
-    â”‚       â”œâ”€â”€ cacheLayer()
-    â”‚       â”œâ”€â”€ getLayer()
-    â”‚       â”œâ”€â”€ getLayersByProfile()
-    â”‚       â””â”€â”€ getStorageStats()
-    â”‚
-    â”œâ”€â”€ GeoLeaf._CacheManager
-    â”‚   â”œâ”€â”€ ResponsabilitÃ©s:
-    â”‚   â”‚   â”œâ”€â”€ Cache profils complets
-    â”‚   â”‚   â”œâ”€â”€ Estimation taille
-    â”‚   â”‚   â””â”€â”€ Gestion quota
-    â”‚   â””â”€â”€ MÃ©thodes:
-    â”‚       â”œâ”€â”€ cacheProfile()
-    â”‚       â”œâ”€â”€ isProfileCached()
-    â”‚       â”œâ”€â”€ listCachedProfiles()
-    â”‚       â”œâ”€â”€ clearCache()
-    â”‚       â””â”€â”€ estimateProfileSize()
-    â”‚
-    â””â”€â”€ GeoLeaf._OfflineDetector
-        â”œâ”€â”€ ResponsabilitÃ©s:
-        â”‚   â”œâ”€â”€ DÃ©tection connectivitÃ©
-        â”‚   â”œâ”€â”€ Badge UI
-        â”‚   â””â”€â”€ Ã‰vÃ©nements rÃ©seau
-        â””â”€â”€ MÃ©thodes:
-            â”œâ”€â”€ init()
-            â”œâ”€â”€ isOnline()
-            â””â”€â”€ destroy()
+GeoLeaf.Storage (API publique — plugin optionnel)
+    │
+    ├── GeoLeaf._StorageDB (indexeddb.js + idb-helper.js)
+    │   ├── Object Stores:
+    │   │   ├── layers           (couches GeoJSON)
+    │   │   ├── sync_queue       (opérations différées)
+    │   │   ├── preferences      (préférences utilisateur)
+    │   │   ├── metadata         (métadonnées)
+    │   │   └── backups          (sauvegardes)
+    │   ├── DB sub-modules (db/):
+    │   │   ├── layers.js        (CRUD couches)
+    │   │   ├── preferences.js   (CRUD préférences)
+    │   │   ├── sync.js          (file de synchro)
+    │   │   ├── backups.js       (sauvegardes)
+    │   │   └── images.js        (images/icônes)
+    │   └── Helpers:
+    │       ├── idb-helper.js    (promisify, get, put, delete, batch)
+    │       ├── schema-validators.js (validation schémas IDB)
+    │       └── storage-helper.js (quota, cleanup)
+    │
+    ├── GeoLeaf._CacheManager (cache-manager.js)
+    │   ├── Cache profils complets
+    │   ├── cache/ sub-modules (10 fichiers):
+    │   │   ├── downloader.js, fetch-manager.js, download-handler.js
+    │   │   ├── calculator.js, validator.js, metrics.js
+    │   │   ├── resource-enumerator.js, progress-tracker.js, retry-handler.js
+    │   │   ├── storage.js
+    │   │   └── layer-selector/ (core, data-fetching, row-rendering, selection-cache)
+    │   └── Méthodes:
+    │       ├── cacheProfile() / clearCache()
+    │       ├── isProfileCached() / listCachedProfiles()
+    │       └── estimateProfileSize()
+    │
+    ├── GeoLeaf._OfflineDetector (offline-detector.js)
+    │   └── init() / isOnline() / destroy()
+    │
+    ├── GeoLeaf._SyncManager (sync-manager.js)
+    │   └── sync() / addOperation() / getQueueSize()
+    │
+    ├── Service Worker (sw.js + sw-register.js)
+    │   ├── 4 stratégies: cache-first, network-first, stale-while-revalidate, network-only
+    │   └── register() / update() / unregister()
+    │
+    ├── Telemetry (telemetry.js)
+    │   └── track() / getStats()
+    │
+    └── Modules future-ready (non bundlés):
+        ├── compression.js     (gzip/deflate)
+        └── cache-strategy.js  (LRU, LFU, TTL, FIFO)
 ```
 
 ### 3.2 Flux de donnÃ©es
@@ -632,7 +648,7 @@ await GeoLeaf.Storage.DB.cacheLayer(layerId, data, profileId);
 ## 10. Voir aussi
 
 - **IndexedDB** : [docs/storage/indexeddb.md](indexeddb.md)
-- **Cache Manager** : [docs/storage/cache-manager.md](cache-manager.md)
+- **Cache détaillé** : [docs/storage/cache-detailed.md](cache-detailed.md)
 - **Offline Detector** : [docs/storage/offline-detector.md](offline-detector.md)
 - **Guide dÃ©veloppeur** : [docs/DEVELOPER_GUIDE.md](../DEVELOPER_GUIDE.md)
 - **Architecture** : [docs/ARCHITECTURE_GUIDE.md](../ARCHITECTURE_GUIDE.md)

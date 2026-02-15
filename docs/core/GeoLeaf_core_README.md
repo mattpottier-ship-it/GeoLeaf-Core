@@ -313,7 +313,10 @@ Dans la dÃ©mo officielle, les options de GeoLeaf.Core proviennent gÃ©nÃ©ra
 
 ### 5.2 Exemple de branchement dans le code
 
+> **Approche moderne (v3.2+)** : utiliser `GeoLeaf.boot()` puis l'événement `geoleaf:ready` (voir section 9).
+
 ```js
+// Approche classique (toujours supportée)
 GeoLeaf.Config.init({
   url: "../data/geoleaf-poi.json",
   autoEvent: true,
@@ -423,3 +426,68 @@ if (!map) {
 | theme  | `"light" \| "dark"` | non         | `"light"` ou dernier thÃ¨me connu | ThÃ¨me UI (light/dark), uniquement pour lâ€™interface |
 
 Ce tableau rÃ©sume ce qui est **obligatoire**, **optionnel** et la fonction de chaque option dans GeoLeaf.Core.
+---
+
+## 9. Boot System (`src/app/`)
+
+Depuis la v3.2.0, l'initialisation de GeoLeaf est orchestrée par le **boot system** situé dans `src/app/`. Ce système gère le chargement séquentiel : core → plugins → démarrage.
+
+### 9.1 Fichiers du boot system
+
+| Fichier | Rôle |
+|---------|------|
+| `src/app/helpers.js` | Fonctions utilitaires partagées (DOM, events, validation) |
+| `src/app/init.js` | Initialisation des modules core + détection de l'environnement |
+| `src/app/boot.js` | Point d'entrée principal — orchestre le chargement et émet `geoleaf:ready` |
+
+### 9.2 Flux de démarrage
+
+```
+1. <script src="geoleaf.umd.js">     → Charge le bundle core (Rollup)
+2. <script src="geoleaf-*.plugin.js"> → Enrichit GeoLeaf.* (Storage, AddPOI…)
+3. GeoLeaf.boot()                     → Vérifie cohérence, initialise, émet geoleaf:ready
+```
+
+### 9.3 `GeoLeaf.boot()`
+
+Point d'entrée recommandé pour démarrer GeoLeaf :
+
+```js
+// Attendre que le DOM soit prêt
+document.addEventListener('DOMContentLoaded', () => {
+  GeoLeaf.boot();
+});
+
+// Écouter l'événement de fin d'initialisation
+document.addEventListener('geoleaf:ready', () => {
+  console.log('GeoLeaf prêt, tous les modules chargés');
+  // Charger la configuration et initialiser la carte
+  GeoLeaf.loadConfig({ url: 'geoleaf.config.json' });
+});
+```
+
+### 9.4 Guard system (`checkPlugins`)
+
+Le boot system vérifie la cohérence des plugins chargés via un guard system :
+
+- Vérifie que les namespaces requis existent avant l'initialisation
+- Logue un avertissement si un plugin attendu est absent
+- Permet une dégradation gracieuse (l'app fonctionne sans plugins)
+
+### 9.5 Plugins disponibles
+
+| Plugin | Fichier | Namespace enrichi |
+|--------|---------|-------------------|
+| Storage | `geoleaf-storage.plugin.js` | `GeoLeaf.Storage`, `GeoLeaf._StorageDB`, `GeoLeaf._CacheManager`, etc. |
+| AddPOI | `geoleaf-addpoi.plugin.js` | `GeoLeaf.AddPOI`, `GeoLeaf._POIForm`, etc. |
+
+Voir [Architecture Plugin](../plugins/GeoLeaf_Plugins_README.md) pour la documentation complète.
+
+---
+
+## 10. Voir aussi
+
+- **Architecture Plugin** : [docs/plugins/GeoLeaf_Plugins_README.md](../plugins/GeoLeaf_Plugins_README.md)
+- **Init Flow** : [docs/architecture/INITIALIZATION_FLOW.md](../architecture/INITIALIZATION_FLOW.md)
+- **Architecture** : [docs/ARCHITECTURE_GUIDE.md](../ARCHITECTURE_GUIDE.md)
+- **Guide développeur** : [docs/DEVELOPER_GUIDE.md](../DEVELOPER_GUIDE.md)

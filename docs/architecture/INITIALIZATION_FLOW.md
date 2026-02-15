@@ -24,14 +24,29 @@ sequenceDiagram
     participant Legend as Legend Module
     participant Table as Table Module
     participant Map as Leaflet Map
+    participant StoragePlugin as Storage Plugin
+    participant SW as Service Worker
 
-    %% Phase 1: Chargement des modules
-    Note over App,Main: 🚀 PHASE 1: Chargement des modules
-    App->>Main: Charge bundle-entry.js
+    %% Phase 1: Chargement du bundle core
+    Note over App,Main: 🚀 PHASE 1: Chargement du bundle core
+    App->>Main: Charge geoleaf.umd.js (bundle-entry.js)
     activate Main
     Main->>Main: imports séquentiels (Rollup)
     Note over Main: Ordre critique:<br/>1. Log, Security, Constants, Utils<br/>2. Core<br/>3. UI (theme, controls, panels)<br/>4. Config (loader, storage, profile)<br/>5. BaseLayers, Filters<br/>6. POI (normalizers, renderers)<br/>7. GeoJSON (layer-manager, loader)<br/>8. Route, Legend, Table<br/>9. API (en dernier)
-    Main-->>App: ✓ Modules chargés (geoleaf:ready)
+    Main-->>App: ✓ Bundle core chargé
+    deactivate Main
+
+    %% Phase 1.5: Chargement des plugins + Boot
+    Note over App,StoragePlugin: 🔌 PHASE 1.5: Plugins + Boot
+    App->>StoragePlugin: Charge geoleaf-storage.plugin.js
+    activate StoragePlugin
+    StoragePlugin->>StoragePlugin: Object.assign(GeoLeaf, ~45 modules)
+    StoragePlugin-->>App: ✓ Plugin Storage chargé
+    deactivate StoragePlugin
+    App->>Main: GeoLeaf.boot()
+    activate Main
+    Main->>Main: checkPlugins() — vérification cohérence
+    Main-->>App: ✓ Événement: geoleaf:ready
     deactivate Main
 
     %% Phase 2: Chargement de la configuration
@@ -90,6 +105,23 @@ sequenceDiagram
     Table->>Table: Création panneau table
     Table-->>App: ✓ Table prête
     deactivate Table
+
+    %% Phase 5.5: Storage & Service Worker
+    Note over App,SW: 💾 PHASE 5.5: Storage & Service Worker
+    alt Si plugin Storage chargé
+        App->>StoragePlugin: GeoLeaf.Storage.init(config.storage)
+        activate StoragePlugin
+        StoragePlugin->>StoragePlugin: IndexedDB.init() + CacheManager.init()
+        StoragePlugin->>StoragePlugin: OfflineDetector.init()
+        alt enableServiceWorker = true
+            StoragePlugin->>SW: sw-register.register()
+            activate SW
+            SW-->>StoragePlugin: ✓ SW enregistré
+            deactivate SW
+        end
+        StoragePlugin-->>App: ✓ Storage initialisé
+        deactivate StoragePlugin
+    end
 
     %% Phase 6: Basemaps
     Note over App,BL: 🗺️ PHASE 6: Fonds de carte
@@ -190,11 +222,13 @@ sequenceDiagram
 
 | # | Étape | Fichier source | Durée estimée | Point de synchronisation | Erreurs courantes |
 |---|-------|----------------|---------------|--------------------------|-------------------|
-| **1** | **Chargement modules** | `bundle-entry.js` | ~500-1000ms | Imports Rollup | Script 404, ordre incorrect |
+| **1** | **Chargement bundle core** | `bundle-entry.js` | ~500-1000ms | Imports Rollup | Script 404, ordre incorrect |
+| **1.5** | **Plugins + Boot** | `geoleaf-storage.plugin.js` | ~100-200ms | GeoLeaf.boot() | Plugin 404, namespace conflit |
 | **2** | **Config globale** | `config/geoleaf-config/config-core.js` | ~50-200ms | Config.init() Promise | JSON invalide, CORS |
 | **3** | **Profil actif** | `config/profile.js` | ~100-500ms | loadActiveProfileResources() Promise | profile.json 404, mapping manquant |
 | **4** | **Carte Leaflet** | `geoleaf.core.js` | ~50-100ms | Core.init() synchrone | mapId invalide, Leaflet non chargé |
 | **5** | **UI** | `geoleaf.ui.js` | ~100-200ms | UI.init() synchrone | Conteneurs DOM absents |
+| **5.5** | **Storage + SW** | `geoleaf-storage.plugin.js` | ~100-300ms | Storage.init() Promise | IndexedDB indisponible, SW 404 |
 | **6** | **BaseLayers** | `geoleaf.baselayers.js` | ~50ms | BaseLayers.init() synchrone | URL tuiles invalide |
 | **7** | **GeoJSON** | `geoleaf.geojson.js` | ~200-2000ms | loadFromProfile() Promise | GeoJSON malformé, mapping incomplet |
 | **8** | **POI** | `geoleaf.poi.js` | ~100-500ms | POI.init() + loadAndDisplay() | Normalisation échouée, coords invalides |
@@ -226,12 +260,16 @@ Promise.all(layers.map(layer => GeoJSON.load(layer.url)))
 
 | Événement | Émetteur | Quand | Utilisation |
 |-----------|----------|-------|-------------|
-| `geoleaf:ready` | boot.js | Tous modules chargés | Démarrage app |
+| `geoleaf:ready` | boot.js | Tous modules + plugins chargés | Démarrage app |
 | `geoleaf:config:loaded` | Config | Config + profil chargés | Init carte |
 | `geoleaf:profile:loaded` | Profile | Profil actif chargé | Init couches |
 | `geoleaf:map:ready` | App | Carte + couches prêtes | Analytics, hooks |
 | `geoleaf:poi:click` | POI | Clic sur marqueur | Panneau latéral |
 | `geoleaf:basemap:change` | BaseLayers | Changement fond | Analytics |
+| `geoleaf:storage:initialized` | Storage | Storage initialisé | Cache ready |
+| `geoleaf:offline` | OfflineDetector | Connexion perdue | Mode offline |
+| `geoleaf:online` | OfflineDetector | Connexion rétablie | Sync |
+| `geoleaf:sw:updated` | sw-register | Nouvelle version SW | Prompt reload |
 
 ---
 
@@ -433,12 +471,14 @@ console.log('[Demo] Carte ajustée sur emprise')
 
 ## Références
 
-- **Code source** : `src/bundle-entry.js`, `src/app/boot.js`
+- **Code source** : `src/bundle-entry.js`, `src/app/boot.js`, `src/app/init.js`, `src/app/helpers.js`
+- **Plugins** : `src/plugins/geoleaf-storage.plugin.js`, `src/plugins/geoleaf-addpoi.plugin.js`
 - **Modules** : `config/geoleaf-config/config-core.js`, `config/profile.js`, `geoleaf.core.js`
-- **Documentation API** : `docs/api/GeoLeaf_API_README.md`
+- **Storage** : `src/static/js/storage/` (32 fichiers)
+- **Documentation** : [Architecture Plugin](../plugins/GeoLeaf_Plugins_README.md), [Storage](../storage/GeoLeaf_Storage_README.md)
 - **Tests** : `__tests__/config/profile.test.js`, `__tests__/core/core-init.test.js`
 
 ---
 
-**Dernière mise à jour** : 14 février 2026  
+**Dernière mise à jour** : 15 février 2026  
 **Version GeoLeaf** : 3.2.0

@@ -1,7 +1,7 @@
 ﻿# GeoLeaf Documentation Index
 
 **Version:** 3.2.0  
-**Last Updated:** February 14, 2026
+**Last Updated:** February 15, 2026
 
 Welcome to the GeoLeaf documentation! This index provides quick access to all documentation resources organized by category.
 
@@ -183,6 +183,16 @@ Deep-dive documentation for individual modules.
 | [Configuration](config/GeoLeaf_Config_README.md) | Profile loading | JSON parsing, validation |
 | [Storage](storage/GeoLeaf_Storage_README.md) | Offline cache | IndexedDB, TTL, compression |
 
+### Plugin Architecture
+
+| Document | Description | Key Features |
+|----------|-------------|--------------|
+| [Plugin Guide](plugins/GeoLeaf_Plugins_README.md) | Architecture plugin complète | Loading, namespaces, guards |
+| [Storage Cache (détaillé)](storage/GeoLeaf_Storage_Cache_README.md) | Système cache avancé | 32 modules, strategies |
+| [IndexedDB](storage/indexeddb.md) | Base de données locale | 5 stores, IDBHelper |
+| [Cache System](storage/cache-detailed.md) | Cache + Service Worker | SW, 4 stratégies, sync |
+| [Offline Detector](storage/offline-detector.md) | Détection connectivité | Events, badge UI |
+
 ### Data Modules
 
 | Module | Description | Key Features |
@@ -258,9 +268,12 @@ System architecture and design documentation.
 
 **Architecture topics:**
 - IIFE module pattern
+- **Plugin architecture** (Storage, AddPOI)
+- **Boot system** (`src/app/` orchestration)
 - Event-driven architecture
 - State management
 - Storage layer (IndexedDB)
+- **Service Worker** (4 cache strategies)
 - Security layer (XSS protection)
 - Build pipeline (Rollup, tree-shaking)
 - Performance optimization
