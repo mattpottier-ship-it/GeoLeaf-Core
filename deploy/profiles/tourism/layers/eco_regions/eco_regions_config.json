@@ -5,7 +5,16 @@
   "geometry": "polygon",
   "data": {
     "directory": "data",
-    "file": "eco_regions.geojson"
+    "file": "eco_regions.geojson",
+    "vectorTiles": {
+      "enabled": true,
+      "tilesDirectory": "tiles",
+      "layerName": "eco_regions",
+      "minZoom": 0,
+      "maxNativeZoom": 14,
+      "maxZoom": 18,
+      "interactive": true
+    }
   },
   "styles": {
     "directory": "styles",

@@ -1,13 +1,14 @@
-﻿# 🔄 GeoLeaf - Système de Normalisation de Données
+# 🔄 GeoLeaf - Système de Normalisation de Données
 
-Product Version: GeoLeaf Platform V1  
+Product Version: GeoLeaf Platform V1
 
 **Modules** : `GeoLeaf._Normalizer`, `GeoLeaf.Config.Normalization`, `GeoLeaf.Config.DataConverter`  
-**Version** : 3.2.0  
+**Version** : 4.0.0  
 **Fichiers source** :
-- `src/static/js/data/normalizer.js`
-- `src/static/js/config/normalization.js`
-- `src/static/js/config/data-converter.js`
+
+- `src/modules/data/normalizer.js`
+- `src/modules/config/normalization.js`
+- `src/modules/config/data-converter.js`
 
 **Dernière mise à jour** : 19 janvier 2026
 
@@ -76,7 +77,7 @@ Le format POI standard utilisé dans tout GeoLeaf :
   // REQUIS
   id: "poi_123",                    // Identifiant unique (string)
   title: "Restaurant La Bonne Table", // Titre/nom (string)
-  
+
   // COORDONNÉES (2 formats supportés)
   latlng: [48.8566, 2.3522],       // Format préféré [lat, lng]
   // OU
@@ -84,12 +85,12 @@ Le format POI standard utilisé dans tout GeoLeaf :
     lat: 48.8566,
     lng: 2.3522
   },
-  
+
   // OPTIONNELS
   description: "Restaurant gastronomique...", // Description courte
   categoryId: "restaurant",         // Catégorie principale
   subCategoryId: "gastronomique",   // Sous-catégorie
-  
+
   attributes: {                     // Métadonnées extensibles
     address: "123 rue de Paris",
     phone: "+33 1 23 45 67 89",
@@ -124,9 +125,10 @@ Normalise des données depuis différentes sources (JSON, GeoJSON, Routes, GPX) 
 Normalise un objet JSON brut en POI.
 
 **Paramètres** :
+
 - `data` (Object) : Données JSON brutes
 - `layerConfig` (Object) : Configuration du layer avec mapping
-  - `dataMapping` : Correspondance des champs (`{ title: 'nom', lat: 'latitude', ... }`)
+    - `dataMapping` : Correspondance des champs (`{ title: 'nom', lat: 'latitude', ... }`)
 
 **Retourne** : POI normalisé ou `null`
 
@@ -135,22 +137,22 @@ Normalise un objet JSON brut en POI.
 ```javascript
 // Données JSON brutes (API externe)
 const rawData = {
-  uid: "ext_123",
-  nom: "Café de la Gare",
-  latitude: 48.8566,
-  longitude: 2.3522,
-  type: "cafe",
-  adresse: "10 rue de la Gare"
+    uid: "ext_123",
+    nom: "Café de la Gare",
+    latitude: 48.8566,
+    longitude: 2.3522,
+    type: "cafe",
+    adresse: "10 rue de la Gare",
 };
 
 // Configuration du mapping
 const layerConfig = {
-  dataMapping: {
-    title: 'nom',
-    lat: 'latitude',
-    lng: 'longitude',
-    categoryId: 'type'
-  }
+    dataMapping: {
+        title: "nom",
+        lat: "latitude",
+        lng: "longitude",
+        categoryId: "type",
+    },
 };
 
 // Normalisation
@@ -175,6 +177,7 @@ const poi = GeoLeaf._Normalizer.normalizeFromJSON(rawData, layerConfig);
 Normalise une Feature GeoJSON en POI.
 
 **Paramètres** :
+
 - `feature` (Object) : GeoJSON Feature (Point/Polygon/LineString)
 - `layerConfig` (Object) : Configuration du layer
 
@@ -185,17 +188,17 @@ Normalise une Feature GeoJSON en POI.
 ```javascript
 // GeoJSON Feature
 const geoFeature = {
-  type: "Feature",
-  id: "geoj_456",
-  geometry: {
-    type: "Point",
-    coordinates: [2.3522, 48.8566] // [lng, lat] en GeoJSON
-  },
-  properties: {
-    name: "Tour Eiffel",
-    height: 330,
-    type: "monument"
-  }
+    type: "Feature",
+    id: "geoj_456",
+    geometry: {
+        type: "Point",
+        coordinates: [2.3522, 48.8566], // [lng, lat] en GeoJSON
+    },
+    properties: {
+        name: "Tour Eiffel",
+        height: 330,
+        type: "monument",
+    },
 };
 
 const poi = GeoLeaf._Normalizer.normalizeFromGeoJSON(geoFeature);
@@ -221,15 +224,15 @@ Normalise une route (GPX/LineString) en POI.
 
 ```javascript
 const route = {
-  id: "route_789",
-  name: "Chemin des Vignes",
-  coordinates: [
-    [48.8566, 2.3522],
-    [48.8570, 2.3530],
-    // ...
-  ],
-  distance: 5200, // mètres
-  elevation_gain: 120
+    id: "route_789",
+    name: "Chemin des Vignes",
+    coordinates: [
+        [48.8566, 2.3522],
+        [48.857, 2.353],
+        // ...
+    ],
+    distance: 5200, // mètres
+    elevation_gain: 120,
 };
 
 const poi = GeoLeaf._Normalizer.normalizeFromRoute(route);
@@ -240,6 +243,7 @@ const poi = GeoLeaf._Normalizer.normalizeFromRoute(route);
 **Méthode générique** qui détermine le type de source et normalise en conséquence.
 
 **Paramètres** :
+
 - `data` : Données brutes (Object/Array)
 - `sourceType` (string) : `'json'`, `'geojson'`, `'route'`, `'gpx'`
 - `layerConfig` (Object) : Configuration
@@ -248,13 +252,13 @@ const poi = GeoLeaf._Normalizer.normalizeFromRoute(route);
 
 ```javascript
 // Détection automatique du type
-const poi = GeoLeaf._Normalizer.normalize(rawData, 'json', layerConfig);
+const poi = GeoLeaf._Normalizer.normalize(rawData, "json", layerConfig);
 
 // Type GeoJSON
-const poiGeo = GeoLeaf._Normalizer.normalize(geoFeature, 'geojson');
+const poiGeo = GeoLeaf._Normalizer.normalize(geoFeature, "geojson");
 
 // Routes
-const poiRoute = GeoLeaf._Normalizer.normalize(routeData, 'route');
+const poiRoute = GeoLeaf._Normalizer.normalize(routeData, "route");
 ```
 
 ---
@@ -284,6 +288,7 @@ POI brut                mapping.json              POI normalisé
 Vérifie si un POI est déjà conforme au format GeoLeaf.
 
 **Critères de validation** :
+
 - ✅ `id` (string non vide)
 - ✅ `title` ou `label` (string non vide)
 - ✅ Coordonnées : `latlng: [lat, lng]` OU `location: { lat, lng }`
@@ -292,16 +297,16 @@ Vérifie si un POI est déjà conforme au format GeoLeaf.
 
 ```javascript
 const poi1 = {
-  id: "123",
-  title: "Restaurant",
-  latlng: [48.8566, 2.3522]
+    id: "123",
+    title: "Restaurant",
+    latlng: [48.8566, 2.3522],
 };
 console.log(GeoLeaf.Config.Normalization.isPoiStructNormalized(poi1));
 // → true
 
 const poi2 = {
-  nom: "Restaurant",
-  coords: [48.8566, 2.3522]
+    nom: "Restaurant",
+    coords: [48.8566, 2.3522],
 };
 console.log(GeoLeaf.Config.Normalization.isPoiStructNormalized(poi2));
 // → false (manque id, title, latlng)
@@ -312,6 +317,7 @@ console.log(GeoLeaf.Config.Normalization.isPoiStructNormalized(poi2));
 Applique un mapping pour transformer un POI brut.
 
 **Paramètres** :
+
 - `rawPoi` (Object) : POI non normalisé
 - `mappingDef` (Object) : Définition du mapping (`mapping.json`)
 
@@ -319,14 +325,14 @@ Applique un mapping pour transformer un POI brut.
 
 ```json
 {
-  "mapping": {
-    "id": "uid",
-    "title": "name",
-    "location.lat": "coordinates.latitude",
-    "location.lng": "coordinates.longitude",
-    "attributes.address": "full_address",
-    "attributes.phone": "contact.phone"
-  }
+    "mapping": {
+        "id": "uid",
+        "title": "name",
+        "location.lat": "coordinates.latitude",
+        "location.lng": "coordinates.longitude",
+        "attributes.address": "full_address",
+        "attributes.phone": "contact.phone"
+    }
 }
 ```
 
@@ -334,31 +340,28 @@ Applique un mapping pour transformer un POI brut.
 
 ```javascript
 const rawPoi = {
-  uid: "ext_001",
-  name: "Boulangerie Dupont",
-  coordinates: {
-    latitude: 48.8566,
-    longitude: 2.3522
-  },
-  full_address: "5 rue du Pain",
-  contact: {
-    phone: "0123456789"
-  }
+    uid: "ext_001",
+    name: "Boulangerie Dupont",
+    coordinates: {
+        latitude: 48.8566,
+        longitude: 2.3522,
+    },
+    full_address: "5 rue du Pain",
+    contact: {
+        phone: "0123456789",
+    },
 };
 
 const mapping = {
-  "id": "uid",
-  "title": "name",
-  "location.lat": "coordinates.latitude",
-  "location.lng": "coordinates.longitude",
-  "attributes.address": "full_address",
-  "attributes.phone": "contact.phone"
+    id: "uid",
+    title: "name",
+    "location.lat": "coordinates.latitude",
+    "location.lng": "coordinates.longitude",
+    "attributes.address": "full_address",
+    "attributes.phone": "contact.phone",
 };
 
-const normalized = GeoLeaf.Config.Normalization.mapRawPoiToNormalized(
-  rawPoi, 
-  mapping
-);
+const normalized = GeoLeaf.Config.Normalization.mapRawPoiToNormalized(rawPoi, mapping);
 
 // Résultat :
 // {
@@ -380,44 +383,42 @@ const normalized = GeoLeaf.Config.Normalization.mapRawPoiToNormalized(
 Normalise un tableau de POI avec `mapping.json`.
 
 **Comportement** :
+
 1. **Sans `mapping.json`** : POI passent tels quels (100% rétrocompatible v2)
 2. **Avec `mapping.json`** :
-   - POI déjà normalisé → conservé tel quel
-   - POI non normalisé → application du mapping
-   - POI non normalisé après mapping → ignoré (warning)
+    - POI déjà normalisé → conservé tel quel
+    - POI non normalisé → application du mapping
+    - POI non normalisé après mapping → ignoré (warning)
 
 **Exemple** :
 
 ```javascript
 const rawPois = [
-  // POI déjà normalisé (conservé)
-  {
-    id: "001",
-    title: "Café A",
-    latlng: [48.8566, 2.3522]
-  },
-  // POI non normalisé (sera mappé)
-  {
-    uid: "ext_002",
-    nom: "Café B",
-    lat: 48.8570,
-    lng: 2.3530
-  }
+    // POI déjà normalisé (conservé)
+    {
+        id: "001",
+        title: "Café A",
+        latlng: [48.8566, 2.3522],
+    },
+    // POI non normalisé (sera mappé)
+    {
+        uid: "ext_002",
+        nom: "Café B",
+        lat: 48.857,
+        lng: 2.353,
+    },
 ];
 
 const mappingConfig = {
-  mapping: {
-    "id": "uid",
-    "title": "nom",
-    "location.lat": "lat",
-    "location.lng": "lng"
-  }
+    mapping: {
+        id: "uid",
+        title: "nom",
+        "location.lat": "lat",
+        "location.lng": "lng",
+    },
 };
 
-const normalized = GeoLeaf.Config.Normalization.normalizePoiWithMapping(
-  rawPois,
-  mappingConfig
-);
+const normalized = GeoLeaf.Config.Normalization.normalizePoiWithMapping(rawPois, mappingConfig);
 
 // Résultat : 2 POI normalisés (le 1er inchangé, le 2ème mappé)
 ```
@@ -431,18 +432,19 @@ Normalise le format des avis (reviews) dans un tableau de POI.
 ```javascript
 // FORMAT ANCIEN (v2) : tableau simple
 poi.attributes.reviews = [
-  { author: "Jean", rating: 5, comment: "Super !" },
-  { author: "Marie", rating: 4, comment: "Bien" }
+    { author: "Jean", rating: 5, comment: "Super !" },
+    { author: "Marie", rating: 4, comment: "Bien" },
 ];
 
 // FORMAT NOUVEAU (v3) : objet structuré
 poi.attributes.reviews = {
-  rating: 4.5,            // Note moyenne
-  count: 127,             // Nombre total
-  summary: "Très bon",    // Résumé
-  recent: [               // Avis récents
-    { author: "Jean", rating: 5, comment: "Super !" }
-  ]
+    rating: 4.5, // Note moyenne
+    count: 127, // Nombre total
+    summary: "Très bon", // Résumé
+    recent: [
+        // Avis récents
+        { author: "Jean", rating: 5, comment: "Super !" },
+    ],
 };
 ```
 
@@ -450,17 +452,18 @@ poi.attributes.reviews = {
 
 ```javascript
 const pois = [
-  {
-    id: "001",
-    title: "Restaurant A",
-    latlng: [48.8566, 2.3522],
-    attributes: {
-      reviews: [ // Format ancien
-        { author: "Jean", rating: 5 },
-        { author: "Marie", rating: 4 }
-      ]
-    }
-  }
+    {
+        id: "001",
+        title: "Restaurant A",
+        latlng: [48.8566, 2.3522],
+        attributes: {
+            reviews: [
+                // Format ancien
+                { author: "Jean", rating: 5 },
+                { author: "Marie", rating: 4 },
+            ],
+        },
+    },
 ];
 
 const normalized = GeoLeaf.Config.Normalization.normalizePoiArray(pois);
@@ -483,6 +486,7 @@ Convertit des POI/Routes normalisés vers **GeoJSON FeatureCollection** pour aff
 Convertit un tableau de POI en GeoJSON FeatureCollection.
 
 **Paramètres** :
+
 - `poiArray` (Array) : Tableau de POI normalisés
 
 **Retourne** : GeoJSON FeatureCollection
@@ -491,21 +495,21 @@ Convertit un tableau de POI en GeoJSON FeatureCollection.
 
 ```javascript
 const pois = [
-  {
-    id: "poi_001",
-    title: "Café Central",
-    latlng: [48.8566, 2.3522],
-    description: "Bar convivial",
-    attributes: {
-      address: "10 rue Paris",
-      phone: "0123456789"
-    }
-  },
-  {
-    id: "poi_002",
-    title: "Boulangerie",
-    location: { lat: 48.8570, lng: 2.3530 }
-  }
+    {
+        id: "poi_001",
+        title: "Café Central",
+        latlng: [48.8566, 2.3522],
+        description: "Bar convivial",
+        attributes: {
+            address: "10 rue Paris",
+            phone: "0123456789",
+        },
+    },
+    {
+        id: "poi_002",
+        title: "Boulangerie",
+        location: { lat: 48.857, lng: 2.353 },
+    },
 ];
 
 const geoJSON = GeoLeaf.Config.DataConverter.convertPoiArrayToGeoJSON(pois);
@@ -542,20 +546,20 @@ Convertit des routes/GPX en GeoJSON LineString.
 
 ```javascript
 const routes = [
-  {
-    id: "route_001",
-    name: "Sentier des Vignes",
-    coordinates: [
-      [48.8566, 2.3522],
-      [48.8570, 2.3530],
-      [48.8575, 2.3535]
-    ],
-    distance: 1200,
-    attributes: {
-      difficulty: "easy",
-      duration: "30min"
-    }
-  }
+    {
+        id: "route_001",
+        name: "Sentier des Vignes",
+        coordinates: [
+            [48.8566, 2.3522],
+            [48.857, 2.353],
+            [48.8575, 2.3535],
+        ],
+        distance: 1200,
+        attributes: {
+            difficulty: "easy",
+            duration: "30min",
+        },
+    },
 ];
 
 const geoJSON = GeoLeaf.Config.DataConverter.convertRoutesToGeoJSON(routes);
@@ -573,20 +577,20 @@ Le fichier `mapping.json` définit la correspondance entre champs sources et for
 
 ```json
 {
-  "version": "1.0",
-  "description": "Mapping pour API externe XYZ",
-  "mapping": {
-    "id": "uid",
-    "title": "name",
-    "description": "short_description",
-    "location.lat": "coordinates.latitude",
-    "location.lng": "coordinates.longitude",
-    "categoryId": "type",
-    "attributes.address": "full_address",
-    "attributes.phone": "contact.telephone",
-    "attributes.website": "links.web",
-    "attributes.opening_hours": "horaires"
-  }
+    "version": "1.0",
+    "description": "Mapping pour API externe XYZ",
+    "mapping": {
+        "id": "uid",
+        "title": "name",
+        "description": "short_description",
+        "location.lat": "coordinates.latitude",
+        "location.lng": "coordinates.longitude",
+        "categoryId": "type",
+        "attributes.address": "full_address",
+        "attributes.phone": "contact.telephone",
+        "attributes.website": "links.web",
+        "attributes.opening_hours": "horaires"
+    }
 }
 ```
 
@@ -629,38 +633,34 @@ profiles/
 
 ```javascript
 // 1. Récupération des données brutes
-const response = await fetch('https://api.example.com/pois');
+const response = await fetch("https://api.example.com/pois");
 const rawData = await response.json();
 // rawData = [{ uid: "001", nom: "Café", coords: {...} }, ...]
 
 // 2. Chargement du mapping.json
-const mappingConfig = await fetch('profiles/tourism/mapping.json');
+const mappingConfig = await fetch("profiles/tourism/mapping.json");
 const mapping = await mappingConfig.json();
 
 // 3. Normalisation structurelle (mapping.json)
 const structurallyNormalized = GeoLeaf.Config.Normalization.normalizePoiWithMapping(
-  rawData,
-  mapping
+    rawData,
+    mapping
 );
 // → Format POI GeoLeaf basique (id, title, location)
 
 // 4. Normalisation sémantique (reviews, etc.)
-const fullyNormalized = GeoLeaf.Config.Normalization.normalizePoiArray(
-  structurallyNormalized
-);
+const fullyNormalized = GeoLeaf.Config.Normalization.normalizePoiArray(structurallyNormalized);
 // → Format POI GeoLeaf complet (reviews v3, etc.)
 
 // 5. Conversion en GeoJSON (si affichage comme layer)
-const geoJSON = GeoLeaf.Config.DataConverter.convertPoiArrayToGeoJSON(
-  fullyNormalized
-);
+const geoJSON = GeoLeaf.Config.DataConverter.convertPoiArrayToGeoJSON(fullyNormalized);
 // → FeatureCollection prête pour Leaflet
 
 // 6. Affichage sur la carte
 GeoLeaf.GeoJSON.load({
-  id: 'pois-externes',
-  data: geoJSON,
-  // ...
+    id: "pois-externes",
+    data: geoJSON,
+    // ...
 });
 ```
 
@@ -674,22 +674,22 @@ GeoLeaf.GeoJSON.load({
 
 ```json
 [
-  {
-    "restaurant_id": "rest_123",
-    "restaurant_name": "Le Petit Bistrot",
-    "geo": {
-      "lat": 48.8566,
-      "lon": 2.3522
-    },
-    "contact_info": {
-      "tel": "0123456789",
-      "web": "https://petitbistrot.fr"
-    },
-    "rating": {
-      "average": 4.5,
-      "total_reviews": 127
+    {
+        "restaurant_id": "rest_123",
+        "restaurant_name": "Le Petit Bistrot",
+        "geo": {
+            "lat": 48.8566,
+            "lon": 2.3522
+        },
+        "contact_info": {
+            "tel": "0123456789",
+            "web": "https://petitbistrot.fr"
+        },
+        "rating": {
+            "average": 4.5,
+            "total_reviews": 127
+        }
     }
-  }
 ]
 ```
 
@@ -697,16 +697,16 @@ GeoLeaf.GeoJSON.load({
 
 ```json
 {
-  "mapping": {
-    "id": "restaurant_id",
-    "title": "restaurant_name",
-    "location.lat": "geo.lat",
-    "location.lng": "geo.lon",
-    "attributes.phone": "contact_info.tel",
-    "attributes.website": "contact_info.web",
-    "attributes.reviews.rating": "rating.average",
-    "attributes.reviews.count": "rating.total_reviews"
-  }
+    "mapping": {
+        "id": "restaurant_id",
+        "title": "restaurant_name",
+        "location.lat": "geo.lat",
+        "location.lng": "geo.lon",
+        "attributes.phone": "contact_info.tel",
+        "attributes.website": "contact_info.web",
+        "attributes.reviews.rating": "rating.average",
+        "attributes.reviews.count": "rating.total_reviews"
+    }
 }
 ```
 
@@ -716,22 +716,22 @@ GeoLeaf.GeoJSON.load({
 
 ```json
 {
-  "type": "FeatureCollection",
-  "features": [
-    {
-      "type": "Feature",
-      "id": "monument_456",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [2.3522, 48.8566]
-      },
-      "properties": {
-        "name": "Arc de Triomphe",
-        "height": 50,
-        "year_built": 1836
-      }
-    }
-  ]
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "id": "monument_456",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [2.3522, 48.8566]
+            },
+            "properties": {
+                "name": "Arc de Triomphe",
+                "height": 50,
+                "year_built": 1836
+            }
+        }
+    ]
 }
 ```
 
@@ -778,22 +778,25 @@ const poi = GeoLeaf._Normalizer.normalizeFromGeoJSON(geoFeature);
 ## 🚀 Améliorations futures
 
 ### Phase 1 (Q1 2026)
+
 - [ ] Support GPX natif (import fichiers .gpx)
 - [ ] Validation avec JSON Schema pour mapping.json
 - [ ] Fallbacks automatiques pour champs manquants
 
 ### Phase 2 (Q2 2026)
+
 - [ ] Transformations avancées (calculs, concatenations)
 - [ ] Support formats supplémentaires (KML, CSV)
 - [ ] Cache de normalisation (éviter re-normalisation)
 
 ### Phase 3 (Q3 2026)
+
 - [ ] Web Worker pour normalisation asynchrone
 - [ ] Streaming pour gros datasets (+100k POI)
 - [ ] TypeScript definitions
 
 ---
 
-**Version** : 3.2.0  
+**Version** : 4.0.0  
 **Dernière mise à jour** : 19 janvier 2026  
 **Sprint 2** : Documentation complète du système de normalisation ✅

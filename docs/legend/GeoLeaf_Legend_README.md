@@ -1,10 +1,11 @@
-﻿# GeoLeaf.LayerManager â€“ Documentation du module Legend (LÃ©gende)
-**Product Version:** GeoLeaf Platform V1  
-**Version**: 3.2.0  
-**Fichier**: `src/static/js/geoleaf.legend.js`  
+# GeoLeaf.LayerManager â€“ Documentation du module Legend (LÃ©gende)
+
+Product Version: GeoLeaf Platform V1 **Version**: 4.0.0  
+**Fichier**: `src/modules/geoleaf.legend.js`  
 **DerniÃ¨re mise Ã  jour**: 19 janvier 2026
 
 ---
+
 Le module **GeoLeaf.LayerManager** gÃ¨re lâ€™affichage de la **lÃ©gende graphique** dans GeoLeaf, placÃ©e en bas Ã  droite de la carte.  
 Il constitue un composant dâ€™interface essentiel permettant Ã  lâ€™utilisateur dâ€™identifier facilement :
 
@@ -21,13 +22,13 @@ Ce module est conÃ§u pour Ãªtre **lÃ©ger, modulaire et entiÃ¨rement UI**
 
 1. CrÃ©er et afficher un **bloc UI** de lÃ©gende.
 2. Afficher dynamiquement :
-   - les basemaps disponibles,
-   - les couches GeoJSON dÃ©clarÃ©es,
-   - les catÃ©gories de POI (future v1.7),
-   - les Ã©lÃ©ments dâ€™itinÃ©raire (future v1.9).
+    - les basemaps disponibles,
+    - les couches GeoJSON dÃ©clarÃ©es,
+    - les catÃ©gories de POI (future v1.7),
+    - les Ã©lÃ©ments dâ€™itinÃ©raire (future v1.9).
 3. GÃ©rer les interactions :
-   - changement de basemap via clic sur lâ€™item de lÃ©gende,
-   - activation/dÃ©sactivation de couches (future v1.8).
+    - changement de basemap via clic sur lâ€™item de lÃ©gende,
+    - activation/dÃ©sactivation de couches (future v1.8).
 4. Utiliser une structure HTML / CSS propre, isolÃ©e et thÃ©mable.
 
 ---
@@ -49,14 +50,14 @@ La lÃ©gende gÃ©nÃ¨re automatiquement un conteneur semblable Ã  :
 
 ```html
 <div class="gl-legend gl-legend-bottomright">
-  <div class="gl-legend-section" data-section="basemaps">
-    <div class="gl-legend-title">Fonds de carte</div>
-    <ul class="gl-legend-list">
-      <li data-gl-baselayer="street">Street</li>
-      <li data-gl-baselayer="topo">Topo</li>
-      <li data-gl-baselayer="satellite">Satellite</li>
-    </ul>
-  </div>
+    <div class="gl-legend-section" data-section="basemaps">
+        <div class="gl-legend-title">Fonds de carte</div>
+        <ul class="gl-legend-list">
+            <li data-gl-baselayer="street">Street</li>
+            <li data-gl-baselayer="topo">Topo</li>
+            <li data-gl-baselayer="satellite">Satellite</li>
+        </ul>
+    </div>
 </div>
 ```
 
@@ -70,18 +71,18 @@ Initialise la lÃ©gende en crÃ©ant le conteneur et en lâ€™insÃ©rant da
 
 ```js
 GeoLeaf.LayerManager.init({
-  position: "bottomright",  // bottomright, bottomleft, topright, topleft
-  basemaps: ["street", "topo", "satellite"]
+    position: "bottomright", // bottomright, bottomleft, topright, topleft
+    basemaps: ["street", "topo", "satellite"],
 });
 ```
 
 ### 4.1 ParamÃ¨tres
 
-| ParamÃ¨tre  | Type     | Obligatoire | Description |
-|------------|----------|-------------|-------------|
+| ParamÃ¨tre | Type     | Obligatoire | Description                                 |
+| ---------- | -------- | ----------- | ------------------------------------------- |
 | `position` | string   | non         | Position CSS du bloc (default: bottomright) |
-| `basemaps` | string[] | non         | Liste des fonds de carte Ã  afficher |
-| `layers`   | array    | non         | Liste de couches GeoJSON/itinÃ©raires |
+| `basemaps` | string[] | non         | Liste des fonds de carte Ã  afficher        |
+| `layers`   | array    | non         | Liste de couches GeoJSON/itinÃ©raires      |
 
 ### 4.2 Comportement
 
@@ -119,8 +120,8 @@ Actualise dynamiquement la section â€œCouchesâ€.
 
 ```js
 GeoLeaf.LayerManager.updateLayers([
-  { id: "zones", label: "Zones" },
-  { id: "parcs", label: "Parcs" }
+    { id: "zones", label: "Zones" },
+    { id: "parcs", label: "Parcs" },
 ]);
 ```
 
@@ -150,13 +151,13 @@ Exemple JSON :
 
 ```json
 {
-  "basemap": {
-    "id": "topo"
-  },
-  "legend": {
-    "enabled": true,
-    "basemaps": ["street", "topo", "satellite"]
-  }
+    "basemap": {
+        "id": "topo"
+    },
+    "legend": {
+        "enabled": true,
+        "basemaps": ["street", "topo", "satellite"]
+    }
 }
 ```
 
@@ -164,9 +165,9 @@ Exemple dâ€™intÃ©gration :
 
 ```js
 if (config.legend?.enabled) {
-  GeoLeaf.LayerManager.init({
-    basemaps: config.legend.basemaps
-  });
+    GeoLeaf.LayerManager.init({
+        basemaps: config.legend.basemaps,
+    });
 }
 ```
 
@@ -174,30 +175,30 @@ if (config.legend?.enabled) {
 
 ## 9. SÃ©quence complÃ¨te dâ€™utilisation
 
-1. `GeoLeaf.Config.load()` lit le fichier JSON.  
-2. `GeoLeaf.Core.init()` crÃ©e la carte.  
-3. `GeoLeaf.Baselayers.init()` installe la basemap initiale.  
-4. `GeoLeaf.LayerManager.init()` affiche la lÃ©gende.  
-5. Lâ€™utilisateur clique sur un item â†’ dÃ©clenche un changement de basemap.  
+1. `GeoLeaf.Config.load()` lit le fichier JSON.
+2. `GeoLeaf.Core.init()` crÃ©e la carte.
+3. `GeoLeaf.Baselayers.init()` installe la basemap initiale.
+4. `GeoLeaf.LayerManager.init()` affiche la lÃ©gende.
+5. Lâ€™utilisateur clique sur un item â†’ dÃ©clenche un changement de basemap.
 6. Les futures couches GeoJSON apparaissent dans la liste â€œCouchesâ€.
 
 ---
 
 ## 10. RÃ©sumÃ© rapide de lâ€™API Legend
 
-| MÃ©thode                  | RÃ´le |
-|--------------------------|------|
-| `init(options)`          | Initialise la lÃ©gende |
-| `updateBasemaps(list)`   | Met Ã  jour la section basemaps |
-| `updateLayers(list)`     | Met Ã  jour la section couches |
-| `clear()`                | Vide entiÃ¨rement la lÃ©gende |
+| MÃ©thode              | RÃ´le                           |
+| ---------------------- | ------------------------------- |
+| `init(options)`        | Initialise la lÃ©gende         |
+| `updateBasemaps(list)` | Met Ã  jour la section basemaps |
+| `updateLayers(list)`   | Met Ã  jour la section couches  |
+| `clear()`              | Vide entiÃ¨rement la lÃ©gende  |
 
 ---
 
 ## 11. Bonnes pratiques
 
-- Toujours initialiser la lÃ©gende **aprÃ¨s** GeoLeaf.Core et GeoLeaf.Baselayers.  
-- Ne jamais Ã©crire de HTML manuel dans la lÃ©gende â†’ utiliser les mÃ©thodes `init` et `update...`.  
-- Garder les labels courts (â€œStreetâ€, â€œTopoâ€, â€œSat.â€).  
-- PrÃ©voir un style actif visuel pour la basemap courante.  
-- PrÃ©parer les entrÃ©es `layers` pour la future version 1.8 (multi-couches GeoJSON).  
+- Toujours initialiser la lÃ©gende **aprÃ¨s** GeoLeaf.Core et GeoLeaf.Baselayers.
+- Ne jamais Ã©crire de HTML manuel dans la lÃ©gende â†’ utiliser les mÃ©thodes `init` et `update...`.
+- Garder les labels courts (â€œStreetâ€, â€œTopoâ€, â€œSat.â€).
+- PrÃ©voir un style actif visuel pour la basemap courante.
+- PrÃ©parer les entrÃ©es `layers` pour la future version 1.8 (multi-couches GeoJSON).

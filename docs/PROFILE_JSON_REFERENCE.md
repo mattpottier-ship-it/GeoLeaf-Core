@@ -1,11 +1,11 @@
 # profile.json - Référence Complète
 
 **Version produit :** GeoLeaf Platform V1  
-**Version:** 3.2.0  
+**Version:** 4.0.0  
 **Date de dernière mise à jour:** 28 janvier 2026  
 **Statut:** ✅ Production Ready
 
-> Convention de versioning : **Platform V1** est le label produit ; le SemVer technique de ce dépôt reste en **3.2.0**.
+> Convention de versioning : **Platform V1** est le label produit ; le SemVer technique des packages/releases reste en **4.x**. Voir [VERSIONING_POLICY.md](VERSIONING_POLICY.md).
 
 ---
 
@@ -14,21 +14,22 @@
 1. [Vue d'ensemble](#vue-densemble)
 2. [Structure complète](#structure-complète)
 3. [Paramètres racine](#paramètres-racine)
-4. [Section Files](#section-files)
-5. [Section ui](#section-ui)
-6. [Section basemaps](#section-basemaps)
-7. [Section performance](#section-performance)
-8. [Section search](#section-search)
-9. [Section layerManagerConfig](#section-layermanagerconfig)
-10. [Section legendConfig](#section-legendconfig)
-11. [Section poiConfig](#section-poiconfig)
-12. [Section brandingConfig](#section-brandingconfig)
-13. [Section tableConfig](#section-tableconfig)
-14. [Section scaleConfig](#section-scaleconfig)
-15. [Section storage](#section-storage)
-16. [Section poiAddConfig](#section-poiaddconfig)
-17. [Paramètres obsolètes/dépréciés](#paramètres-obsolètesdépréciés)
-18. [Architecture des fichiers de configuration](#architecture-des-fichiers-de-configuration)
+4. [Section map](#section-map)
+5. [Section Files](#section-files)
+6. [Section ui](#section-ui)
+7. [Section basemaps](#section-basemaps)
+8. [Section performance](#section-performance)
+9. [Section search](#section-search)
+10. [Section layerManagerConfig](#section-layermanagerconfig)
+11. [Section legendConfig](#section-legendconfig)
+12. [Section poiConfig](#section-poiconfig)
+13. [Section brandingConfig](#section-brandingconfig)
+14. [Section tableConfig](#section-tableconfig)
+15. [Section scaleConfig](#section-scaleconfig)
+16. [Section storage](#section-storage)
+17. [Section poiAddConfig](#section-poiaddconfig)
+18. [Paramètres obsolètes/dépréciés](#paramètres-obsolètesdépréciés)
+19. [Architecture des fichiers de configuration](#architecture-des-fichiers-de-configuration)
 
 ---
 
@@ -42,7 +43,7 @@ Le fichier `profile.json` est le **fichier de configuration principal** d'un pro
 - La configuration des filtres et de la recherche
 - Les réglages des composants (table, légende, gestionnaire de couches)
 
-> **⚠️ Important:** Cette documentation est basée sur l'analyse du **code source réel** (src/static/js/) et des **tests unitaires** (\_\_tests\_\_/). Les fichiers exemples (examples/) peuvent être obsolètes et ne doivent pas servir de référence.
+> **⚠️ Important:** Cette documentation est basée sur l'analyse du **code source réel** (src/modules/) et des **tests unitaires** (\_\_tests\_\_/).
 
 ### Emplacement
 
@@ -53,7 +54,8 @@ profiles/{profile-name}/profile.json
 ### Chargement
 
 Le fichier est chargé par :
-- **Fichier source:** [src/static/js/config/profile.js](../src/static/js/config/profile.js)
+
+- **Fichier source:** [src/modules/config/profile.js](../src/modules/config/profile.js)
 - **Fonction principale:** `loadActiveProfileResources()`
 - **Événement émis:** `geoleaf:profile:loaded`
 
@@ -69,6 +71,15 @@ Voici la structure complète avec tous les paramètres disponibles :
   "label": "string",
   "description": "string",
   "version": "string",
+
+  "map": {
+    "bounds": [[number, number], [number, number]],
+    "initialMaxZoom": number,
+    "padding": [number, number],
+    "positionFixed": boolean,
+    "boundsMargin": number,
+    "minZoom": number
+  },
 
   "Files": {
     "taxonomyFile": "string",
@@ -95,7 +106,9 @@ Voici la structure complète avec tous les paramètres disponibles :
     "{basemap-id}": {
       "id": "string",
       "label": "string",
-      "url": "string",
+      "type": "string (\"raster\" | \"maplibre\")",
+      "url": "string (tile URL template, also used as raster fallback for maplibre)",
+      "style": "string (URL style JSON MapLibre)",
       "attribution": "string",
       "minZoom": number,
       "maxZoom": number,
@@ -216,12 +229,14 @@ Voici la structure complète avec tous les paramètres disponibles :
 **Description:** Identifiant unique du profil.
 
 **Utilisation dans le code:**
+
 - Utilisé pour charger le profil
 - Référencé dans les événements
 - Stocké dans `config.data.activeProfile`
 
 **Fichiers source:**
-- [src/static/js/config/profile.js](../src/static/js/config/profile.js) ligne 141
+
+- [src/modules/config/profile.js](../src/modules/config/profile.js) ligne 141
 
 **Valeurs possibles:** Chaîne alphanumérique sans espaces (ex: `"tourism"`, `"my-custom-profile"`)
 
@@ -236,11 +251,13 @@ Voici la structure complète avec tous les paramètres disponibles :
 **Description:** Nom d'affichage du profil pour l'interface utilisateur.
 
 **Utilisation dans le code:**
+
 - Affiché dans les logs
 - Peut être utilisé dans l'interface de sélection de profil
 
 **Fichiers source:**
-- [src/static/js/config/profile.js](../src/static/js/config/profile.js)
+
+- [src/modules/config/profile.js](../src/modules/config/profile.js)
 
 **Valeurs possibles:** Chaîne de caractères libre (ex: `"Profil tourisme"`, `"My Custom Profile"`)
 
@@ -255,10 +272,12 @@ Voici la structure complète avec tous les paramètres disponibles :
 **Description:** Description détaillée du profil et de son usage.
 
 **Utilisation dans le code:**
+
 - Utilisé pour la documentation
 - Peut être affiché dans une interface de sélection
 
 **Fichiers source:**
+
 - Stocké dans l'objet profile mais peu utilisé directement dans le code
 
 **Valeurs possibles:** Texte libre
@@ -274,17 +293,93 @@ Voici la structure complète avec tous les paramètres disponibles :
 **Description:** Version du profil suivant le semantic versioning.
 
 **Utilisation dans le code:**
+
 - Utilisé pour la détection de version (v2.0 vs v3.0)
-- Fonction `isV3Profile()` dans ProfileV3Loader
+- Fonction `isModularProfile()` dans ProfileLoader
 
 **Fichiers source:**
-- [src/static/js/config/profile-v3-loader.js](../src/static/js/config/profile-v3-loader.js)
+
+- [src/modules/config/profile-loader.js](../src/modules/config/profile-loader.js)
 
 **Valeurs possibles:** Format "X.Y.Z" (ex: `"3.0.0"`, `"1.2.5"`)
 
 **Valeur par défaut:** `"1.0.0"`
 
 **État:** ✅ Actif et fonctionnel
+
+---
+
+## Section map
+
+### `map` (object, obligatoire)
+
+**Description:** Paramètres d'initialisation de la carte : emprise initiale, plafond de zoom au chargement, et restriction de navigation.
+
+**Utilisation dans le code:**
+
+- Chargé dans `src/app/init.js` lors de l'initialisation de la carte
+- `bounds` est utilisé pour le `fitBounds()` initial et comme emprise de `maxBounds` si `positionFixed` est activé
+
+#### `map.bounds` (array, obligatoire)
+
+Emprise géographique initiale au format `[[sud, ouest], [nord, est]]` en WGS84.
+
+```json
+"bounds": [[-58.39, -73.58], [-21.78, -34.67]]
+```
+
+#### `map.initialMaxZoom` (integer, optionnel)
+
+Zoom maximum utilisé par `fitBounds()` au démarrage. **Ne limite PAS** le zoom utilisateur — il empêche seulement le `fitBounds` initial de zoomer trop fort sur une petite emprise.
+
+- **Valeur par défaut:** `12`
+- **Valeurs possibles:** `1` à `20`
+- **Rétrocompatibilité:** l'ancien nom `maxZoom` est toujours lu en fallback
+
+> **⚠️ Note:** Ce paramètre ne remplace pas le `maxZoom` des basemaps (qui contrôle la disponibilité des tuiles) ni le zoom maximum Leaflet de la carte.
+
+#### `map.padding` (array, optionnel)
+
+Marge en pixels `[vertical, horizontal]` appliquée au `fitBounds()` initial. Évite que l'emprise colle aux bords du conteneur.
+
+- **Valeur par défaut:** `[50, 50]`
+
+#### `map.positionFixed` (boolean, optionnel)
+
+Restreint le déplacement de la carte à l'emprise définie dans `bounds`. L'utilisateur ne peut pas naviguer trop loin de cette zone mais conserve une liberté de déplacement.
+
+- **Valeur par défaut:** `false`
+- **Avantage performance:** Leaflet ne chargera pas de tuiles hors emprise → réduction des requêtes réseau
+- **Implémentation:** utilise `L.map({ maxBounds, maxBoundsViscosity: 0.85 })` avec une marge configurable via `boundsMargin` (défaut 30%)
+- **Comportement:** effet élastique ("rubber-band") aux bords, pas un mur dur
+
+#### `map.boundsMargin` (number, optionnel)
+
+Marge supplémentaire autour des `bounds` lorsque `positionFixed` est `true`. Permet de contrôler la liberté de déplacement.
+
+- **Valeur par défaut:** `0.3` (30% de marge)
+- **Plage:** `0` (aucune marge, très restrictif) à `1` (100%, très libre)
+- **Ignoré** si `positionFixed` est `false`
+
+#### `map.minZoom` (integer, optionnel)
+
+Zoom minimum lorsque `positionFixed` est `true`. Empêche l'utilisateur de dézoomer trop et voir le reste du monde.
+
+- **Valeur par défaut:** `3` (si `positionFixed` est `true`)
+- **Ignoré** si `positionFixed` est `false`
+
+#### Exemple complet
+
+```json
+"map": {
+  "bounds": [[-58.39, -73.58], [-21.78, -34.67]],
+  "initialMaxZoom": 12,
+  "padding": [50, 50],
+  "positionFixed": true,
+  "boundsMargin": 0.3,
+  "minZoom": 3
+}
+```
 
 ---
 
@@ -295,8 +390,9 @@ Voici la structure complète avec tous les paramètres disponibles :
 **Description:** Définit les chemins vers les fichiers de configuration associés au profil.
 
 **Utilisation dans le code:**
-- Chargés en parallèle lors de l'initialisation du profil v3.0
-- [src/static/js/config/profile-v3-loader.js](../src/static/js/config/profile-v3-loader.js)
+
+- Chargés en parallèle lors de l'initialisation du profil modulaire
+- [src/modules/config/profile-loader.js](../src/modules/config/profile-loader.js)
 
 **État:** ✅ Actif et fonctionnel (profils v3.0)
 
@@ -307,13 +403,15 @@ Voici la structure complète avec tous les paramètres disponibles :
 **Description:** Chemin vers le fichier de taxonomie (catégories/sous-catégories).
 
 **Utilisation dans le code:**
+
 ```javascript
-// profile-v3-loader.js ligne 67
+// profile-loader.js ligne 67
 const taxonomyUrl = `${baseUrl}/${profile.Files.taxonomyFile}?t=${timestamp}`;
 ```
 
 **Fichiers source:**
-- [src/static/js/config/profile-v3-loader.js](../src/static/js/config/profile-v3-loader.js) ligne 67
+
+- [src/modules/config/profile-loader.js](../src/modules/config/profile-loader.js) ligne 67
 
 **Valeurs possibles:** Chemin relatif au répertoire du profil (ex: `"taxonomy.json"`)
 
@@ -328,13 +426,15 @@ const taxonomyUrl = `${baseUrl}/${profile.Files.taxonomyFile}?t=${timestamp}`;
 **Description:** Chemin vers le fichier de thèmes (presets de visibilité des couches).
 
 **Utilisation dans le code:**
+
 ```javascript
-// profile-v3-loader.js ligne 68
+// profile-loader.js ligne 68
 const themesUrl = `${baseUrl}/${profile.Files.themesFile}?t=${timestamp}`;
 ```
 
 **Fichiers source:**
-- [src/static/js/config/profile-v3-loader.js](../src/static/js/config/profile-v3-loader.js) ligne 68
+
+- [src/modules/config/profile-loader.js](../src/modules/config/profile-loader.js) ligne 68
 
 **Valeurs possibles:** Chemin relatif (ex: `"themes.json"`)
 
@@ -349,13 +449,15 @@ const themesUrl = `${baseUrl}/${profile.Files.themesFile}?t=${timestamp}`;
 **Description:** Chemin vers le fichier de définition des couches GeoJSON.
 
 **Utilisation dans le code:**
+
 ```javascript
-// profile-v3-loader.js ligne 69
+// profile-loader.js ligne 69
 const layersUrl = `${baseUrl}/${profile.Files.layersFile}?t=${timestamp}`;
 ```
 
 **Fichiers source:**
-- [src/static/js/config/profile-v3-loader.js](../src/static/js/config/profile-v3-loader.js) ligne 69
+
+- [src/modules/config/profile-loader.js](../src/modules/config/profile-loader.js) ligne 69
 
 **Valeurs possibles:** Chemin relatif (ex: `"layers.json"`)
 
@@ -380,17 +482,20 @@ const layersUrl = `${baseUrl}/${profile.Files.layersFile}?t=${timestamp}`;
 **Description:** Thème visuel de l'application.
 
 **Utilisation dans le code:**
+
 ```javascript
 // geoleaf.core.js ligne 132
-const uiConfig = global.GeoLeaf.Config.get('ui') || {};
-const theme = uiConfig.theme || 'light';
+const uiConfig = global.GeoLeaf.Config.get("ui") || {};
+const theme = uiConfig.theme || "light";
 ```
 
 **Fichiers source:**
-- [src/static/js/geoleaf.core.js](../src/static/js/geoleaf.core.js) ligne 132
-- [src/static/js/ui/theme.js](../src/static/js/ui/theme.js)
 
-**Valeurs possibles:** 
+- [src/modules/geoleaf.core.js](../src/modules/geoleaf.core.js) ligne 132
+- [src/modules/ui/theme.js](../src/modules/ui/theme.js)
+
+**Valeurs possibles:**
+
 - `"light"` - Thème clair
 - `"dark"` - Thème sombre
 
@@ -405,10 +510,12 @@ const theme = uiConfig.theme || 'light';
 **Description:** Langue de l'interface utilisateur.
 
 **Utilisation dans le code:**
+
 - Stocké dans la configuration
 - Peut influencer les labels et textes
 
 **Fichiers source:**
+
 - Pas d'utilisation directe détectée dans le code actuel
 
 **Valeurs possibles:** Codes ISO 639-1 (ex: `"fr"`, `"en"`, `"es"`)
@@ -424,13 +531,15 @@ const theme = uiConfig.theme || 'light';
 **Description:** Affiche les contrôles de sélection des fonds de carte.
 
 **Utilisation dans le code:**
+
 ```javascript
 // geoleaf.baselayers.js ligne 217
 const showControls = config && config.ui && config.ui.showBaseLayerControls !== false;
 ```
 
 **Fichiers source:**
-- [src/static/js/geoleaf.baselayers.js](../src/static/js/geoleaf.baselayers.js) ligne 217
+
+- [src/modules/geoleaf.baselayers.js](../src/modules/geoleaf.baselayers.js) ligne 217
 
 **Valeurs possibles:** `true` | `false`
 
@@ -439,6 +548,7 @@ const showControls = config && config.ui && config.ui.showBaseLayerControls !== 
 **État:** ✅ Actif et fonctionnel
 
 **Tests:**
+
 - [\_\_tests\_\_/baselayers/baselayers.test.js](../__tests__/baselayers/baselayers.test.js) ligne 307
 
 ---
@@ -448,10 +558,12 @@ const showControls = config && config.ui && config.ui.showBaseLayerControls !== 
 **Description:** Affiche le gestionnaire de couches.
 
 **Utilisation dans le code:**
+
 - Utilisé pour conditionner l'affichage du composant LayerManager
 
 **Fichiers source:**
-- [src/static/js/geoleaf.layer-manager.js](../src/static/js/geoleaf.layer-manager.js)
+
+- [src/modules/geoleaf.layer-manager.js](../src/modules/geoleaf.layer-manager.js)
 
 **Valeurs possibles:** `true` | `false`
 
@@ -466,13 +578,15 @@ const showControls = config && config.ui && config.ui.showBaseLayerControls !== 
 **Description:** Affiche le panneau de filtrage des POI.
 
 **Utilisation dans le code:**
+
 ```javascript
 // filter-panel/renderer.test.js ligne 425
 mockGeoLeaf.Config.get.mockReturnValue({ showFilterPanel: true });
 ```
 
 **Fichiers source:**
-- [src/static/js/ui/filter-panel/renderer.js](../src/static/js/ui/filter-panel/renderer.js)
+
+- [src/modules/ui/filter-panel/renderer.js](../src/modules/ui/filter-panel/renderer.js)
 
 **Valeurs possibles:** `true` | `false`
 
@@ -481,6 +595,7 @@ mockGeoLeaf.Config.get.mockReturnValue({ showFilterPanel: true });
 **État:** ✅ Actif et fonctionnel
 
 **Tests:**
+
 - [\_\_tests\_\_/ui/filter-panel/renderer.test.js](../__tests__/ui/filter-panel/renderer.test.js) ligne 424
 
 ---
@@ -490,13 +605,15 @@ mockGeoLeaf.Config.get.mockReturnValue({ showFilterPanel: true });
 **Description:** Active le contrôle de géolocalisation.
 
 **Utilisation dans le code:**
+
 ```javascript
 // ui/controls.js (ligne 164 dans les tests)
 const config = { ui: { enableGeolocation: true } };
 ```
 
 **Fichiers source:**
-- [src/static/js/ui/controls.js](../src/static/js/ui/controls.js)
+
+- [src/modules/ui/controls.js](../src/modules/ui/controls.js)
 
 **Valeurs possibles:** `true` | `false`
 
@@ -505,6 +622,7 @@ const config = { ui: { enableGeolocation: true } };
 **État:** ✅ Actif et fonctionnel
 
 **Tests:**
+
 - [\_\_tests\_\_/ui/controls.test.js](../__tests__/ui/controls.test.js) ligne 164
 - [\_\_tests\_\_/integration/controls-simple.test.js](../__tests__/integration/controls-simple.test.js) ligne 214
 
@@ -515,14 +633,16 @@ const config = { ui: { enableGeolocation: true } };
 **Description:** Affiche l'indicateur de coordonnées.
 
 **Utilisation dans le code:**
+
 ```javascript
 // geoleaf.core.js ligne 132
-const showCoordinates = uiConfig ? (uiConfig.showCoordinates !== false) : true;
+const showCoordinates = uiConfig ? uiConfig.showCoordinates !== false : true;
 ```
 
 **Fichiers source:**
-- [src/static/js/geoleaf.core.js](../src/static/js/geoleaf.core.js)
-- [src/static/js/ui/coordinates-display.js](../src/static/js/ui/coordinates-display.js)
+
+- [src/modules/geoleaf.core.js](../src/modules/geoleaf.core.js)
+- [src/modules/ui/coordinates-display.js](../src/modules/ui/coordinates-display.js)
 
 **Valeurs possibles:** `true` | `false`
 
@@ -531,6 +651,7 @@ const showCoordinates = uiConfig ? (uiConfig.showCoordinates !== false) : true;
 **État:** ✅ Actif et fonctionnel
 
 **Tests:**
+
 - [\_\_tests\_\_/ui/coordinates-display.test.js](../__tests__/ui/coordinates-display.test.js) ligne 144
 
 ---
@@ -540,13 +661,15 @@ const showCoordinates = uiConfig ? (uiConfig.showCoordinates !== false) : true;
 **Description:** Affiche le sélecteur de thèmes.
 
 **Utilisation dans le code:**
+
 ```javascript
 // themes/theme-selector.js ligne 124
-const uiConfig = GeoLeaf.Config && GeoLeaf.Config.get ? GeoLeaf.Config.get('ui') : null;
+const uiConfig = GeoLeaf.Config && GeoLeaf.Config.get ? GeoLeaf.Config.get("ui") : null;
 ```
 
 **Fichiers source:**
-- [src/static/js/themes/theme-selector.js](../src/static/js/themes/theme-selector.js) ligne 124
+
+- [src/modules/themes/theme-selector.js](../src/modules/themes/theme-selector.js) ligne 124
 
 **Valeurs possibles:** `true` | `false`
 
@@ -561,13 +684,15 @@ const uiConfig = GeoLeaf.Config && GeoLeaf.Config.get ? GeoLeaf.Config.get('ui')
 **Description:** Affiche le composant de légende.
 
 **Utilisation dans le code:**
+
 ```javascript
 // geoleaf.core.js ligne 133
-const showLegend = uiConfig ? (uiConfig.showLegend !== false) : true;
+const showLegend = uiConfig ? uiConfig.showLegend !== false : true;
 ```
 
 **Fichiers source:**
-- [src/static/js/geoleaf.core.js](../src/static/js/geoleaf.core.js) ligne 133
+
+- [src/modules/geoleaf.core.js](../src/modules/geoleaf.core.js) ligne 133
 
 **Valeurs possibles:** `true` | `false`
 
@@ -582,13 +707,15 @@ const showLegend = uiConfig ? (uiConfig.showLegend !== false) : true;
 **Description:** Affiche le bouton de gestion du cache hors ligne.
 
 **Utilisation dans le code:**
+
 ```javascript
 // ui/cache-button.test.js ligne 154
 const showCacheButton = cfg?.ui?.showCacheButton !== false;
 ```
 
 **Fichiers source:**
-- [src/static/js/ui/cache-button.js](../src/static/js/ui/cache-button.js)
+
+- [src/modules/ui/cache-button.js](../src/modules/ui/cache-button.js)
 
 **Valeurs possibles:** `true` | `false`
 
@@ -597,6 +724,7 @@ const showCacheButton = cfg?.ui?.showCacheButton !== false;
 **État:** ✅ Actif et fonctionnel
 
 **Tests:**
+
 - [\_\_tests\_\_/ui/cache-button.test.js](../__tests__/ui/cache-button.test.js) ligne 152
 
 ---
@@ -606,13 +734,15 @@ const showCacheButton = cfg?.ui?.showCacheButton !== false;
 **Description:** Affiche le bouton d'ajout de POI.
 
 **Utilisation dans le code:**
+
 ```javascript
 // integration/controls-simple.test.js ligne 287
 const config = { ui: { showAddPoi: true } };
 ```
 
 **Fichiers source:**
-- [src/static/js/ui/controls.js](../src/static/js/ui/controls.js)
+
+- [src/modules/ui/controls.js](../src/modules/ui/controls.js)
 
 **Valeurs possibles:** `true` | `false`
 
@@ -621,6 +751,7 @@ const config = { ui: { showAddPoi: true } };
 **État:** ✅ Actif et fonctionnel
 
 **Tests:**
+
 - [\_\_tests\_\_/integration/controls-simple.test.js](../__tests__/integration/controls-simple.test.js) ligne 287
 
 ---
@@ -630,16 +761,18 @@ const config = { ui: { showAddPoi: true } };
 **Description:** Rend les formes géométriques (polygones, lignes) interactives (cliquables).
 
 **Utilisation dans le code:**
+
 ```javascript
 // ui/filter-panel/proximity.js ligne 212
-const interactiveShapes = GeoLeaf.Config.get('ui.interactiveShapes', false);
+const interactiveShapes = GeoLeaf.Config.get("ui.interactiveShapes", false);
 ```
 
 **Fichiers source:**
-- [src/static/js/ui/filter-panel/proximity.js](../src/static/js/ui/filter-panel/proximity.js) ligne 212
-- [src/static/js/ui/controls.js](../src/static/js/ui/controls.js) ligne 348
-- [src/static/js/geojson/layer-config-manager.js](../src/static/js/geojson/layer-config-manager.js) ligne 115
-- [src/static/js/geoleaf.route.js](../src/static/js/geoleaf.route.js) ligne 144
+
+- [src/modules/ui/filter-panel/proximity.js](../src/modules/ui/filter-panel/proximity.js) ligne 212
+- [src/modules/ui/controls.js](../src/modules/ui/controls.js) ligne 348
+- [src/modules/geojson/layer-config-manager.js](../src/modules/geojson/layer-config-manager.js) ligne 115
+- [src/modules/geoleaf.route.js](../src/modules/geoleaf.route.js) ligne 144
 
 **Valeurs possibles:** `true` | `false`
 
@@ -658,14 +791,16 @@ const interactiveShapes = GeoLeaf.Config.get('ui.interactiveShapes', false);
 **Structure:** Objet avec clés = ID du fond de carte, valeurs = configuration du fond de carte.
 
 **Utilisation dans le code:**
+
 ```javascript
 // geoleaf.baselayers.js ligne 218
-basemaps: global.GeoLeaf.Config.get('basemaps') || {}
+basemaps: global.GeoLeaf.Config.get("basemaps") || {};
 ```
 
 **Fichiers source:**
-- [src/static/js/geoleaf.baselayers.js](../src/static/js/geoleaf.baselayers.js)
-- [src/static/js/storage/cache/resource-enumerator.js](../src/static/js/storage/cache/resource-enumerator.js) ligne 211
+
+- [src/modules/geoleaf.baselayers.js](../src/modules/geoleaf.baselayers.js)
+- [src/modules/storage/cache/resource-enumerator.js](../src/modules/storage/cache/resource-enumerator.js) ligne 211
 
 **État:** ✅ Actif et fonctionnel
 
@@ -702,6 +837,7 @@ basemaps: global.GeoLeaf.Config.get('basemaps') || {}
 **Format:** Utilise les placeholders `{s}`, `{z}`, `{x}`, `{y}`
 
 **Exemple:**
+
 ```
 https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png
 ```
@@ -719,6 +855,7 @@ https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png
 **Description:** Texte d'attribution/copyright du fond de carte (HTML autorisé).
 
 **Exemple:**
+
 ```
 &copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors
 ```
@@ -736,6 +873,7 @@ https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png
 **Description:** Niveau de zoom minimum pour ce fond de carte.
 
 **Utilisation dans le code:**
+
 ```javascript
 // geoleaf.baselayers.js ligne 103
 if (typeof definition.minZoom === "number") {
@@ -744,7 +882,8 @@ if (typeof definition.minZoom === "number") {
 ```
 
 **Fichiers source:**
-- [src/static/js/geoleaf.baselayers.js](../src/static/js/geoleaf.baselayers.js) ligne 100-107
+
+- [src/modules/geoleaf.baselayers.js](../src/modules/geoleaf.baselayers.js) ligne 100-107
 
 **Valeurs possibles:** Nombre entier entre 0 et 20 (généralement 0-5 pour fonds de carte)
 
@@ -759,13 +898,15 @@ if (typeof definition.minZoom === "number") {
 **Description:** Niveau de zoom maximum pour ce fond de carte.
 
 **Utilisation dans le code:**
+
 ```javascript
 // geoleaf.baselayers.js ligne 108
 opts.maxZoom = typeof definition.maxZoom === "number" ? definition.maxZoom : 19;
 ```
 
 **Fichiers source:**
-- [src/static/js/geoleaf.baselayers.js](../src/static/js/geoleaf.baselayers.js) ligne 108
+
+- [src/modules/geoleaf.baselayers.js](../src/modules/geoleaf.baselayers.js) ligne 108
 
 **Valeurs possibles:** Nombre entier entre 1 et 20 (généralement 17-19 pour OSM)
 
@@ -780,10 +921,12 @@ opts.maxZoom = typeof definition.maxZoom === "number" ? definition.maxZoom : 19;
 **Description:** Indique si ce fond de carte est sélectionné par défaut au chargement.
 
 **Utilisation dans le code:**
+
 - Utilisé lors de l'initialisation de la carte pour sélectionner le fond par défaut
 
 **Fichiers source:**
-- [src/static/js/geoleaf.baselayers.js](../src/static/js/geoleaf.baselayers.js)
+
+- [src/modules/geoleaf.baselayers.js](../src/modules/geoleaf.baselayers.js)
 
 **Valeurs possibles:** `true` | `false`
 
@@ -798,10 +941,12 @@ opts.maxZoom = typeof definition.maxZoom === "number" ? definition.maxZoom : 19;
 **Description:** Indique si ce fond de carte est disponible en mode hors ligne (cache).
 
 **Utilisation dans le code:**
+
 - Utilisé par le système de cache pour déterminer si les tuiles doivent être mises en cache
 
 **Fichiers source:**
-- [src/static/js/storage/cache/resource-enumerator.js](../src/static/js/storage/cache/resource-enumerator.js)
+
+- [src/modules/storage/cache/resource-enumerator.js](../src/modules/storage/cache/resource-enumerator.js)
 
 **Valeurs possibles:** `true` | `false`
 
@@ -816,6 +961,7 @@ opts.maxZoom = typeof definition.maxZoom === "number" ? definition.maxZoom : 19;
 **Description:** Limites géographiques pour le cache hors ligne de ce fond de carte.
 
 **Structure:**
+
 ```json
 {
   "north": number,
@@ -828,12 +974,13 @@ opts.maxZoom = typeof definition.maxZoom === "number" ? definition.maxZoom : 19;
 **Prérequis:** `offline: true`
 
 **Exemple:**
+
 ```json
 {
-  "north": -22.0,
-  "south": -56.0,
-  "east": -53.5,
-  "west": -73.5
+    "north": -22.0,
+    "south": -56.0,
+    "east": -53.5,
+    "west": -73.5
 }
 ```
 
@@ -873,6 +1020,73 @@ opts.maxZoom = typeof definition.maxZoom === "number" ? definition.maxZoom : 19;
 
 ---
 
+#### `basemaps.{id}.type` (string, optionnel)
+
+**Description:** Type de basemap. Permet de distinguer les basemaps raster classiques des basemaps vectorielles MapLibre GL.
+
+**Valeurs possibles:**
+
+- `"raster"` — Basemap raster classique via `L.tileLayer()` (défaut implicite)
+- `"maplibre"` — Basemap vectorielle WebGL via `@maplibre/maplibre-gl-leaflet`
+
+**Valeur par défaut:** `"raster"` (implicite quand absent)
+
+**Comportement:** Si `type: "maplibre"` (ou si `style` est présent), le module Baselayers crée un layer MapLibre GL au lieu d'un `L.tileLayer`. Si le plugin MapLibre n'est pas chargé, un fallback raster est utilisé.
+
+**Ajouté en:** v4.0.0 (Scénario B hybride)
+
+**État:** ✅ Actif et fonctionnel
+
+---
+
+#### `basemaps.{id}.style` (string, requis si type "maplibre")
+
+**Description:** URL du style JSON MapLibre GL (ou objet style inline). Définit les sources de tuiles vectorielles et les layers de rendu.
+
+**Prérequis:** `type: "maplibre"` (ou implicite si `style` est fourni)
+
+**Exemple:**
+
+```
+https://tiles.openfreemap.org/styles/liberty
+```
+
+**Providers gratuits:**
+
+- OpenFreeMap : `https://tiles.openfreemap.org/styles/liberty` (100% gratuit)
+- OpenFreeMap Dark : `https://tiles.openfreemap.org/styles/dark`
+- MapTiler (freemium) : `https://api.maptiler.com/maps/streets-v2/style.json?key=KEY`
+
+**Valeur par défaut:** Aucune (requis pour les basemaps MapLibre)
+
+**Ajouté en:** v4.0.0 (Scénario B hybride)
+
+**État:** ✅ Actif et fonctionnel
+
+---
+
+#### `basemaps.{id}.fallbackUrl` (string, optionnel)
+
+**Description:** URL de tuiles raster de secours, utilisée quand le plugin MapLibre GL Leaflet n'est pas disponible.
+
+**Prérequis:** `type: "maplibre"` (ignoré pour les basemaps raster)
+
+**Exemple:**
+
+```
+https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png
+```
+
+**Comportement:** Si `L.maplibreGL` n'est pas chargé (CDN manquant, erreur réseau), la basemap utilise cette URL raster en fallback. Si `fallbackUrl` n'est pas fourni, le fallback utilise la basemap `street` par défaut (OSM).
+
+**Valeur par défaut:** URL de la basemap `street` par défaut
+
+**Ajouté en:** v4.0.0 (Scénario B hybride)
+
+**État:** ✅ Actif et fonctionnel
+
+---
+
 ## Section performance
 
 ### `performance` (object, optionnel)
@@ -888,13 +1102,15 @@ opts.maxZoom = typeof definition.maxZoom === "number" ? definition.maxZoom : 19;
 **Description:** Nombre maximum de couches pouvant être chargées en parallèle.
 
 **Utilisation dans le code:**
+
 ```javascript
 // themes/theme-applier.js ligne 102
 const maxLayers = perfConfig.maxConcurrentLayers || 10;
 ```
 
 **Fichiers source:**
-- [src/static/js/themes/theme-applier.js](../src/static/js/themes/theme-applier.js) ligne 102
+
+- [src/modules/themes/theme-applier.js](../src/modules/themes/theme-applier.js) ligne 102
 
 **Valeurs possibles:** Nombre entier > 0 (généralement 5-15)
 
@@ -909,13 +1125,15 @@ const maxLayers = perfConfig.maxConcurrentLayers || 10;
 **Description:** Délai en millisecondes entre le chargement de chaque couche pour éviter la surcharge.
 
 **Utilisation dans le code:**
+
 ```javascript
 // themes/theme-applier.js ligne 103
 const loadDelay = perfConfig.layerLoadDelay || 200;
 ```
 
 **Fichiers source:**
-- [src/static/js/themes/theme-applier.js](../src/static/js/themes/theme-applier.js) ligne 103
+
+- [src/modules/themes/theme-applier.js](../src/modules/themes/theme-applier.js) ligne 103
 
 **Valeurs possibles:** Nombre entier en millisecondes (généralement 100-500)
 
@@ -930,13 +1148,15 @@ const loadDelay = perfConfig.layerLoadDelay || 200;
 **Description:** Ajuste automatiquement la vue de la carte aux limites des données lors du changement de thème.
 
 **Utilisation dans le code:**
+
 ```javascript
 // themes/theme-applier.js ligne 104
 const enableFitBounds = perfConfig.fitBoundsOnThemeChange !== false;
 ```
 
 **Fichiers source:**
-- [src/static/js/themes/theme-applier.js](../src/static/js/themes/theme-applier.js) ligne 104
+
+- [src/modules/themes/theme-applier.js](../src/modules/themes/theme-applier.js) ligne 104
 
 **Valeurs possibles:** `true` | `false`
 
@@ -955,14 +1175,16 @@ const enableFitBounds = perfConfig.fitBoundsOnThemeChange !== false;
 **Note:** Supporte aussi l'ancien format `profile.panels.search` pour la rétrocompatibilité.
 
 **Utilisation dans le code:**
+
 ```javascript
 // ui/filter-panel/renderer.js ligne 52
 const searchPanel = (profile.panels && profile.panels.search) || profile.search;
 ```
 
 **Fichiers source:**
-- [src/static/js/ui/filter-panel/renderer.js](../src/static/js/ui/filter-panel/renderer.js) ligne 51-52
-- [src/static/js/ui/filter-control-builder.js](../src/static/js/ui/filter-control-builder.js) ligne 385
+
+- [src/modules/ui/filter-panel/renderer.js](../src/modules/ui/filter-panel/renderer.js) ligne 51-52
+- [src/modules/ui/filter-control-builder.js](../src/modules/ui/filter-control-builder.js) ligne 385
 
 **État:** ✅ Actif et fonctionnel
 
@@ -973,13 +1195,15 @@ const searchPanel = (profile.panels && profile.panels.search) || profile.search;
 **Description:** Titre du panneau de filtrage.
 
 **Utilisation dans le code:**
+
 ```javascript
 // ui/filter-panel/renderer.js ligne 93
-textContent: searchPanel.title || "Filtres"
+textContent: searchPanel.title || "Filtres";
 ```
 
 **Fichiers source:**
-- [src/static/js/ui/filter-panel/renderer.js](../src/static/js/ui/filter-panel/renderer.js) ligne 93
+
+- [src/modules/ui/filter-panel/renderer.js](../src/modules/ui/filter-panel/renderer.js) ligne 93
 
 **Valeurs possibles:** Chaîne de caractères libre
 
@@ -994,6 +1218,7 @@ textContent: searchPanel.title || "Filtres"
 **Description:** Rayon minimum (en km) pour la recherche par proximité.
 
 **Utilisation dans le code:**
+
 ```javascript
 // ui/filter-control-builder.js ligne 387
 if (typeof searchConfig.radiusMin === "number" && searchConfig.radiusMin > 0) {
@@ -1002,7 +1227,8 @@ if (typeof searchConfig.radiusMin === "number" && searchConfig.radiusMin > 0) {
 ```
 
 **Fichiers source:**
-- [src/static/js/ui/filter-control-builder.js](../src/static/js/ui/filter-control-builder.js) ligne 387
+
+- [src/modules/ui/filter-control-builder.js](../src/modules/ui/filter-control-builder.js) ligne 387
 
 **Valeurs possibles:** Nombre > 0 (généralement 1-10)
 
@@ -1017,6 +1243,7 @@ if (typeof searchConfig.radiusMin === "number" && searchConfig.radiusMin > 0) {
 **Description:** Rayon maximum (en km) pour la recherche par proximité.
 
 **Utilisation dans le code:**
+
 ```javascript
 // ui/filter-control-builder.js ligne 390
 if (typeof searchConfig.radiusMax === "number" && searchConfig.radiusMax > 0) {
@@ -1025,7 +1252,8 @@ if (typeof searchConfig.radiusMax === "number" && searchConfig.radiusMax > 0) {
 ```
 
 **Fichiers source:**
-- [src/static/js/ui/filter-control-builder.js](../src/static/js/ui/filter-control-builder.js) ligne 390
+
+- [src/modules/ui/filter-control-builder.js](../src/modules/ui/filter-control-builder.js) ligne 390
 
 **Valeurs possibles:** Nombre > `radiusMin` (généralement 50-100)
 
@@ -1040,6 +1268,7 @@ if (typeof searchConfig.radiusMax === "number" && searchConfig.radiusMax > 0) {
 **Description:** Pas d'incrémentation pour le curseur de rayon de recherche.
 
 **Utilisation dans le code:**
+
 ```javascript
 // ui/filter-control-builder.js ligne 393
 if (typeof searchConfig.radiusStep === "number" && searchConfig.radiusStep > 0) {
@@ -1048,7 +1277,8 @@ if (typeof searchConfig.radiusStep === "number" && searchConfig.radiusStep > 0) 
 ```
 
 **Fichiers source:**
-- [src/static/js/ui/filter-control-builder.js](../src/static/js/ui/filter-control-builder.js) ligne 393
+
+- [src/modules/ui/filter-control-builder.js](../src/modules/ui/filter-control-builder.js) ligne 393
 
 **Valeurs possibles:** Nombre > 0 (généralement 1-5)
 
@@ -1063,6 +1293,7 @@ if (typeof searchConfig.radiusStep === "number" && searchConfig.radiusStep > 0) 
 **Description:** Rayon par défaut (en km) pour la recherche par proximité.
 
 **Utilisation dans le code:**
+
 ```javascript
 // ui/filter-control-builder.js ligne 396
 if (typeof searchConfig.radiusDefault === "number" && searchConfig.radiusDefault > 0) {
@@ -1071,7 +1302,8 @@ if (typeof searchConfig.radiusDefault === "number" && searchConfig.radiusDefault
 ```
 
 **Fichiers source:**
-- [src/static/js/ui/filter-control-builder.js](../src/static/js/ui/filter-control-builder.js) ligne 396
+
+- [src/modules/ui/filter-control-builder.js](../src/modules/ui/filter-control-builder.js) ligne 396
 
 **Valeurs possibles:** Nombre entre `radiusMin` et `radiusMax` (généralement 10-20)
 
@@ -1098,34 +1330,38 @@ if (typeof searchConfig.radiusDefault === "number" && searchConfig.radiusDefault
 **Description:** Liste des filtres disponibles dans le panneau de recherche.
 
 **Structure de chaque filtre:**
+
 ```json
 {
-  "id": "string",
-  "type": "string",
-  "label": "string",
-  "placeholder": "string",
-  "searchFields": ["string"],
-  "buttonLabel": "string",
-  "instructionText": "string",
-  "field": "string"
+    "id": "string",
+    "type": "string",
+    "label": "string",
+    "placeholder": "string",
+    "searchFields": ["string"],
+    "buttonLabel": "string",
+    "instructionText": "string",
+    "field": "string"
 }
 ```
 
 **Types de filtres disponibles:**
+
 - `"search"` - Recherche textuelle
 - `"proximity"` - Recherche par proximité géographique
 - `"tree"` - Arbre de catégories
 - `"multiselect-tags"` - Sélection multiple de tags
 
 **Utilisation dans le code:**
+
 ```javascript
 // ui/filter-panel/renderer.js ligne 55
 const filters = searchPanel && Array.isArray(searchPanel.filters) ? searchPanel.filters : null;
 ```
 
 **Fichiers source:**
-- [src/static/js/ui/filter-panel/renderer.js](../src/static/js/ui/filter-panel/renderer.js) ligne 55
-- [src/static/js/ui/filter-control-builder.js](../src/static/js/ui/filter-control-builder.js)
+
+- [src/modules/ui/filter-panel/renderer.js](../src/modules/ui/filter-panel/renderer.js) ligne 55
+- [src/modules/ui/filter-control-builder.js](../src/modules/ui/filter-control-builder.js)
 
 **État:** ✅ Actif et fonctionnel
 
@@ -1136,14 +1372,16 @@ const filters = searchPanel && Array.isArray(searchPanel.filters) ? searchPanel.
 **Description:** Labels des boutons d'action du panneau de filtrage.
 
 **Structure:**
+
 ```json
 {
-  "applyLabel": "string",
-  "resetLabel": "string"
+    "applyLabel": "string",
+    "resetLabel": "string"
 }
 ```
 
 **Valeurs par défaut:**
+
 - `applyLabel`: `"Appliquer"`
 - `resetLabel`: `"Réinitialiser"`
 
@@ -1158,13 +1396,15 @@ const filters = searchPanel && Array.isArray(searchPanel.filters) ? searchPanel.
 **Description:** Configuration du gestionnaire de couches.
 
 **Utilisation dans le code:**
+
 ```javascript
 // geoleaf.layer-manager.js ligne 149
-const layerManagerConfig = GeoLeaf.Config.get('layerManagerConfig');
+const layerManagerConfig = GeoLeaf.Config.get("layerManagerConfig");
 ```
 
 **Fichiers source:**
-- [src/static/js/geoleaf.layer-manager.js](../src/static/js/geoleaf.layer-manager.js) ligne 149
+
+- [src/modules/geoleaf.layer-manager.js](../src/modules/geoleaf.layer-manager.js) ligne 149
 
 **État:** ✅ Actif et fonctionnel
 
@@ -1187,14 +1427,16 @@ const layerManagerConfig = GeoLeaf.Config.get('layerManagerConfig');
 **Description:** État replié initial du gestionnaire de couches.
 
 **Utilisation dans le code:**
+
 ```javascript
 // geoleaf.layer-manager.js ligne 152
-collapsed: layerManagerConfig?.collapsedByDefault
+collapsed: layerManagerConfig?.collapsedByDefault;
 ```
 
 **Fichiers source:**
-- [src/static/js/geoleaf.layer-manager.js](../src/static/js/geoleaf.layer-manager.js) ligne 152
-- [src/static/js/layer-manager/control.js](../src/static/js/layer-manager/control.js) ligne 111
+
+- [src/modules/geoleaf.layer-manager.js](../src/modules/geoleaf.layer-manager.js) ligne 152
+- [src/modules/layer-manager/control.js](../src/modules/layer-manager/control.js) ligne 111
 
 **Valeurs possibles:** `true` | `false`
 
@@ -1209,6 +1451,7 @@ collapsed: layerManagerConfig?.collapsedByDefault
 **Description:** Liste des sections du gestionnaire de couches.
 
 **Structure de chaque section:**
+
 ```json
 {
   "id": "string",
@@ -1219,14 +1462,16 @@ collapsed: layerManagerConfig?.collapsedByDefault
 ```
 
 **Utilisation dans le code:**
+
 ```javascript
 // geoleaf.layer-manager.js ligne 173
-collapsedByDefault: s.collapsedByDefault
+collapsedByDefault: s.collapsedByDefault;
 ```
 
 **Fichiers source:**
-- [src/static/js/geoleaf.layer-manager.js](../src/static/js/geoleaf.layer-manager.js) ligne 162-176
-- [src/static/js/layer-manager/renderer.js](../src/static/js/layer-manager/renderer.js) ligne 61-62
+
+- [src/modules/geoleaf.layer-manager.js](../src/modules/geoleaf.layer-manager.js) ligne 162-176
+- [src/modules/layer-manager/renderer.js](../src/modules/layer-manager/renderer.js) ligne 61-62
 
 **État:** ✅ Actif et fonctionnel
 
@@ -1239,13 +1484,15 @@ collapsedByDefault: s.collapsedByDefault
 **Description:** Configuration du composant de légende.
 
 **Utilisation dans le code:**
+
 ```javascript
 // geoleaf.legend.js ligne 158
 const legendConfig = GeoLeaf.Config.get("legendConfig");
 ```
 
 **Fichiers source:**
-- [src/static/js/geoleaf.legend.js](../src/static/js/geoleaf.legend.js) ligne 158
+
+- [src/modules/geoleaf.legend.js](../src/modules/geoleaf.legend.js) ligne 158
 
 **État:** ✅ Actif et fonctionnel
 
@@ -1268,13 +1515,15 @@ const legendConfig = GeoLeaf.Config.get("legendConfig");
 **Description:** État replié initial de la légende.
 
 **Utilisation dans le code:**
+
 ```javascript
 // geoleaf.legend.js ligne 163
-collapsed: (legendConfig && legendConfig.collapsedByDefault) || false
+collapsed: (legendConfig && legendConfig.collapsedByDefault) || false;
 ```
 
 **Fichiers source:**
-- [src/static/js/geoleaf.legend.js](../src/static/js/geoleaf.legend.js) ligne 163
+
+- [src/modules/geoleaf.legend.js](../src/modules/geoleaf.legend.js) ligne 163
 
 **Valeurs possibles:** `true` | `false`
 
@@ -1288,7 +1537,8 @@ collapsed: (legendConfig && legendConfig.collapsedByDefault) || false
 
 **Description:** Position de la légende sur la carte.
 
-**Valeurs possibles:** 
+**Valeurs possibles:**
+
 - `"topleft"`
 - `"topright"`
 - `"bottomleft"`
@@ -1307,13 +1557,15 @@ collapsed: (legendConfig && legendConfig.collapsedByDefault) || false
 **Description:** Configuration des Points d'Intérêt (POI).
 
 **Utilisation dans le code:**
+
 ```javascript
 // geojson/clustering.js ligne 25
 return Config.get("poiConfig") || {};
 ```
 
 **Fichiers source:**
-- [src/static/js/geojson/clustering.js](../src/static/js/geojson/clustering.js) ligne 25
+
+- [src/modules/geojson/clustering.js](../src/modules/geojson/clustering.js) ligne 25
 
 **État:** ✅ Actif et fonctionnel
 
@@ -1324,16 +1576,19 @@ return Config.get("poiConfig") || {};
 **Description:** Stratégie de clustering des POI.
 
 **Utilisation dans le code:**
+
 ```javascript
 // geojson/clustering.js ligne 123
 const strategy = poiConfig.clusterStrategy || "unified";
 ```
 
 **Fichiers source:**
-- [src/static/js/geojson/clustering.js](../src/static/js/geojson/clustering.js) ligne 123, 131
-- [src/static/js/geojson/loader.js](../src/static/js/geojson/loader.js) ligne 495
+
+- [src/modules/geojson/clustering.js](../src/modules/geojson/clustering.js) ligne 123, 131
+- [src/modules/geojson/loader.js](../src/modules/geojson/loader.js) ligne 495
 
 **Valeurs possibles:**
+
 - `"unified"` - Cluster unique partagé entre toutes les couches (défaut)
 - `"by-source"` - Cluster indépendant par source de données
 
@@ -1342,6 +1597,7 @@ const strategy = poiConfig.clusterStrategy || "unified";
 **État:** ✅ Actif et fonctionnel
 
 **Tests:**
+
 - [\_\_tests\_\_/geojson/geojson-layers.test.js](../__tests__/geojson/geojson-layers.test.js) ligne 373
 
 ---
@@ -1353,13 +1609,15 @@ const strategy = poiConfig.clusterStrategy || "unified";
 **Description:** Configuration du bandeau d'attribution/branding.
 
 **Utilisation dans le code:**
+
 ```javascript
 // ui/branding.js ligne 72
 const brandingConfig = GeoLeaf.Config?.get("brandingConfig");
 ```
 
 **Fichiers source:**
-- [src/static/js/ui/branding.js](../src/static/js/ui/branding.js) ligne 72
+
+- [src/modules/ui/branding.js](../src/modules/ui/branding.js) ligne 72
 
 **État:** ✅ Actif et fonctionnel
 
@@ -1370,6 +1628,7 @@ const brandingConfig = GeoLeaf.Config?.get("brandingConfig");
 **Description:** Active/désactive le bandeau de branding.
 
 **Utilisation dans le code:**
+
 ```javascript
 // ui/branding.js ligne 74
 if (brandingConfig === false || (brandingConfig && brandingConfig.enabled === false)) {
@@ -1378,7 +1637,8 @@ if (brandingConfig === false || (brandingConfig && brandingConfig.enabled === fa
 ```
 
 **Fichiers source:**
-- [src/static/js/ui/branding.js](../src/static/js/ui/branding.js) ligne 74
+
+- [src/modules/ui/branding.js](../src/modules/ui/branding.js) ligne 74
 
 **Valeurs possibles:** `true` | `false`
 
@@ -1393,13 +1653,15 @@ if (brandingConfig === false || (brandingConfig && brandingConfig.enabled === fa
 **Description:** Texte du bandeau de branding (HTML autorisé).
 
 **Utilisation dans le code:**
+
 ```javascript
 // ui/branding.js ligne 82
 this._options.text = brandingConfig.text;
 ```
 
 **Fichiers source:**
-- [src/static/js/ui/branding.js](../src/static/js/ui/branding.js) ligne 81-82
+
+- [src/modules/ui/branding.js](../src/modules/ui/branding.js) ligne 81-82
 
 **Valeurs possibles:** Chaîne HTML
 
@@ -1414,15 +1676,18 @@ this._options.text = brandingConfig.text;
 **Description:** Position du bandeau de branding sur la carte.
 
 **Utilisation dans le code:**
+
 ```javascript
 // ui/branding.js ligne 85
 this._options.position = brandingConfig.position;
 ```
 
 **Fichiers source:**
-- [src/static/js/ui/branding.js](../src/static/js/ui/branding.js) ligne 84-85
+
+- [src/modules/ui/branding.js](../src/modules/ui/branding.js) ligne 84-85
 
 **Valeurs possibles:**
+
 - `"topleft"`
 - `"topright"`
 - `"bottomleft"`
@@ -1441,15 +1706,17 @@ this._options.position = brandingConfig.position;
 **Description:** Configuration de la table de données tabulaires.
 
 **Utilisation dans le code:**
+
 ```javascript
 // geoleaf.table.js ligne 90
 const globalConfig = GeoLeaf.Config ? GeoLeaf.Config.get("tableConfig") : null;
 ```
 
 **Fichiers source:**
-- [src/static/js/geoleaf.table.js](../src/static/js/geoleaf.table.js) ligne 90
-- [src/static/js/table/panel.js](../src/static/js/table/panel.js)
-- [src/static/js/table/renderer.js](../src/static/js/table/renderer.js)
+
+- [src/modules/geoleaf.table.js](../src/modules/geoleaf.table.js) ligne 90
+- [src/modules/table/panel.js](../src/modules/table/panel.js)
+- [src/modules/table/renderer.js](../src/modules/table/renderer.js)
 
 **État:** ✅ Actif et fonctionnel
 
@@ -1484,14 +1751,16 @@ const globalConfig = GeoLeaf.Config ? GeoLeaf.Config.get("tableConfig") : null;
 **Description:** Nombre de lignes par page dans la table.
 
 **Utilisation dans le code:**
+
 ```javascript
 // geoleaf.table.js ligne 94
-pageSize: 50
+pageSize: 50;
 ```
 
 **Fichiers source:**
-- [src/static/js/geoleaf.table.js](../src/static/js/geoleaf.table.js) ligne 94
-- [src/static/js/table/renderer.js](../src/static/js/table/renderer.js) ligne 84-85
+
+- [src/modules/geoleaf.table.js](../src/modules/geoleaf.table.js) ligne 94
+- [src/modules/table/renderer.js](../src/modules/table/renderer.js) ligne 84-85
 
 **Valeurs possibles:** Nombre entier > 0 (généralement 25-100)
 
@@ -1500,6 +1769,7 @@ pageSize: 50
 **État:** ✅ Actif et fonctionnel
 
 **Tests:**
+
 - [\_\_tests\_\_/table/index.test.js](../__tests__/table/index.test.js) ligne 81
 
 ---
@@ -1509,13 +1779,15 @@ pageSize: 50
 **Description:** Nombre maximum de lignes à afficher par couche.
 
 **Utilisation dans le code:**
+
 ```javascript
 // geoleaf.table.js ligne 305
 const maxRows = this._config.maxRowsPerLayer || 1000;
 ```
 
 **Fichiers source:**
-- [src/static/js/geoleaf.table.js](../src/static/js/geoleaf.table.js) ligne 95, 305
+
+- [src/modules/geoleaf.table.js](../src/modules/geoleaf.table.js) ligne 95, 305
 
 **Valeurs possibles:** Nombre entier > 0 (généralement 500-5000)
 
@@ -1524,6 +1796,7 @@ const maxRows = this._config.maxRowsPerLayer || 1000;
 **État:** ✅ Actif et fonctionnel
 
 **Tests:**
+
 - [\_\_tests\_\_/table/index.test.js](../__tests__/table/index.test.js) ligne 82
 
 ---
@@ -1533,13 +1806,15 @@ const maxRows = this._config.maxRowsPerLayer || 1000;
 **Description:** Affiche le bouton d'export CSV/JSON.
 
 **Utilisation dans le code:**
+
 ```javascript
 // table/panel.js ligne 194
 if (config.enableExportButton) {
 ```
 
 **Fichiers source:**
-- [src/static/js/table/panel.js](../src/static/js/table/panel.js) ligne 194
+
+- [src/modules/table/panel.js](../src/modules/table/panel.js) ligne 194
 
 **Valeurs possibles:** `true` | `false`
 
@@ -1548,6 +1823,7 @@ if (config.enableExportButton) {
 **État:** ✅ Actif et fonctionnel
 
 **Tests:**
+
 - [\_\_tests\_\_/table/panel.test.js](../__tests__/table/panel.test.js) ligne 183
 
 ---
@@ -1557,13 +1833,15 @@ if (config.enableExportButton) {
 **Description:** Active le scrolling virtuel pour les grandes listes.
 
 **Utilisation dans le code:**
+
 ```javascript
 // table/renderer.js ligne 84
 if (config.virtualScrolling && features.length > config.pageSize) {
 ```
 
 **Fichiers source:**
-- [src/static/js/table/renderer.js](../src/static/js/table/renderer.js) ligne 84
+
+- [src/modules/table/renderer.js](../src/modules/table/renderer.js) ligne 84
 
 **Valeurs possibles:** `true` | `false`
 
@@ -1578,13 +1856,15 @@ if (config.virtualScrolling && features.length > config.pageSize) {
 **Description:** Hauteur par défaut de la table.
 
 **Utilisation dans le code:**
+
 ```javascript
 // table/panel.js ligne 31
 container.style.height = config.defaultHeight || "40%";
 ```
 
 **Fichiers source:**
-- [src/static/js/table/panel.js](../src/static/js/table/panel.js) ligne 31
+
+- [src/modules/table/panel.js](../src/modules/table/panel.js) ligne 31
 
 **Valeurs possibles:** Valeur CSS (ex: `"40%"`, `"300px"`)
 
@@ -1593,6 +1873,7 @@ container.style.height = config.defaultHeight || "40%";
 **État:** ✅ Actif et fonctionnel
 
 **Tests:**
+
 - [\_\_tests\_\_/table/index.test.js](../__tests__/table/index.test.js) ligne 83
 
 ---
@@ -1602,13 +1883,15 @@ container.style.height = config.defaultHeight || "40%";
 **Description:** Hauteur minimale de la table (pour redimensionnement).
 
 **Utilisation dans le code:**
+
 ```javascript
 // table/panel.js ligne 97
 const minHeightPx = parseHeight(config.minHeight || "20%", viewportHeight);
 ```
 
 **Fichiers source:**
-- [src/static/js/table/panel.js](../src/static/js/table/panel.js) ligne 97
+
+- [src/modules/table/panel.js](../src/modules/table/panel.js) ligne 97
 
 **Valeurs possibles:** Valeur CSS (ex: `"20%"`, `"150px"`)
 
@@ -1623,13 +1906,15 @@ const minHeightPx = parseHeight(config.minHeight || "20%", viewportHeight);
 **Description:** Hauteur maximale de la table (pour redimensionnement).
 
 **Utilisation dans le code:**
+
 ```javascript
 // table/panel.js ligne 98
 const maxHeightPx = parseHeight(config.maxHeight || "80%", viewportHeight);
 ```
 
 **Fichiers source:**
-- [src/static/js/table/panel.js](../src/static/js/table/panel.js) ligne 98
+
+- [src/modules/table/panel.js](../src/modules/table/panel.js) ligne 98
 
 **Valeurs possibles:** Valeur CSS (ex: `"60%"`, `"600px"`)
 
@@ -1644,13 +1929,15 @@ const maxHeightPx = parseHeight(config.maxHeight || "80%", viewportHeight);
 **Description:** Permet le redimensionnement manuel de la table par l'utilisateur.
 
 **Utilisation dans le code:**
+
 ```javascript
 // table/panel.js ligne 34
 if (config.resizable) {
 ```
 
 **Fichiers source:**
-- [src/static/js/table/panel.js](../src/static/js/table/panel.js) ligne 34
+
+- [src/modules/table/panel.js](../src/modules/table/panel.js) ligne 34
 
 **Valeurs possibles:** `true` | `false`
 
@@ -1667,15 +1954,18 @@ if (config.resizable) {
 **Description:** Configuration du contrôle d'échelle de la carte.
 
 **Utilisation dans le code:**
+
 ```javascript
 // map/scale-control.js ligne 435
 ? GeoLeaf.Config.get('scaleConfig')
 ```
 
 **Fichiers source:**
-- [src/static/js/map/scale-control.js](../src/static/js/map/scale-control.js) ligne 435
+
+- [src/modules/map/scale-control.js](../src/modules/map/scale-control.js) ligne 435
 
 **Documentation:**
+
 - [docs/config/SCALE_CONFIG.md](../docs/config/SCALE_CONFIG.md)
 
 **État:** ✅ Actif et fonctionnel
@@ -1687,13 +1977,15 @@ if (config.resizable) {
 **Description:** Affiche l'échelle graphique (barre graduée).
 
 **Utilisation dans le code:**
+
 ```javascript
 // map/scale-control.js ligne 59
 if (this._config.scaleGraphic !== false) {
 ```
 
 **Fichiers source:**
-- [src/static/js/map/scale-control.js](../src/static/js/map/scale-control.js) ligne 59, 438
+
+- [src/modules/map/scale-control.js](../src/modules/map/scale-control.js) ligne 59, 438
 
 **Valeurs possibles:** `true` | `false`
 
@@ -1708,13 +2000,15 @@ if (this._config.scaleGraphic !== false) {
 **Description:** Affiche l'échelle numérique (ratio 1:xxxxx).
 
 **Utilisation dans le code:**
+
 ```javascript
 // map/scale-control.js ligne 65
 if (this._config.scaleNumeric || this._config.scaleNivel) {
 ```
 
 **Fichiers source:**
-- [src/static/js/map/scale-control.js](../src/static/js/map/scale-control.js) ligne 65, 160, 438
+
+- [src/modules/map/scale-control.js](../src/modules/map/scale-control.js) ligne 65, 160, 438
 
 **Valeurs possibles:** `true` | `false`
 
@@ -1731,13 +2025,15 @@ if (this._config.scaleNumeric || this._config.scaleNivel) {
 **Prérequis:** `scaleNumeric: true`
 
 **Utilisation dans le code:**
+
 ```javascript
 // map/scale-control.js ligne 161
 if (this._config.scaleNumericEditable) {
 ```
 
 **Fichiers source:**
-- [src/static/js/map/scale-control.js](../src/static/js/map/scale-control.js) ligne 161, 285
+
+- [src/modules/map/scale-control.js](../src/modules/map/scale-control.js) ligne 161, 285
 
 **Valeurs possibles:** `true` | `false`
 
@@ -1752,13 +2048,15 @@ if (this._config.scaleNumericEditable) {
 **Description:** Affiche l'indicateur de niveau de zoom.
 
 **Utilisation dans le code:**
+
 ```javascript
 // map/scale-control.js ligne 169
 if (this._config.scaleNivel) {
 ```
 
 **Fichiers source:**
-- [src/static/js/map/scale-control.js](../src/static/js/map/scale-control.js) ligne 65, 169, 438
+
+- [src/modules/map/scale-control.js](../src/modules/map/scale-control.js) ligne 65, 169, 438
 
 **Valeurs possibles:** `true` | `false`
 
@@ -1773,6 +2071,7 @@ if (this._config.scaleNivel) {
 **Description:** Position du contrôle d'échelle sur la carte.
 
 **Valeurs possibles:**
+
 - `"topleft"`
 - `"topright"`
 - `"bottomleft"`
@@ -1805,13 +2104,15 @@ if (this._config.scaleNivel) {
 **Description:** Active le cache des ressources du profil (fichiers JSON, GeoJSON).
 
 **Utilisation dans le code:**
+
 ```javascript
 // storage/cache/layer-selector.js ligne 97
 const profileCacheEnabled = Config.get("storage.cache.enableProfileCache", false);
 ```
 
 **Fichiers source:**
-- [src/static/js/storage/cache/layer-selector.js](../src/static/js/storage/cache/layer-selector.js) ligne 97
+
+- [src/modules/storage/cache/layer-selector.js](../src/modules/storage/cache/layer-selector.js) ligne 97
 
 **Valeurs possibles:** `true` | `false`
 
@@ -1826,13 +2127,15 @@ const profileCacheEnabled = Config.get("storage.cache.enableProfileCache", false
 **Description:** Active le cache des tuiles des fonds de carte.
 
 **Utilisation dans le code:**
+
 ```javascript
 // storage/cache/layer-selector.js ligne 98
 const tileCacheEnabled = Config.get("storage.cache.enableTileCache", false);
 ```
 
 **Fichiers source:**
-- [src/static/js/storage/cache/layer-selector.js](../src/static/js/storage/cache/layer-selector.js) ligne 98, 653
+
+- [src/modules/storage/cache/layer-selector.js](../src/modules/storage/cache/layer-selector.js) ligne 98, 653
 
 **Valeurs possibles:** `true` | `false`
 
@@ -1869,15 +2172,18 @@ const tileCacheEnabled = Config.get("storage.cache.enableTileCache", false);
 **Description:** Méthode par défaut pour positionner un nouveau POI.
 
 **Utilisation dans le code:**
+
 ```javascript
 // ui/controls.js ligne 532
 const defaultPosition = config?.poiAddConfig?.defaultPosition || "placement-mode";
 ```
 
 **Fichiers source:**
-- [src/static/js/ui/controls.js](../src/static/js/ui/controls.js) ligne 532, 534
+
+- [src/modules/ui/controls.js](../src/modules/ui/controls.js) ligne 532, 534
 
 **Valeurs possibles:**
+
 - `"geolocation"` - Utilise la position GPS de l'utilisateur
 - `"placement-mode"` - Mode placement manuel sur la carte (clic)
 - `"map-center"` - Centre actuel de la carte
@@ -1887,7 +2193,8 @@ const defaultPosition = config?.poiAddConfig?.defaultPosition || "placement-mode
 **État:** ✅ Actif et fonctionnel
 
 **Tests:**
-- [tests/manual/test-poiaddconfig-migration.html](../tests/manual/test-poiaddconfig-migration.html)
+
+- Voir les tests unitaires dans `__tests__/poi/`
 
 ---
 
@@ -1900,25 +2207,38 @@ Ces paramètres existent dans le code pour assurer la rétrocompatibilité mais 
 **Raison de dépréciation:** Remplacé par la structure plate au premier niveau
 
 **Ancien format:**
+
 ```json
 {
-  "panels": {
-    "search": { /* config */ },
-    "detail": { /* config */ },
-    "route": { /* config */ },
-    "poi": { /* config */ }
-  }
+    "panels": {
+        "search": {
+            /* config */
+        },
+        "detail": {
+            /* config */
+        },
+        "route": {
+            /* config */
+        },
+        "poi": {
+            /* config */
+        }
+    }
 }
 ```
 
 **Nouveau format:**
+
 ```json
 {
-  "search": { /* config */ }
+    "search": {
+        /* config */
+    }
 }
 ```
 
 **Support actuel:**
+
 ```javascript
 // ui/filter-panel/renderer.js ligne 52
 const searchPanel = (profile.panels && profile.panels.search) || profile.search;
@@ -1935,13 +2255,15 @@ const searchPanel = (profile.panels && profile.panels.search) || profile.search;
 **Raison de dépréciation:** Configuration de routes déplacée vers un autre système
 
 **Utilisation dans le code:**
+
 ```javascript
 // geoleaf.route.js ligne 371
 if (activeProfile && activeProfile.defaultSettings && activeProfile.defaultSettings.routeConfig) {
 ```
 
 **Fichiers source:**
-- [src/static/js/geoleaf.route.js](../src/static/js/geoleaf.route.js) ligne 371-384
+
+- [src/modules/geoleaf.route.js](../src/modules/geoleaf.route.js) ligne 371-384
 
 **État:** ⚠️ Supporté pour rétrocompatibilité
 
@@ -1952,11 +2274,13 @@ if (activeProfile && activeProfile.defaultSettings && activeProfile.defaultSetti
 Ces paramètres ne sont PAS dans profile.json mais dans la configuration racine (geoleaf.config.json ou dans `config.data`).
 
 **Noms supportés (par ordre de priorité):**
+
 1. `config.data.enableProfilePoiMapping` ✅ **Recommandé** (utiliser celui-ci)
 2. `config.data.useProfilePoiMapping` ⚠️ Rétrocompatibilité
 3. `config.data.useMapping` ⚠️ Rétrocompatibilité
 
 **Utilisation dans le code:**
+
 ```javascript
 // config/profile.js ligne 87-101
 isProfilePoiMappingEnabled() {
@@ -1975,7 +2299,8 @@ isProfilePoiMappingEnabled() {
 ```
 
 **Fichiers source:**
-- [src/static/js/config/profile.js](../src/static/js/config/profile.js) ligne 87-101
+
+- [src/modules/config/profile.js](../src/modules/config/profile.js) ligne 87-101
 
 **État:** ✅ Supportés pour rétrocompatibilité, mais utiliser `enableProfilePoiMapping`
 
@@ -2003,6 +2328,7 @@ geoleaf.config.json      ← Configuration globale de l'application (ROOT)
 ### 🔄 Responsabilités de chaque fichier
 
 #### **profile.json** (Ce fichier)
+
 - ✅ Configuration **UI**: Visibilité des composants, thèmes, langues
 - ✅ Configuration **Performance**: Limites de chargement, délais
 - ✅ Configuration **Basemaps**: Fonds de carte disponibles
@@ -2012,17 +2338,20 @@ geoleaf.config.json      ← Configuration globale de l'application (ROOT)
 - ⚠️ `defaultSettings.routeConfig` : Configuration de routage (déprécié)
 
 #### **taxonomy.json**
+
 - ✅ Catégories et hiérarchie
 - ✅ **Métadonnées des icônes** (sprites, formats)
 - ✅ Tags et classifications
 - ✅ Propriétés de couches non spatiales
 
 #### **themes.json**
+
 - ✅ Presets de visibilité (groupes de couches)
 - ✅ Thèmes cartographiques
 - ✅ Configurations de styles alternatifs (par thème)
 
 #### **layers.json**
+
 - ✅ Définitions GeoJSON des couches
 - ✅ **Métadonnées de chaque couche**: Styles, icônes, attributs
 - ✅ Configuration spécifique par couche
@@ -2030,15 +2359,15 @@ geoleaf.config.json      ← Configuration globale de l'application (ROOT)
 
 ### 🎨 Où vit chaque paramètre?
 
-| Paramètre | Fichier | Utilisation |
-|-----------|---------|------------|
-| `icons` | **taxonomy.json** | Métadonnées des sprites/icônes |
-| `stylesConfig` | **profile.json** | Configuration globale des styles alternatifs |
-| `Directory` | **layers.json** | Templates de chemins (définis par couche) |
-| `defaultSettings.routeConfig` | **profile.json** | Configuration de routage (déprécié) |
-| `ui.*` | **profile.json** | Configuration UI |
-| `basemaps` | **profile.json** | Fonds de carte |
-| Tous les autres | **profile.json** | Voir section structure |
+| Paramètre                     | Fichier           | Utilisation                                  |
+| ----------------------------- | ----------------- | -------------------------------------------- |
+| `icons`                       | **taxonomy.json** | Métadonnées des sprites/icônes               |
+| `stylesConfig`                | **profile.json**  | Configuration globale des styles alternatifs |
+| `Directory`                   | **layers.json**   | Templates de chemins (définis par couche)    |
+| `defaultSettings.routeConfig` | **profile.json**  | Configuration de routage (déprécié)          |
+| `ui.*`                        | **profile.json**  | Configuration UI                             |
+| `basemaps`                    | **profile.json**  | Fonds de carte                               |
+| Tous les autres               | **profile.json**  | Voir section structure                       |
 
 ### ✅ Validation
 
@@ -2049,80 +2378,81 @@ geoleaf.config.json      ← Configuration globale de l'application (ROOT)
 
 ## Tableau récapitulatif
 
-| Section | Paramètre | Type | Défaut | État | Obligatoire |
-|---------|-----------|------|--------|------|-------------|
-| Racine | `id` | string | - | ✅ | Oui |
-| Racine | `label` | string | - | ✅ | Oui |
-| Racine | `description` | string | "" | ✅ | Non |
-| Racine | `version` | string | "1.0.0" | ✅ | Non |
-| Files | `taxonomyFile` | string | "taxonomy.json" | ✅ | Oui |
-| Files | `themesFile` | string | "themes.json" | ✅ | Oui |
-| Files | `layersFile` | string | "layers.json" | ✅ | Non |
-| ui | `theme` | string | "light" | ✅ | Non |
-| ui | `language` | string | "fr" | ⚠️ | Non |
-| ui | `showBaseLayerControls` | boolean | false | ✅ | Non |
-| ui | `showLayerManager` | boolean | true | ✅ | Non |
-| ui | `showFilterPanel` | boolean | true | ✅ | Non |
-| ui | `enableGeolocation` | boolean | true | ✅ | Non |
-| ui | `showCoordinates` | boolean | true | ✅ | Non |
-| ui | `showThemeSelector` | boolean | true | ✅ | Non |
-| ui | `showLegend` | boolean | true | ✅ | Non |
-| ui | `showCacheButton` | boolean | false | ✅ | Non |
-| ui | `showAddPoi` | boolean | false | ✅ | Non |
-| ui | `interactiveShapes` | boolean | false | ✅ | Non |
-| basemaps | `{id}.id` | string | - | ✅ | Oui |
-| basemaps | `{id}.label` | string | - | ✅ | Oui |
-| basemaps | `{id}.url` | string | - | ✅ | Oui |
-| basemaps | `{id}.attribution` | string | - | ✅ | Oui |
-| basemaps | `{id}.minZoom` | number | 0 | ✅ | Non |
-| basemaps | `{id}.maxZoom` | number | 19 | ✅ | Non |
-| basemaps | `{id}.defaultBasemap` | boolean | false | ✅ | Non |
-| basemaps | `{id}.offline` | boolean | false | ✅ | Non |
-| basemaps | `{id}.offlineBounds` | object | - | ✅ | Non |
-| basemaps | `{id}.cacheMinZoom` | number | 4 | ✅ | Non |
-| basemaps | `{id}.cacheMaxZoom` | number | 12 | ✅ | Non |
-| performance | `maxConcurrentLayers` | number | 10 | ✅ | Non |
-| performance | `layerLoadDelay` | number | 200 | ✅ | Non |
-| performance | `fitBoundsOnThemeChange` | boolean | false | ✅ | Non |
-| search | `title` | string | "Filtres" | ✅ | Non |
-| search | `radiusMin` | number | 1 | ✅ | Non |
-| search | `radiusMax` | number | 50 | ✅ | Non |
-| search | `radiusStep` | number | 1 | ✅ | Non |
-| search | `radiusDefault` | number | 10 | ✅ | Non |
-| search | `searchPlaceholder` | string | "Rechercher..." | ✅ | Non |
-| search | `filters` | array | [] | ✅ | Non |
-| search | `actions` | object | {...} | ✅ | Non |
-| layerManagerConfig | `title` | string | "Couches" | ✅ | Non |
-| layerManagerConfig | `collapsedByDefault` | boolean | true | ✅ | Non |
-| layerManagerConfig | `sections` | array | [] | ✅ | Non |
-| legendConfig | `title` | string | "Légende" | ✅ | Non |
-| legendConfig | `collapsedByDefault` | boolean | true | ✅ | Non |
-| legendConfig | `position` | string | "bottomleft" | ✅ | Non |
-| poiConfig | `clusterStrategy` | string | "unified" | ✅ | Non |
-| brandingConfig | `enabled` | boolean | true | ✅ | Non |
-| brandingConfig | `text` | string | "..." | ✅ | Non |
-| brandingConfig | `position` | string | "bottomleft" | ✅ | Non |
-| tableConfig | `enabled` | boolean | true | ✅ | Non |
-| tableConfig | `defaultVisible` | boolean | false | ✅ | Non |
-| tableConfig | `pageSize` | number | 50 | ✅ | Non |
-| tableConfig | `maxRowsPerLayer` | number | 1000 | ✅ | Non |
-| tableConfig | `enableExportButton` | boolean | true | ✅ | Non |
-| tableConfig | `virtualScrolling` | boolean | true | ✅ | Non |
-| tableConfig | `defaultHeight` | string | "40%" | ✅ | Non |
-| tableConfig | `minHeight` | string | "20%" | ✅ | Non |
-| tableConfig | `maxHeight` | string | "60%" | ✅ | Non |
-| tableConfig | `resizable` | boolean | true | ✅ | Non |
-| scaleConfig | `scaleGraphic` | boolean | true | ✅ | Non |
-| scaleConfig | `scaleNumeric` | boolean | true | ✅ | Non |
-| scaleConfig | `scaleNumericEditable` | boolean | true | ✅ | Non |
-| scaleConfig | `scaleNivel` | boolean | true | ✅ | Non |
-| scaleConfig | `position` | string | "bottomleft" | ✅ | Non |
-| storage.cache | `enableProfileCache` | boolean | true | ✅ | Non |
-| storage.cache | `enableTileCache` | boolean | true | ✅ | Non |
-| poiAddConfig | `enabled` | boolean | true | ✅ | Non |
-| poiAddConfig | `defaultPosition` | string | "placement-mode" | ✅ | Non |
+| Section            | Paramètre                | Type    | Défaut           | État | Obligatoire |
+| ------------------ | ------------------------ | ------- | ---------------- | ---- | ----------- |
+| Racine             | `id`                     | string  | -                | ✅   | Oui         |
+| Racine             | `label`                  | string  | -                | ✅   | Oui         |
+| Racine             | `description`            | string  | ""               | ✅   | Non         |
+| Racine             | `version`                | string  | "1.0.0"          | ✅   | Non         |
+| Files              | `taxonomyFile`           | string  | "taxonomy.json"  | ✅   | Oui         |
+| Files              | `themesFile`             | string  | "themes.json"    | ✅   | Oui         |
+| Files              | `layersFile`             | string  | "layers.json"    | ✅   | Non         |
+| ui                 | `theme`                  | string  | "light"          | ✅   | Non         |
+| ui                 | `language`               | string  | "fr"             | ⚠️   | Non         |
+| ui                 | `showBaseLayerControls`  | boolean | false            | ✅   | Non         |
+| ui                 | `showLayerManager`       | boolean | true             | ✅   | Non         |
+| ui                 | `showFilterPanel`        | boolean | true             | ✅   | Non         |
+| ui                 | `enableGeolocation`      | boolean | true             | ✅   | Non         |
+| ui                 | `showCoordinates`        | boolean | true             | ✅   | Non         |
+| ui                 | `showThemeSelector`      | boolean | true             | ✅   | Non         |
+| ui                 | `showLegend`             | boolean | true             | ✅   | Non         |
+| ui                 | `showCacheButton`        | boolean | false            | ✅   | Non         |
+| ui                 | `showAddPoi`             | boolean | false            | ✅   | Non         |
+| ui                 | `interactiveShapes`      | boolean | false            | ✅   | Non         |
+| basemaps           | `{id}.id`                | string  | -                | ✅   | Oui         |
+| basemaps           | `{id}.label`             | string  | -                | ✅   | Oui         |
+| basemaps           | `{id}.url`               | string  | -                | ✅   | Oui         |
+| basemaps           | `{id}.attribution`       | string  | -                | ✅   | Oui         |
+| basemaps           | `{id}.minZoom`           | number  | 0                | ✅   | Non         |
+| basemaps           | `{id}.maxZoom`           | number  | 19               | ✅   | Non         |
+| basemaps           | `{id}.defaultBasemap`    | boolean | false            | ✅   | Non         |
+| basemaps           | `{id}.offline`           | boolean | false            | ✅   | Non         |
+| basemaps           | `{id}.offlineBounds`     | object  | -                | ✅   | Non         |
+| basemaps           | `{id}.cacheMinZoom`      | number  | 4                | ✅   | Non         |
+| basemaps           | `{id}.cacheMaxZoom`      | number  | 12               | ✅   | Non         |
+| performance        | `maxConcurrentLayers`    | number  | 10               | ✅   | Non         |
+| performance        | `layerLoadDelay`         | number  | 200              | ✅   | Non         |
+| performance        | `fitBoundsOnThemeChange` | boolean | false            | ✅   | Non         |
+| search             | `title`                  | string  | "Filtres"        | ✅   | Non         |
+| search             | `radiusMin`              | number  | 1                | ✅   | Non         |
+| search             | `radiusMax`              | number  | 50               | ✅   | Non         |
+| search             | `radiusStep`             | number  | 1                | ✅   | Non         |
+| search             | `radiusDefault`          | number  | 10               | ✅   | Non         |
+| search             | `searchPlaceholder`      | string  | "Rechercher..."  | ✅   | Non         |
+| search             | `filters`                | array   | []               | ✅   | Non         |
+| search             | `actions`                | object  | {...}            | ✅   | Non         |
+| layerManagerConfig | `title`                  | string  | "Couches"        | ✅   | Non         |
+| layerManagerConfig | `collapsedByDefault`     | boolean | true             | ✅   | Non         |
+| layerManagerConfig | `sections`               | array   | []               | ✅   | Non         |
+| legendConfig       | `title`                  | string  | "Légende"        | ✅   | Non         |
+| legendConfig       | `collapsedByDefault`     | boolean | true             | ✅   | Non         |
+| legendConfig       | `position`               | string  | "bottomleft"     | ✅   | Non         |
+| poiConfig          | `clusterStrategy`        | string  | "unified"        | ✅   | Non         |
+| brandingConfig     | `enabled`                | boolean | true             | ✅   | Non         |
+| brandingConfig     | `text`                   | string  | "..."            | ✅   | Non         |
+| brandingConfig     | `position`               | string  | "bottomleft"     | ✅   | Non         |
+| tableConfig        | `enabled`                | boolean | true             | ✅   | Non         |
+| tableConfig        | `defaultVisible`         | boolean | false            | ✅   | Non         |
+| tableConfig        | `pageSize`               | number  | 50               | ✅   | Non         |
+| tableConfig        | `maxRowsPerLayer`        | number  | 1000             | ✅   | Non         |
+| tableConfig        | `enableExportButton`     | boolean | true             | ✅   | Non         |
+| tableConfig        | `virtualScrolling`       | boolean | true             | ✅   | Non         |
+| tableConfig        | `defaultHeight`          | string  | "40%"            | ✅   | Non         |
+| tableConfig        | `minHeight`              | string  | "20%"            | ✅   | Non         |
+| tableConfig        | `maxHeight`              | string  | "60%"            | ✅   | Non         |
+| tableConfig        | `resizable`              | boolean | true             | ✅   | Non         |
+| scaleConfig        | `scaleGraphic`           | boolean | true             | ✅   | Non         |
+| scaleConfig        | `scaleNumeric`           | boolean | true             | ✅   | Non         |
+| scaleConfig        | `scaleNumericEditable`   | boolean | true             | ✅   | Non         |
+| scaleConfig        | `scaleNivel`             | boolean | true             | ✅   | Non         |
+| scaleConfig        | `position`               | string  | "bottomleft"     | ✅   | Non         |
+| storage.cache      | `enableProfileCache`     | boolean | true             | ✅   | Non         |
+| storage.cache      | `enableTileCache`        | boolean | true             | ✅   | Non         |
+| poiAddConfig       | `enabled`                | boolean | true             | ✅   | Non         |
+| poiAddConfig       | `defaultPosition`        | string  | "placement-mode" | ✅   | Non         |
 
 **Légende:**
+
 - ✅ : Actif et fonctionnel
 - ⚠️ : Défini mais peu utilisé
 - ❌ : Non présent/manquant
@@ -2138,7 +2468,7 @@ geoleaf.config.json      ← Configuration globale de l'application (ROOT)
 
 2. **Rétrocompatibilité** : Le code supporte l'ancienne structure `profile.panels.search` mais la nouvelle structure `profile.search` est recommandée.
 
-3. **Paramètres data.*** : Les paramètres comme `data.activeProfile`, `data.profilesBasePath`, `data.enableProfilePoiMapping` ne sont PAS dans profile.json mais dans geoleaf.config.json ou passés via init().
+3. **Paramètres data.\*** : Les paramètres comme `data.activeProfile`, `data.profilesBasePath`, `data.enableProfilePoiMapping` ne sont PAS dans profile.json mais dans geoleaf.config.json ou passés via init().
 
 4. **Position Leaflet** : Toutes les positions utilisent les valeurs standard Leaflet : `"topleft"`, `"topright"`, `"bottomleft"`, `"bottomright"`.
 

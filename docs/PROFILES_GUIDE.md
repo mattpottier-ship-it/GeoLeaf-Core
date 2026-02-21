@@ -1,11 +1,11 @@
-﻿# GeoLeaf Profiles Guide
+# GeoLeaf Profiles Guide
 
 **Product Version:** GeoLeaf Platform V1  
-**Version:** 3.2.0  
+**Version:** 4.0.0  
 **Last Updated:** January 2026  
 **Audience:** Developers creating custom business profiles
 
-> Versioning convention: **Platform V1** is the product label; technical SemVer in this repository remains **3.2.0** for compatibility.
+> Versioning convention: **Platform V1** is the product label; technical package/release SemVer remains **4.x**. See [VERSIONING_POLICY.md](VERSIONING_POLICY.md).
 
 ---
 
@@ -38,21 +38,23 @@ Think of profiles as **themes on steroids** — they control not just visual sty
 
 ### Use Cases
 
-| Profile Type | Best For | Example Applications |
-|-------------|----------|---------------------|
-| **Tourism** | Public-facing discovery | Tourist attractions, hiking trails, accommodations |
-| **Real Estate** | Property management | Properties, buildings, land parcels |
-| **Emergency** | Crisis response | Shelters, hospitals, emergency routes |
-| **Retail** | Store management | Store locations, inventory, service areas |
+| Profile Type    | Best For                | Example Applications                               |
+| --------------- | ----------------------- | -------------------------------------------------- |
+| **Tourism**     | Public-facing discovery | Tourist attractions, hiking trails, accommodations |
+| **Real Estate** | Property management     | Properties, buildings, land parcels                |
+| **Emergency**   | Crisis response         | Shelters, hospitals, emergency routes              |
+| **Retail**      | Store management        | Store locations, inventory, service areas          |
 
 ### When to Create Custom vs Use Built-in
 
 **Use Built-in Profile** if:
+
 - ✅ Your use case closely matches Tourism
 - ✅ You only need minor customization (colors, labels)
 - ✅ You want to start quickly
 
 **Create Custom Profile** if:
+
 - ✅ You have unique business domain requirements
 - ✅ You need custom POI categories (e.g., medical facilities, schools)
 - ✅ You require specific data sources or layers
@@ -101,29 +103,31 @@ profiles/
 
 ```json
 {
-  "id": "my-profile",
-  "label": "My Custom Profile",
-  "description": "Profile description",
-  "version": "1.0.0",
-  
-  "ui": {
-    "showLayerManager": true,
-    "showFilterPanel": true,
-    "showThemeSelector": true
-  },
-  
-  "basemaps": {
-    "street": { /* basemap config */ }
-  },
-  
-  "Files": {
-    "taxonomyFile": "taxonomy.json",
-    "themesFile": "themes.json"
-  },
-  
-  "Directory": {
-    "layers": "layers/{layerId}/"
-  }
+    "id": "my-profile",
+    "label": "My Custom Profile",
+    "description": "Profile description",
+    "version": "1.0.0",
+
+    "ui": {
+        "showLayerManager": true,
+        "showFilterPanel": true,
+        "showThemeSelector": true
+    },
+
+    "basemaps": {
+        "street": {
+            /* basemap config */
+        }
+    },
+
+    "Files": {
+        "taxonomyFile": "taxonomy.json",
+        "themesFile": "themes.json"
+    },
+
+    "Directory": {
+        "layers": "layers/{layerId}/"
+    }
 }
 ```
 
@@ -139,24 +143,24 @@ profiles/
 
 ```json
 {
-  "icons": {
-    "spriteUrl": "path/to/sprite.svg",
-    "symbolPrefix": "my-prefix-",
-    "defaultIcon": "default-icon"
-  },
-  
-  "categories": {
-    "category-1": {
-      "label": "Category 1",
-      "icon": "icon-name",
-      "subcategories": {
-        "subcat-1": {
-          "label": "Subcategory 1",
-          "icon": "icon-name"
+    "icons": {
+        "spriteUrl": "path/to/sprite.svg",
+        "symbolPrefix": "my-prefix-",
+        "defaultIcon": "default-icon"
+    },
+
+    "categories": {
+        "category-1": {
+            "label": "Category 1",
+            "icon": "icon-name",
+            "subcategories": {
+                "subcat-1": {
+                    "label": "Subcategory 1",
+                    "icon": "icon-name"
+                }
+            }
         }
-      }
     }
-  }
 }
 ```
 
@@ -172,22 +176,22 @@ profiles/
 
 ```json
 {
-  "config": {
-    "defaultTheme": "default",
-    "allowCustomThemes": true
-  },
-  
-  "themes": [
-    {
-      "id": "default",
-      "label": "Default View",
-      "icon": "view-all",
-      "layers": {
-        "layer-1": true,
-        "layer-2": false
-      }
-    }
-  ]
+    "config": {
+        "defaultTheme": "default",
+        "allowCustomThemes": true
+    },
+
+    "themes": [
+        {
+            "id": "default",
+            "label": "Default View",
+            "icon": "view-all",
+            "layers": {
+                "layer-1": true,
+                "layer-2": false
+            }
+        }
+    ]
 }
 ```
 
@@ -202,6 +206,7 @@ profiles/
 **Purpose:** Normalizes external data to GeoLeaf's internal format.
 
 **Use When:**
+
 - Loading data from external APIs
 - Converting CSV/Excel to GeoJSON
 - Transforming property names
@@ -211,32 +216,32 @@ profiles/
 
 ```json
 {
-  "poi": {
-    "mapping": {
-      "id": "feature_id",
-      "title": "name",
-      "latlng": {
-        "lat": "latitude",
-        "lng": "longitude"
-      },
-      "category": "poi_category",
-      "properties": {
-        "description": "desc",
-        "phone": "contact.phone"
-      }
-    }
-  },
-  
-  "transforms": [
-    {
-      "field": "poi_category",
-      "type": "map",
-      "mappings": {
-        "hotel": "hebergements",
-        "restaurant": "food"
-      }
-    }
-  ]
+    "poi": {
+        "mapping": {
+            "id": "feature_id",
+            "title": "name",
+            "latlng": {
+                "lat": "latitude",
+                "lng": "longitude"
+            },
+            "category": "poi_category",
+            "properties": {
+                "description": "desc",
+                "phone": "contact.phone"
+            }
+        }
+    },
+
+    "transforms": [
+        {
+            "field": "poi_category",
+            "type": "map",
+            "mappings": {
+                "hotel": "hebergements",
+                "restaurant": "food"
+            }
+        }
+    ]
 }
 ```
 
@@ -294,7 +299,7 @@ profiles/tourism/
 **Key Features:**
 
 - **35+ layers** organized by category
-- **46 migrated styles** (v3.2.0 with `label.visibleByDefault`)
+- **46 migrated styles** (v4.0.0 with `label.visibleByDefault`)
 - **Icon sprite** with 50+ tourism symbols
 - **Sample data** for major French cities
 - **4 category groups:** Activités, Culture, Nature, Hébergements
@@ -304,28 +309,29 @@ profiles/tourism/
 
 ```json
 {
-  "ui": {
-    "showLayerManager": true,
-    "showFilterPanel": true,
-    "showThemeSelector": true,
-    "showLegend": true,
-    "showCacheButton": true
-  },
-  
-  "basemaps": {
-    "street": { "defaultBasemap": true, "offline": true },
-    "satellite": { "offline": false },
-    "topo": { "offline": false }
-  },
-  
-  "performance": {
-    "maxConcurrentLayers": 10,
-    "layerLoadDelay": 200
-  }
+    "ui": {
+        "showLayerManager": true,
+        "showFilterPanel": true,
+        "showThemeSelector": true,
+        "showLegend": true,
+        "showCacheButton": true
+    },
+
+    "basemaps": {
+        "street": { "defaultBasemap": true, "offline": true },
+        "satellite": { "offline": false },
+        "topo": { "offline": false }
+    },
+
+    "performance": {
+        "maxConcurrentLayers": 10,
+        "layerLoadDelay": 200
+    }
 }
 ```
 
 **Best For:**
+
 - Tourism boards
 - Travel apps
 - Hiking/outdoor applications
@@ -352,52 +358,53 @@ Start with a minimal template:
 
 ```json
 {
-  "id": "my-profile",
-  "label": "My Custom Profile",
-  "description": "Brief description of your profile",
-  "version": "1.0.0",
-  
-  "ui": {
-    "showLayerManager": true,
-    "showFilterPanel": true,
-    "showThemeSelector": false,
-    "showLegend": true,
-    "showCacheButton": false,
-    "enableGeolocation": true
-  },
-  
-  "basemaps": {
-    "street": {
-      "id": "street",
-      "label": "Street Map",
-      "url": "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-      "attribution": "&copy; OpenStreetMap contributors",
-      "minZoom": 3,
-      "maxZoom": 19,
-      "defaultBasemap": true,
-      "offline": false
+    "id": "my-profile",
+    "label": "My Custom Profile",
+    "description": "Brief description of your profile",
+    "version": "1.0.0",
+
+    "ui": {
+        "showLayerManager": true,
+        "showFilterPanel": true,
+        "showThemeSelector": false,
+        "showLegend": true,
+        "showCacheButton": false,
+        "enableGeolocation": true
+    },
+
+    "basemaps": {
+        "street": {
+            "id": "street",
+            "label": "Street Map",
+            "url": "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+            "attribution": "&copy; OpenStreetMap contributors",
+            "minZoom": 3,
+            "maxZoom": 19,
+            "defaultBasemap": true,
+            "offline": false
+        }
+    },
+
+    "Files": {
+        "taxonomyFile": "taxonomy.json",
+        "themesFile": "themes.json"
+    },
+
+    "Directory": {
+        "layers": "layers/{layerId}/"
+    },
+
+    "defaultSettings": {
+        "map": {
+            "center": [46.8, 2.5],
+            "zoom": 6
+        }
     }
-  },
-  
-  "Files": {
-    "taxonomyFile": "taxonomy.json",
-    "themesFile": "themes.json"
-  },
-  
-  "Directory": {
-    "layers": "layers/{layerId}/"
-  },
-  
-  "defaultSettings": {
-    "map": {
-      "center": [46.8, 2.5],
-      "zoom": 6
-    }
-  }
 }
 ```
 
 **Customization checklist:**
+
 - ✅ Set unique `id` (lowercase, no spaces)
 - ✅ Configure `ui` components needed
 - ✅ Define at least one basemap
@@ -411,41 +418,42 @@ Define your POI categories:
 
 ```json
 {
-  "icons": {
-    "spriteUrl": "assets/icons/sprite.svg",
-    "symbolPrefix": "my-prefix-",
-    "defaultIcon": "default-icon"
-  },
-  
-  "defaults": {
-    "icon": "default-icon"
-  },
-  
-  "categories": {
-    "category-1": {
-      "label": "Category 1",
-      "icon": "icon-1",
-      "subcategories": {
-        "subcat-1": {
-          "label": "Subcategory 1",
-          "icon": "icon-1a"
-        },
-        "subcat-2": {
-          "label": "Subcategory 2",
-          "icon": "icon-1b"
-        }
-      }
+    "icons": {
+        "spriteUrl": "assets/icons/sprite.svg",
+        "symbolPrefix": "my-prefix-",
+        "defaultIcon": "default-icon"
     },
-    "category-2": {
-      "label": "Category 2",
-      "icon": "icon-2",
-      "subcategories": {}
+
+    "defaults": {
+        "icon": "default-icon"
+    },
+
+    "categories": {
+        "category-1": {
+            "label": "Category 1",
+            "icon": "icon-1",
+            "subcategories": {
+                "subcat-1": {
+                    "label": "Subcategory 1",
+                    "icon": "icon-1a"
+                },
+                "subcat-2": {
+                    "label": "Subcategory 2",
+                    "icon": "icon-1b"
+                }
+            }
+        },
+        "category-2": {
+            "label": "Category 2",
+            "icon": "icon-2",
+            "subcategories": {}
+        }
     }
-  }
 }
 ```
 
 **Tips:**
+
 - Keep category IDs lowercase with hyphens
 - Limit depth to 2 levels (category → subcategory)
 - Use semantic icon names
@@ -459,38 +467,39 @@ Define layer visibility presets:
 
 ```json
 {
-  "config": {
-    "defaultTheme": "default",
-    "allowCustomThemes": true,
-    "persistSelection": true
-  },
-  
-  "themes": [
-    {
-      "id": "default",
-      "label": "Default View",
-      "icon": "view-all",
-      "layers": {
-        "layer-1": true,
-        "layer-2": true,
-        "layer-3": true
-      }
+    "config": {
+        "defaultTheme": "default",
+        "allowCustomThemes": true,
+        "persistSelection": true
     },
-    {
-      "id": "minimal",
-      "label": "Minimal View",
-      "icon": "view-minimal",
-      "layers": {
-        "layer-1": true,
-        "layer-2": false,
-        "layer-3": false
-      }
-    }
-  ]
+
+    "themes": [
+        {
+            "id": "default",
+            "label": "Default View",
+            "icon": "view-all",
+            "layers": {
+                "layer-1": true,
+                "layer-2": true,
+                "layer-3": true
+            }
+        },
+        {
+            "id": "minimal",
+            "label": "Minimal View",
+            "icon": "view-minimal",
+            "layers": {
+                "layer-1": true,
+                "layer-2": false,
+                "layer-3": false
+            }
+        }
+    ]
 }
 ```
 
 **Tips:**
+
 - Start with 2-4 themes
 - Include an "All Layers" theme
 - Name themes by purpose, not technical details
@@ -514,20 +523,20 @@ mkdir -p layers/my-layer/styles
 
 ```json
 {
-  "type": "FeatureCollection",
-  "features": [
-    {
-      "type": "Feature",
-      "properties": {
-        "name": "Location 1",
-        "category": "category-1"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [2.5, 46.8]
-      }
-    }
-  ]
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "Location 1",
+                "category": "category-1"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [2.5, 46.8]
+            }
+        }
+    ]
 }
 ```
 
@@ -537,34 +546,34 @@ mkdir -p layers/my-layer/styles
 
 ```json
 {
-  "$schema": "../../../../schema/style.schema.json",
-  "id": "default",
-  "name": "Default Style",
-  
-  "label": {
-    "enabled": true,
-    "visibleByDefault": false,
-    "field": "name"
-  },
-  
-  "style": {
-    "fillColor": "#3b82f6",
-    "fillOpacity": 0.6,
-    "color": "#1e40af",
-    "weight": 2,
-    "opacity": 1.0
-  },
-  
-  "legend": {
-    "enabled": true,
-    "title": "My Layer",
-    "items": [
-      {
-        "label": "Feature",
-        "color": "#3b82f6"
-      }
-    ]
-  }
+    "$schema": "../../../../schema/style.schema.json",
+    "id": "default",
+    "name": "Default Style",
+
+    "label": {
+        "enabled": true,
+        "visibleByDefault": false,
+        "field": "name"
+    },
+
+    "style": {
+        "fillColor": "#3b82f6",
+        "fillOpacity": 0.6,
+        "color": "#1e40af",
+        "weight": 2,
+        "opacity": 1.0
+    },
+
+    "legend": {
+        "enabled": true,
+        "title": "My Layer",
+        "items": [
+            {
+                "label": "Feature",
+                "color": "#3b82f6"
+            }
+        ]
+    }
 }
 ```
 
@@ -574,18 +583,18 @@ mkdir -p layers/my-layer/styles
 
 ```json
 {
-  "layers": [
-    {
-      "id": "my-layer",
-      "name": "My Layer",
-      "type": "point",
-      "dataSource": "layers/my-layer/data.geojson",
-      "defaultStyle": "default",
-      "availableStyles": ["default"],
-      "minZoom": 8,
-      "maxZoom": 19
-    }
-  ]
+    "layers": [
+        {
+            "id": "my-layer",
+            "name": "My Layer",
+            "type": "point",
+            "dataSource": "layers/my-layer/data.geojson",
+            "defaultStyle": "default",
+            "availableStyles": ["default"],
+            "minZoom": 8,
+            "maxZoom": 19
+        }
+    ]
 }
 ```
 
@@ -597,30 +606,30 @@ If you have POI data, create `poi.json`:
 
 ```json
 {
-  "version": "1.0",
-  "count": 2,
-  "source": "Sample data",
-  
-  "pois": [
-    {
-      "id": "poi-001",
-      "latlng": [46.8, 2.5],
-      "title": "Sample POI 1",
-      "category": "category-1",
-      "subcategory": "subcat-1",
-      "properties": {
-        "description": "Description here",
-        "address": "123 Main St"
-      }
-    },
-    {
-      "id": "poi-002",
-      "latlng": [46.9, 2.6],
-      "title": "Sample POI 2",
-      "category": "category-2",
-      "properties": {}
-    }
-  ]
+    "version": "1.0",
+    "count": 2,
+    "source": "Sample data",
+
+    "pois": [
+        {
+            "id": "poi-001",
+            "latlng": [46.8, 2.5],
+            "title": "Sample POI 1",
+            "category": "category-1",
+            "subcategory": "subcat-1",
+            "properties": {
+                "description": "Description here",
+                "address": "123 Main St"
+            }
+        },
+        {
+            "id": "poi-002",
+            "latlng": [46.9, 2.6],
+            "title": "Sample POI 2",
+            "category": "category-2",
+            "properties": {}
+        }
+    ]
 }
 ```
 
@@ -632,23 +641,23 @@ Add your profile to `profiles/geoleaf.config.json`:
 
 ```json
 {
-  "data": {
-    "activeProfile": "my-profile",
-    "profilesBasePath": "/profiles/"
-  },
-  
-  "profiles": [
-    {
-      "id": "tourism",
-      "label": "Tourism",
-      "description": "Tourist attractions and activities"
+    "data": {
+        "activeProfile": "my-profile",
+        "profilesBasePath": "/profiles/"
     },
-    {
-      "id": "my-profile",
-      "label": "My Custom Profile",
-      "description": "Brief description"
-    }
-  ]
+
+    "profiles": [
+        {
+            "id": "tourism",
+            "label": "Tourism",
+            "description": "Tourist attractions and activities"
+        },
+        {
+            "id": "my-profile",
+            "label": "My Custom Profile",
+            "description": "Brief description"
+        }
+    ]
 }
 ```
 
@@ -673,14 +682,15 @@ http://localhost:8080/demo/?profile=my-profile
 ```javascript
 // In browser console
 GeoLeaf.Config.setDebug({
-  enabled: true,
-  modules: ['*']
+    enabled: true,
+    modules: ["*"],
 });
 ```
 
 **D. Check console for errors:**
 
 Look for:
+
 - ❌ Profile loading errors
 - ❌ Missing files (taxonomy, themes)
 - ❌ Invalid JSON syntax
@@ -712,8 +722,10 @@ Add `$schema` reference to each file:
 
 ```json
 {
-  "$schema": "../../schema/taxonomy.schema.json",
-  "icons": { /* ... */ }
+    "$schema": "../../schema/taxonomy.schema.json",
+    "icons": {
+        /* ... */
+    }
 }
 ```
 
@@ -724,18 +736,21 @@ Add `$schema` reference to each file:
 ### Naming Conventions
 
 **Profile IDs:**
+
 - ✅ Use lowercase with hyphens: `my-profile`
 - ❌ Avoid spaces or special chars: `My Profile!`
 - ✅ Be descriptive: `retail-store-locator`
 - ❌ Don't be generic: `profile1`
 
 **Category IDs:**
+
 - ✅ Use semantic names: `restaurants`, `hotels`
 - ❌ Avoid abbreviations: `rest`, `htl`
 - ✅ Pluralize categories: `museums`, not `museum`
 - ❌ Don't use generic names: `type1`, `category-a`
 
 **Layer IDs:**
+
 - ✅ Use descriptive names: `heritage-sites`, `bike-routes`
 - ❌ Avoid technical names: `layer1`, `geojson-data`
 - ✅ Include type if helpful: `zones-nature`, `routes-bike`
@@ -760,23 +775,25 @@ Add `$schema` reference to each file:
 **Best Practices:**
 
 1. **Consistent prefix:** All symbol IDs start with same prefix
-   ```json
-   "symbolPrefix": "my-prefix-"
-   ```
+
+    ```json
+    "symbolPrefix": "my-prefix-"
+    ```
 
 2. **Standardize viewBox:** Use 24x24 for consistency
-   ```xml
-   viewBox="0 0 24 24"
-   ```
+
+    ```xml
+    viewBox="0 0 24 24"
+    ```
 
 3. **Optimize file size:**
-   - Remove unnecessary groups
-   - Simplify paths
-   - Use SVGO: `svgo sprite.svg -o sprite.optimized.svg`
+    - Remove unnecessary groups
+    - Simplify paths
+    - Use SVGO: `svgo sprite.svg -o sprite.optimized.svg`
 
 4. **Limit icon count:** 50-100 icons max per sprite
-   - Split into multiple sprites if needed
-   - Load sprites on-demand
+    - Split into multiple sprites if needed
+    - Load sprites on-demand
 
 5. **Use semantic names:** `hotel`, not `icon-01`
 
@@ -793,6 +810,7 @@ Category (Level 1)
 ```
 
 **Why?**
+
 - UI becomes cluttered with >2 levels
 - Filter panel complexity increases
 - User confusion increases
@@ -801,16 +819,16 @@ Category (Level 1)
 
 ```json
 {
-  "categories": {
-    "food": {
-      "label": "Food & Drink",
-      "subcategories": {
-        "restaurant": { "label": "Restaurants" },
-        "cafe": { "label": "Cafés" },
-        "bar": { "label": "Bars" }
-      }
+    "categories": {
+        "food": {
+            "label": "Food & Drink",
+            "subcategories": {
+                "restaurant": { "label": "Restaurants" },
+                "cafe": { "label": "Cafés" },
+                "bar": { "label": "Bars" }
+            }
+        }
     }
-  }
 }
 ```
 
@@ -818,21 +836,21 @@ Category (Level 1)
 
 ```json
 {
-  "categories": {
-    "food": {
-      "subcategories": {
-        "restaurant": {
-          "subcategories": {
-            "italian": {
-              "subcategories": {
-                "pizza": {}  // ❌ Too deep!
-              }
+    "categories": {
+        "food": {
+            "subcategories": {
+                "restaurant": {
+                    "subcategories": {
+                        "italian": {
+                            "subcategories": {
+                                "pizza": {} // ❌ Too deep!
+                            }
+                        }
+                    }
+                }
             }
-          }
         }
-      }
     }
-  }
 }
 ```
 
@@ -840,11 +858,11 @@ Category (Level 1)
 
 ### Theme Count Recommendations
 
-| Profile Size | Recommended Themes | Why |
-|--------------|-------------------|-----|
-| Small (5-10 layers) | 2-3 themes | Keep it simple |
-| Medium (10-20 layers) | 3-5 themes | Balance flexibility & simplicity |
-| Large (20+ layers) | 4-6 themes | Help users navigate complexity |
+| Profile Size          | Recommended Themes | Why                              |
+| --------------------- | ------------------ | -------------------------------- |
+| Small (5-10 layers)   | 2-3 themes         | Keep it simple                   |
+| Medium (10-20 layers) | 3-5 themes         | Balance flexibility & simplicity |
+| Large (20+ layers)    | 4-6 themes         | Help users navigate complexity   |
 
 **Theme Strategy:**
 
@@ -864,39 +882,41 @@ Category (Level 1)
 **Solutions:**
 
 1. **Lazy load layers:**
-   ```json
-   {
-     "performance": {
-       "maxConcurrentLayers": 5,
-       "layerLoadDelay": 300
-     }
-   }
-   ```
+
+    ```json
+    {
+        "performance": {
+            "maxConcurrentLayers": 5,
+            "layerLoadDelay": 300
+        }
+    }
+    ```
 
 2. **Use layer visibility themes strategically:**
-   - Don't enable all layers by default
-   - Create focused themes with 5-10 layers max
+    - Don't enable all layers by default
+    - Create focused themes with 5-10 layers max
 
 3. **Enable clustering for dense POI layers:**
-   ```json
-   {
-     "defaultSettings": {
-       "clustering": {
-         "enabled": true,
-         "maxClusterRadius": 80
-       }
-     }
-   }
-   ```
+
+    ```json
+    {
+        "defaultSettings": {
+            "clustering": {
+                "enabled": true,
+                "maxClusterRadius": 80
+            }
+        }
+    }
+    ```
 
 4. **Optimize GeoJSON:**
-   - Simplify geometries (reduce precision)
-   - Remove unnecessary properties
-   - Use `.geojson` instead of inline JSON
+    - Simplify geometries (reduce precision)
+    - Remove unnecessary properties
+    - Use `.geojson` instead of inline JSON
 
 5. **Split large layers:**
-   - Instead of one "Restaurants" layer with 10,000 POIs
-   - Create regional layers: "Restaurants Paris", "Restaurants Lyon"
+    - Instead of one "Restaurants" layer with 10,000 POIs
+    - Create regional layers: "Restaurants Paris", "Restaurants Lyon"
 
 ---
 
@@ -906,12 +926,13 @@ Category (Level 1)
 
 1. **Enable clustering** (essential)
 2. **Set appropriate zoom levels:**
-   ```json
-   {
-     "minZoom": 10,  // Don't render at country-level zoom
-     "maxZoom": 19
-   }
-   ```
+
+    ```json
+    {
+        "minZoom": 10, // Don't render at country-level zoom
+        "maxZoom": 19
+    }
+    ```
 
 3. **Use vector tiles** (advanced) if available
 4. **Implement search/filter** to narrow results
@@ -935,9 +956,15 @@ Category (Level 1)
 
 ```json
 {
-  "pois": [ /* all POIs inline */ ],
-  "categories": { /* inline taxonomy */ },
-  "basemaps": { /* ... */ }
+    "pois": [
+        /* all POIs inline */
+    ],
+    "categories": {
+        /* inline taxonomy */
+    },
+    "basemaps": {
+        /* ... */
+    }
 }
 ```
 
@@ -951,7 +978,63 @@ profiles/my-profile/
 └── poi.json           # POIs (extracted)
 ```
 
+**See:** [Refactoring v3 Guide](REFACTORING_V3_GUIDE.md) for complete migration
 
+---
+
+### v3.0 to v3.1
+
+**Key Changes:**
+
+1. **Label configuration moved** - `visibleByDefault` now in style files
+2. **Breaking change** - Layer config `label.visibleByDefault` deprecated
+
+**Migration Steps:**
+
+**Before (v3.0) - Layer config:**
+
+```json
+{
+    "layers": [
+        {
+            "id": "my-layer",
+            "label": {
+                "enabled": true,
+                "visibleByDefault": true, // ❌ DEPRECATED
+                "field": "name"
+            }
+        }
+    ]
+}
+```
+
+**After (v3.1) - Style file:**
+
+```json
+{
+    "id": "default",
+    "label": {
+        "enabled": true,
+        "visibleByDefault": true, // ✅ NOW HERE
+        "field": "name"
+    },
+    "style": {
+        /* ... */
+    }
+}
+```
+
+**Automated Migration:**
+
+```bash
+# Run migration script
+node scripts/migrate-label-config.cjs
+
+# Or manually use label migrator
+node scripts/add-missing-label-config.cjs
+```
+
+**See:** [Labels Documentation](labels/GeoLeaf_Labels_README.md) for complete details
 
 ---
 
@@ -964,30 +1047,32 @@ profiles/my-profile/
 **Causes & Solutions:**
 
 1. **Incorrect profile ID in config**
-   ```javascript
-   // Check console
-   console.log(GeoLeaf.Config.getActiveProfile());
-   
-   // Should match profile directory name
-   ```
+
+    ```javascript
+    // Check console
+    console.log(GeoLeaf.Config.getActiveProfile());
+
+    // Should match profile directory name
+    ```
 
 2. **Wrong profilesBasePath**
-   ```json
-   {
-     "data": {
-       "profilesBasePath": "/profiles/"  // Check this path
-     }
-   }
-   ```
+
+    ```json
+    {
+        "data": {
+            "profilesBasePath": "/profiles/" // Check this path
+        }
+    }
+    ```
 
 3. **profile.json syntax error**
-   - Use JSON validator: https://jsonlint.com/
-   - Check for trailing commas (invalid in JSON)
-   - Check for missing quotes
+    - Use JSON validator: https://jsonlint.com/
+    - Check for trailing commas (invalid in JSON)
+    - Check for missing quotes
 
 4. **CORS issues (if using file:// protocol)**
-   - Use a local web server: `npm start`
-   - Or run Chrome with: `--allow-file-access-from-files`
+    - Use a local web server: `npm start`
+    - Or run Chrome with: `--allow-file-access-from-files`
 
 ---
 
@@ -998,36 +1083,38 @@ profiles/my-profile/
 **Causes & Solutions:**
 
 1. **Sprite URL incorrect**
-   ```json
-   {
-     "icons": {
-       "spriteUrl": "../path/to/sprite.svg"  // Check path relative to profile.json
-     }
-   }
-   ```
+
+    ```json
+    {
+        "icons": {
+            "spriteUrl": "../path/to/sprite.svg" // Check path relative to profile.json
+        }
+    }
+    ```
 
 2. **Symbol ID mismatch**
-   ```json
-   // taxonomy.json
-   "icon": "hotel"  // Must match symbol ID in sprite
-   
-   // sprite.svg
-   <symbol id="my-prefix-hotel">  // Prefix + icon name
-   ```
+
+    ```json
+    // taxonomy.json
+    "icon": "hotel"  // Must match symbol ID in sprite
+
+    // sprite.svg
+    <symbol id="my-prefix-hotel">  // Prefix + icon name
+    ```
 
 3. **Sprite not loading (check Network tab)**
-   - 404: Incorrect spriteUrl path
-   - CORS: Sprite on different domain
-   - 200 but still not showing: Check symbol IDs
+    - 404: Incorrect spriteUrl path
+    - CORS: Sprite on different domain
+    - 200 but still not showing: Check symbol IDs
 
 4. **Missing defaultIcon**
-   ```json
-   {
-     "icons": {
-       "defaultIcon": "generic"  // Fallback if icon not found
-     }
-   }
-   ```
+    ```json
+    {
+        "icons": {
+            "defaultIcon": "generic" // Fallback if icon not found
+        }
+    }
+    ```
 
 ---
 
@@ -1038,35 +1125,39 @@ profiles/my-profile/
 **Causes & Solutions:**
 
 1. **Invalid GeoJSON**
-   - Validate at: https://geojsonlint.com/
-   - Check coordinates format: `[lng, lat]` NOT `[lat, lng]`
+    - Validate at: https://geojsonlint.com/
+    - Check coordinates format: `[lng, lat]` NOT `[lat, lng]`
 
 2. **Data outside map bounds**
-   ```javascript
-   // Check feature bounds
-   const layer = GeoLeaf.GeoJSON.getLayerById('my-layer');
-   console.log(layer.getBounds());
-   ```
+
+    ```javascript
+    // Check feature bounds
+    const layer = GeoLeaf.GeoJSON.getLayerById("my-layer");
+    console.log(layer.getBounds());
+    ```
 
 3. **Incorrect dataSource path**
-   ```json
-   {
-     "dataSource": "layers/my-layer/data.geojson"  // Relative to profile root
-   }
-   ```
+
+    ```json
+    {
+        "dataSource": "layers/my-layer/data.geojson" // Relative to profile root
+    }
+    ```
 
 4. **Zoom level out of range**
-   ```json
-   {
-     "minZoom": 8,   // Layer only visible at zoom 8-19
-     "maxZoom": 19
-   }
-   ```
-   - Zoom to correct level or adjust min/maxZoom
+
+    ```json
+    {
+        "minZoom": 8, // Layer only visible at zoom 8-19
+        "maxZoom": 19
+    }
+    ```
+
+    - Zoom to correct level or adjust min/maxZoom
 
 5. **Layer hidden by theme**
-   - Check current theme settings
-   - Verify layer ID in themes.json
+    - Check current theme settings
+    - Verify layer ID in themes.json
 
 ---
 
@@ -1077,33 +1168,35 @@ profiles/my-profile/
 **Causes & Solutions:**
 
 1. **Layer IDs don't match**
-   ```json
-   // themes.json
-   "layers": {
-     "my-layer": true  // Must match layer ID exactly
-   }
-   
-   // layers.json
-   {
-     "id": "my-layer"  // Must match
-   }
-   ```
+
+    ```json
+    // themes.json
+    "layers": {
+      "my-layer": true  // Must match layer ID exactly
+    }
+
+    // layers.json
+    {
+      "id": "my-layer"  // Must match
+    }
+    ```
 
 2. **Theme persistence conflict**
-   ```json
-   {
-     "config": {
-       "persistSelection": false  // Try disabling persistence
-     }
-   }
-   ```
+
+    ```json
+    {
+        "config": {
+            "persistSelection": false // Try disabling persistence
+        }
+    }
+    ```
 
 3. **Cache issue**
-   ```javascript
-   // Clear theme cache
-   localStorage.removeItem('geoleaf-theme-selection');
-   location.reload();
-   ```
+    ```javascript
+    // Clear theme cache
+    localStorage.removeItem("geoleaf-theme-selection");
+    location.reload();
+    ```
 
 ---
 
@@ -1114,40 +1207,43 @@ profiles/my-profile/
 **Causes & Solutions:**
 
 1. **label.enabled = false in style**
-   ```json
-   {
-     "label": {
-       "enabled": true,  // ✅ Must be true
-       "visibleByDefault": true,
-       "field": "name"
-     }
-   }
-   ```
+
+    ```json
+    {
+        "label": {
+            "enabled": true, // ✅ Must be true
+            "visibleByDefault": true,
+            "field": "name"
+        }
+    }
+    ```
 
 2. **Label field missing in data**
-   ```javascript
-   // Check if field exists
-   const layer = GeoLeaf.GeoJSON.getLayerById('my-layer');
-   layer.eachLayer(feature => {
-     console.log(feature.properties.name);  // Should exist
-   });
-   ```
+
+    ```javascript
+    // Check if field exists
+    const layer = GeoLeaf.GeoJSON.getLayerById("my-layer");
+    layer.eachLayer((feature) => {
+        console.log(feature.properties.name); // Should exist
+    });
+    ```
 
 3. **Zoom level below labelScale.minZoom**
-   ```json
-   {
-     "labelScale": {
-       "minZoom": 14,  // Labels only show at zoom 14+
-       "maxZoom": 19
-     }
-   }
-   ```
+
+    ```json
+    {
+        "labelScale": {
+            "minZoom": 14, // Labels only show at zoom 14+
+            "maxZoom": 19
+        }
+    }
+    ```
 
 4. **visibleByDefault = false**
-   - Click label button in Layer Manager to enable
+    - Click label button in Layer Manager to enable
 
-5. **Outdated config still in use**
-  - Align labels settings with the current schema in [Configuration Guide](CONFIGURATION_GUIDE.md#labels--multi-label-system-v310)
+5. **v3.0 config still in use**
+    - Migrate to v3.1: see [Labels Documentation](labels/GeoLeaf_Labels_README.md)
 
 ---
 
@@ -1158,40 +1254,42 @@ profiles/my-profile/
 **Causes & Solutions:**
 
 1. **Too many layers enabled**
-   ```json
-   {
-     "performance": {
-       "maxConcurrentLayers": 5  // Limit concurrent layers
-     }
-   }
-   ```
+
+    ```json
+    {
+        "performance": {
+            "maxConcurrentLayers": 5 // Limit concurrent layers
+        }
+    }
+    ```
 
 2. **Large GeoJSON files**
-   - Simplify geometries
-   - Split into regional layers
-   - Use clustering for POIs
+    - Simplify geometries
+    - Split into regional layers
+    - Use clustering for POIs
 
 3. **No clustering for dense POI layers**
-   ```json
-   {
-     "defaultSettings": {
-       "clustering": {
-         "enabled": true,
-         "maxClusterRadius": 80
-       }
-     }
-   }
-   ```
+
+    ```json
+    {
+        "defaultSettings": {
+            "clustering": {
+                "enabled": true,
+                "maxClusterRadius": 80
+            }
+        }
+    }
+    ```
 
 4. **Too many label updates**
-   - Check console for "[LabelButtonManager] Bouton créé" spam
-   - Labels module should debounce updates (300ms)
+    - Check console for "[LabelButtonManager] Bouton créé" spam
+    - Labels module should debounce updates (300ms)
 
 5. **Memory leak from layers**
-   ```javascript
-   // Clear layers before switching profiles
-   GeoLeaf.GeoJSON.clearAll();
-   ```
+    ```javascript
+    // Clear layers before switching profiles
+    GeoLeaf.GeoJSON.clearAll();
+    ```
 
 ---
 
@@ -1200,8 +1298,9 @@ profiles/my-profile/
 - **[Configuration Guide](CONFIGURATION_GUIDE.md)** - Complete JSON reference
 - **[Getting Started](GETTING_STARTED.md)** - Quick 5-minute tutorial
 - **[User Guide](USER_GUIDE.md)** - Using GeoLeaf features
-- **[Examples](../examples/README.md)** - Working profile examples
-- **[Schema Documentation](../schema/README.md)** - JSON Schema validation
+- **[Tourism Profile](../profiles/tourism/)** - Working profile example
+- **[Schema Documentation](schema/README.md)** - JSON Schema validation
+- **[Labels Documentation](labels/GeoLeaf_Labels_README.md)** - Labels system and migration
 
 ---
 
@@ -1209,7 +1308,7 @@ profiles/my-profile/
 
 For help with profile creation:
 
-1. **Check examples:** [examples/](../examples/) directory has complete working profile
+1. **Check Tourism profile:** `profiles/tourism/` directory has complete working profile
 2. **Review built-in profiles:** Tourism in `profiles/` directory
 3. **Validate your JSON:** Use JSON Schema validation
 4. **Enable debug mode:** See detailed logs in console
@@ -1218,4 +1317,4 @@ For help with profile creation:
 ---
 
 **Last Updated:** January 23, 2026  
-**GeoLeaf Version:** 3.2.0
+**GeoLeaf Version:** 4.0.0

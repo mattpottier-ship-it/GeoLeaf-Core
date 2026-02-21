@@ -1,11 +1,11 @@
-﻿# GeoLeaf API Reference
+# GeoLeaf API Reference
 
 **Product Version:** GeoLeaf Platform V1  
-**Version:** 3.2.0  
-**Last Updated:** January 2026  
+**Version:** 4.0.0  
+**Last Updated:** February 21, 2026  
 **Audience:** Developers integrating GeoLeaf
 
-> Versioning convention: **Platform V1** is the product label; technical SemVer in this repository remains **3.2.0** for compatibility.
+> Versioning convention: **Platform V1** is the product label; technical package/release SemVer remains **4.x**. See [VERSIONING_POLICY.md](VERSIONING_POLICY.md).
 
 ---
 
@@ -38,10 +38,10 @@
 
 ```html
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<link rel="stylesheet" href="https://unpkg.com/geoleaf@3.2.0/dist/geoleaf.min.css" />
+<link rel="stylesheet" href="https://unpkg.com/geoleaf@4.0.0/dist/geoleaf.min.css" />
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/geoleaf@3.2.0/dist/geoleaf.min.js"></script>
+<script src="https://unpkg.com/geoleaf@4.0.0/dist/geoleaf.min.js"></script>
 ```
 
 **Via NPM:**
@@ -51,9 +51,9 @@ npm install geoleaf leaflet
 ```
 
 ```javascript
-import GeoLeaf from 'geoleaf';
-import 'leaflet/dist/leaflet.css';
-import 'geoleaf/dist/geoleaf.min.css';
+import GeoLeaf from "geoleaf";
+import "leaflet/dist/leaflet.css";
+import "geoleaf/dist/geoleaf.min.css";
 ```
 
 ### Basic Usage
@@ -61,30 +61,33 @@ import 'geoleaf/dist/geoleaf.min.css';
 ```javascript
 // Initialize map
 const map = GeoLeaf.init({
-  map: {
-    target: 'map',
-    center: [48.8566, 2.3522],
-    zoom: 12
-  },
-  data: {
-    activeProfile: 'tourism',
-    profilesBasePath: '/profiles/'
-  }
+    map: {
+        target: "map",
+        center: [48.8566, 2.3522],
+        zoom: 12,
+    },
+    data: {
+        activeProfile: "tourism",
+        profilesBasePath: "/profiles/",
+    },
 });
 
 // Access map instance
-console.log('Map ready:', map);
+console.log("Map ready:", map);
 ```
 
 ---
 
 ## Core API
 
+> License scope: this reference documents the MIT core API. Premium plugin namespaces are documented separately and require a commercial license.
+
 ### GeoLeaf.init(config)
 
 Initializes the GeoLeaf application with configuration.
 
 **Parameters:**
+
 - `config` (Object, required) - Configuration object
 
 **Configuration Structure:**
@@ -101,18 +104,18 @@ Initializes the GeoLeaf application with configuration.
     zoomControl: true,           // Show zoom controls (default: true)
     attributionControl: true     // Show attribution (default: true)
   },
-  
+
   debug: {
     enabled: false,              // Enable debug logs
     modules: ['*'],              // Module filters: ['*'] or ['poi', 'labels']
     logLevel: 'debug'            // 'debug' | 'info' | 'warn' | 'error'
   },
-  
+
   data: {
     activeProfile: 'tourism',    // Profile to load
     profilesBasePath: '/profiles/' // Path to profiles directory
   },
-  
+
   performance: {
     enableClustering: true,      // Enable POI clustering
     clusterThreshold: 50,        // Cluster if >50 POIs
@@ -128,58 +131,146 @@ Initializes the GeoLeaf application with configuration.
 
 ```javascript
 const map = GeoLeaf.init({
-  map: {
-    target: 'map',
-    center: [46.8, 2.5],
-    zoom: 6
-  },
-  debug: {
-    enabled: true,
-    modules: ['poi', 'geojson']
-  },
-  data: {
-    activeProfile: 'custom-profile'
-  }
+    map: {
+        target: "map",
+        center: [46.8, 2.5],
+        zoom: 6,
+    },
+    debug: {
+        enabled: true,
+        modules: ["poi", "geojson"],
+    },
+    data: {
+        activeProfile: "custom-profile",
+    },
 });
 ```
 
 **Throws:**
+
 - `InitializationError` - If target element not found
 - `ConfigError` - If configuration is invalid
 
 ---
 
-### GeoLeaf.getMap()
+### GeoLeaf.loadConfig(input)
 
-Returns the current Leaflet map instance.
+Loads configuration from URL or object.
 
-**Returns:** `L.Map | null`
+**Parameters:**
 
-**Example:**
+- `input` (String|Object, required) - Config URL or config object
 
-```javascript
-const map = GeoLeaf.getMap();
-if (map) {
-  map.setZoom(14);
-}
-```
+**Returns:** `Promise<Object|null>`
 
 ---
 
-### GeoLeaf.destroy()
+### GeoLeaf.setTheme(theme)
 
-Destroys the GeoLeaf instance and cleans up resources.
+Applies the active theme.
 
-**Returns:** `void`
+**Parameters:**
 
-**Example:**
+- `theme` (String, required) - Theme identifier
 
-```javascript
-// Cleanup before page unload
-window.addEventListener('beforeunload', () => {
-  GeoLeaf.destroy();
-});
-```
+**Returns:** `Boolean`
+
+---
+
+### GeoLeaf.createMap(targetId, options)
+
+Creates and registers a map instance for a target element.
+
+**Parameters:**
+
+- `targetId` (String, required) - Target DOM element ID
+- `options` (Object, optional) - Map options
+
+**Returns:** `L.Map | null`
+
+---
+
+### GeoLeaf.getMap(targetId)
+
+Returns a registered map instance by target ID.
+
+**Parameters:**
+
+- `targetId` (String, required) - Target DOM element ID
+
+**Returns:** `L.Map | null`
+
+---
+
+### GeoLeaf.getAllMaps()
+
+Returns all registered map instances.
+
+**Returns:** `Array<L.Map>`
+
+---
+
+### GeoLeaf.removeMap(targetId)
+
+Removes a registered map instance.
+
+**Parameters:**
+
+- `targetId` (String, required) - Target DOM element ID
+
+**Returns:** `Boolean`
+
+---
+
+### GeoLeaf.getModule(name)
+
+Returns a GeoLeaf module by name.
+
+**Parameters:**
+
+- `name` (String, required) - Module name (`Core`, `POI`, `GeoJSON`, etc.)
+
+**Returns:** `Object | null`
+
+---
+
+### GeoLeaf.hasModule(name)
+
+Checks if a module is available.
+
+**Parameters:**
+
+- `name` (String, required) - Module name
+
+**Returns:** `Boolean`
+
+---
+
+### GeoLeaf.getNamespace(name)
+
+Returns a namespace from the global GeoLeaf object.
+
+**Parameters:**
+
+- `name` (String, required) - Namespace name
+
+**Returns:** `Object | null`
+
+---
+
+### GeoLeaf.getHealth()
+
+Returns API controller health status.
+
+**Returns:** `Object | null`
+
+---
+
+### GeoLeaf.getMetrics()
+
+Alias for `GeoLeaf.getHealth()`.
+
+**Returns:** `Object | null`
 
 ---
 
@@ -190,6 +281,7 @@ window.addEventListener('beforeunload', () => {
 Adds a single POI to the map.
 
 **Parameters:**
+
 - `poi` (Object, required) - POI object
 
 **POI Structure:**
@@ -217,23 +309,24 @@ Adds a single POI to the map.
 
 ```javascript
 const marker = GeoLeaf.POI.add({
-  id: 'restaurant-001',
-  latlng: [48.8584, 2.2945],
-  title: 'Le Jules Verne',
-  description: 'Michelin-starred restaurant',
-  category: 'restaurants',
-  properties: {
-    priceRange: '$$$$',
-    cuisine: 'French',
-    rating: 4.6
-  }
+    id: "restaurant-001",
+    latlng: [48.8584, 2.2945],
+    title: "Le Jules Verne",
+    description: "Michelin-starred restaurant",
+    category: "restaurants",
+    properties: {
+        priceRange: "$$$$",
+        cuisine: "French",
+        rating: 4.6,
+    },
 });
 
 // Access marker
-marker.bindPopup('Custom popup content');
+marker.bindPopup("Custom popup content");
 ```
 
 **Throws:**
+
 - `POIError` - If POI structure is invalid
 - `ValidationError` - If coordinates are out of bounds
 
@@ -244,6 +337,7 @@ marker.bindPopup('Custom popup content');
 Updates an existing POI.
 
 **Parameters:**
+
 - `id` (String|Number, required) - POI identifier
 - `updates` (Object, required) - Properties to update
 
@@ -252,11 +346,11 @@ Updates an existing POI.
 **Example:**
 
 ```javascript
-GeoLeaf.POI.update('restaurant-001', {
-  title: 'Le Jules Verne (Updated)',
-  properties: {
-    rating: 4.7
-  }
+GeoLeaf.POI.update("restaurant-001", {
+    title: "Le Jules Verne (Updated)",
+    properties: {
+        rating: 4.7,
+    },
 });
 ```
 
@@ -267,6 +361,7 @@ GeoLeaf.POI.update('restaurant-001', {
 Removes a POI from the map.
 
 **Parameters:**
+
 - `id` (String|Number, required) - POI identifier
 
 **Returns:** `Boolean` - `true` if removed, `false` if not found
@@ -274,8 +369,8 @@ Removes a POI from the map.
 **Example:**
 
 ```javascript
-if (GeoLeaf.POI.remove('restaurant-001')) {
-  console.log('POI removed');
+if (GeoLeaf.POI.remove("restaurant-001")) {
+    console.log("POI removed");
 }
 ```
 
@@ -286,6 +381,7 @@ if (GeoLeaf.POI.remove('restaurant-001')) {
 Retrieves a POI by its ID.
 
 **Parameters:**
+
 - `id` (String|Number, required) - POI identifier
 
 **Returns:** `Object | null` - POI object or null if not found
@@ -293,9 +389,9 @@ Retrieves a POI by its ID.
 **Example:**
 
 ```javascript
-const poi = GeoLeaf.POI.getById('restaurant-001');
+const poi = GeoLeaf.POI.getById("restaurant-001");
 if (poi) {
-  console.log('POI:', poi.title, poi.latlng);
+    console.log("POI:", poi.title, poi.latlng);
 }
 ```
 
@@ -313,8 +409,8 @@ Returns all POIs currently on the map.
 const allPOIs = GeoLeaf.POI.getAll();
 console.log(`Total POIs: ${allPOIs.length}`);
 
-allPOIs.forEach(poi => {
-  console.log(poi.title, poi.category);
+allPOIs.forEach((poi) => {
+    console.log(poi.title, poi.category);
 });
 ```
 
@@ -325,6 +421,7 @@ allPOIs.forEach(poi => {
 Filters POIs by criteria.
 
 **Parameters:**
+
 - `criteria` (Object, required) - Filter criteria
 
 **Criteria Structure:**
@@ -349,14 +446,14 @@ Filters POIs by criteria.
 // Find highly-rated restaurants in current view
 const bounds = map.getBounds();
 const restaurants = GeoLeaf.POI.filter({
-  category: 'restaurants',
-  properties: {
-    rating: { gte: 4.5 }
-  },
-  bounds: [
-    [bounds.getSouth(), bounds.getWest()],
-    [bounds.getNorth(), bounds.getEast()]
-  ]
+    category: "restaurants",
+    properties: {
+        rating: { gte: 4.5 },
+    },
+    bounds: [
+        [bounds.getSouth(), bounds.getWest()],
+        [bounds.getNorth(), bounds.getEast()],
+    ],
 });
 
 console.log(`Found ${restaurants.length} top restaurants`);
@@ -374,7 +471,7 @@ Removes all POIs from the map.
 
 ```javascript
 GeoLeaf.POI.clearAll();
-console.log('All POIs cleared');
+console.log("All POIs cleared");
 ```
 
 ---
@@ -384,6 +481,7 @@ console.log('All POIs cleared');
 Imports multiple POIs at once.
 
 **Parameters:**
+
 - `pois` (Array, required) - Array of POI objects
 
 **Returns:** `Object` - Import result
@@ -400,15 +498,15 @@ Imports multiple POIs at once.
 
 ```javascript
 const poisData = [
-  { latlng: [48.8, 2.3], title: 'POI 1', category: 'landmarks' },
-  { latlng: [48.9, 2.4], title: 'POI 2', category: 'restaurants' }
+    { latlng: [48.8, 2.3], title: "POI 1", category: "landmarks" },
+    { latlng: [48.9, 2.4], title: "POI 2", category: "restaurants" },
 ];
 
 const result = GeoLeaf.POI.import(poisData);
 console.log(`Imported ${result.success}/${poisData.length} POIs`);
 
 if (result.failed > 0) {
-  console.error('Errors:', result.errors);
+    console.error("Errors:", result.errors);
 }
 ```
 
@@ -421,6 +519,7 @@ if (result.failed > 0) {
 Loads a GeoJSON layer onto the map.
 
 **Parameters:**
+
 - `config` (Object, required) - Layer configuration
 
 **Configuration Structure:**
@@ -451,19 +550,19 @@ Loads a GeoJSON layer onto the map.
 
 ```javascript
 const layer = await GeoLeaf.GeoJSON.load({
-  id: 'parks',
-  url: '/data/parks.geojson',
-  style: {
-    fillColor: '#22c55e',
-    fillOpacity: 0.3,
-    color: '#16a34a',
-    weight: 2
-  },
-  minZoom: 10,
-  fitBounds: true
+    id: "parks",
+    url: "/data/parks.geojson",
+    style: {
+        fillColor: "#22c55e",
+        fillOpacity: 0.3,
+        color: "#16a34a",
+        weight: 2,
+    },
+    minZoom: 10,
+    fitBounds: true,
 });
 
-console.log('Layer loaded:', layer.getLayers().length, 'features');
+console.log("Layer loaded:", layer.getLayers().length, "features");
 ```
 
 ---
@@ -473,6 +572,7 @@ console.log('Layer loaded:', layer.getLayers().length, 'features');
 Adds inline GeoJSON data to the map.
 
 **Parameters:**
+
 - `id` (String, required) - Layer identifier
 - `geojson` (Object, required) - GeoJSON FeatureCollection
 - `style` (Object|Function, optional) - Style or style function
@@ -509,6 +609,7 @@ const layer = GeoLeaf.GeoJSON.add('custom-layer', geojsonData, {
 Removes a GeoJSON layer from the map.
 
 **Parameters:**
+
 - `id` (String, required) - Layer identifier
 
 **Returns:** `Boolean` - `true` if removed
@@ -516,8 +617,8 @@ Removes a GeoJSON layer from the map.
 **Example:**
 
 ```javascript
-if (GeoLeaf.GeoJSON.remove('parks')) {
-  console.log('Layer removed');
+if (GeoLeaf.GeoJSON.remove("parks")) {
+    console.log("Layer removed");
 }
 ```
 
@@ -528,6 +629,7 @@ if (GeoLeaf.GeoJSON.remove('parks')) {
 Retrieves a layer by its ID.
 
 **Parameters:**
+
 - `id` (String, required) - Layer identifier
 
 **Returns:** `Object | null` - Layer object with metadata
@@ -535,10 +637,10 @@ Retrieves a layer by its ID.
 **Example:**
 
 ```javascript
-const layer = GeoLeaf.GeoJSON.getLayerById('parks');
+const layer = GeoLeaf.GeoJSON.getLayerById("parks");
 if (layer) {
-  console.log('Layer:', layer.id, layer._visibility.current);
-  console.log('Features:', layer.getLayers().length);
+    console.log("Layer:", layer.id, layer._visibility.current);
+    console.log("Features:", layer.getLayers().length);
 }
 ```
 
@@ -563,6 +665,7 @@ GeoLeaf.GeoJSON.clearAll();
 Shows or hides a layer.
 
 **Parameters:**
+
 - `id` (String, required) - Layer identifier
 - `visible` (Boolean, required) - `true` to show, `false` to hide
 
@@ -572,10 +675,10 @@ Shows or hides a layer.
 
 ```javascript
 // Hide layer
-GeoLeaf.GeoJSON.setLayerVisibility('parks', false);
+GeoLeaf.GeoJSON.setLayerVisibility("parks", false);
 
 // Show layer
-GeoLeaf.GeoJSON.setLayerVisibility('parks', true);
+GeoLeaf.GeoJSON.setLayerVisibility("parks", true);
 ```
 
 ---
@@ -587,6 +690,7 @@ GeoLeaf.GeoJSON.setLayerVisibility('parks', true);
 Enables labels for a specific layer.
 
 **Parameters:**
+
 - `layerId` (String, required) - Layer identifier
 
 **Returns:** `Boolean` - `true` if successful
@@ -594,10 +698,11 @@ Enables labels for a specific layer.
 **Example:**
 
 ```javascript
-GeoLeaf.Labels.enable('parks');
+GeoLeaf.Labels.enable("parks");
 ```
 
 **Requirements:**
+
 - Layer must exist
 - Layer's current style must have `label.enabled: true`
 - Layer must be visible
@@ -609,6 +714,7 @@ GeoLeaf.Labels.enable('parks');
 Disables labels for a specific layer.
 
 **Parameters:**
+
 - `layerId` (String, required) - Layer identifier
 
 **Returns:** `Boolean` - `true` if successful
@@ -616,7 +722,7 @@ Disables labels for a specific layer.
 **Example:**
 
 ```javascript
-GeoLeaf.Labels.disable('parks');
+GeoLeaf.Labels.disable("parks");
 ```
 
 ---
@@ -626,6 +732,7 @@ GeoLeaf.Labels.disable('parks');
 Toggles label visibility for a layer.
 
 **Parameters:**
+
 - `layerId` (String, required) - Layer identifier
 
 **Returns:** `Boolean` - New state (`true` = labels now visible)
@@ -633,8 +740,8 @@ Toggles label visibility for a layer.
 **Example:**
 
 ```javascript
-const nowVisible = GeoLeaf.Labels.toggle('parks');
-console.log('Labels are now:', nowVisible ? 'visible' : 'hidden');
+const nowVisible = GeoLeaf.Labels.toggle("parks");
+console.log("Labels are now:", nowVisible ? "visible" : "hidden");
 ```
 
 ---
@@ -644,6 +751,7 @@ console.log('Labels are now:', nowVisible ? 'visible' : 'hidden');
 Checks if labels are currently visible for a layer.
 
 **Parameters:**
+
 - `layerId` (String, required) - Layer identifier
 
 **Returns:** `Boolean`
@@ -651,8 +759,8 @@ Checks if labels are currently visible for a layer.
 **Example:**
 
 ```javascript
-if (GeoLeaf.Labels.areLabelsEnabled('parks')) {
-  console.log('Labels are visible');
+if (GeoLeaf.Labels.areLabelsEnabled("parks")) {
+    console.log("Labels are visible");
 }
 ```
 
@@ -663,6 +771,7 @@ if (GeoLeaf.Labels.areLabelsEnabled('parks')) {
 Changes which property field is displayed in labels.
 
 **Parameters:**
+
 - `layerId` (String, required) - Layer identifier
 - `field` (String, required) - Property field name
 
@@ -672,7 +781,7 @@ Changes which property field is displayed in labels.
 
 ```javascript
 // Show 'description' instead of 'name'
-GeoLeaf.Labels.setLabelField('parks', 'description');
+GeoLeaf.Labels.setLabelField("parks", "description");
 ```
 
 ---
@@ -684,6 +793,7 @@ GeoLeaf.Labels.setLabelField('parks', 'description');
 Switches to a different theme.
 
 **Parameters:**
+
 - `themeId` (String, required) - Theme identifier
 
 **Returns:** `Promise<void>`
@@ -691,11 +801,12 @@ Switches to a different theme.
 **Example:**
 
 ```javascript
-await GeoLeaf.Theme.setActive('heritage');
-console.log('Theme changed to Heritage');
+await GeoLeaf.Theme.setActive("heritage");
+console.log("Theme changed to Heritage");
 ```
 
 **Behavior:**
+
 - Changes layer visibility according to theme config
 - Updates UI components
 - Persists selection (if `persistSelection: true`)
@@ -723,7 +834,7 @@ Returns the currently active theme.
 
 ```javascript
 const currentTheme = GeoLeaf.Theme.getCurrent();
-console.log('Current theme:', currentTheme.label);
+console.log("Current theme:", currentTheme.label);
 ```
 
 ---
@@ -738,8 +849,8 @@ Returns all available themes.
 
 ```javascript
 const themes = GeoLeaf.Theme.getAll();
-themes.forEach(theme => {
-  console.log(theme.id, theme.label);
+themes.forEach((theme) => {
+    console.log(theme.id, theme.label);
 });
 ```
 
@@ -750,6 +861,7 @@ themes.forEach(theme => {
 Creates a custom theme at runtime.
 
 **Parameters:**
+
 - `themeConfig` (Object, required) - Theme configuration
 
 **Returns:** `Object` - Created theme object
@@ -758,17 +870,17 @@ Creates a custom theme at runtime.
 
 ```javascript
 const myTheme = GeoLeaf.Theme.create({
-  id: 'my-custom-theme',
-  label: 'My Custom View',
-  layers: {
-    'parks': true,
-    'restaurants': true,
-    'hotels': false
-  }
+    id: "my-custom-theme",
+    label: "My Custom View",
+    layers: {
+        parks: true,
+        restaurants: true,
+        hotels: false,
+    },
 });
 
 // Activate it
-await GeoLeaf.Theme.setActive('my-custom-theme');
+await GeoLeaf.Theme.setActive("my-custom-theme");
 ```
 
 ---
@@ -780,6 +892,7 @@ await GeoLeaf.Theme.setActive('my-custom-theme');
 Switches to a different basemap.
 
 **Parameters:**
+
 - `basemapId` (String, required) - Basemap identifier ('street', 'satellite', 'topo')
 
 **Returns:** `void`
@@ -787,7 +900,7 @@ Switches to a different basemap.
 **Example:**
 
 ```javascript
-GeoLeaf.Basemap.setActive('satellite');
+GeoLeaf.Basemap.setActive("satellite");
 ```
 
 ---
@@ -811,7 +924,7 @@ Returns the currently active basemap.
 
 ```javascript
 const basemap = GeoLeaf.Basemap.getCurrent();
-console.log('Current basemap:', basemap.label);
+console.log("Current basemap:", basemap.label);
 ```
 
 ---
@@ -826,8 +939,8 @@ Returns all available basemaps.
 
 ```javascript
 const basemaps = GeoLeaf.Basemap.getAll();
-basemaps.forEach(bm => {
-  console.log(bm.id, bm.label);
+basemaps.forEach((bm) => {
+    console.log(bm.id, bm.label);
 });
 ```
 
@@ -840,6 +953,7 @@ basemaps.forEach(bm => {
 Applies filters to visible layers.
 
 **Parameters:**
+
 - `filters` (Object, required) - Filter criteria
 
 **Filter Structure:**
@@ -862,11 +976,11 @@ Applies filters to visible layers.
 
 ```javascript
 const count = GeoLeaf.Filters.apply({
-  category: ['restaurants'],
-  properties: {
-    rating: { gte: 4.5 },
-    cuisine: { in: ['French', 'Italian'] }
-  }
+    category: ["restaurants"],
+    properties: {
+        rating: { gte: 4.5 },
+        cuisine: { in: ["French", "Italian"] },
+    },
 });
 
 console.log(`Showing ${count} restaurants`);
@@ -899,7 +1013,7 @@ Returns currently active filters.
 ```javascript
 const activeFilters = GeoLeaf.Filters.get();
 if (activeFilters) {
-  console.log('Active filters:', activeFilters);
+    console.log("Active filters:", activeFilters);
 }
 ```
 
@@ -912,6 +1026,7 @@ if (activeFilters) {
 Saves data to IndexedDB cache.
 
 **Parameters:**
+
 - `key` (String, required) - Cache key
 - `data` (Any, required) - Data to cache
 - `options` (Object, optional) - Cache options
@@ -942,6 +1057,7 @@ await GeoLeaf.Cache.save('my-data', { items: [...] }, {
 Loads data from cache.
 
 **Parameters:**
+
 - `key` (String, required) - Cache key
 
 **Returns:** `Promise<Any | null>` - Cached data or null if not found/expired
@@ -949,11 +1065,11 @@ Loads data from cache.
 **Example:**
 
 ```javascript
-const cachedData = await GeoLeaf.Cache.load('my-data');
+const cachedData = await GeoLeaf.Cache.load("my-data");
 if (cachedData) {
-  console.log('Cache hit:', cachedData);
+    console.log("Cache hit:", cachedData);
 } else {
-  // Fetch fresh data
+    // Fetch fresh data
 }
 ```
 
@@ -964,6 +1080,7 @@ if (cachedData) {
 Clears a specific cache entry.
 
 **Parameters:**
+
 - `key` (String, optional) - Cache key. If omitted, clears all cache.
 
 **Returns:** `Promise<void>`
@@ -972,7 +1089,7 @@ Clears a specific cache entry.
 
 ```javascript
 // Clear specific cache
-await GeoLeaf.Cache.clear('my-data');
+await GeoLeaf.Cache.clear("my-data");
 
 // Clear all cache
 await GeoLeaf.Cache.clear();
@@ -1002,6 +1119,7 @@ console.log(`Cache size: ${(size / 1024 / 1024).toFixed(2)} MB`);
 Shows a success toast notification.
 
 **Parameters:**
+
 - `message` (String, required) - Message to display
 - `options` (Object, optional) - Toast options
 
@@ -1020,7 +1138,7 @@ Shows a success toast notification.
 **Example:**
 
 ```javascript
-GeoLeaf.Toast.success('POI added successfully!');
+GeoLeaf.Toast.success("POI added successfully!");
 ```
 
 ---
@@ -1032,9 +1150,9 @@ Shows an error toast notification.
 **Example:**
 
 ```javascript
-GeoLeaf.Toast.error('Failed to load layer', {
-  duration: 5000,
-  dismissable: true
+GeoLeaf.Toast.error("Failed to load layer", {
+    duration: 5000,
+    dismissable: true,
 });
 ```
 
@@ -1047,8 +1165,8 @@ Shows a warning toast notification.
 **Example:**
 
 ```javascript
-GeoLeaf.Toast.warning('Layer has no data', {
-  duration: 4000
+GeoLeaf.Toast.warning("Layer has no data", {
+    duration: 4000,
 });
 ```
 
@@ -1061,8 +1179,8 @@ Shows an info toast notification.
 **Example:**
 
 ```javascript
-GeoLeaf.Toast.info('Loading profile...', {
-  duration: 2000
+GeoLeaf.Toast.info("Loading profile...", {
+    duration: 2000,
 });
 ```
 
@@ -1073,6 +1191,7 @@ GeoLeaf.Toast.info('Loading profile...', {
 Generic toast method.
 
 **Parameters:**
+
 - `message` (String, required)
 - `type` (String, required) - 'success' | 'error' | 'warning' | 'info'
 - `options` (Object, optional)
@@ -1080,8 +1199,8 @@ Generic toast method.
 **Example:**
 
 ```javascript
-GeoLeaf.Toast.show('Custom message', 'info', {
-  duration: 3000
+GeoLeaf.Toast.show("Custom message", "info", {
+    duration: 3000,
 });
 ```
 
@@ -1092,12 +1211,13 @@ GeoLeaf.Toast.show('Custom message', 'info', {
 Dismisses a specific toast.
 
 **Parameters:**
+
 - `toastId` (String, required) - Toast identifier
 
 **Example:**
 
 ```javascript
-const id = GeoLeaf.Toast.info('Processing...');
+const id = GeoLeaf.Toast.info("Processing...");
 
 // Later...
 GeoLeaf.Toast.dismiss(id);
@@ -1124,6 +1244,7 @@ GeoLeaf.Toast.clearAll();
 Switches to a different profile.
 
 **Parameters:**
+
 - `profileId` (String, required) - Profile identifier
 
 **Returns:** `Promise<void>`
@@ -1131,11 +1252,12 @@ Switches to a different profile.
 **Example:**
 
 ```javascript
-await GeoLeaf.Config.switchProfile('tourism');
-console.log('Switched to Tourism profile');
+await GeoLeaf.Config.switchProfile("tourism");
+console.log("Switched to Tourism profile");
 ```
 
 **Behavior:**
+
 - Clears current data
 - Loads new profile config
 - Re-initializes components
@@ -1148,6 +1270,7 @@ console.log('Switched to Tourism profile');
 Gets a configuration value by path.
 
 **Parameters:**
+
 - `path` (String, required) - Dot-notation path
 
 **Returns:** `Any`
@@ -1155,9 +1278,9 @@ Gets a configuration value by path.
 **Example:**
 
 ```javascript
-const profileId = GeoLeaf.Config.get('data.activeProfile');
-const maxLayers = GeoLeaf.Config.get('performance.maxConcurrentLoads');
-const uiTheme = GeoLeaf.Config.get('ui.theme');
+const profileId = GeoLeaf.Config.get("data.activeProfile");
+const maxLayers = GeoLeaf.Config.get("performance.maxConcurrentLoads");
+const uiTheme = GeoLeaf.Config.get("ui.theme");
 ```
 
 ---
@@ -1167,6 +1290,7 @@ const uiTheme = GeoLeaf.Config.get('ui.theme');
 Sets a configuration value.
 
 **Parameters:**
+
 - `path` (String, required) - Dot-notation path
 - `value` (Any, required) - New value
 
@@ -1175,8 +1299,8 @@ Sets a configuration value.
 **Example:**
 
 ```javascript
-GeoLeaf.Config.set('debug.enabled', true);
-GeoLeaf.Config.set('performance.maxConcurrentLoads', 5);
+GeoLeaf.Config.set("debug.enabled", true);
+GeoLeaf.Config.set("performance.maxConcurrentLoads", 5);
 ```
 
 **Note:** Some config changes require re-initialization.
@@ -1193,7 +1317,7 @@ Returns the current active profile ID.
 
 ```javascript
 const profileId = GeoLeaf.Config.getActiveProfile();
-console.log('Active profile:', profileId);
+console.log("Active profile:", profileId);
 ```
 
 ---
@@ -1208,7 +1332,7 @@ Returns the taxonomy configuration.
 
 ```javascript
 const taxonomy = GeoLeaf.Config.getTaxonomy();
-console.log('Categories:', Object.keys(taxonomy.categories));
+console.log("Categories:", Object.keys(taxonomy.categories));
 ```
 
 ---
@@ -1218,6 +1342,7 @@ console.log('Categories:', Object.keys(taxonomy.categories));
 Configures debug logging.
 
 **Parameters:**
+
 - `options` (Object, required)
 
 ```javascript
@@ -1232,9 +1357,9 @@ Configures debug logging.
 
 ```javascript
 GeoLeaf.Config.setDebug({
-  enabled: true,
-  modules: ['labels', 'geojson'],
-  logLevel: 'debug'
+    enabled: true,
+    modules: ["labels", "geojson"],
+    logLevel: "debug",
 });
 ```
 
@@ -1247,6 +1372,7 @@ GeoLeaf.Config.setDebug({
 Subscribes to an event.
 
 **Parameters:**
+
 - `eventName` (String, required) - Event name
 - `handler` (Function, required) - Event handler
 
@@ -1254,30 +1380,30 @@ Subscribes to an event.
 
 **Available Events:**
 
-| Event | Data | Description |
-|-------|------|-------------|
-| `map-ready` | `{ map }` | Map initialized |
-| `profile-loaded` | `{ profileId }` | Profile loaded |
-| `profile-changed` | `{ from, to }` | Profile switched |
-| `layer-added` | `{ layerId, layer }` | Layer added |
-| `layer-removed` | `{ layerId }` | Layer removed |
+| Event                      | Data                   | Description        |
+| -------------------------- | ---------------------- | ------------------ |
+| `map-ready`                | `{ map }`              | Map initialized    |
+| `profile-loaded`           | `{ profileId }`        | Profile loaded     |
+| `profile-changed`          | `{ from, to }`         | Profile switched   |
+| `layer-added`              | `{ layerId, layer }`   | Layer added        |
+| `layer-removed`            | `{ layerId }`          | Layer removed      |
 | `layer-visibility-changed` | `{ layerId, visible }` | Layer shown/hidden |
-| `labels-enabled` | `{ layerId }` | Labels enabled |
-| `labels-disabled` | `{ layerId }` | Labels disabled |
-| `theme-changed` | `{ themeId }` | Theme changed |
-| `basemap-changed` | `{ basemapId }` | Basemap changed |
-| `poi-added` | `{ poi, marker }` | POI added |
-| `poi-removed` | `{ poiId }` | POI removed |
-| `filters-applied` | `{ filters, count }` | Filters applied |
-| `filters-cleared` | `{}` | Filters cleared |
-| `error` | `{ error }` | Error occurred |
+| `labels-enabled`           | `{ layerId }`          | Labels enabled     |
+| `labels-disabled`          | `{ layerId }`          | Labels disabled    |
+| `theme-changed`            | `{ themeId }`          | Theme changed      |
+| `basemap-changed`          | `{ basemapId }`        | Basemap changed    |
+| `poi-added`                | `{ poi, marker }`      | POI added          |
+| `poi-removed`              | `{ poiId }`            | POI removed        |
+| `filters-applied`          | `{ filters, count }`   | Filters applied    |
+| `filters-cleared`          | `{}`                   | Filters cleared    |
+| `error`                    | `{ error }`            | Error occurred     |
 
 **Example:**
 
 ```javascript
 // Subscribe
-const unsubscribe = GeoLeaf.Events.on('layer-added', (data) => {
-  console.log('Layer added:', data.layerId);
+const unsubscribe = GeoLeaf.Events.on("layer-added", (data) => {
+    console.log("Layer added:", data.layerId);
 });
 
 // Unsubscribe later
@@ -1291,6 +1417,7 @@ unsubscribe();
 Unsubscribes from an event.
 
 **Parameters:**
+
 - `eventName` (String, required)
 - `handler` (Function, required) - Same handler reference
 
@@ -1298,13 +1425,13 @@ Unsubscribes from an event.
 
 ```javascript
 function onLayerAdded(data) {
-  console.log('Layer:', data.layerId);
+    console.log("Layer:", data.layerId);
 }
 
-GeoLeaf.Events.on('layer-added', onLayerAdded);
+GeoLeaf.Events.on("layer-added", onLayerAdded);
 
 // Later...
-GeoLeaf.Events.off('layer-added', onLayerAdded);
+GeoLeaf.Events.off("layer-added", onLayerAdded);
 ```
 
 ---
@@ -1314,14 +1441,15 @@ GeoLeaf.Events.off('layer-added', onLayerAdded);
 Subscribes to an event for one-time execution.
 
 **Parameters:**
+
 - `eventName` (String, required)
 - `handler` (Function, required)
 
 **Example:**
 
 ```javascript
-GeoLeaf.Events.once('map-ready', (data) => {
-  console.log('Map is ready, this runs only once');
+GeoLeaf.Events.once("map-ready", (data) => {
+    console.log("Map is ready, this runs only once");
 });
 ```
 
@@ -1332,15 +1460,16 @@ GeoLeaf.Events.once('map-ready', (data) => {
 Emits a custom event.
 
 **Parameters:**
+
 - `eventName` (String, required)
 - `data` (Any, optional)
 
 **Example:**
 
 ```javascript
-GeoLeaf.Events.emit('custom-event', {
-  message: 'Something happened',
-  value: 42
+GeoLeaf.Events.emit("custom-event", {
+    message: "Something happened",
+    value: 42,
 });
 ```
 
@@ -1353,6 +1482,7 @@ GeoLeaf.Events.emit('custom-event', {
 Escapes HTML special characters.
 
 **Parameters:**
+
 - `str` (String, required)
 
 **Returns:** `String` - Escaped string
@@ -1364,7 +1494,7 @@ const userInput = '<script>alert("XSS")</script>';
 const safe = GeoLeaf.Security.escapeHtml(userInput);
 // Result: '&lt;script&gt;alert(&quot;XSS&quot;)&lt;/script&gt;'
 
-element.textContent = safe;  // Safe to display
+element.textContent = safe; // Safe to display
 ```
 
 ---
@@ -1374,6 +1504,7 @@ element.textContent = safe;  // Safe to display
 Validates URL protocol.
 
 **Parameters:**
+
 - `url` (String, required)
 - `allowedProtocols` (Array, optional) - Default: `['http', 'https', 'data']`
 
@@ -1383,10 +1514,10 @@ Validates URL protocol.
 
 ```javascript
 try {
-  GeoLeaf.Security.validateUrl('https://example.com');
-  // URL is safe
+    GeoLeaf.Security.validateUrl("https://example.com");
+    // URL is safe
 } catch (error) {
-  console.error('Invalid URL:', error.message);
+    console.error("Invalid URL:", error.message);
 }
 ```
 
@@ -1397,6 +1528,7 @@ try {
 Validates geographic coordinates.
 
 **Parameters:**
+
 - `lat` (Number, required)
 - `lng` (Number, required)
 
@@ -1406,10 +1538,10 @@ Validates geographic coordinates.
 
 ```javascript
 try {
-  GeoLeaf.Security.validateCoordinates(48.8566, 2.3522);
-  // Coordinates are valid
+    GeoLeaf.Security.validateCoordinates(48.8566, 2.3522);
+    // Coordinates are valid
 } catch (error) {
-  console.error('Invalid coordinates:', error.message);
+    console.error("Invalid coordinates:", error.message);
 }
 ```
 
@@ -1420,6 +1552,7 @@ try {
 Sanitizes POI properties object.
 
 **Parameters:**
+
 - `properties` (Object, required)
 
 **Returns:** `Object` - Sanitized properties
@@ -1428,9 +1561,9 @@ Sanitizes POI properties object.
 
 ```javascript
 const userProperties = {
-  description: '<b>Bold text</b>',
-  website: 'javascript:alert("XSS")',
-  phone: '+33 1 23 45 67 89'
+    description: "<b>Bold text</b>",
+    website: 'javascript:alert("XSS")',
+    phone: "+33 1 23 45 67 89",
 };
 
 const safe = GeoLeaf.Security.sanitizePoiProperties(userProperties);
@@ -1447,6 +1580,7 @@ const safe = GeoLeaf.Security.sanitizePoiProperties(userProperties);
 Creates a typed error.
 
 **Parameters:**
+
 - `message` (String, required)
 - `code` (String, optional) - Error code
 - `context` (Object, optional) - Additional context
@@ -1456,11 +1590,9 @@ Creates a typed error.
 **Example:**
 
 ```javascript
-const error = GeoLeaf.Errors.createError(
-  'Layer not found',
-  'LAYER_NOT_FOUND',
-  { layerId: 'parks' }
-);
+const error = GeoLeaf.Errors.createError("Layer not found", "LAYER_NOT_FOUND", {
+    layerId: "parks",
+});
 
 throw error;
 ```
@@ -1486,12 +1618,14 @@ All error classes extend `GeoLeafError`:
 
 ```javascript
 try {
-  GeoLeaf.POI.add({ /* invalid */ });
+    GeoLeaf.POI.add({
+        /* invalid */
+    });
 } catch (error) {
-  if (error instanceof GeoLeaf.Errors.POIError) {
-    console.error('POI error:', error.message);
-    console.log('Context:', error.context);
-  }
+    if (error instanceof GeoLeaf.Errors.POIError) {
+        console.error("POI error:", error.message);
+        console.log("Context:", error.context);
+    }
 }
 ```
 
@@ -1507,10 +1641,10 @@ Validates coordinates with custom bounds.
 
 ```javascript
 GeoLeaf.Validators.validateCoordinates(48.8566, 2.3522, {
-  minLat: -90,
-  maxLat: 90,
-  minLng: -180,
-  maxLng: 180
+    minLat: -90,
+    maxLat: 90,
+    minLng: -180,
+    maxLng: 180,
 });
 ```
 
@@ -1523,9 +1657,9 @@ Validates required fields in object.
 **Example:**
 
 ```javascript
-const poi = { title: 'Test', latlng: [48, 2] };
+const poi = { title: "Test", latlng: [48, 2] };
 
-GeoLeaf.Validators.validateRequiredFields(poi, ['title', 'latlng', 'category']);
+GeoLeaf.Validators.validateRequiredFields(poi, ["title", "latlng", "category"]);
 // Throws ValidationError: missing 'category'
 ```
 
@@ -1558,11 +1692,11 @@ Debounces a function.
 
 ```javascript
 const debouncedSearch = GeoLeaf.Helpers.debounce((query) => {
-  console.log('Searching:', query);
+    console.log("Searching:", query);
 }, 300);
 
-input.addEventListener('input', (e) => {
-  debouncedSearch(e.target.value);
+input.addEventListener("input", (e) => {
+    debouncedSearch(e.target.value);
 });
 ```
 
@@ -1576,10 +1710,10 @@ Throttles a function.
 
 ```javascript
 const throttledScroll = GeoLeaf.Helpers.throttle(() => {
-  console.log('Scrolling...');
+    console.log("Scrolling...");
 }, 100);
 
-window.addEventListener('scroll', throttledScroll);
+window.addEventListener("scroll", throttledScroll);
 ```
 
 ---
@@ -1607,40 +1741,40 @@ GeoLeaf includes TypeScript definitions in `index.d.ts`.
 **Example:**
 
 ```typescript
-import GeoLeaf from 'geoleaf';
+import GeoLeaf from "geoleaf";
 
 const map = GeoLeaf.init({
-  map: {
-    target: 'map',
-    center: [48.8566, 2.3522],
-    zoom: 12
-  },
-  data: {
-    activeProfile: 'tourism'
-  }
+    map: {
+        target: "map",
+        center: [48.8566, 2.3522],
+        zoom: 12,
+    },
+    data: {
+        activeProfile: "tourism",
+    },
 });
 
 // Type-safe POI
 interface Restaurant {
-  id: string;
-  latlng: [number, number];
-  title: string;
-  category: 'restaurants';
-  properties: {
-    cuisine: string;
-    rating: number;
-  };
+    id: string;
+    latlng: [number, number];
+    title: string;
+    category: "restaurants";
+    properties: {
+        cuisine: string;
+        rating: number;
+    };
 }
 
 const poi: Restaurant = {
-  id: 'rest-001',
-  latlng: [48.8584, 2.2945],
-  title: 'Le Jules Verne',
-  category: 'restaurants',
-  properties: {
-    cuisine: 'French',
-    rating: 4.6
-  }
+    id: "rest-001",
+    latlng: [48.8584, 2.2945],
+    title: "Le Jules Verne",
+    category: "restaurants",
+    properties: {
+        cuisine: "French",
+        rating: 4.6,
+    },
 };
 
 GeoLeaf.POI.add(poi);
@@ -1669,5 +1803,5 @@ For API questions or issues:
 
 ---
 
-**Last Updated:** January 23, 2026  
-**GeoLeaf Version:** 3.2.0
+**Last Updated:** February 21, 2026  
+**GeoLeaf Version:** 4.0.0

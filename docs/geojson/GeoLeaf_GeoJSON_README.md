@@ -1,9 +1,8 @@
 # GeoLeaf.GeoJSON – Documentation du module GeoJSON
 
-**Product Version:** GeoLeaf Platform V1  
-
-**Version**: 3.2.0  
-**Fichiers**: `src/static/js/geojson/core.js` + sous-modules `geojson/` (incl. `layer-manager/` et `loader/`)  
+Product Version: GeoLeaf Platform V1  
+**Version**: 4.0.0  
+**Fichiers**: `src/modules/geoleaf.geojson.js` + sous-modules `geojson/` (incl. `layer-manager/` et `loader/`)  
 **Dernière mise à jour**: 14 février 2026
 
 ---
@@ -24,18 +23,18 @@ Il permet :
 ## 1. Rôle fonctionnel de GeoLeaf.GeoJSON
 
 1. Charger du GeoJSON depuis :
-   - un objet JavaScript,
-   - une URL distante,
-   - une configuration JSON externe.
+    - un objet JavaScript,
+    - une URL distante,
+    - une configuration JSON externe.
 
 2. Convertir automatiquement les données en :
-   - `L.GeoJSON`,
-   - avec styles et interactions personnalisables.
+    - `L.GeoJSON`,
+    - avec styles et interactions personnalisables.
 
 3. Gérer :
-   - ajout/suppression de couches GeoJSON,
-   - centrage automatique (`fitBounds`),
-   - styles par défaut ou transmis par l’utilisateur.
+    - ajout/suppression de couches GeoJSON,
+    - centrage automatique (`fitBounds`),
+    - styles par défaut ou transmis par l’utilisateur.
 
 4. Préparer la future gestion multi-couches et la légende avancée (Phase 1.8 de la roadmap).
 
@@ -58,32 +57,32 @@ Charge un GeoJSON depuis une URL ou un objet.
 
 ```js
 GeoLeaf.GeoJSON.load({
-  map,
-  url: "./data/zones.geojson",
-  style: feature => ({
-    color: feature.properties.color || "#2288ff",
-    weight: 2
-  }),
-  fitBounds: true
+    map,
+    url: "./data/zones.geojson",
+    style: (feature) => ({
+        color: feature.properties.color || "#2288ff",
+        weight: 2,
+    }),
+    fitBounds: true,
 });
 ```
 
 ### 3.1 Paramètres
 
-| Paramètre    | Type     | Obligatoire | Description                                    |
-|--------------|----------|-------------|------------------------------------------------|
-| `map`        | L.Map    | oui         | Instance Leaflet                               |
-| `url`        | string   | non         | Charge un GeoJSON externe                      |
-| `data`       | object   | non         | GeoJSON inline (objet JS)                      |
-| `style`      | function | non         | Style statique ou dynamique                    |
-| `onEach`     | function | non         | Callback pour chaque feature                   |
-| `fitBounds`  | boolean  | non         | Centre la carte automatiquement                |
+| Paramètre   | Type     | Obligatoire | Description                     |
+| ----------- | -------- | ----------- | ------------------------------- |
+| `map`       | L.Map    | oui         | Instance Leaflet                |
+| `url`       | string   | non         | Charge un GeoJSON externe       |
+| `data`      | object   | non         | GeoJSON inline (objet JS)       |
+| `style`     | function | non         | Style statique ou dynamique     |
+| `onEach`    | function | non         | Callback pour chaque feature    |
+| `fitBounds` | boolean  | non         | Centre la carte automatiquement |
 
 ### 3.2 Règles
 
 - Au moins l’un de ces champs doit être fourni :
-  - `url`
-  - `data`
+    - `url`
+    - `data`
 - Si `url` est fourni → un `fetch()` est exécuté.
 - Le chargement est protégé par try/catch → pas d’impact sur les autres modules.
 
@@ -95,9 +94,9 @@ Charge un GeoJSON directement sous forme d'objet JavaScript.
 
 ```js
 GeoLeaf.GeoJSON.fromObject(myGeoJSON, {
-  map,
-  style: { color: "#ff8800", weight: 3 },
-  fitBounds: true
+    map,
+    style: { color: "#ff8800", weight: 3 },
+    fitBounds: true,
 });
 ```
 
@@ -109,8 +108,8 @@ GeoLeaf.GeoJSON.fromObject(myGeoJSON, {
 ### 4.2 Comportement
 
 - Crée un `L.GeoJSON` avec :
-  - style (optionnel),
-  - `onEachFeature` (optionnel).
+    - style (optionnel),
+    - `onEachFeature` (optionnel).
 - Ajoute la couche à la carte.
 - Ajoute la couche au registre interne (`_layers`).
 
@@ -132,25 +131,25 @@ style: {
 ### 5.2 Style dynamique
 
 ```js
-style: feature => ({
-  color: feature.properties.type === "river" ? "#4499ff" : "#55aa55",
-  weight: 2
-})
+style: (feature) => ({
+    color: feature.properties.type === "river" ? "#4499ff" : "#55aa55",
+    weight: 2,
+});
 ```
 
 ### 5.3 Exemple complet
 
 ```js
 GeoLeaf.GeoJSON.load({
-  map,
-  url: "./zones.geojson",
-  style: f => ({
-    color: f.properties.zoneColor,
-    fillOpacity: 0.6
-  }),
-  onEach: (feature, layer) => {
-    layer.bindPopup(`<b>${feature.properties.name}</b>`);
-  }
+    map,
+    url: "./zones.geojson",
+    style: (f) => ({
+        color: f.properties.zoneColor,
+        fillOpacity: 0.6,
+    }),
+    onEach: (feature, layer) => {
+        layer.bindPopup(`<b>${feature.properties.name}</b>`);
+    },
 });
 ```
 
@@ -162,10 +161,10 @@ Callback exécuté pour chaque entité du GeoJSON :
 
 ```js
 onEach: (feature, layer) => {
-  layer.bindPopup(feature.properties.name);
-  layer.on("mouseover", () => layer.setStyle({ weight: 4 }));
-  layer.on("mouseout", () => layer.setStyle({ weight: 2 }));
-}
+    layer.bindPopup(feature.properties.name);
+    layer.on("mouseover", () => layer.setStyle({ weight: 4 }));
+    layer.on("mouseout", () => layer.setStyle({ weight: 2 }));
+};
 ```
 
 Permet de créer :
@@ -186,9 +185,9 @@ Si l'option `fitBounds: true` est activée :
 
 ```js
 GeoLeaf.GeoJSON.load({
-  map,
-  data: myGeoJson,
-  fitBounds: true
+    map,
+    data: myGeoJson,
+    fitBounds: true,
 });
 ```
 
@@ -223,10 +222,10 @@ Exemple de configuration :
 
 ```json
 {
-  "geojson": {
-    "enabled": true,
-    "url": "./data/polygones.geojson"
-  }
+    "geojson": {
+        "enabled": true,
+        "url": "./data/polygones.geojson"
+    }
 }
 ```
 
@@ -234,11 +233,11 @@ Exemple d’intégration :
 
 ```js
 if (config.geojson?.enabled) {
-  GeoLeaf.GeoJSON.load({
-    map,
-    url: config.geojson.url,
-    fitBounds: true
-  });
+    GeoLeaf.GeoJSON.load({
+        map,
+        url: config.geojson.url,
+        fitBounds: true,
+    });
 }
 ```
 
@@ -246,23 +245,23 @@ if (config.geojson?.enabled) {
 
 ## 11. Séquence d’utilisation typique
 
-1. `GeoLeaf.Config` charge la configuration JSON.  
-2. `GeoLeaf.Core.init()` crée la carte.  
-3. `GeoLeaf.Baselayers.init()` active le fond de carte.  
-4. `GeoLeaf.POI.init()` ajoute les POI.  
-5. `GeoLeaf.GeoJSON.load()` charge les couches GeoJSON.  
-6. `GeoLeaf.LayerManager.init()` complète l’interface légende.  
+1. `GeoLeaf.Config` charge la configuration JSON.
+2. `GeoLeaf.Core.init()` crée la carte.
+3. `GeoLeaf.Baselayers.init()` active le fond de carte.
+4. `GeoLeaf.POI.init()` ajoute les POI.
+5. `GeoLeaf.GeoJSON.load()` charge les couches GeoJSON.
+6. `GeoLeaf.LayerManager.init()` complète l’interface légende.
 
 ---
 
 ## 12. Résumé rapide de l’API GeoLeaf.GeoJSON
 
-| Méthode | Rôle |
-|--------|------|
-| `load(options)` | Charge un GeoJSON depuis URL ou objet |
-| `fromObject(obj, options)` | Charge depuis un objet JS |
-| `clear()` | Supprime toutes les couches |
-| `getLayers()` | Retourne les couches actives |
+| Méthode                    | Rôle                                  |
+| -------------------------- | ------------------------------------- |
+| `load(options)`            | Charge un GeoJSON depuis URL ou objet |
+| `fromObject(obj, options)` | Charge depuis un objet JS             |
+| `clear()`                  | Supprime toutes les couches           |
+| `getLayers()`              | Retourne les couches actives          |
 
 ---
 
@@ -273,7 +272,6 @@ if (config.geojson?.enabled) {
 - Utiliser des styles dynamiques pour refléter les propriétés du GeoJSON.
 - Prévoir une clé `properties` cohérente dans vos données.
 - Pour gros fichiers :
-  - compresser le GeoJSON,
-  - utiliser un simplificateur de géométries,
-  - passer à un chargement progressif (Phase 1.8+).
-
+    - compresser le GeoJSON,
+    - utiliser un simplificateur de géométries,
+    - passer à un chargement progressif (Phase 1.8+).

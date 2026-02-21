@@ -1,4 +1,4 @@
-// Type definitions for GeoLeaf 3.1.0
+// Type definitions for GeoLeaf 4.0.0
 // Project: GeoLeaf – Librairie JavaScript modulaire basée sur Leaflet
 // Definitions by: Mattieu
 

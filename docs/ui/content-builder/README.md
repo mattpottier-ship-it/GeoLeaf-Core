@@ -1,6 +1,6 @@
-﻿# ðŸ“¦ Content Builder - Documentation ComplÃ¨te
+# ðŸ“¦ Content Builder - Documentation ComplÃ¨te
 
-**Version**: 3.2.0  
+**Version**: 4.0.0  
 **Date**: 18 janvier 2026  
 **Module**: `GeoLeaf._ContentBuilder`
 
@@ -22,6 +22,7 @@
 ## ðŸŽ¯ Vue d'ensemble
 
 Le **Content Builder** est le systÃ¨me de gÃ©nÃ©ration de contenu HTML pour les POIs (Points d'IntÃ©rÃªt) dans GeoLeaf. Il gÃ¨re la crÃ©ation de:
+
 - **Popups**: FenÃªtres contextuelles sur la carte
 - **Tooltips**: Info-bulles au survol
 - **Panels**: Panneaux latÃ©raux dÃ©taillÃ©s
@@ -43,6 +44,7 @@ ui/content-builder/
 ```
 
 **Avantages**:
+
 - âœ… **ModularitÃ©**: Chaque module a une responsabilitÃ© claire
 - âœ… **TestabilitÃ©**: Modules isolÃ©s testables individuellement
 - âœ… **MaintenabilitÃ©**: Fichiers <400 lignes, code organisÃ©
@@ -128,10 +130,10 @@ ui/content-builder/
 
 ```javascript
 // Ordre critique (dÃ©fini dans src/bundle-entry.js)
-'ui/content-builder/core.js',        // 1. Helpers + validators
-'ui/content-builder/templates.js',   // 2. Template builders
-'ui/content-builder/assemblers.js',  // 3. Assembleurs
-'ui/content-builder.js'              // 4. Renderers + orchestration
+("ui/content-builder/core.js", // 1. Helpers + validators
+    "ui/content-builder/templates.js", // 2. Template builders
+    "ui/content-builder/assemblers.js", // 3. Assembleurs
+    "ui/content-builder.js"); // 4. Renderers + orchestration
 ```
 
 âš ï¸ **Important**: Ne pas modifier l'ordre de chargement sous peine de dÃ©pendances manquantes.
@@ -145,6 +147,7 @@ ui/content-builder/
 **ResponsabilitÃ©**: Fonctions utilitaires, validateurs, rÃ©solution badges, formatage.
 
 **Exports**:
+
 ```javascript
 GeoLeaf._ContentBuilder.Core = {
     // Helpers
@@ -152,17 +155,17 @@ GeoLeaf._ContentBuilder.Core = {
     getEscapeHtml(),        // Ã‰chappement HTML sÃ©curisÃ©
     getActiveProfile(),     // Profil config actif
     getLog(),               // Logger systÃ¨me
-    
+
     // Validators
     validateImageUrl(poi, field, options),
     validateCoordinates(poi, field),
     validateNumber(value, options),
     validateRating(value, options),
-    
+
     // Badge Resolver
     resolveBadge(poi, config, options),
     resolveBadgeTooltip(badge),
-    
+
     // Formatters
     formatNumber(value, options),
     formatCoordinates(lat, lng, format),
@@ -171,23 +174,28 @@ GeoLeaf._ContentBuilder.Core = {
 ```
 
 **Exemple**:
+
 ```javascript
 const Core = GeoLeaf._ContentBuilder.Core;
 
 // Validation image URL
-const imageUrl = Core.validateImageUrl(poi, 'attributes.photo', {
-    defaultImage: '/images/default.jpg'
+const imageUrl = Core.validateImageUrl(poi, "attributes.photo", {
+    defaultImage: "/images/default.jpg",
 });
 
 // RÃ©solution badge
-const badge = Core.resolveBadge(poi, { field: 'attributes.categoryId' }, {
-    context: 'popup',
-    resolveCategoryDisplay: true
-});
+const badge = Core.resolveBadge(
+    poi,
+    { field: "attributes.categoryId" },
+    {
+        context: "popup",
+        resolveCategoryDisplay: true,
+    }
+);
 // Retourne: { icon, color, label, tooltip }
 
 // Formatage coordonnÃ©es
-const formatted = Core.formatCoordinates(45.7578, 4.8320);
+const formatted = Core.formatCoordinates(45.7578, 4.832);
 // Retourne: "45Â°45'28.1\"N, 4Â°49'55.2\"E"
 ```
 
@@ -200,6 +208,7 @@ const formatted = Core.formatCoordinates(45.7578, 4.8320);
 **ResponsabilitÃ©**: GÃ©nÃ©ration structures HTML pour tous types de contenu.
 
 **Exports**:
+
 ```javascript
 GeoLeaf._ContentBuilder.Templates = {
     // CSS Classes Library (BEM)
@@ -208,7 +217,7 @@ GeoLeaf._ContentBuilder.Templates = {
         METRIC_VALUE: 'gl-metric__value',
         // ... 40+ classes BEM
     },
-    
+
     // Template Builders (14 fonctions)
     createMetricElement(value, options),
     createRatingElement(value, options),
@@ -228,14 +237,15 @@ GeoLeaf._ContentBuilder.Templates = {
 ```
 
 **Exemple**:
+
 ```javascript
 const Templates = GeoLeaf._ContentBuilder.Templates;
 
 // CrÃ©er mÃ©trique
 const metricHtml = Templates.createMetricElement(42.5, {
-    prefix: 'â‚¬',
-    suffix: '/mÂ²',
-    icon: 'fa-euro'
+    prefix: "â‚¬",
+    suffix: "/mÂ²",
+    icon: "fa-euro",
 });
 // Retourne: <div class="gl-metric">â‚¬ 42.5 /mÂ²</div>
 
@@ -245,10 +255,10 @@ const ratingHtml = Templates.createRatingElement(4.5, { max: 5 });
 
 // CrÃ©er badge
 const badgeHtml = Templates.createBadge({
-    label: 'Restaurant',
-    icon: 'fa-utensils',
-    color: '#e74c3c',
-    tooltip: 'CatÃ©gorie: Restaurants'
+    label: "Restaurant",
+    icon: "fa-utensils",
+    color: "#e74c3c",
+    tooltip: "CatÃ©gorie: Restaurants",
 });
 ```
 
@@ -261,6 +271,7 @@ const badgeHtml = Templates.createBadge({
 **ResponsabilitÃ©**: Assembler les renderers en structures complÃ¨tes (popup, tooltip, panel).
 
 **Exports**:
+
 ```javascript
 GeoLeaf._ContentBuilder.Assemblers = {
     buildPopupHTML(poi, config, options),      // HTML complet popup
@@ -270,29 +281,34 @@ GeoLeaf._ContentBuilder.Assemblers = {
 ```
 
 **Exemple**:
+
 ```javascript
 const Assemblers = GeoLeaf._ContentBuilder.Assemblers;
 
 // Build Popup
-const popupHtml = Assemblers.buildPopupHTML(poi, [
-    { type: 'image', field: 'photo', variant: 'hero', order: 1 },
-    { type: 'badge', field: 'categoryId', order: 2 },
-    { type: 'text', field: 'name', variant: 'title', order: 3 },
-    { type: 'longtext', field: 'description', order: 4 }
-], { context: 'popup' });
+const popupHtml = Assemblers.buildPopupHTML(
+    poi,
+    [
+        { type: "image", field: "photo", variant: "hero", order: 1 },
+        { type: "badge", field: "categoryId", order: 2 },
+        { type: "text", field: "name", variant: "title", order: 3 },
+        { type: "longtext", field: "description", order: 4 },
+    ],
+    { context: "popup" }
+);
 
 // Build Tooltip
 const tooltipHtml = Assemblers.buildTooltipHTML(poi, [
-    { type: 'text', field: 'name', order: 1 },
-    { type: 'badge', field: 'categoryId', order: 2, contentUnion: '-' }
+    { type: "text", field: "name", order: 1 },
+    { type: "badge", field: "categoryId", order: 2, contentUnion: "-" },
 ]);
 // Retourne: "Restaurant La Bonne Table - Restaurant"
 
 // Build Panel Items
 const panelItems = Assemblers.buildPanelItems(poi, [
-    { type: 'image', field: 'photo', order: 1 },
-    { type: 'list', field: 'services', label: 'Services', accordion: true },
-    { type: 'table', field: 'schedule', label: 'Horaires' }
+    { type: "image", field: "photo", order: 1 },
+    { type: "list", field: "services", label: "Services", accordion: true },
+    { type: "table", field: "schedule", label: "Horaires" },
 ]);
 // Retourne: [{ html, config, label, accordion, defaultOpen }, ...]
 ```
@@ -306,6 +322,7 @@ const panelItems = Assemblers.buildPanelItems(poi, [
 **ResponsabilitÃ©**: Renderers individuels (13 types) + orchestration centrale.
 
 **Exports**:
+
 ```javascript
 GeoLeaf._ContentBuilder = {
     // Renderers individuels (13)
@@ -323,12 +340,12 @@ GeoLeaf._ContentBuilder = {
     renderCoordinates(poi, config, options),
     renderGallery(poi, config, options),
     renderItem(poi, config, options),    // Dispatcher
-    
+
     // Assembleurs (dÃ©lÃ©guÃ©s Ã  assemblers.js)
     buildPopupHTML(poi, config, options),
     buildTooltipHTML(poi, config, options),
     buildPanelItems(poi, config, options),
-    
+
     // Utilitaires exposÃ©s
     getResolveField(),
     getEscapeHtml(),
@@ -366,21 +383,24 @@ GeoLeaf._ContentBuilder = {
 Retourne une fonction de rÃ©solution de champs POI avec support multi-paths.
 
 **Signature**:
+
 ```javascript
 const resolveField = Core.getResolveField();
 const value = resolveField(poi, ...paths);
 ```
 
 **ParamÃ¨tres**:
+
 - `poi` (Object): Objet POI Ã  interroger
 - `paths` (...String): Chemins Ã  tester (ex: 'attributes.name', 'properties.nom')
 
 **Retourne**: PremiÃ¨re valeur non-null trouvÃ©e, ou `null`
 
 **Exemple**:
+
 ```javascript
 const resolveField = Core.getResolveField();
-const name = resolveField(poi, 'attributes.name', 'attributes.nom', 'properties.name');
+const name = resolveField(poi, "attributes.name", "attributes.nom", "properties.name");
 // Teste dans l'ordre: poi.attributes.name â†’ poi.attributes.nom â†’ poi.properties.name
 ```
 
@@ -391,19 +411,21 @@ const name = resolveField(poi, 'attributes.name', 'attributes.nom', 'properties.
 Valide et normalise une URL d'image.
 
 **ParamÃ¨tres**:
+
 - `poi` (Object): POI source
 - `field` (String): Champ Ã  valider
 - `options` (Object):
-  - `defaultImage` (String): Image par dÃ©faut si invalide
-  - `allowedPatterns` (Array<RegExp>): Patterns autorisÃ©s (dÃ©faut: `[/^https?:\/\//, /^data:image\//]`)
+    - `defaultImage` (String): Image par dÃ©faut si invalide
+    - `allowedPatterns` (Array<RegExp>): Patterns autorisÃ©s (dÃ©faut: `[/^https?:\/\//, /^data:image\//]`)
 
 **Retourne**: URL validÃ©e (String) ou `defaultImage`
 
 **Exemple**:
+
 ```javascript
-const imageUrl = Core.validateImageUrl(poi, 'attributes.photo', {
-    defaultImage: '/images/placeholder.jpg',
-    allowedPatterns: [/^https?:\/\//, /^\/images\//]
+const imageUrl = Core.validateImageUrl(poi, "attributes.photo", {
+    defaultImage: "/images/placeholder.jpg",
+    allowedPatterns: [/^https?:\/\//, /^\/images\//],
 });
 ```
 
@@ -414,19 +436,22 @@ const imageUrl = Core.validateImageUrl(poi, 'attributes.photo', {
 RÃ©sout un badge depuis taxonomie ou styleRules.
 
 **ParamÃ¨tres**:
+
 - `poi` (Object): POI source
 - `config` (Object): Configuration badge `{ field, type: 'badge' }`
 - `options` (Object):
-  - `context` (String): 'popup', 'tooltip', 'panel'
-  - `resolveCategoryDisplay` (Boolean): RÃ©soudre label taxonomie
+    - `context` (String): 'popup', 'tooltip', 'panel'
+    - `resolveCategoryDisplay` (Boolean): RÃ©soudre label taxonomie
 
 **Retourne**: Object `{ icon, color, label, tooltip }`
 
 **Exemple**:
+
 ```javascript
-const badge = Core.resolveBadge(poi, 
-    { field: 'attributes.categoryId', type: 'badge' },
-    { context: 'popup', resolveCategoryDisplay: true }
+const badge = Core.resolveBadge(
+    poi,
+    { field: "attributes.categoryId", type: "badge" },
+    { context: "popup", resolveCategoryDisplay: true }
 );
 // Retourne:
 // {
@@ -444,6 +469,7 @@ const badge = Core.resolveBadge(poi,
 Formate des coordonnÃ©es GPS.
 
 **ParamÃ¨tres**:
+
 - `lat` (Number): Latitude
 - `lng` (Number): Longitude
 - `format` (String): 'DMS' (degrÃ©s/minutes/secondes) ou 'DD' (dÃ©cimal)
@@ -451,11 +477,12 @@ Formate des coordonnÃ©es GPS.
 **Retourne**: String formatÃ©
 
 **Exemple**:
+
 ```javascript
-const dms = Core.formatCoordinates(45.7578, 4.8320, 'DMS');
+const dms = Core.formatCoordinates(45.7578, 4.832, "DMS");
 // Retourne: "45Â°45'28.1\"N, 4Â°49'55.2\"E"
 
-const decimal = Core.formatCoordinates(45.7578, 4.8320, 'DD');
+const decimal = Core.formatCoordinates(45.7578, 4.832, "DD");
 // Retourne: "45.7578, 4.8320"
 ```
 
@@ -468,22 +495,24 @@ const decimal = Core.formatCoordinates(45.7578, 4.8320, 'DD');
 CrÃ©e un Ã©lÃ©ment mÃ©trique avec prÃ©fixe/suffixe.
 
 **ParamÃ¨tres**:
+
 - `value` (Number): Valeur numÃ©rique
 - `options` (Object):
-  - `prefix` (String): PrÃ©fixe (ex: 'â‚¬', '$')
-  - `suffix` (String): Suffixe (ex: '/mÂ²', 'kg')
-  - `icon` (String): Classe icÃ´ne FontAwesome
-  - `className` (String): Classe CSS additionnelle
+    - `prefix` (String): PrÃ©fixe (ex: 'â‚¬', '$')
+    - `suffix` (String): Suffixe (ex: '/mÂ²', 'kg')
+    - `icon` (String): Classe icÃ´ne FontAwesome
+    - `className` (String): Classe CSS additionnelle
 
 **Retourne**: HTML String
 
 **Exemple**:
+
 ```javascript
-const html = Templates.createMetricElement(89.50, {
-    prefix: 'â‚¬',
-    suffix: '/nuit',
-    icon: 'fa-euro',
-    className: 'price-display'
+const html = Templates.createMetricElement(89.5, {
+    prefix: "â‚¬",
+    suffix: "/nuit",
+    icon: "fa-euro",
+    className: "price-display",
 });
 // Retourne:
 // <div class="gl-metric price-display">
@@ -501,15 +530,17 @@ const html = Templates.createMetricElement(89.50, {
 CrÃ©e un Ã©lÃ©ment de notation avec Ã©toiles.
 
 **ParamÃ¨tres**:
+
 - `value` (Number): Note (0-5)
 - `options` (Object):
-  - `max` (Number): Note maximale (dÃ©faut: 5)
-  - `showValue` (Boolean): Afficher valeur numÃ©rique (dÃ©faut: true)
-  - `className` (String): Classe CSS additionnelle
+    - `max` (Number): Note maximale (dÃ©faut: 5)
+    - `showValue` (Boolean): Afficher valeur numÃ©rique (dÃ©faut: true)
+    - `className` (String): Classe CSS additionnelle
 
 **Retourne**: HTML String
 
 **Exemple**:
+
 ```javascript
 const html = Templates.createRatingElement(4.5, { max: 5, showValue: true });
 // Retourne:
@@ -526,21 +557,26 @@ const html = Templates.createRatingElement(4.5, { max: 5, showValue: true });
 CrÃ©e un badge visuel.
 
 **ParamÃ¨tres**:
+
 - `badge` (Object): `{ label, icon, color, tooltip }`
 - `options` (Object):
-  - `className` (String): Classe additionnelle
-  - `style` (String): Style inline additionnel
+    - `className` (String): Classe additionnelle
+    - `style` (String): Style inline additionnel
 
 **Retourne**: HTML String
 
 **Exemple**:
+
 ```javascript
-const html = Templates.createBadge({
-    label: 'Restaurant',
-    icon: 'fa-utensils',
-    color: '#e74c3c',
-    tooltip: 'CatÃ©gorie: Restaurants'
-}, { className: 'badge-large' });
+const html = Templates.createBadge(
+    {
+        label: "Restaurant",
+        icon: "fa-utensils",
+        color: "#e74c3c",
+        tooltip: "CatÃ©gorie: Restaurants",
+    },
+    { className: "badge-large" }
+);
 ```
 
 ---
@@ -552,51 +588,55 @@ const html = Templates.createBadge({
 Construit le HTML complet d'un popup POI.
 
 **ParamÃ¨tres**:
+
 - `poi` (Object): DonnÃ©es POI normalisÃ©
 - `config` (Array): Configuration `detailPopup` (tableau d'objets renderer)
 - `options` (Object):
-  - `context` (String): 'popup'
-  - `resolveCategoryDisplay` (Boolean): RÃ©soudre labels taxonomie
+    - `context` (String): 'popup'
+    - `resolveCategoryDisplay` (Boolean): RÃ©soudre labels taxonomie
 
 **Retourne**: HTML String complet
 
 **FonctionnalitÃ©s**:
+
 - âœ… Tri des Ã©lÃ©ments par `order`
 - âœ… Groupage automatique badges consÃ©cutifs
 - âœ… Images hero en dehors du body
 - âœ… Lien "Voir plus" automatique
 
 **Exemple**:
+
 ```javascript
 const popupConfig = [
-    { type: 'image', field: 'photo', variant: 'hero', order: 1 },
-    { type: 'badge', field: 'categoryId', order: 2 },
-    { type: 'badge', field: 'subCategoryId', order: 3 },
-    { type: 'text', field: 'name', variant: 'title', order: 4 },
-    { type: 'longtext', field: 'description', order: 5 },
-    { type: 'rating', field: 'rating', order: 6 }
+    { type: "image", field: "photo", variant: "hero", order: 1 },
+    { type: "badge", field: "categoryId", order: 2 },
+    { type: "badge", field: "subCategoryId", order: 3 },
+    { type: "text", field: "name", variant: "title", order: 4 },
+    { type: "longtext", field: "description", order: 5 },
+    { type: "rating", field: "rating", order: 6 },
 ];
 
 const html = Assemblers.buildPopupHTML(poi, popupConfig, {
-    context: 'popup',
-    resolveCategoryDisplay: true
+    context: "popup",
+    resolveCategoryDisplay: true,
 });
 ```
 
 **Structure HTML gÃ©nÃ©rÃ©e**:
+
 ```html
 <div class="gl-poi-popup">
-  <img class="gl-poi-popup__hero" src="..." />
-  <div class="gl-poi-popup__body">
-    <div class="gl-poi-popup__badges">
-      <span class="gl-badge">Restaurant</span>
-      <span class="gl-badge">Italien</span>
+    <img class="gl-poi-popup__hero" src="..." />
+    <div class="gl-poi-popup__body">
+        <div class="gl-poi-popup__badges">
+            <span class="gl-badge">Restaurant</span>
+            <span class="gl-badge">Italien</span>
+        </div>
+        <h3 class="gl-poi-popup__title">...</h3>
+        <p class="gl-poi-popup__description">...</p>
+        <div class="gl-rating">...</div>
+        <a class="gl-poi-popup__link" data-poi-id="...">Voir plus >>></a>
     </div>
-    <h3 class="gl-poi-popup__title">...</h3>
-    <p class="gl-poi-popup__description">...</p>
-    <div class="gl-rating">...</div>
-    <a class="gl-poi-popup__link" data-poi-id="...">Voir plus >>></a>
-  </div>
 </div>
 ```
 
@@ -607,6 +647,7 @@ const html = Assemblers.buildPopupHTML(poi, popupConfig, {
 Construit le HTML/texte d'un tooltip POI.
 
 **ParamÃ¨tres**:
+
 - `poi` (Object): DonnÃ©es POI
 - `config` (Array): Configuration `detailTooltip`
 - `options` (Object): Options rendering
@@ -614,16 +655,18 @@ Construit le HTML/texte d'un tooltip POI.
 **Retourne**: String (HTML ou texte simple)
 
 **FonctionnalitÃ©s**:
+
 - âœ… Extraction valeurs textuelles
 - âœ… RÃ©solution taxonomie pour badges
 - âœ… Jointure avec `contentUnion`
 
 **Exemple**:
+
 ```javascript
 const tooltipConfig = [
-    { type: 'text', field: 'name', order: 1 },
-    { type: 'badge', field: 'categoryId', order: 2, contentUnion: '-' },
-    { type: 'number', field: 'price', order: 3, contentUnion: 'â€¢' }
+    { type: "text", field: "name", order: 1 },
+    { type: "badge", field: "categoryId", order: 2, contentUnion: "-" },
+    { type: "number", field: "price", order: 3, contentUnion: "â€¢" },
 ];
 
 const text = Assemblers.buildTooltipHTML(poi, tooltipConfig);
@@ -637,6 +680,7 @@ const text = Assemblers.buildTooltipHTML(poi, tooltipConfig);
 Construit les items pour un panneau latÃ©ral POI.
 
 **ParamÃ¨tres**:
+
 - `poi` (Object): DonnÃ©es POI
 - `config` (Array): Configuration `detailLayout`
 - `options` (Object): Options rendering
@@ -644,15 +688,23 @@ Construit les items pour un panneau latÃ©ral POI.
 **Retourne**: Array `[{ html, config, label, accordion, defaultOpen }, ...]`
 
 **Exemple**:
+
 ```javascript
 const panelConfig = [
-    { type: 'image', field: 'photo', order: 1 },
-    { type: 'list', field: 'services', label: 'Services disponibles', accordion: true, order: 2 },
-    { type: 'table', field: 'schedule', label: 'Horaires d\'ouverture', accordion: true, defaultOpen: true, order: 3 },
-    { type: 'coordinates', field: 'coordinates', label: 'CoordonnÃ©es GPS', order: 4 }
+    { type: "image", field: "photo", order: 1 },
+    { type: "list", field: "services", label: "Services disponibles", accordion: true, order: 2 },
+    {
+        type: "table",
+        field: "schedule",
+        label: "Horaires d'ouverture",
+        accordion: true,
+        defaultOpen: true,
+        order: 3,
+    },
+    { type: "coordinates", field: "coordinates", label: "CoordonnÃ©es GPS", order: 4 },
 ];
 
-const items = Assemblers.buildPanelItems(poi, panelConfig, { context: 'panel' });
+const items = Assemblers.buildPanelItems(poi, panelConfig, { context: "panel" });
 // Retourne:
 // [
 //   { html: '<img...>', config: {...}, label: '', accordion: false, defaultOpen: true },
@@ -671,6 +723,7 @@ const items = Assemblers.buildPanelItems(poi, panelConfig, { context: 'panel' })
 Dispatcher principal - route vers le renderer appropriÃ©.
 
 **ParamÃ¨tres**:
+
 - `poi` (Object): POI source
 - `config` (Object): Configuration renderer `{ type, field, ...options }`
 - `options` (Object): Options contextuelles
@@ -678,13 +731,18 @@ Dispatcher principal - route vers le renderer appropriÃ©.
 **Retourne**: HTML String
 
 **Exemple**:
+
 ```javascript
-const html = GeoLeaf._ContentBuilder.renderItem(poi, {
-    type: 'metric',
-    field: 'price',
-    prefix: 'â‚¬',
-    suffix: '/nuit'
-}, { context: 'popup' });
+const html = GeoLeaf._ContentBuilder.renderItem(
+    poi,
+    {
+        type: "metric",
+        field: "price",
+        prefix: "â‚¬",
+        suffix: "/nuit",
+    },
+    { context: "popup" }
+);
 ```
 
 ---
@@ -695,37 +753,37 @@ const html = GeoLeaf._ContentBuilder.renderItem(poi, {
 
 ```javascript
 const poi = {
-    id: 'rest-001',
+    id: "rest-001",
     attributes: {
-        name: 'La Bonne Table',
-        categoryId: 'restaurants',
-        subCategoryId: 'italian',
-        description: 'Restaurant italien authentique au cÅ“ur de la ville',
-        photo: 'https://example.com/photos/rest-001.jpg',
+        name: "La Bonne Table",
+        categoryId: "restaurants",
+        subCategoryId: "italian",
+        description: "Restaurant italien authentique au cÅ“ur de la ville",
+        photo: "https://example.com/photos/rest-001.jpg",
         rating: 4.5,
         price: 45,
-        services: ['wifi', 'terrasse', 'parking'],
+        services: ["wifi", "terrasse", "parking"],
         schedule: {
-            lundi: '12h-14h, 19h-22h',
-            mardi: '12h-14h, 19h-22h'
-        }
-    }
+            lundi: "12h-14h, 19h-22h",
+            mardi: "12h-14h, 19h-22h",
+        },
+    },
 };
 
 const popupConfig = [
-    { type: 'image', field: 'attributes.photo', variant: 'hero', order: 1 },
-    { type: 'badge', field: 'attributes.categoryId', order: 2 },
-    { type: 'badge', field: 'attributes.subCategoryId', order: 3 },
-    { type: 'text', field: 'attributes.name', variant: 'title', icon: 'fa-utensils', order: 4 },
-    { type: 'longtext', field: 'attributes.description', order: 5 },
-    { type: 'rating', field: 'attributes.rating', order: 6 },
-    { type: 'metric', field: 'attributes.price', prefix: 'â‚¬', suffix: '/pers', order: 7 },
-    { type: 'tags', field: 'attributes.services', order: 8 }
+    { type: "image", field: "attributes.photo", variant: "hero", order: 1 },
+    { type: "badge", field: "attributes.categoryId", order: 2 },
+    { type: "badge", field: "attributes.subCategoryId", order: 3 },
+    { type: "text", field: "attributes.name", variant: "title", icon: "fa-utensils", order: 4 },
+    { type: "longtext", field: "attributes.description", order: 5 },
+    { type: "rating", field: "attributes.rating", order: 6 },
+    { type: "metric", field: "attributes.price", prefix: "â‚¬", suffix: "/pers", order: 7 },
+    { type: "tags", field: "attributes.services", order: 8 },
 ];
 
 const html = GeoLeaf._ContentBuilder.buildPopupHTML(poi, popupConfig, {
-    context: 'popup',
-    resolveCategoryDisplay: true
+    context: "popup",
+    resolveCategoryDisplay: true,
 });
 ```
 
@@ -735,9 +793,9 @@ const html = GeoLeaf._ContentBuilder.buildPopupHTML(poi, popupConfig, {
 
 ```javascript
 const tooltipConfig = [
-    { type: 'text', field: 'attributes.name', order: 1 },
-    { type: 'badge', field: 'attributes.categoryId', order: 2, contentUnion: 'â€¢' },
-    { type: 'rating', field: 'attributes.rating', order: 3, contentUnion: '-' }
+    { type: "text", field: "attributes.name", order: 1 },
+    { type: "badge", field: "attributes.categoryId", order: 2, contentUnion: "â€¢" },
+    { type: "rating", field: "attributes.rating", order: 3, contentUnion: "-" },
 ];
 
 const tooltipText = GeoLeaf._ContentBuilder.buildTooltipHTML(poi, tooltipConfig);
@@ -750,21 +808,28 @@ const tooltipText = GeoLeaf._ContentBuilder.buildTooltipHTML(poi, tooltipConfig)
 
 ```javascript
 const panelConfig = [
-    { type: 'image', field: 'attributes.photo', order: 1 },
-    { type: 'text', field: 'attributes.name', variant: 'title', order: 2 },
-    { type: 'rating', field: 'attributes.rating', order: 3 },
-    { type: 'longtext', field: 'attributes.description', order: 4 },
-    { type: 'list', field: 'attributes.services', label: 'Services', accordion: true, order: 5 },
-    { type: 'table', field: 'attributes.schedule', label: 'Horaires', accordion: true, defaultOpen: true, order: 6 },
-    { type: 'coordinates', label: 'Localisation', order: 7 }
+    { type: "image", field: "attributes.photo", order: 1 },
+    { type: "text", field: "attributes.name", variant: "title", order: 2 },
+    { type: "rating", field: "attributes.rating", order: 3 },
+    { type: "longtext", field: "attributes.description", order: 4 },
+    { type: "list", field: "attributes.services", label: "Services", accordion: true, order: 5 },
+    {
+        type: "table",
+        field: "attributes.schedule",
+        label: "Horaires",
+        accordion: true,
+        defaultOpen: true,
+        order: 6,
+    },
+    { type: "coordinates", label: "Localisation", order: 7 },
 ];
 
 const items = GeoLeaf._ContentBuilder.buildPanelItems(poi, panelConfig, {
-    context: 'panel'
+    context: "panel",
 });
 
 // Construire le panneau
-items.forEach(item => {
+items.forEach((item) => {
     if (item.accordion) {
         // CrÃ©er section accordÃ©on
     } else {
@@ -780,24 +845,28 @@ items.forEach(item => {
 ```javascript
 // Utiliser Core pour validation
 const Core = GeoLeaf._ContentBuilder.Core;
-const imageUrl = Core.validateImageUrl(poi, 'attributes.photo', {
-    defaultImage: '/images/placeholder.jpg'
+const imageUrl = Core.validateImageUrl(poi, "attributes.photo", {
+    defaultImage: "/images/placeholder.jpg",
 });
 
 // Utiliser Templates pour gÃ©nÃ©ration HTML
 const Templates = GeoLeaf._ContentBuilder.Templates;
 const metricHtml = Templates.createMetricElement(poi.attributes.price, {
-    prefix: 'â‚¬',
-    suffix: '/pers',
-    icon: 'fa-euro'
+    prefix: "â‚¬",
+    suffix: "/pers",
+    icon: "fa-euro",
 });
 
 // Utiliser renderer directement
-const ratingHtml = GeoLeaf._ContentBuilder.renderRating(poi, {
-    type: 'rating',
-    field: 'attributes.rating',
-    showValue: true
-}, { context: 'popup' });
+const ratingHtml = GeoLeaf._ContentBuilder.renderRating(
+    poi,
+    {
+        type: "rating",
+        field: "attributes.rating",
+        showValue: true,
+    },
+    { context: "popup" }
+);
 ```
 
 ---
@@ -807,11 +876,13 @@ const ratingHtml = GeoLeaf._ContentBuilder.renderRating(poi, {
 ### Changements Majeurs
 
 **v0.9** (Architecture monolithique):
+
 - 1 fichier: `content-builder.js` (899 lignes)
 - Code dupliquÃ© (helpers, validators)
 - Pas de sÃ©paration templates/renderers
 
 **v1.0** (Architecture modulaire):
+
 - 4 fichiers: core, templates, assemblers, content-builder
 - Helpers centralisÃ©s
 - Templates rÃ©utilisables
@@ -822,6 +893,7 @@ const ratingHtml = GeoLeaf._ContentBuilder.renderRating(poi, {
 #### 1. Imports (si utilisation directe)
 
 **Avant (v0.9)**:
+
 ```javascript
 // Tout dans GeoLeaf._ContentBuilder
 const builder = GeoLeaf._ContentBuilder;
@@ -829,6 +901,7 @@ builder.buildPopupHTML(poi, config);
 ```
 
 **AprÃ¨s (v1.0)**:
+
 ```javascript
 // AccÃ¨s modules spÃ©cialisÃ©s
 const Core = GeoLeaf._ContentBuilder.Core;
@@ -842,13 +915,19 @@ GeoLeaf._ContentBuilder.buildPopupHTML(poi, config);
 #### 2. Helpers
 
 **Avant**:
+
 ```javascript
 // Helpers inline dans content-builder.js
-function escapeHtml(str) { /* ... */ }
-function resolveField(poi, path) { /* ... */ }
+function escapeHtml(str) {
+    /* ... */
+}
+function resolveField(poi, path) {
+    /* ... */
+}
 ```
 
 **AprÃ¨s**:
+
 ```javascript
 // Via Core module
 const Core = GeoLeaf._ContentBuilder.Core;
@@ -859,6 +938,7 @@ const resolveField = Core.getResolveField();
 #### 3. Templates
 
 **Avant**:
+
 ```javascript
 // Templates inline dans renderers
 function renderMetric() {
@@ -867,6 +947,7 @@ function renderMetric() {
 ```
 
 **AprÃ¨s**:
+
 ```javascript
 // Via Templates module
 const Templates = GeoLeaf._ContentBuilder.Templates;
@@ -876,6 +957,7 @@ const html = Templates.createMetricElement(value, options);
 #### 4. Badge Resolution
 
 **Avant (v0.9)**:
+
 ```javascript
 // 61 lignes de logique inline dans renderBadge
 function renderBadge(poi, config) {
@@ -886,6 +968,7 @@ function renderBadge(poi, config) {
 ```
 
 **AprÃ¨s (v1.0)**:
+
 ```javascript
 // Core.resolveBadge + Templates.createBadge
 const Core = GeoLeaf._ContentBuilder.Core;
@@ -900,6 +983,7 @@ const html = Templates.createBadge(badge);
 âœ… **100% rÃ©trocompatible** : Toutes les APIs publiques sont maintenues.
 
 Les appels suivants fonctionnent identiquement en v0.9 et v1.0:
+
 ```javascript
 GeoLeaf._ContentBuilder.buildPopupHTML(poi, config);
 GeoLeaf._ContentBuilder.buildTooltipHTML(poi, config);
@@ -916,16 +1000,18 @@ GeoLeaf._ContentBuilder.renderItem(poi, config);
 ### 1. Utiliser les APIs Publiques
 
 âœ… **RECOMMANDÃ‰**:
+
 ```javascript
 // Via orchestrateur
 GeoLeaf._ContentBuilder.buildPopupHTML(poi, config);
 
 // Via modules spÃ©cialisÃ©s
 const Core = GeoLeaf._ContentBuilder.Core;
-Core.validateImageUrl(poi, 'photo');
+Core.validateImageUrl(poi, "photo");
 ```
 
 âŒ **Ã€ Ã‰VITER**:
+
 ```javascript
 // AccÃ¨s direct aux fonctions internes
 GeoLeaf._ContentBuilder._internalHelper(); // Peut changer
@@ -934,30 +1020,33 @@ GeoLeaf._ContentBuilder._internalHelper(); // Peut changer
 ### 2. Valider les DonnÃ©es
 
 âœ… **RECOMMANDÃ‰**:
+
 ```javascript
 const Core = GeoLeaf._ContentBuilder.Core;
 
 // Valider image URL
-const imageUrl = Core.validateImageUrl(poi, 'photo', {
-    defaultImage: '/images/default.jpg'
+const imageUrl = Core.validateImageUrl(poi, "photo", {
+    defaultImage: "/images/default.jpg",
 });
 
 // Valider coordonnÃ©es
-const coords = Core.validateCoordinates(poi, 'coordinates');
+const coords = Core.validateCoordinates(poi, "coordinates");
 ```
 
 ### 3. RÃ©utiliser les Templates
 
 âœ… **RECOMMANDÃ‰**:
+
 ```javascript
 const Templates = GeoLeaf._ContentBuilder.Templates;
 
 // RÃ©utiliser templates existants
-const metricHtml = Templates.createMetricElement(42, { prefix: 'â‚¬' });
+const metricHtml = Templates.createMetricElement(42, { prefix: "â‚¬" });
 const ratingHtml = Templates.createRatingElement(4.5);
 ```
 
 âŒ **Ã€ Ã‰VITER**:
+
 ```javascript
 // RecrÃ©er HTML manuellement
 const html = '<div class="metric">â‚¬ 42</div>'; // Pas de BEM, pas de classes CSS
@@ -966,11 +1055,12 @@ const html = '<div class="metric">â‚¬ 42</div>'; // Pas de BEM, pas de class
 ### 4. Trier les Configs par Order
 
 âœ… **RECOMMANDÃ‰**:
+
 ```javascript
 const config = [
-    { type: 'image', field: 'photo', variant: 'hero', order: 1 },
-    { type: 'badge', field: 'category', order: 2 },
-    { type: 'text', field: 'name', variant: 'title', order: 3 }
+    { type: "image", field: "photo", variant: "hero", order: 1 },
+    { type: "badge", field: "category", order: 2 },
+    { type: "text", field: "name", variant: "title", order: 3 },
 ];
 // Assemblers.buildPopupHTML trie automatiquement par order
 ```
@@ -978,11 +1068,12 @@ const config = [
 ### 5. Grouper les Badges
 
 âœ… **RECOMMANDÃ‰**:
+
 ```javascript
 // Mettre badges consÃ©cutifs pour auto-groupage
 const config = [
-    { type: 'badge', field: 'categoryId', order: 2 },
-    { type: 'badge', field: 'subCategoryId', order: 3 },
+    { type: "badge", field: "categoryId", order: 2 },
+    { type: "badge", field: "subCategoryId", order: 3 },
     // Autres Ã©lÃ©ments aprÃ¨s
 ];
 // buildPopupHTML groupe automatiquement dans <div class="gl-poi-popup__badges">
@@ -991,11 +1082,12 @@ const config = [
 ### 6. Utiliser ContentUnion pour Tooltips
 
 âœ… **RECOMMANDÃ‰**:
+
 ```javascript
 const tooltipConfig = [
-    { type: 'text', field: 'name', order: 1 },
-    { type: 'badge', field: 'category', order: 2, contentUnion: 'â€¢' },
-    { type: 'rating', field: 'rating', order: 3, contentUnion: '-' }
+    { type: "text", field: "name", order: 1 },
+    { type: "badge", field: "category", order: 2, contentUnion: "â€¢" },
+    { type: "rating", field: "rating", order: 3, contentUnion: "-" },
 ];
 // buildTooltipHTML joint avec contentUnion: "Name â€¢ Category - â˜…â˜…â˜…â˜…â˜†"
 ```
@@ -1009,12 +1101,13 @@ const tooltipConfig = [
 **SymptÃ´me**: `Cannot read property 'Core' of undefined`
 
 **Solution**:
+
 ```javascript
 // VÃ©rifier ordre de chargement dans bundle-entry.js
-'ui/content-builder/core.js',        // 1. AVANT
-'ui/content-builder/templates.js',   // 2. AVANT
-'ui/content-builder/assemblers.js',  // 3. AVANT
-'ui/content-builder.js'              // 4. APRÃˆS
+("ui/content-builder/core.js", // 1. AVANT
+    "ui/content-builder/templates.js", // 2. AVANT
+    "ui/content-builder/assemblers.js", // 3. AVANT
+    "ui/content-builder.js"); // 4. APRÃˆS
 ```
 
 ---
@@ -1024,11 +1117,12 @@ const tooltipConfig = [
 **SymptÃ´me**: Badge affiche ID au lieu du label
 
 **Solution**:
+
 ```javascript
 // Activer resolveCategoryDisplay
 const html = Assemblers.buildPopupHTML(poi, config, {
-    context: 'popup',
-    resolveCategoryDisplay: true // â† Important
+    context: "popup",
+    resolveCategoryDisplay: true, // â† Important
 });
 ```
 
@@ -1039,12 +1133,13 @@ const html = Assemblers.buildPopupHTML(poi, config, {
 **SymptÃ´me**: Image cassÃ©e ou placeholder
 
 **Solution**:
+
 ```javascript
 // Utiliser validateImageUrl avec defaultImage
 const Core = GeoLeaf._ContentBuilder.Core;
-const imageUrl = Core.validateImageUrl(poi, 'attributes.photo', {
-    defaultImage: '/images/placeholder.jpg',
-    allowedPatterns: [/^https?:\/\//, /^\/images\//]
+const imageUrl = Core.validateImageUrl(poi, "attributes.photo", {
+    defaultImage: "/images/placeholder.jpg",
+    allowedPatterns: [/^https?:\/\//, /^\/images\//],
 });
 ```
 
@@ -1055,20 +1150,22 @@ const imageUrl = Core.validateImageUrl(poi, 'attributes.photo', {
 **SymptÃ´me**: Popup affiche uniquement "Voir plus"
 
 **Causes possibles**:
+
 1. Config vide ou invalide
 2. Champs POI inexistants
 3. Order non dÃ©fini
 
 **Solution**:
+
 ```javascript
 // VÃ©rifier config
-console.log('Config:', config);
-console.log('POI:', poi);
+console.log("Config:", config);
+console.log("POI:", poi);
 
 // Valider order
-config.forEach(item => {
-    if (typeof item.order !== 'number') {
-        console.warn('Item sans order:', item);
+config.forEach((item) => {
+    if (typeof item.order !== "number") {
+        console.warn("Item sans order:", item);
     }
 });
 ```
@@ -1080,6 +1177,7 @@ config.forEach(item => {
 **SymptÃ´me**: Popups lents Ã  gÃ©nÃ©rer
 
 **Solutions**:
+
 1. **Cache badge resolver**: Core.resolveBadge utilise un cache interne
 2. **Limiter Ã©lÃ©ments**: Ne mettre que l'essentiel dans detailPopup
 3. **Lazy loading images**: Utiliser `loading="lazy"` sur images
@@ -1097,10 +1195,10 @@ config.forEach(item => {
 
 ### Fichiers Source
 
-- [core.js](../../../src/static/js/ui/content-builder/core.js) - Module Core (316 lignes)
-- [templates.js](../../../src/static/js/ui/content-builder/templates.js) - Module Templates (351 lignes)
-- [assemblers.js](../../../src/static/js/ui/content-builder/assemblers.js) - Module Assemblers (361 lignes)
-- [content-builder.js](../../../src/static/js/ui/content-builder.js) - Orchestrateur (653 lignes)
+- [core.js](../../../src/modules/ui/content-builder/core.js) - Module Core (316 lignes)
+- [templates.js](../../../src/modules/ui/content-builder/templates.js) - Module Templates (351 lignes)
+- [assemblers.js](../../../src/modules/ui/content-builder/assemblers.js) - Module Assemblers (361 lignes)
+- [content-builder.js](../../../src/modules/ui/content-builder.js) - Orchestrateur (653 lignes)
 
 ### Tests
 
@@ -1114,6 +1212,7 @@ config.forEach(item => {
 ### v1.0.0 (18 janvier 2026) - Sprint 4.5
 
 **âœ¨ Features:**
+
 - âœ… Architecture modulaire 4 fichiers (core, templates, assemblers, orchestrator)
 - âœ… Core module: helpers, validators, badge resolver, formatters
 - âœ… Templates module: 14 template builders + CSS_CLASSES library
@@ -1121,18 +1220,21 @@ config.forEach(item => {
 - âœ… Fallbacks dÃ©fensifs pour rÃ©trocompatibilitÃ© 100%
 
 **ðŸ“‰ Refactoring:**
+
 - âœ… RÃ©duction -246 lignes (-27.4% depuis 899)
 - âœ… Ã‰limination duplication helpers (37 lignes Ã©conomisÃ©es)
 - âœ… renderBadge: 61â†’21 lignes (badge resolver externalisÃ©)
 - âœ… renderImage: 24â†’16 lignes (validateImageUrl externalisÃ©)
 
 **ðŸ“š Documentation:**
+
 - âœ… SPRINT_4_5_COMPLETION_REPORT.md
 - âœ… CONTENT_BUILDER_MODULES_ARCHITECTURE.md
 - âœ… README.md (ce document)
 - âœ… JSDoc inline dans tous modules
 
 **ðŸ·ï¸ Tags Git:**
+
 - `sprint-4.5-start` (2706f51)
 - `sprint-4.5-complete` (456ddc0)
 
@@ -1141,6 +1243,7 @@ config.forEach(item => {
 ### v0.9.0 (Avant Sprint 4.5)
 
 **Ã‰tat initial:**
+
 - 1 fichier monolithique: content-builder.js (899 lignes)
 - Code dupliquÃ© (69 lignes helpers)
 - Templates inline
@@ -1148,7 +1251,7 @@ config.forEach(item => {
 
 ---
 
-**Version**: 3.2.0  
+**Version**: 4.0.0  
 **DerniÃ¨re mise Ã  jour**: 18 janvier 2026  
 **Auteur**: GitHub Copilot + Audit 2026 Team  
 **Licence**: MIT (identique au projet GeoLeaf)

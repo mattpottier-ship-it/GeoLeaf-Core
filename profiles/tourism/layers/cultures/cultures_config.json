@@ -55,6 +55,11 @@
         "type": "badge",
         "label": "Sous-catégorie",
         "field": "properties.subcategoryId"
+      },
+      {
+        "type": "rating",
+        "label": "Note",
+        "field": "attributes.reviews.rating"
       }
     ]
   },
@@ -81,7 +86,7 @@
       {
         "type": "badge",
         "label": "Sous-catégorie",
-        "field": "properties.subCategoryId",
+        "field": "properties.subcategoryId",
         "style": "subcategory",
         "accordion": false,
         "defaultOpen": false
@@ -89,7 +94,7 @@
             {
         "type": "text",
         "label": "Nom",
-        "field": "properties.Name",
+        "field": "properties.name",
         "style": "title",
         "accordion": false,
         "defaultOpen": false
@@ -146,6 +151,22 @@
         "label": "Tags",
         "field": "properties.tags",
         "accordion": false,
+        "defaultOpen": false
+      },
+      {
+        "type": "rating",
+        "label": "Note globale",
+        "field": "attributes.reviews.rating",
+        "variant": "stat",
+        "accordion": false,
+        "defaultOpen": false
+      },
+      {
+        "type": "reviews",
+        "label": "Avis récents",
+        "field": "attributes.reviews.recent",
+        "maxCount": 5,
+        "accordion": true,
         "defaultOpen": false
       }
     ]

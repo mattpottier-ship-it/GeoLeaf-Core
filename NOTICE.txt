@@ -33,21 +33,39 @@ under the MIT License. This includes:
 
 The Core is perpetually open source and available under the MIT License.
 
-FUTURE MODULES
---------------
-GeoLeaf may provide additional modules in the future that extend Core
-functionality. These modules may operate under different licensing models
-and commercial terms, without affecting the perpetual open-source nature
-of the Core library.
+PREMIUM PLUGINS (Commercial License)
+-------------------------------------
+GeoLeaf provides optional premium plugins that extend Core functionality
+under a separate commercial license:
 
-Any such future modules will be:
-- Clearly documented as separate modules
-- Independently licensed
-- Optional additions to the Core
-- Backward compatible with the Core
+  - GeoLeaf Storage Plugin (geoleaf-storage.plugin.js)
+    Adds IndexedDB, offline tile cache, background sync, and Service Worker.
+    Requires a valid commercial license.
+    Commercial license required. See https://geoleaf.dev/pricing
 
-The open-source Core remains unaffected by any licensing changes to
-future modules.
+  - GeoLeaf AddPOI Plugin (geoleaf-addpoi.plugin.js)
+    Adds a full POI creation/edit/delete form with image upload and real-time
+    validation. Works with or without the Storage plugin.
+    Commercial license required. See https://geoleaf.dev/pricing
+
+Two licensing models are available:
+  Annual License   — updates and support included, renewed each year.
+  One-Shot License — perpetual access to the purchased version; optional
+                     updates available for 3 years from purchase date (N+3,
+                     day for day). After N+3, a new license purchase is
+                     required for updates (purchased version remains usable).
+
+Plugins are distributed via GitHub Packages (private npm registry).
+A token provided at purchase constitutes proof of active license.
+
+These premium plugins are:
+  - Sold separately from the open-source Core
+  - Independently licensed under a commercial license
+  - Optional additions to the Core
+  - Fully backward compatible with the Core
+
+The open-source Core (MIT) is entirely unaffected by the commercial
+plugins and remains perpetually free and open source.
 
 ================================================================================
 DEPENDENCIES

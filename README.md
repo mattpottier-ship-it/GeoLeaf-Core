@@ -1,239 +1,568 @@
-<div align="center">
+# GeoLeaf JS
 
-# 🌿 GeoLeaf JS
+**Product Version:** GeoLeaf Platform V1
+**Version:** 4.0.0
+**License:** MIT
+**Description:** Modern JavaScript mapping library built on Leaflet with advanced features for interactive web mapping applications.
 
-**Modular JavaScript mapping library built on Leaflet**
+> **Versioning policy**
+>
+> - Product label: **GeoLeaf Platform V1**
+> - Technical SemVer (packages/releases): **4.x**
+> - Details: [docs/VERSIONING_POLICY.md](docs/VERSIONING_POLICY.md)
 
-**Product Line:** GeoLeaf Platform V1 (product naming)  
-**Technical package SemVer in this repository:** 3.2.0
+> **Licence scope (important)**
+>
+> - **GeoLeaf Core (`geoleaf`, ce dépôt)** : licence **MIT** (usage, modification, redistribution autorisés selon MIT)
+> - **Plugins premium (`@geoleaf-plugins/storage`, `@geoleaf-plugins/addpoi`)** : **licence commerciale** distincte
+> - Les plugins premium ne sont **pas** couverts par la licence MIT du core
 
-[![Version](https://img.shields.io/badge/version-3.2.0-blue.svg)](https://github.com/mattpottier-ship-it/GeoLeaf-Core/releases)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Leaflet](https://img.shields.io/badge/Leaflet-1.9.4-199900.svg)](https://leafletjs.com)
-
-[Documentation](docs/INDEX.md) · [Getting Started](docs/GETTING_STARTED.md) · [API Reference](docs/API_REFERENCE.md) · [Live Demo](deploy/index.html)
-
-</div>
+[![npm version](https://img.shields.io/npm/v/geoleaf.svg)](https://www.npmjs.com/package/geoleaf)
+[![npm downloads](https://img.shields.io/npm/dm/geoleaf.svg)](https://www.npmjs.com/package/geoleaf)
+[![GitHub license](https://img.shields.io/github/license/mattpottier-ship-it/geoleaf-js)](LICENCE)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENCE)
 
 ---
 
 ## 🚀 Quick Start
 
-### Via CDN
+Get started with GeoLeaf in less than 5 minutes:
 
-```html
-<!-- Leaflet (peer dependency) -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+### Installation
 
-<!-- Optional: MarkerCluster -->
-<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
-
-<!-- GeoLeaf Core -->
-<link rel="stylesheet" href="dist/geoleaf-main.min.css" />
-<script src="dist/geoleaf.umd.js"></script>
-
-<div id="geoleaf-map" style="height: 500px;"></div>
-<script>GeoLeaf.boot();</script>
-```
-
-### Via NPM
+**Via NPM (recommended — ESM):**
 
 ```bash
 npm install geoleaf
 ```
 
 ```javascript
-import GeoLeaf from 'geoleaf';
-GeoLeaf.boot();
+// ES Modules (recommended)
+import { Core, GeoJSON, POI, Filters } from "geoleaf";
+import "geoleaf/dist/geoleaf.min.css";
+
+Core.init({
+    map: { target: "map", center: [46.5, 2.5], zoom: 6 },
+});
 ```
+
+**Via CDN (UMD — legacy):**
+
+```html
+<!-- Leaflet (required dependency) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- GeoLeaf -->
+<link rel="stylesheet" href="https://unpkg.com/geoleaf@latest/dist/geoleaf.min.css" />
+<script src="https://unpkg.com/geoleaf@latest/dist/geoleaf.min.js"></script>
+```
+
+### Your First Map
+
+```html
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <link rel="stylesheet" href="https://unpkg.com/geoleaf@latest/dist/geoleaf.min.css" />
+        <style>
+            #map {
+                height: 600px;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="map"></div>
+
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <script src="https://unpkg.com/geoleaf@latest/dist/geoleaf.min.js"></script>
+        <script>
+            // Initialize map
+            const map = GeoLeaf.init({
+                map: {
+                    target: "map",
+                    center: [46.5, 2.5],
+                    zoom: 6,
+                },
+            });
+
+            // Add a POI marker
+            GeoLeaf.POI.add({
+                id: "poi-1",
+                latlng: [48.8566, 2.3522],
+                title: "Paris",
+                category: "city",
+            });
+        </script>
+    </body>
+</html>
+```
+
+---
+
+## ❓ Why GeoLeaf?
+
+### GeoLeaf vs Popular Alternatives
+
+| Feature                       | Leaflet       | Google Maps    | Mapbox GL      | **GeoLeaf**         |
+| ----------------------------- | ------------- | -------------- | -------------- | ------------------- |
+| **Security (XSS Protection)** | ⚠️ Basic      | ✅ Built-in    | ⚠️ Basic       | ✅ Advanced         |
+| **GeoJSON Multi-Style**       | ⚠️ Limited    | ✅ Full        | ✅ Full        | ✅ Full             |
+| **Offline Support**           | ❌ No         | ❌ No          | ⚠️ Partial     | ✅ Full (IndexedDB) |
+| **POI Clustering**            | ⚠️ Via Plugin | ✅ Built-in    | ✅ Built-in    | ✅ Built-in         |
+| **Label System**              | ❌ No         | ✅ Built-in    | ✅ Built-in    | ✅ Built-in         |
+| **Business Profiles**         | ❌ No         | ❌ No          | ❌ No          | ✅ Multi-profile    |
+| **Open Source**               | ✅ BSD-2      | ❌ Proprietary | ✅ Proprietary | ✅ MIT              |
+| **Free for Production**       | ✅ Yes        | ⚠️ Paid API    | ⚠️ Paid        | ✅ Yes              |
+| **Offline-First Ready**       | ❌ No         | ❌ No          | ❌ No          | ✅ Yes              |
+| **TypeScript Support**        | ⚠️ Community  | ✅ Official    | ✅ Official    | ✅ Full             |
+
+### Best For
+
+**Choose GeoLeaf if you need:**
+
+- ✅ Security-first mapping (XSS protection built-in)
+- ✅ Offline-first applications (mobile, unreliable networks)
+- ✅ Business context switching (profiles)
+- ✅ Complex styling rules per layer
+- ✅ Open source with MIT licensing
+- ✅ Professional mapping without vendor lock-in
+
+**Use Leaflet if:**
+
+- Lightweight, no-frills mapping
+- Maximum plugin ecosystem
+- Minimal dependencies
+
+**Use Google Maps if:**
+
+- Enterprise support needed
+- Extensive street view/Street Data
+- Google services integration essential
 
 ---
 
 ## ✨ Features
 
-| Feature | Description |
-|---|---|
-| 🗺️ **Multi-Profile** | JSON-based configuration profiles for different use cases |
-| 🎨 **Dynamic Theming** | Dark/light themes with CSS custom properties |
-| 📍 **POI Management** | Display and manage Points of Interest |
-| 🗂️ **GeoJSON Layers** | Load, style, and interact with GeoJSON data |
-| 🔎 **Smart Filters** | Dynamic filter panels generated from profile config |
-| 🛣️ **Route Display** | GPX/GeoJSON route rendering with elevation support |
-| 📊 **Data Table** | Tabular view of map features with sorting & search |
-| 📖 **Legend** | Auto-generated map legend from active layers |
-| 🏷️ **Labels** | Configurable map labels with collision detection |
-| 🔒 **Security** | Built-in XSS prevention and input sanitization |
+### 🗺️ **Multi-Profile System**
 
----
+Switch between different business contexts (Tourism, Custom…) with dedicated configurations, taxonomies, and UI presets.
 
-## 🆚 Why GeoLeaf?
+### 📍 **Advanced POI Management**
 
-| Feature | GeoLeaf | Leaflet (raw) | Google Maps | Mapbox GL |
-|---|---|---|---|---|
-| Profile system | ✅ | ❌ | ❌ | ❌ |
-| Zero-config boot | ✅ | ❌ | ❌ | ❌ |
-| Filter panel | ✅ | ❌ | ❌ | ❌ |
-| Built-in XSS protection | ✅ | ❌ | ❌ | ❌ |
-| Free & open source | ✅ | ✅ | ❌ | Partial |
-| No API key required | ✅ | ✅ | ❌ | ❌ |
-| Bundle size (gzip) | ~128 KB | ~40 KB | N/A | ~200 KB |
+- Category-based organization with icons
+- Custom sidepanel layouts (JSON-driven)
+- Search, filters, and clustering
+- Add/Edit/Delete with validation
 
----
+### 🎨 **Dynamic Theming**
 
-## ⚙️ Configuration
+- Light/Dark mode with system detection
+- Primary & secondary theme switchers
+- Layer visibility presets per theme
+- CSS custom properties integration
 
-GeoLeaf uses JSON profile files for configuration:
+### 📊 **GeoJSON Layers**
 
-```json
-{
-  "map": {
-    "center": [46.603354, 1.888334],
-    "zoom": 6,
-    "maxZoom": 18
-  },
-  "layers": [
-    {
-      "id": "cities",
-      "label": "Villes",
-      "type": "geojson",
-      "url": "data/cities.geojson",
-      "visible": true
-    }
-  ],
-  "filters": {
-    "enabled": true,
-    "position": "left"
-  },
-  "theme": "dark"
-}
-```
+- Load multiple GeoJSON layers from configuration
+- Style system with multiple presets per layer
+- Labels with scale-based visibility
+- Interactive shapes with tooltips/popups
 
-See [Configuration Guide](docs/CONFIGURATION_GUIDE.md) and [Profile JSON Reference](docs/PROFILE_JSON_REFERENCE.md) for the full specification.
+### 🔄 **Offline Cache**
 
----
+_(via plugin premium Storage)_
 
-## 📁 Project Structure
+- IndexedDB storage for profiles and data
+- Basemap tile caching for offline usage
+- Automatic cache management
+- Progress tracking and notifications
 
-```
-GeoLeaf-Core/
-├── dist/                   # Production-ready bundles
-│   ├── geoleaf.umd.js     #   UMD bundle (development)
-│   ├── geoleaf.min.js     #   Minified bundle (production)
-│   ├── geoleaf.min.js.map #   Source map
-│   └── geoleaf-main.min.css
-├── src/                    # Source code (MIT)
-│   ├── app/                #   Boot & initialization
-│   │   ├── boot.js
-│   │   ├── init.js
-│   │   └── helpers.js
-│   └── static/
-│       ├── css/            #   All stylesheets
-│       ├── icons/          #   Favicon, logo
-│       └── js/             #   Core modules
-│           ├── index.js
-│           ├── geoleaf.core.js
-│           ├── geoleaf.api.js
-│           ├── geoleaf.ui.js
-│           ├── geoleaf.filters.js
-│           ├── geoleaf.poi.js
-│           ├── geoleaf.route.js
-│           ├── geoleaf.table.js
-│           ├── geoleaf.legend.js
-│           ├── geoleaf.security.js
-│           └── ...
-├── deploy/                 # Ready-to-deploy package
-├── demo/                   # Interactive demo page
-├── docs/                   # Complete documentation
-├── profiles/               # Configuration profiles
-├── index.d.ts              # TypeScript declarations
-├── rollup.config.mjs       # Build configuration
-├── package.json
-├── LICENSE                  # MIT
-├── NOTICE.txt
-└── CHANGELOG.md
-```
+### 🏷️ **Integrated Labels System**
+
+- Style-based label configuration
+- Scale-dependent visibility
+- Dynamic field rendering
+- Toggle controls in layer manager
+
+### 🎯 **Smart Filters**
+
+- Category/subcategory filtering
+- Tag-based filtering
+- Full-text search
+- Proximity/radius filtering
+- Result counters
+
+### 📋 **Data Table**
+
+- Tabular view of layer features
+- Sortable columns
+- Export to CSV/Excel
+- Synchronized with map selection
+
+### 🔒 **Security**
+
+- XSS protection via Content Security Policy
+- Input sanitization
+- Safe HTML rendering
+- CORS headers support
 
 ---
 
 ## 📖 Documentation
 
-| Guide | Description |
-|---|---|
-| [Getting Started](docs/GETTING_STARTED.md) | Installation & your first map |
-| [User Guide](docs/USER_GUIDE.md) | Complete usage documentation |
-| [API Reference](docs/API_REFERENCE.md) | All public methods (80+) |
-| [Configuration Guide](docs/CONFIGURATION_GUIDE.md) | JSON configuration system |
-| [Profiles Guide](docs/PROFILES_GUIDE.md) | Multi-profile setup |
-| [Architecture Guide](docs/ARCHITECTURE_GUIDE.md) | System design & modules |
-| [Cookbook](docs/COOKBOOK.md) | Practical recipes & examples |
-| [FAQ](docs/FAQ.md) | Common questions & answers |
-| [CDN Usage](docs/usage-cdn.md) | Using GeoLeaf via CDN |
+**📚 [Complete Documentation Index](docs/INDEX.md)** - Browse all documentation organized by category
+
+### Getting Started
+
+- **[Getting Started Guide](docs/GETTING_STARTED.md)** - Your first map in 5 minutes
+- **[User Guide](docs/USER_GUIDE.md)** - Complete user documentation (10 sections)
+- **[Configuration Guide](docs/CONFIGURATION_GUIDE.md)** - JSON configuration reference (9 types)
+- **[Profiles Guide](docs/PROFILES_GUIDE.md)** - Create custom business profiles (1,200+ lines)
+
+### Development
+
+- **[Developer Guide](docs/DEVELOPER_GUIDE.md)** - Complete development workflow (build, test, deploy)
+- **[API Reference](docs/API_REFERENCE.md)** - Complete API documentation (80+ methods)
+- **[Contributing Guide](docs/CONTRIBUTING.md)** - Contribution guidelines and standards
+- **[Architecture Guide](docs/ARCHITECTURE_GUIDE.md)** - System architecture and design patterns
+
+### Guides & References
+
+- **[Profiles Guide](docs/PROFILES_GUIDE.md)** - Create custom business profiles (1,200+ lines)
+- **[Demo System Guide](docs/DEMO_SYSTEM_GUIDE.md)** - Demo page and DemoLog API
+- **[JSON Schemas](docs/schema/)** - Validation schemas for profiles
+- **[Cookbook](docs/COOKBOOK.md)** - Practical recipes and solutions
+- **[FAQ](docs/FAQ.md)** - Frequently asked questions
+- **[Project Structure](docs/PROJECT_TREE.md)** - Complete project tree
+
+### Module Documentation
+
+- [Baselayers](docs/baselayers/GeoLeaf_Baselayers_README.md) - Basemap management
+- [Configuration](docs/config/GeoLeaf_Config_README.md) - Profile loading
+- [POI Management](docs/poi/GeoLeaf_POI_README.md) - Points of Interest
+- [GeoJSON Layers](docs/geojson/GEOJSON_LAYERS_GUIDE.md) - Vector layers
+- [Labels System](docs/labels/GeoLeaf_Labels_README.md) - Map labels
+- [Themes](docs/themes/GeoLeaf_Themes_README.md) - Theme system
+- [Storage & Cache](docs/storage/GeoLeaf_Storage_README.md) - Offline storage
+- [UI Components](docs/ui/GeoLeaf_UI_README.md) - User interface
+- [View all modules →](docs/)
 
 ---
 
-## 🏗️ Build from Source
+## ⚡ Performance Metrics
+
+GeoLeaf is optimized for production performance:
+
+- **Bundle Size**: ~128 KB (minified + gzipped)
+- **Tree-Shaking**: 75.7% code reduction in production build
+- **Initialization**: < 100ms on modern devices
+- **Runtime Performance**: Smooth interactions with 1000+ POI markers
+- **Offline Support**: Full app functionality without network
+- **Browser Support**: Chrome 90+, Firefox 88+, Safari 14+, Edge 90+ (ES2020+)
+
+### Code Quality
+
+- **Test Coverage**: 70% Jest + Playwright e2e
+- **Security**: XSS protection, input sanitization, CSP headers
+- **TypeScript**: Full type definitions (772 lines)
+- **ESLint**: 0 warnings in production code
+
+---
+
+## 🏗️ Architecture
+
+GeoLeaf is built with a **modular architecture** (v4.0.0) consisting of 200+ modules organized into functional domains:
+
+```
+geoleaf-js/
+├── src/modules/          # Core modules
+│   ├── core/               # Map initialization
+│   ├── config/             # Profile loading
+│   ├── poi/                # POI management
+│   ├── geojson/            # GeoJSON layers
+│   ├── labels/             # Label system
+│   ├── themes/             # Theme system
+│   ├── ui/                 # UI components
+│   ├── storage/            # Offline storage
+│   ├── filters/            # Filter engine
+│   ├── security/           # XSS protection
+│   └── utils/              # Utilities
+├── profiles/               # Business profiles
+│   └── tourism/            # Tourism profile
+└── docs/                   # Documentation
+```
+
+See [Developer Guide](docs/DEVELOPER_GUIDE.md) for detailed architecture documentation.
+
+---
+
+## 🎯 Use Cases
+
+### Tourism & Heritage
+
+Display points of interest, tourist routes, climate data, and protected areas with category-based filtering and rich popups.
+
+### Custom Applications
+
+Build your own business-specific mapping application using the flexible profile system.
+
+---
+
+## 🔧 Configuration
+
+GeoLeaf uses a **profile-based configuration system** with JSON files:
+
+### Main Configuration (`geoleaf.config.json`)
+
+```json
+{
+    "debug": false,
+    "data": {
+        "activeProfile": "tourism",
+        "profilesBasePath": "./profiles"
+    }
+}
+```
+
+### Profile Configuration (`profiles/tourism/profile.json`)
+
+```json
+{
+  "id": "tourism",
+  "label": "Tourism",
+  "version": "1.0.0",
+  "ui": {
+    "showLegend": true,
+    "showLayerManager": true,
+    "showFilterPanel": true
+  },
+  "basemaps": { ... },
+  "layers": { ... },
+  "taxonomy": { ... },
+  "themes": { ... }
+}
+```
+
+See [Configuration Guide](docs/CONFIGURATION_GUIDE.md) for complete reference.
+
+---
+
+## 🛠️ Development
+
+### Prerequisites
+
+- Node.js 18+ and npm
+- Modern browser with ES6+ support
+
+### Setup
 
 ```bash
-git clone https://github.com/mattpottier-ship-it/GeoLeaf-Core.git
-cd GeoLeaf-Core
+# Clone repository
+git clone https://github.com/yourusername/geoleaf-js.git
+cd geoleaf-js
+
+# Install dependencies
 npm install
+
+# Start development server
+npm start
+
+# Run tests
+npm test
+
+# Build for production
 npm run build
 ```
 
-### Available Scripts
+### Project Scripts
 
-| Script | Description |
-|---|---|
-| `npm run build` | Build UMD + minified bundles |
-| `npm run build:css` | Build & minify CSS |
-| `npm run build:all` | Full build (JS + CSS) |
-| `npm run build:deploy` | Generate deploy/ package |
+- `npm start` - Start development server
+- `npm test` - Run test suite (Jest)
+- `npm run test:e2e` - Run E2E tests (Playwright)
+- `npm run build` - Build production bundle
+- `npm run lint` - Lint code
+- `npm run coverage` - Generate coverage report
+
+See [Developer Guide](docs/DEVELOPER_GUIDE.md) for detailed setup instructions.
 
 ---
 
-## 📊 Performance
+## 📦 Distribution
 
-| Metric | Value |
-|---|---|
-| Bundle size (gzip) | ~128 KB |
-| Tree-shaking efficiency | 75.7% |
-| Init time | < 100ms |
+### NPM Package
+
+```bash
+npm install geoleaf
+```
+
+```javascript
+import GeoLeaf from "geoleaf";
+import "geoleaf/dist/geoleaf.min.css";
+```
+
+### CDN (jsDelivr)
+
+```html
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/geoleaf@4.0.0/dist/geoleaf.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/geoleaf@4.0.0/dist/geoleaf.min.js"></script>
+```
+
+### Build from Source
+
+See [Distribution Guide](docs/guides/DISTRIBUTION_GUIDE_2026.md) for packaging instructions.
+
+---
+
+## 🧪 Testing
+
+- **Unit tests:** Jest (150+ tests)
+- **Integration tests:** Jest with mock DOM
+- **E2E tests:** Playwright
+- **Coverage:** 80%+ target
+
+```bash
+npm test                    # Run all tests
+npm run test:watch          # Watch mode
+npm run test:coverage       # Generate coverage report
+npm run test:e2e            # E2E tests
+```
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome! See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for detailed guidelines.
+Contributions are welcome! Please read our [Contributing Guide](docs/CONTRIBUTING.md) for:
 
-1. Fork this repository
-2. Create your feature branch (`git checkout -b feature/my-feature`)
-3. Commit your changes (`git commit -m 'feat: add my feature'`)
-4. Push to the branch (`git push origin feature/my-feature`)
-5. Open a Pull Request
-
----
-
-## 📝 License
-
-**MIT** © 2026 [Mattieu Pottier](https://github.com/mattpottier-ship-it)
-
-See [LICENSE](LICENSE) for the full license text.
+- Code standards and conventions
+- Branch naming and PR process
+- Testing requirements
+- Documentation guidelines
 
 ---
 
-## 🙏 Acknowledgments
+## 📄 License
 
-- [Leaflet.js](https://leafletjs.com) — The mapping foundation
-- [OpenStreetMap](https://www.openstreetmap.org) — Map data contributors
-- [Leaflet.markercluster](https://github.com/Leaflet/Leaflet.markercluster) — Clustering support
+MIT License - see [LICENCE](LICENCE) file for details.
 
 ---
 
-## 🔗 Links
+## 🙏 Credits
 
-- [GitHub Repository](https://github.com/mattpottier-ship-it/GeoLeaf-Core)
-- [Report a Bug](https://github.com/mattpottier-ship-it/GeoLeaf-Core/issues)
-- [Changelog](CHANGELOG.md)
+### Built With
+
+- [Leaflet](https://leafletjs.com/) - Interactive maps
+- [Turf.js](https://turfjs.org/) - Geospatial analysis
+- Modern JavaScript (ES6+)
+
+### Maintainers
+
+- **Lead Developer:** [Your Name]
+
+---
+
+## 📞 Support
+
+- **Documentation:** [docs/](docs/)
+- **Issues:** [GitHub Issues](https://github.com/yourusername/geoleaf-js/issues)
+- **Discussions:** [GitHub Discussions](https://github.com/yourusername/geoleaf-js/discussions)
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Please see [CONTRIBUTING.md](docs/CONTRIBUTING.md) for:
+
+- **How to contribute:** Bug reports, features, documentation
+- **Development setup:** Local development environment
+- **Code standards:** ESLint, Prettier, JSDoc formatting
+- **Testing requirements:** 75% coverage minimum
+- **Pull request process:** Code review and merge guidelines
+- **Versioning:** Semantic versioning and conventional commits
+- **Publishing:** Release process and npm automation
+
+### Quick Start Contributing
+
+```bash
+# Clone and setup
+git clone https://github.com/yourusername/geoleaf-js.git
+cd geoleaf-js
+npm install
+
+# Run tests
+npm run test:watch
+
+# Check code quality
+npm run lint
+
+# Build production bundle
+npm run build:all
+```
+
+---
+
+## 📄 License & Legal
+
+**License:** MIT (Open Source)
+
+GeoLeaf Core is released under the **MIT License** - free for commercial and personal use.
+
+- See [LICENCE](LICENCE) for the complete license text
+- See [NOTICE.txt](NOTICE.txt) for third-party attributions
+- See [LICENSE_HEADERS.md](docs/LICENSE_HEADERS.md) for code header requirements
+
+### Using GeoLeaf
+
+✅ **You can:**
+
+- Use in commercial projects
+- Modify and redistribute
+- Use for private projects
+- Include in open source projects
+
+⚠️ **You must:**
+
+- Include license and copyright notice
+- Document changes
+
+❌ **You cannot:**
+
+- Hold the author liable
+- Use the author's name for endorsement
+
+---
+
+## 🗺️ Roadmap
+
+### Version 3.3 (Q3 2026)
+
+- [ ] Enhanced mobile support
+- [ ] WebGL renderer for large datasets
+- [ ] Real-time collaboration features
+- [ ] Advanced analytics dashboard
+
+### **[CHANGELOG.md](CHANGELOG.md)** for complete version history and upgrade guides
+
+- [ ] TypeScript migration
+- [ ] Plugin system
+- [ ] 3D visualization support
+- [ ] Cloud storage integration
+
+See [CHANGELOG.md](CHANGELOG.md) for version history.
+
+---
+
+## License
+
+GeoLeaf Core is released under the MIT License.  
+© 2026 Mattieu Pottier
+
+For more information about licensing and the distinction between GeoLeaf Core (open source) and future modules, see [NOTICE.md](docs/NOTICE.md).
+
+---
+
+<p align="center">
+  Made with ❤️ for the geospatial community
+</p>

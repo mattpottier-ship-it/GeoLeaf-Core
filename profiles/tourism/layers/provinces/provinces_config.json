@@ -5,7 +5,16 @@
   "geometry": "polygon",
   "data": {
     "directory": "data",
-    "file": "provinces.geojson"
+    "file": "provinces.geojson",
+    "vectorTiles": {
+      "enabled": true,
+      "tilesDirectory": "tiles",
+      "layerName": "provinces",
+      "minZoom": 0,
+      "maxNativeZoom": 14,
+      "maxZoom": 18,
+      "interactive": true
+    }
   },
   "styles": {
     "directory": "styles",

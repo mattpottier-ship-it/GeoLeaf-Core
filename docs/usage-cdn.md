@@ -1,10 +1,10 @@
 # GeoLeaf – Utilisation via CDN et NPM
 
 **Version produit**: GeoLeaf Platform V1  
-**Version**: 3.2.0  
+**Version**: 4.0.0  
 **Dernière mise à jour**: 14 février 2026
 
-> Convention de versioning : **Platform V1** est le label produit ; le SemVer technique de ce dépôt reste en **3.2.0**.
+> Convention de versioning : **Platform V1** est le label produit ; le SemVer technique des packages/releases reste en **4.x**. Voir [VERSIONING_POLICY.md](VERSIONING_POLICY.md).
 
 ---
 
@@ -19,13 +19,15 @@ Ce document décrit les méthodes recommandées pour charger GeoLeaf dans une ap
 
 > **Note** : les URLs de CDN ci-dessous supposent que le package `geoleaf` est publié sur NPM.
 
+> **Périmètre licence** : le package `geoleaf` (core) est sous licence MIT. Les plugins premium (Storage, AddPOI) sont distribués séparément sous licence commerciale et ne sont pas inclus dans ce chargement CDN public.
+
 ---
 
 ## 1. Utilisation via UNPKG (CDN)
 
 ```html
-<link rel="stylesheet" href="https://unpkg.com/geoleaf@3.2.0/dist/geoleaf-main.min.css" />
-<script src="https://unpkg.com/geoleaf@3.2.0/dist/geoleaf.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/geoleaf@4.0.0/dist/geoleaf-main.min.css" />
+<script src="https://unpkg.com/geoleaf@4.0.0/dist/geoleaf.min.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 ```
@@ -35,8 +37,11 @@ Ce document décrit les méthodes recommandées pour charger GeoLeaf dans une ap
 ## 2. Utilisation via jsDelivr (CDN)
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/geoleaf@3.2.0/dist/geoleaf-main.min.css" />
-<script src="https://cdn.jsdelivr.net/npm/geoleaf@3.2.0/dist/geoleaf.min.js"></script>
+<link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/geoleaf@4.0.0/dist/geoleaf-main.min.css"
+/>
+<script src="https://cdn.jsdelivr.net/npm/geoleaf@4.0.0/dist/geoleaf.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 ```
@@ -64,10 +69,10 @@ import L from "leaflet";
 import GeoLeaf from "geoleaf";
 
 GeoLeaf.Core.init({
-  mapId: "geoleaf-map",
-  center: [-32.95, -60.65],
-  zoom: 12,
-  theme: "light",
+    mapId: "geoleaf-map",
+    center: [-32.95, -60.65],
+    zoom: 12,
+    theme: "light",
 });
 ```
 
@@ -78,35 +83,46 @@ GeoLeaf.Core.init({
 ```html
 <!DOCTYPE html>
 <html lang="fr">
-<head>
-  <meta charset="UTF-8" />
-  <title>Exemple GeoLeaf – CDN UMD</title>
+    <head>
+        <meta charset="UTF-8" />
+        <title>Exemple GeoLeaf – CDN UMD</title>
 
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
+        <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/geoleaf@3.2.0/dist/geoleaf-main.min.css" />
-  <script src="https://cdn.jsdelivr.net/npm/geoleaf@3.2.0/dist/geoleaf.min.js"></script>
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/geoleaf@4.0.0/dist/geoleaf-main.min.css"
+        />
+        <script src="https://cdn.jsdelivr.net/npm/geoleaf@4.0.0/dist/geoleaf.min.js"></script>
 
-  <style>
-    html, body { margin: 0; padding: 0; height: 100%; }
-    #geoleaf-map { width: 100vw; height: 100vh; }
-  </style>
-</head>
-<body>
-  <div id="geoleaf-map"></div>
+        <style>
+            html,
+            body {
+                margin: 0;
+                padding: 0;
+                height: 100%;
+            }
+            #geoleaf-map {
+                width: 100vw;
+                height: 100vh;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="geoleaf-map"></div>
 
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      GeoLeaf.Core.init({
-        mapId: "geoleaf-map",
-        center: [-32.95, -60.65],
-        zoom: 12,
-        theme: "light",
-      });
-    });
-  </script>
-</body>
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                GeoLeaf.Core.init({
+                    mapId: "geoleaf-map",
+                    center: [-32.95, -60.65],
+                    zoom: 12,
+                    theme: "light",
+                });
+            });
+        </script>
+    </body>
 </html>
 ```
 
@@ -116,21 +132,21 @@ GeoLeaf.Core.init({
 
 ```ts
 interface GeoLeafCoreInitOptions {
-  mapId: string;
-  center: [number, number];
-  zoom: number;
-  theme?: string;
-  basemapId?: string;
-  configUrl?: string;
-  onReady?: (ctx: GeoLeafCoreContext) => void;
-  onError?: (error: unknown) => void;
+    mapId: string;
+    center: [number, number];
+    zoom: number;
+    theme?: string;
+    basemapId?: string;
+    configUrl?: string;
+    onReady?: (ctx: GeoLeafCoreContext) => void;
+    onError?: (error: unknown) => void;
 }
 
 interface GeoLeafCoreContext {
-  map: L.Map;
-  baselayers?: unknown;
-  ui?: unknown;
-  config?: unknown;
+    map: L.Map;
+    baselayers?: unknown;
+    ui?: unknown;
+    config?: unknown;
 }
 ```
 
@@ -174,3 +190,11 @@ docs/
 - [ ] Core.init disponible
 - [ ] Carte visible dans le DOM
 - [ ] URLs CDN versionnées
+
+---
+
+## 10. Plugins premium (Storage / AddPOI)
+
+- Les plugins premium ne sont pas publiés sur CDN public.
+- Leur distribution passe par un registre privé et un token d'accès lié à une licence commerciale.
+- Voir le guide détaillé : [GUIDE_LICENCE_PREMIUM](guides/GUIDE_LICENCE_PREMIUM.md).

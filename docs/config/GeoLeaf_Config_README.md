@@ -1,8 +1,8 @@
 # GeoLeaf.Config – Documentation du module Config (Chargement JSON)
 
 Product Version: GeoLeaf Platform V1  
-**Version**: 3.2.0  
-**Fichiers**: `src/static/js/config/geoleaf-config/` (4 sous-modules : config-core.js, config-validation.js, config-loaders.js, config-accessors.js)  
+**Version**: 4.0.0  
+**Fichiers**: `src/modules/config/geoleaf-config/` (4 sous-modules : config-core.js, config-validation.js, config-loaders.js, config-accessors.js)  
 **Dernière mise à jour**: 14 février 2026
 
 ---
@@ -25,15 +25,15 @@ Ce module pilote la **séquence d’initialisation complète** de GeoLeaf.
 ## 1. Rôle fonctionnel de GeoLeaf.Config
 
 1. Charger une configuration JSON depuis :
-   - un fichier distant (`url`),
-   - un objet JS inline (`data`).
+    - un fichier distant (`url`),
+    - un objet JS inline (`data`).
 2. Valider les blocs essentiels :
-   - `map`,
-   - `ui`,
-   - `basemap`,
-   - `poi`,
-   - `geojson`,
-   - `route`.
+    - `map`,
+    - `ui`,
+    - `basemap`,
+    - `poi`,
+    - `geojson`,
+    - `route`.
 3. Exposer l’objet de configuration aux autres modules (Core, UI, Baselayers, POI…).
 4. Déclencher un callback `onLoaded(config)` lorsque tout est prêt.
 5. Émettre un événement DOM `"geoleaf:config:loaded"` si `autoEvent` est activé.
@@ -57,31 +57,31 @@ Initialise le module en précisant la source de la configuration.
 
 ```js
 GeoLeaf.Config.init({
-  url: "../data/geoleaf-poi.json",
-  autoEvent: true,
-  onLoaded: (config) => {
-    console.log("Config chargée :", config);
-  }
+    url: "../data/geoleaf-poi.json",
+    autoEvent: true,
+    onLoaded: (config) => {
+        console.log("Config chargée :", config);
+    },
 });
 ```
 
 ### 3.1 Paramètres
 
-| Paramètre  | Type     | Obligatoire | Description |
-|------------|----------|-------------|-------------|
-| `url`      | string   | non (si `data` fourni) | Chemin du fichier JSON |
-| `data`     | object   | non (si `url` fourni)  | Configuration inline |
-| `autoEvent`| boolean  | non         | Émet l’événement `"geoleaf:config:loaded"` |
-| `onLoaded` | function | non         | Callback appelé après chargement |
+| Paramètre   | Type     | Obligatoire            | Description                                |
+| ----------- | -------- | ---------------------- | ------------------------------------------ |
+| `url`       | string   | non (si `data` fourni) | Chemin du fichier JSON                     |
+| `data`      | object   | non (si `url` fourni)  | Configuration inline                       |
+| `autoEvent` | boolean  | non                    | Émet l’événement `"geoleaf:config:loaded"` |
+| `onLoaded`  | function | non                    | Callback appelé après chargement           |
 
 ### 3.2 Comportement
 
 - Si `data` est fourni → la configuration est utilisée immédiatement.
 - Si `url` est fourni → appel `GeoLeaf.Config.load(url)` via `fetch`.
 - Après chargement :
-  - stockage interne de la configuration,
-  - appel du callback `onLoaded`,
-  - émission de l’événement DOM (si `autoEvent = true`).
+    - stockage interne de la configuration,
+    - appel du callback `onLoaded`,
+    - émission de l’événement DOM (si `autoEvent = true`).
 
 ---
 
@@ -130,8 +130,8 @@ Utile lorsque :
 Permet d’ajouter dynamiquement un callback qui sera exécuté lorsque la config est prête.
 
 ```js
-GeoLeaf.Config.onLoaded(cfg => {
-  console.log("Configuration prête :", cfg);
+GeoLeaf.Config.onLoaded((cfg) => {
+    console.log("Configuration prête :", cfg);
 });
 ```
 
@@ -146,34 +146,34 @@ Voici la structure minimale recommandée :
 
 ```json
 {
-  "map": {
-    "target": "geoleaf-map",
-    "center": [-32.95, -60.65],
-    "zoom": 12
-  },
-  "ui": {
-    "theme": "light"
-  },
-  "basemap": {
-    "id": "street"
-  },
-  "poi": [
-    {
-      "id": "poi-1",
-      "latlng": [-32.95, -60.65],
-      "label": "Titre",
-      "description": "Texte",
-      "iconId": "default",
-      "properties": {}
+    "map": {
+        "target": "geoleaf-map",
+        "center": [-32.95, -60.65],
+        "zoom": 12
+    },
+    "ui": {
+        "theme": "light"
+    },
+    "basemap": {
+        "id": "street"
+    },
+    "poi": [
+        {
+            "id": "poi-1",
+            "latlng": [-32.95, -60.65],
+            "label": "Titre",
+            "description": "Texte",
+            "iconId": "default",
+            "properties": {}
+        }
+    ],
+    "geojson": {
+        "enabled": true,
+        "url": "./data/zones.geojson"
+    },
+    "route": {
+        "enabled": false
     }
-  ],
-  "geojson": {
-    "enabled": true,
-    "url": "./data/zones.geojson"
-  },
-  "route": {
-    "enabled": false
-  }
 }
 ```
 
@@ -183,30 +183,30 @@ Tous ces blocs sont optionnels **sauf `map`**.
 
 ## 8. Séquence complète d’initialisation (schéma)
 
-1. `GeoLeaf.Config.init({ url })`  
-2. `fetch()` du fichier JSON  
-3. JSON chargé → stockage interne  
-4. Appel des callbacks `onLoaded(config)`  
-5. Émission éventuelle de `geoleaf:config:loaded`  
+1. `GeoLeaf.Config.init({ url })`
+2. `fetch()` du fichier JSON
+3. JSON chargé → stockage interne
+4. Appel des callbacks `onLoaded(config)`
+5. Émission éventuelle de `geoleaf:config:loaded`
 6. Initialisation des modules :
-   - `GeoLeaf.Core.init(config.map)`
-   - `GeoLeaf.UI.initThemeToggle()`
-   - `GeoLeaf.Baselayers.init({ defaultKey: config.basemap.id })`
-   - `GeoLeaf.POI.init()` + chargement des POI
-   - `GeoLeaf.GeoJSON.load(config.geojson)`
-   - `GeoLeaf.Route.loadFromGPX/Coordinates`
-   - `GeoLeaf.LayerManager.init(config.legend)`
+    - `GeoLeaf.Core.init(config.map)`
+    - `GeoLeaf.UI.initThemeToggle()`
+    - `GeoLeaf.Baselayers.init({ defaultKey: config.basemap.id })`
+    - `GeoLeaf.POI.init()` + chargement des POI
+    - `GeoLeaf.GeoJSON.load(config.geojson)`
+    - `GeoLeaf.Route.loadFromGPX/Coordinates`
+    - `GeoLeaf.LayerManager.init(config.legend)`
 
 ---
 
 ## 9. Résumé rapide de l’API Config
 
-| Méthode | Rôle |
-|--------|------|
+| Méthode         | Rôle                                         |
+| --------------- | -------------------------------------------- |
 | `init(options)` | Démarre le chargement du JSON ou data inline |
-| `load(url)` | Charge un fichier JSON externe |
-| `get()` | Retourne la configuration courante |
-| `onLoaded(cb)` | Ajoute un callback au chargement |
+| `load(url)`     | Charge un fichier JSON externe               |
+| `get()`         | Retourne la configuration courante           |
+| `onLoaded(cb)`  | Ajoute un callback au chargement             |
 
 ---
 
@@ -217,4 +217,3 @@ Tous ces blocs sont optionnels **sauf `map`**.
 - Utiliser `autoEvent` pour intégrer GeoLeaf dans des frameworks externes.
 - Toujours valider vos fichiers JSON via un formatteur avant utilisation.
 - Ne jamais mettre de commentaires dans le JSON (non supporté nativement).
-

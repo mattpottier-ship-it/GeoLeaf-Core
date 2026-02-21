@@ -5,7 +5,7 @@
   "description": "JSON Schema for validating GeoLeaf profile.json files (v3.0.0). Generated: 2026-01-28",
   "version": "3.0.0",
   "type": "object",
-  "required": ["id", "label", "version", "Files", "basemaps"],
+  "required": ["id", "label", "version", "Files", "basemaps", "map"],
   "properties": {
     "id": {
       "type": "string",
@@ -130,14 +130,67 @@
         }
       }
     },
+    "map": {
+      "type": "object",
+      "description": "Map initialization settings: initial extent, zoom cap for fitBounds, and panning restrictions",
+      "required": ["bounds"],
+      "additionalProperties": false,
+      "properties": {
+        "bounds": {
+          "type": "array",
+          "description": "Initial map extent as [[south, west], [north, east]] in WGS84",
+          "items": {
+            "type": "array",
+            "items": { "type": "number" },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "initialMaxZoom": {
+          "type": "integer",
+          "description": "Maximum zoom level used by fitBounds at startup (does NOT limit user zoom)",
+          "minimum": 1,
+          "maximum": 20,
+          "default": 12
+        },
+        "padding": {
+          "type": "array",
+          "description": "Padding in pixels [vertical, horizontal] applied to fitBounds",
+          "items": { "type": "integer", "minimum": 0 },
+          "minItems": 2,
+          "maxItems": 2,
+          "default": [50, 50]
+        },
+        "positionFixed": {
+          "type": "boolean",
+          "description": "Restrict panning to the map bounds (user cannot scroll outside the defined extent)",
+          "default": false
+        },
+        "boundsMargin": {
+          "type": "number",
+          "description": "Extra margin around bounds when positionFixed is true (0.3 = 30% extra space for panning freedom)",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.3
+        },
+        "minZoom": {
+          "type": "integer",
+          "description": "Minimum zoom level when positionFixed is true (prevents zooming out too far)",
+          "minimum": 0,
+          "maximum": 20,
+          "default": 3
+        }
+      }
+    },
     "basemaps": {
       "type": "object",
-      "description": "Available basemaps (tile layers)",
+      "description": "Available basemaps (tile layers and vector styles)",
       "minProperties": 1,
       "additionalProperties": {
         "type": "object",
-        "required": ["id", "label", "url", "attribution"],
-        "additionalProperties": false,
+        "required": ["id", "label", "attribution"],
         "properties": {
           "id": {
             "type": "string",
@@ -148,10 +201,19 @@
             "type": "string",
             "description": "Display name in user interface"
           },
+          "type": {
+            "type": "string",
+            "description": "Basemap type: 'maplibre' for vector tiles, omit or 'raster' for standard tile layers",
+            "enum": ["raster", "maplibre"]
+          },
           "url": {
             "type": "string",
-            "description": "Tile URL template with {s}, {z}, {x}, {y} placeholders",
-            "pattern": ".*\\{[szxy]\\}.*"
+            "description": "Tile URL template with {s}, {z}, {x}, {y} placeholders (required for raster, used as raster fallback for maplibre)"
+          },
+          "style": {
+            "type": "string",
+            "description": "MapLibre style JSON URL (required when type is 'maplibre')",
+            "format": "uri"
           },
           "attribution": {
             "type": "string",
@@ -611,6 +673,13 @@
       "label": "Profil tourisme",
       "description": "Profil optimisé pour les POI touristiques",
       "version": "3.0.0",
+      "map": {
+        "bounds": [[-58.39, -73.58], [-21.78, -34.67]],
+        "initialMaxZoom": 12,
+        "padding": [50, 50],
+        "positionFixed": true,
+        "boundsMargin": 0.3
+      },
       "Files": {
         "taxonomyFile": "taxonomy.json",
         "themesFile": "themes.json",
@@ -623,12 +692,23 @@
         "showFilterPanel": true
       },
       "basemaps": {
+        "street-vector": {
+          "id": "street-vector",
+          "label": "Carte vectorielle",
+          "type": "maplibre",
+          "style": "https://tiles.openfreemap.org/styles/liberty",
+          "url": "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+          "attribution": "© OpenFreeMap © OpenMapTiles © OpenStreetMap",
+          "minZoom": 5,
+          "maxZoom": 19,
+          "defaultBasemap": true
+        },
         "street": {
           "id": "street",
           "label": "Street",
           "url": "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
           "attribution": "&copy; OpenStreetMap contributors",
-          "defaultBasemap": true
+          "defaultBasemap": false
         }
       }
     }

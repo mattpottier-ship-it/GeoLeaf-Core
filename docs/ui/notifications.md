@@ -27,8 +27,9 @@ Le module **GeoLeaf.UI.Notifications** gère l'affichage de notifications toast 
 **Éviction** : Les moins prioritaires sont droppées
 
 **Priorités** :
+
 - `ERROR` = 3 (haute)
-- `WARNING` = 2 (moyenne)  
+- `WARNING` = 2 (moyenne)
 - `SUCCESS` / `INFO` = 1 (basse)
 
 ---
@@ -42,7 +43,7 @@ Le module **GeoLeaf.UI.Notifications** gère l'affichage de notifications toast 
 GeoLeaf.UI.Notifications.success("Sauvegarde réussie", 3000);
 GeoLeaf.UI.Notifications.success("Profil téléchargé", { duration: 4000 });
 
-// Notification d'erreur  
+// Notification d'erreur
 GeoLeaf.UI.Notifications.error("Erreur réseau", 5000);
 GeoLeaf.UI.Notifications.error("Échec connexion", { duration: 5000, persistent: true });
 
@@ -62,15 +63,16 @@ GeoLeaf.UI.Notifications.show("Message", "success", 3000);
 
 // Signature objet (avec options avancées)
 GeoLeaf.UI.Notifications.show("Message", {
-  type: "success",           // "success" | "error" | "warning" | "info"
-  duration: 3000,            // Durée en ms
-  persistent: false,         // Toast persistant (pas d'auto-dismiss)
-  dismissible: true,         // Bouton de fermeture
-  icon: "✓",                 // Icône personnalisée (futur)
-  action: {                  // Bouton action (futur)
-    label: "Annuler",
-    callback: () => {}
-  }
+    type: "success", // "success" | "error" | "warning" | "info"
+    duration: 3000, // Durée en ms
+    persistent: false, // Toast persistant (pas d'auto-dismiss)
+    dismissible: true, // Bouton de fermeture
+    icon: "✓", // Icône personnalisée (futur)
+    action: {
+        // Bouton action (futur)
+        label: "Annuler",
+        callback: () => {},
+    },
 });
 ```
 
@@ -123,16 +125,17 @@ GeoLeaf.UI.clearNotifications();
 
 ```javascript
 GeoLeaf._UINotifications.init({
-  container: '#gl-notifications',      // Sélecteur conteneur DOM
-  position: 'bottom-center',           // Position ('bottom-center', 'top-right', etc.)
-  maxVisible: 3,                       // Max toasts temporaires visibles
-  animations: true,                    // Activer animations
-  durations: {                         // Durées par défaut (ms)
-    success: 3000,
-    error: 5000,
-    warning: 4000,
-    info: 3000
-  }
+    container: "#gl-notifications", // Sélecteur conteneur DOM
+    position: "bottom-center", // Position ('bottom-center', 'top-right', etc.)
+    maxVisible: 3, // Max toasts temporaires visibles
+    animations: true, // Activer animations
+    durations: {
+        // Durées par défaut (ms)
+        success: 3000,
+        error: 5000,
+        warning: 4000,
+        info: 3000,
+    },
 });
 ```
 
@@ -157,20 +160,21 @@ GeoLeaf._UINotifications.init({
 
 Le système enregistre les métriques suivantes via `GeoLeaf.Storage.Telemetry` :
 
-| Métrique | Description | Type |
-|----------|-------------|------|
-| `notification.shown.success` | Toasts succès affichés | Counter |
-| `notification.shown.error` | Toasts error affichés | Counter |
-| `notification.shown.warning` | Toasts warning affichés | Counter |
-| `notification.shown.info` | Toasts info affichés | Counter |
-| `notification.dismissed.manual` | Fermeture manuelle (clic X) | Counter |
-| `notification.dismissed.auto` | Fermeture automatique (timeout) | Counter |
-| `notification.queued` | Ajouts à la queue | Counter |
-| `notification.dropped` | Notifications évincées (queue pleine) | Counter |
+| Métrique                        | Description                           | Type    |
+| ------------------------------- | ------------------------------------- | ------- |
+| `notification.shown.success`    | Toasts succès affichés                | Counter |
+| `notification.shown.error`      | Toasts error affichés                 | Counter |
+| `notification.shown.warning`    | Toasts warning affichés               | Counter |
+| `notification.shown.info`       | Toasts info affichés                  | Counter |
+| `notification.dismissed.manual` | Fermeture manuelle (clic X)           | Counter |
+| `notification.dismissed.auto`   | Fermeture automatique (timeout)       | Counter |
+| `notification.queued`           | Ajouts à la queue                     | Counter |
+| `notification.dropped`          | Notifications évincées (queue pleine) | Counter |
 
 ### Buffer de démarrage
 
 Si le module `Telemetry` n'est pas encore chargé au démarrage, les métriques sont **buffered pendant 30 secondes** puis :
+
 - **Flush automatique** si `Telemetry` devient disponible
 - **Abandon après 30s** si `Telemetry` ne charge pas (évite fuite mémoire)
 
@@ -198,7 +202,7 @@ GeoLeaf.UI.Notifications.info("Info 3");
 // Arrive un error prioritaire
 GeoLeaf.UI.Notifications.error("Erreur critique !");
 
-// Résultat : 
+// Résultat :
 // - 1 toast info retiré avec animation slideUp
 // - Error affiché immédiatement
 // - 2 toasts info restants visibles
@@ -212,44 +216,56 @@ GeoLeaf.UI.Notifications.error("Erreur critique !");
 
 ```html
 <div id="gl-notifications" class="gl-notifications gl-notifications--bottom-center">
-  <div class="gl-toast gl-toast--success gl-toast--visible" role="alert" aria-live="polite">
-    <span class="gl-toast__message">Message de succès</span>
-    <button class="gl-toast__close" aria-label="Fermer">×</button>
-  </div>
+    <div class="gl-toast gl-toast--success gl-toast--visible" role="alert" aria-live="polite">
+        <span class="gl-toast__message">Message de succès</span>
+        <button class="gl-toast__close" aria-label="Fermer">×</button>
+    </div>
 </div>
 ```
 
 ### Classes principales
 
-| Classe | Description |
-|--------|-------------|
-| `.gl-notifications` | Conteneur fixe |
-| `.gl-notifications--bottom-center` | Variante position |
-| `.gl-toast` | Toast individuel |
-| `.gl-toast--visible` | État visible (opacity: 1) |
-| `.gl-toast--removing` | Animation de sortie |
-| `.gl-toast--sliding-up` | Animation réorganisation (toast évincé) |
-| `.gl-toast--sliding-down` | Animation réorganisation (toast descendu) |
-| `.gl-toast--success` | Type succès (vert) |
-| `.gl-toast--error` | Type error (rouge) |
-| `.gl-toast--warning` | Type warning (orange) |
-| `.gl-toast--info` | Type info (bleu) |
-| `.gl-toast__message` | Contenu du message |
-| `.gl-toast__close` | Bouton fermeture |
+| Classe                             | Description                               |
+| ---------------------------------- | ----------------------------------------- |
+| `.gl-notifications`                | Conteneur fixe                            |
+| `.gl-notifications--bottom-center` | Variante position                         |
+| `.gl-toast`                        | Toast individuel                          |
+| `.gl-toast--visible`               | État visible (opacity: 1)                 |
+| `.gl-toast--removing`              | Animation de sortie                       |
+| `.gl-toast--sliding-up`            | Animation réorganisation (toast évincé)   |
+| `.gl-toast--sliding-down`          | Animation réorganisation (toast descendu) |
+| `.gl-toast--success`               | Type succès (vert)                        |
+| `.gl-toast--error`                 | Type error (rouge)                        |
+| `.gl-toast--warning`               | Type warning (orange)                     |
+| `.gl-toast--info`                  | Type info (bleu)                          |
+| `.gl-toast__message`               | Contenu du message                        |
+| `.gl-toast__close`                 | Bouton fermeture                          |
 
 ### Animations CSS
 
 ```css
 /* Animation slide-up (toast retiré par priorité) */
 @keyframes slideUp {
-  from { transform: translateY(0); opacity: 1; }
-  to { transform: translateY(-100%); opacity: 0; }
+    from {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
 }
 
 /* Animation slide-down (toast descendu dans la pile) */
 @keyframes slideDown {
-  from { transform: translateY(-20px); opacity: 0.5; }
-  to { transform: translateY(0); opacity: 1; }
+    from {
+        transform: translateY(-20px);
+        opacity: 0.5;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 ```
 
@@ -270,9 +286,10 @@ GeoLeaf.UI.Notifications.error("Erreur critique !");
 
 ```css
 @media (prefers-reduced-motion: reduce) {
-  .gl-toast, .gl-notifications {
-    transition: none !important;
-  }
+    .gl-toast,
+    .gl-notifications {
+        transition: none !important;
+    }
 }
 ```
 
@@ -283,17 +300,18 @@ GeoLeaf.UI.Notifications.error("Erreur critique !");
 ### Mobile
 
 Sur mobile (< 768px) :
+
 - Toasts occupent toute la largeur
 - Position centrée en bas
 - Espacement réduit
 
 ```css
 @media (max-width: 768px) {
-  .gl-notifications--bottom-center {
-    left: 10px;
-    right: 10px;
-    transform: none;
-  }
+    .gl-notifications--bottom-center {
+        left: 10px;
+        right: 10px;
+        transform: none;
+    }
 }
 ```
 
@@ -305,51 +323,36 @@ Sur mobile (< 768px) :
 
 ```javascript
 // Succès téléchargement
-GeoLeaf.UI.Notifications.success(
-  `Profil téléchargé : ${sizeMB} MB`,
-  4000
-);
+GeoLeaf.UI.Notifications.success(`Profil téléchargé : ${sizeMB} MB`, 4000);
 
 // Erreur stockage
-GeoLeaf.UI.Notifications.error(
-  "Stockage offline non disponible",
-  5000
-);
+GeoLeaf.UI.Notifications.error("Stockage offline non disponible", 5000);
 
 // Avertissement arrêt
-GeoLeaf.UI.Notifications.warning(
-  "Téléchargement arrêté",
-  3000
-);
+GeoLeaf.UI.Notifications.warning("Téléchargement arrêté", 3000);
 ```
 
 ### Synchronisation POI
 
 ```javascript
 // Info démarrage
-GeoLeaf.UI.Notifications.info(
-  "Synchronisation en cours...",
-  { persistent: true, dismissible: false }
-);
+GeoLeaf.UI.Notifications.info("Synchronisation en cours...", {
+    persistent: true,
+    dismissible: false,
+});
 
 // Succès conditionnel
 if (results.failed > 0) {
-  GeoLeaf.UI.Notifications.warning(
-    `✅ Sync terminée: ${results.synced} réussies, ${results.failed} échecs`,
-    5000
-  );
+    GeoLeaf.UI.Notifications.warning(
+        `✅ Sync terminée: ${results.synced} réussies, ${results.failed} échecs`,
+        5000
+    );
 } else {
-  GeoLeaf.UI.Notifications.success(
-    `✅ Sync terminée: ${results.synced} réussies`,
-    5000
-  );
+    GeoLeaf.UI.Notifications.success(`✅ Sync terminée: ${results.synced} réussies`, 5000);
 }
 
 // Erreur
-GeoLeaf.UI.Notifications.error(
-  `❌ Erreur synchronisation: ${error.message}`,
-  5000
-);
+GeoLeaf.UI.Notifications.error(`❌ Erreur synchronisation: ${error.message}`, 5000);
 ```
 
 ---
@@ -361,24 +364,24 @@ GeoLeaf.UI.Notifications.error(
 ```javascript
 // Icône personnalisée
 GeoLeaf.UI.Notifications.success("Message", {
-  icon: "🎉",
-  duration: 3000
+    icon: "🎉",
+    duration: 3000,
 });
 
 // Bouton action
 GeoLeaf.UI.Notifications.warning("Connexion perdue", {
-  persistent: true,
-  action: {
-    label: "Reconnecter",
-    callback: () => reconnect()
-  }
+    persistent: true,
+    action: {
+        label: "Reconnecter",
+        callback: () => reconnect(),
+    },
 });
 
 // Toast de progression
 GeoLeaf.UI.Notifications.info("Téléchargement", {
-  persistent: true,
-  progress: true,  // Affiche barre de progression
-  onProgress: (percent) => {}
+    persistent: true,
+    progress: true, // Affiche barre de progression
+    onProgress: (percent) => {},
 });
 ```
 
@@ -389,10 +392,12 @@ GeoLeaf.UI.Notifications.info("Téléchargement", {
 ### Depuis v4.4.0
 
 **Breaking changes** :
+
 - Méthode `show(message, type, duration)` maintenant disponible publiquement
 - Support double signature : positionnelle ET objet options
 
 **Migrations recommandées** :
+
 ```javascript
 // Avant (v4.4.0)
 GeoLeaf.UI.Notifications.show("Message", "warning", 3000);
@@ -401,9 +406,9 @@ GeoLeaf.UI.Notifications.show("Message", "warning", 3000);
 GeoLeaf.UI.Notifications.warning("Message", 3000);
 
 // Alternative avec options avancées
-GeoLeaf.UI.Notifications.warning("Message", { 
-  duration: 3000,
-  persistent: false 
+GeoLeaf.UI.Notifications.warning("Message", {
+    duration: 3000,
+    persistent: false,
 });
 ```
 
@@ -419,13 +424,13 @@ console.log(GeoLeaf.UI.Notifications.getStatus());
 
 // Vérifier métriques Telemetry
 if (GeoLeaf.Storage?.Telemetry) {
-  const report = GeoLeaf.Storage.Telemetry.getMetricsReport();
-  console.log('Notification metrics:', report);
+    const report = GeoLeaf.Storage.Telemetry.getMetricsReport();
+    console.log("Notification metrics:", report);
 }
 
 // Tester la queue
 for (let i = 0; i < 20; i++) {
-  GeoLeaf.UI.Notifications.info(`Test ${i}`);
+    GeoLeaf.UI.Notifications.info(`Test ${i}`);
 }
 // Observe: 3 visibles, 12 en queue, 5 droppés
 ```
@@ -433,5 +438,6 @@ for (let i = 0; i < 20; i++) {
 ---
 
 **📘 Documentation liée** :
+
 - [GeoLeaf_UI_README.md](./GeoLeaf_UI_README.md) - Module UI principal
 - [../storage/telemetry.md](../storage/telemetry.md) - Système Telemetry

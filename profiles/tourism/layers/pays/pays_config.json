@@ -5,7 +5,16 @@
   "geometry": "polyline",
   "data": {
     "directory": "data",
-    "file": "pays.geojson"
+    "file": "pays.geojson",
+    "vectorTiles": {
+      "enabled": true,
+      "tilesDirectory": "tiles",
+      "layerName": "pays",
+      "minZoom": 0,
+      "maxNativeZoom": 12,
+      "maxZoom": 18,
+      "interactive": true
+    }
   },
   "styles": {
     "directory": "styles",

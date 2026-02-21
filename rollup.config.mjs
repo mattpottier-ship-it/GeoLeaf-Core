@@ -20,17 +20,32 @@
 //    3. geoleaf.utils.js (utilitaires partagés)
 //    4. geoleaf.core.js, geoleaf.ui.js, geoleaf.config.js, etc.
 //    5. geoleaf.api.js (API publique)
-const INPUT_FILE = "src/bundle-entry.js";
-const STORAGE_PLUGIN = "src/plugins/geoleaf-storage.plugin.js";
-const ADDPOI_PLUGIN = "src/plugins/geoleaf-addpoi.plugin.js";
+// 🚧 Phase 7 ESM Migration: separate entry files for UMD vs ESM builds
+const INPUT_FILE     = "src/bundle-entry.js";          // UMD only — no named exports
+const INPUT_FILE_ESM = "src/bundle-esm-entry.js";      // ESM only — all named exports
+const STORAGE_PLUGIN = "../GeoLeaf-Plugins/plugin-storage/src/entry.js";
+const ADDPOI_PLUGIN  = "../GeoLeaf-Plugins/plugin-addpoi/src/entry.js";
 
 import terser from "@rollup/plugin-terser";
 import { visualizer } from "rollup-plugin-visualizer";
 import resolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
+import replace from "@rollup/plugin-replace";
+import alias  from "@rollup/plugin-alias";
 import filesize from "rollup-plugin-filesize";
-import fs from "node:fs";
-import path from "node:path";
+import fs   from "node:fs";
+import path  from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+/** Alias pour résoudre @storage et @addpoi depuis les configs plugin (Phase 7) */
+const premiumAliases = alias({
+    entries: [
+        { find: '@storage', replacement: path.resolve(__dirname, '../GeoLeaf-Plugins/plugin-storage/src') },
+        { find: '@addpoi',  replacement: path.resolve(__dirname, '../GeoLeaf-Plugins/plugin-addpoi/src') },
+    ],
+});
 
 // Read version from package.json for dynamic injection
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf-8'));
@@ -43,6 +58,14 @@ const pkg = JSON.parse(fs.readFileSync('package.json', 'utf-8'));
 const baseConfig = {
   input: INPUT_FILE,
   plugins: [
+    // Injection version build — remplace __GEOLEAF_VERSION__ dans les sources JS
+    replace({
+      preventAssignment: true,
+      values: {
+        '__GEOLEAF_VERSION__': JSON.stringify(pkg.version),
+        '__SW_DEBUG__': process.env.NODE_ENV !== 'production' ? 'true' : 'false',
+      }
+    }),
     // Résolution modules Node.js (si nécessaire)
     resolve({
       browser: true,
@@ -57,20 +80,59 @@ const baseConfig = {
       showBrotliSize: true
     })
   ],
-  external: ["leaflet", "leaflet.markercluster"],
+  external: ["leaflet", "leaflet.markercluster", "leaflet.vectorgrid", "maplibre-gl", "@maplibre/maplibre-gl-leaflet"],
 
-  // Tree-shaking — les modules IIFE sont des side-effects par nature
+  // Tree-shaking UMD — conserver tous les side-effects (app/*, globals.js, sw-register.js…)
+  // ⚠️ Ne pas filtrer ici : app/boot.js, app/init.js etc. sont des side-effect imports purs.
+  // ⚠️ unknownGlobalSideEffects DOIT être true : les modules qui mutent window.GeoLeaf via
+  //    des variables dérivées de globalThis (ex: api/geoleaf-api.js → Object.assign) seraient
+  //    incorrectement éliminés si Rollup traite globalThis comme un objet local sans état.
   treeshake: {
-    moduleSideEffects: true,            // Conserver les IIFE (side-effects sur window.GeoLeaf)
+    moduleSideEffects: true,
     propertyReadSideEffects: false,
     tryCatchDeoptimization: false,
-    unknownGlobalSideEffects: false,
+    unknownGlobalSideEffects: true,
     annotations: true,
   },
 };
 
 /**
+ * Bundle ESM — version ESM pour bundlers (import/export natif).
+ * Phase 7 B13: activé — tree-shaking + ~50 named exports + lazy chunks dans dist/chunks/.
+ * Entrée dédiée : bundle-esm-entry.js (séparée du bundle UMD pour ne pas contaminer window.GeoLeaf).
+ */
+const esmConfig = {
+  ...baseConfig,
+  input: INPUT_FILE_ESM,
+  // ESM tree-shaking : seuls globals.js + sw-register.js + app/* ont des side-effects réels
+  treeshake: {
+    ...baseConfig.treeshake,
+    moduleSideEffects: (id) =>
+      id.includes('globals.js') ||
+      id.includes('sw-register.js') ||
+      id.includes('/app/'),
+  },
+  output: {
+    dir: "dist",
+    format: "es",
+    entryFileNames: "geoleaf.esm.js",
+    chunkFileNames: "chunks/geoleaf-[name]-[hash].js",
+    sourcemap: true,
+    exports: "named",
+    // Force Rollup to emit separate chunk files for each lazy/ module.
+    // Without this, Rollup inlines dynamic imports as Promise.resolve() when
+    // the lazy modules share all their dependencies with the static imports.
+    manualChunks(id) {
+      if (id.includes('/src/lazy/') || id.includes('\\src\\lazy\\')) {
+        return path.basename(id, '.js');
+      }
+    },
+  },
+};
+
+/**
  * Bundle UMD non minifié – utile en dev (CDN, script direct).
+ * Sprint 6: inlineDynamicImports — les chunks sont inlineés (bundle unique).
  * → Sourcemap activé.
  */
 const umdConfig = {
@@ -78,22 +140,27 @@ const umdConfig = {
   output: {
     file: "dist/geoleaf.umd.js",
     format: "umd",
-    name: "GeoLeaf", // Nom du global exposé en mode <script>
+    name: "GeoLeaf",
     sourcemap: true,
     globals: {
       leaflet: "L",
       "leaflet.markercluster": "L",
+      "leaflet.vectorgrid": "L",
+      "maplibre-gl": "maplibregl",
+      "@maplibre/maplibre-gl-leaflet": "L",
     },
-    // Optimisations output
-    compact: false,  // Lisible en dev
-    exports: "named"
+    compact: false,
+    exports: "named",
+    inlineDynamicImports: true,
   },
 };
 
 /**
  * Bundle UMD minifié – version de production pour CDN.
- * → Minification via Terser + sourcemap activé + analyse bundle.
+ * Sprint 6: inlineDynamicImports — les chunks sont inlineés (bundle unique).
+ * → Minification via Terser + analyse bundle.
  * Sprint 7.1: Compression et mangling agressifs
+ * ⚠️ Source maps disabled in production (security: prevents source code exposure)
  */
 const umdMinConfig = {
   ...baseConfig,
@@ -101,14 +168,17 @@ const umdMinConfig = {
     file: "dist/geoleaf.min.js",
     format: "umd",
     name: "GeoLeaf",
-    sourcemap: true,
+    sourcemap: false,
     globals: {
       leaflet: "L",
       "leaflet.markercluster": "L",
+      "leaflet.vectorgrid": "L",
+      "maplibre-gl": "maplibregl",
+      "@maplibre/maplibre-gl-leaflet": "L",
     },
-    // Optimisations output
-    compact: true,    // Compact en prod
-    exports: "named"
+    compact: true,
+    exports: "named",
+    inlineDynamicImports: true,
   },
   plugins: [
     ...(baseConfig.plugins || []),
@@ -120,7 +190,7 @@ const umdMinConfig = {
         dead_code: true,
         drop_console: false,        // Le Logger utilise console.* — on strip via pure_funcs
         drop_debugger: true,        // Supprimer debugger
-        pure_funcs: ['console.log', 'console.debug'],  // Strip verbose logging du bundle de production
+        pure_funcs: ['console.log', 'console.debug', 'Log.debug'],  // Strip verbose logging du bundle de production
         passes: 3,                  // 3 passes compression pour max optimisation
 
         // Optimisations avancées
@@ -174,7 +244,7 @@ const umdMinConfig = {
         ecma: 2015                  // Target ES6
       },
 
-      sourceMap: true,              // Source maps
+      sourceMap: false,             // No source maps in production
       toplevel: false,              // Pas de mangle exports
       keep_classnames: true,        // Garder noms classes
       keep_fnames: false            // Minifier fonctions internes
@@ -189,9 +259,156 @@ const umdMinConfig = {
       template: "treemap",         // Format: treemap, sunburst, network
       title: "GeoLeaf Bundle Analysis - Sprint 7.1",
       sourcemap: true
-    })
+    }),
+
+    // Sprint 7: Emit sw-core.js (lite SW) and geojson-worker.js as assets
+    swCoreVersionPlugin(pkg.version),
+    geojsonWorkerPlugin(pkg.version)
   ],
 };
+
+/**
+ * Custom Rollup plugin — Premium Core Redirect (Phase 7)
+ * Premium plugin source files (in GeoLeaf-Plugins) contain relative imports
+ * that assumed they lived in GeoLeaf-Js/src/modules/. This plugin transparently
+ * redirects unresolvable relative imports to their real target:
+ *   1. Same module still in GeoLeaf-Js/src (log, config, utils, contracts…)
+ *   2. Or a sibling module moved to another plugin sub-directory
+ *
+ * Mapping: plugin-storage/src  ↔  GeoLeaf-Js/src/modules/storage
+ *          plugin-addpoi/src   ↔  GeoLeaf-Js/src/modules/poi
+ *
+ * Special origins override: files whose original GeoLeaf-Js location differs
+ * from what the plugin path implies (e.g. lazy-chunk.js was src/lazy/).
+ */
+function premiumCoreRedirect() {
+    // Each plugin maps its src/ subdirs to original GeoLeaf-Js module locations.
+    // dirMappings: first path segment → { base, stripSegment }
+    //   base: the original module root for files in that subdir
+    //   stripSegment: if true, consume the segment so relAfterMapping is relative to base
+    const pluginMappings = [
+        {
+            pluginSrc:   path.resolve(__dirname, '../GeoLeaf-Plugins/plugin-storage/src'),
+            defaultSrc:  path.resolve(__dirname, 'src/modules/storage'),
+            dirMappings: {
+                // These subdirs were introduced during Phase 7 copy; original files lived
+                // at the root of src/modules/storage/ or at another module root.
+                'core': { base: path.resolve(__dirname, 'src/modules/storage') },
+                'sync': { base: path.resolve(__dirname, 'src/modules/storage') },
+                'sw'  : { base: path.resolve(__dirname, 'src/modules/storage') },
+                'ui'  : { base: path.resolve(__dirname, 'src/modules/ui')      },
+            },
+        },
+        {
+            pluginSrc:   path.resolve(__dirname, '../GeoLeaf-Plugins/plugin-addpoi/src'),
+            defaultSrc:  path.resolve(__dirname, 'src/modules/poi'),
+            dirMappings: {},
+        },
+    ];
+    // Files with completely different original locations (not derivable from plugin path)
+    const fileOriginOverrides = {
+        [path.resolve(__dirname, '../GeoLeaf-Plugins/plugin-addpoi/src/lazy-chunk.js')]:
+            path.resolve(__dirname, 'src/lazy'),
+        // geoleaf.storage.js was a top-level facade at src/modules/ (not inside storage/)
+        [path.resolve(__dirname, '../GeoLeaf-Plugins/plugin-storage/src/core/geoleaf.storage.js')]:
+            path.resolve(__dirname, 'src/modules'),
+    };
+
+    function tryExtensions(base) {
+        for (const ext of ['', '.js', '/index.js']) {
+            if (fs.existsSync(base + ext)) return base + ext;
+        }
+        return null;
+    }
+
+    // Build a filename→[absolutePath] index for all files in each plugin src tree.
+    // Used as fallback when a virtual-original path doesn't exist in GeoLeaf-Js core.
+    const pluginFileIndex = new Map(); // pluginSrc → Map(basename → absPath[])
+    for (const m of pluginMappings) {
+        const idx = new Map();
+        (function walk(dir) {
+            try {
+                for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+                    const full = path.join(dir, entry.name);
+                    if (entry.isDirectory()) { walk(full); }
+                    else if (entry.name.endsWith('.js')) {
+                        const key = entry.name.replace(/\.js$/, '');
+                        if (!idx.has(key)) idx.set(key, []);
+                        idx.get(key).push(full);
+                    }
+                }
+            } catch (_) { /* skip unreadable dirs */ }
+        })(m.pluginSrc);
+        pluginFileIndex.set(m.pluginSrc, idx);
+    }
+
+    return {
+        name: 'premium-core-redirect',
+        resolveId(source, importer) {
+            if (!importer || !source.startsWith('.')) return null;
+
+            const pluginsRoot = path.resolve(__dirname, '../GeoLeaf-Plugins');
+            if (!importer.startsWith(pluginsRoot)) return null;
+
+            // Find matching plugin mapping
+            let mapping = null;
+            for (const m of pluginMappings) {
+                if (importer.startsWith(m.pluginSrc + path.sep) || importer === m.pluginSrc) {
+                    mapping = m;
+                    break;
+                }
+            }
+            if (!mapping) return null;
+
+            // ── Compute virtual original importer directory ────────────────────────
+            let virtualImporterDir;
+            const absImporter = path.normalize(importer);
+            if (fileOriginOverrides[absImporter]) {
+                virtualImporterDir = fileOriginOverrides[absImporter];
+            } else {
+                const relParts = path.relative(mapping.pluginSrc, path.dirname(importer))
+                    .split(path.sep).filter(Boolean);
+                const firstSeg = relParts[0];
+                const dm = mapping.dirMappings[firstSeg];
+                if (dm) {
+                    // Always strip the first segment (it's consumed by the mapping key itself)
+                    const restParts = relParts.slice(1);
+                    virtualImporterDir = restParts.length
+                        ? path.resolve(dm.base, restParts.join(path.sep))
+                        : dm.base;
+                } else {
+                    virtualImporterDir = relParts.length
+                        ? path.resolve(mapping.defaultSrc, relParts.join(path.sep))
+                        : mapping.defaultSrc;
+                }
+            }
+
+            // ── Resolve source from virtual original dir ───────────────────────────
+            const virtualResolved = path.resolve(virtualImporterDir, source);
+
+            // Step 1 — still exists in GeoLeaf-Js core tree
+            const inCore = tryExtensions(virtualResolved);
+            if (inCore) return inCore;
+
+            // Step 2 — was moved to a plugin; search by filename
+            // Prioritise the same plugin as the importer to avoid cross-plugin collisions.
+            const targetName = path.basename(virtualResolved, '.js');
+            const orderedMappings = [mapping, ...pluginMappings.filter(m => m !== mapping)];
+            for (const m of orderedMappings) {
+                const idx = pluginFileIndex.get(m.pluginSrc);
+                const candidates = idx?.get(targetName) || [];
+                if (candidates.length === 1) return candidates[0];
+                if (candidates.length > 1) {
+                    const hint = path.basename(path.dirname(virtualResolved));
+                    const match = candidates.find(c => path.dirname(c).includes(hint));
+                    return match || candidates[0];
+                }
+            }
+
+            return null;
+        },
+    };
+}
 
 /**
  * Plugin Storage — Module optionnel (offline, IndexedDB, cache).
@@ -203,6 +420,8 @@ const storagePluginConfigs = fs.existsSync(STORAGE_PLUGIN)
       {
         input: STORAGE_PLUGIN,
         plugins: [
+          premiumAliases,
+          premiumCoreRedirect(),
           resolve({ browser: true, preferBuiltins: false }),
           commonjs(),
           swVersionPlugin(pkg.version),  // Emit dist/sw.js alongside storage plugin
@@ -213,7 +432,7 @@ const storagePluginConfigs = fs.existsSync(STORAGE_PLUGIN)
           file: "dist/geoleaf-storage.plugin.js",
           format: "iife",
           name: "GeoLeafStoragePlugin",
-          sourcemap: true,
+          sourcemap: false,
           globals: { leaflet: "L", "leaflet.markercluster": "L" },
         },
       },
@@ -229,14 +448,14 @@ const addPoiPluginConfigs = fs.existsSync(ADDPOI_PLUGIN)
   ? [
       {
         input: ADDPOI_PLUGIN,
-        plugins: [resolve({ browser: true, preferBuiltins: false }), commonjs()],
+        plugins: [premiumAliases, premiumCoreRedirect(), resolve({ browser: true, preferBuiltins: false }), commonjs()],
         external: ["leaflet", "leaflet.markercluster"],
         treeshake: { moduleSideEffects: true },
         output: {
           file: "dist/geoleaf-addpoi.plugin.js",
           format: "iife",
           name: "GeoLeafAddPoiPlugin",
-          sourcemap: true,
+          sourcemap: false,
           globals: { leaflet: "L", "leaflet.markercluster": "L" },
         },
       },
@@ -244,20 +463,22 @@ const addPoiPluginConfigs = fs.existsSync(ADDPOI_PLUGIN)
   : [];
 
 /**
- * Custom Rollup plugin — Service Worker version injection.
+ * Custom Rollup plugin — Service Worker version injection (premium/full).
  * Reads the SW template, replaces __GEOLEAF_VERSION__ placeholders,
  * and emits dist/sw.js as a raw asset (no bundling/wrapping).
  * Attached to the Storage plugin build so sw.js is only produced
- * when the Storage module is being built.
+ * when the premium Storage module is being built.
  */
 function swVersionPlugin(version) {
-  const SW_SOURCE = "src/static/js/storage/sw.js";
+  const SW_SOURCE = "src/modules/storage/sw.js";
   return {
     name: "sw-version-inject",
     generateBundle() {
       if (!fs.existsSync(SW_SOURCE)) return;
+      const swDebug = process.env.NODE_ENV !== 'production' ? 'true' : 'false';
       const content = fs.readFileSync(SW_SOURCE, "utf-8")
-        .replaceAll("__GEOLEAF_VERSION__", version);
+        .replaceAll("__GEOLEAF_VERSION__", version)
+        .replaceAll("__SW_DEBUG__", swDebug);
       this.emitFile({
         type: "asset",
         fileName: "sw.js",
@@ -267,4 +488,60 @@ function swVersionPlugin(version) {
   };
 }
 
-export default [umdConfig, umdMinConfig, ...storagePluginConfigs, ...addPoiPluginConfigs];
+/**
+ * Custom Rollup plugin — Service Worker Core (lite) version injection.
+ * Emits dist/sw-core.js for the open-source/free bundle.
+ * Provides basic offline caching (Cache API only, no IndexedDB/sync).
+ * Attached to the UMD min build (core production).
+ */
+function swCoreVersionPlugin(version) {
+  const SW_CORE_SOURCE = "src/modules/storage/sw-core.js";
+  return {
+    name: "sw-core-version-inject",
+    generateBundle() {
+      if (!fs.existsSync(SW_CORE_SOURCE)) return;
+      const swDebug = process.env.NODE_ENV !== 'production' ? 'true' : 'false';
+      const content = fs.readFileSync(SW_CORE_SOURCE, "utf-8")
+        .replaceAll("__GEOLEAF_VERSION__", version)
+        .replaceAll("__SW_DEBUG__", swDebug);
+      this.emitFile({
+        type: "asset",
+        fileName: "sw-core.js",
+        source: content,
+      });
+    },
+    // Copy sw-core.js to demo/ so the demo can register it (same directory as demo/index.html)
+    writeBundle(options) {
+      const distFile = path.join(options.dir || path.dirname(options.file || "dist/geoleaf.min.js"), "sw-core.js");
+      const demoFile = path.resolve("demo", "sw-core.js");
+      if (fs.existsSync(distFile)) {
+        fs.copyFileSync(distFile, demoFile);
+      }
+    },
+  };
+}
+
+/**
+ * Custom Rollup plugin — GeoJSON Web Worker asset emission.
+ * Emits dist/geojson-worker.js for off-thread GeoJSON parsing (Sprint 7).
+ * Attached to the core build so it’s always available.
+ */
+function geojsonWorkerPlugin(version) {
+  const WORKER_SOURCE = "src/modules/geojson/geojson-worker.js";
+  return {
+    name: "geojson-worker-emit",
+    generateBundle() {
+      if (!fs.existsSync(WORKER_SOURCE)) return;
+      const content = fs.readFileSync(WORKER_SOURCE, "utf-8")
+        .replaceAll("__GEOLEAF_VERSION__", version);
+      this.emitFile({
+        type: "asset",
+        fileName: "geojson-worker.js",
+        source: content,
+      });
+    },
+  };
+}
+
+// Phase 7 B13: esmConfig activé — architecture ESM + tree-shaking enabled
+export default [umdConfig, umdMinConfig, esmConfig, ...storagePluginConfigs, ...addPoiPluginConfigs];

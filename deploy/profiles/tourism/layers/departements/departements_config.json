@@ -5,7 +5,16 @@
   "geometry": "polygon",
   "data": {
     "directory": "data",
-    "file": "departements.geojson"
+    "file": "departements.geojson",
+    "vectorTiles": {
+      "enabled": true,
+      "tilesDirectory": "tiles",
+      "layerName": "departements",
+      "minZoom": 0,
+      "maxNativeZoom": 14,
+      "maxZoom": 18,
+      "interactive": true
+    }
   },
   "styles": {
     "directory": "styles",

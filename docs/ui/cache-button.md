@@ -1,4 +1,4 @@
-# GeoLeaf UI - Cache Button
+﻿# GeoLeaf UI - Cache Button
 
 Product Version: GeoLeaf Platform V1  
 **Date de création**: Décembre 2025  
@@ -23,9 +23,9 @@ Module de bouton Leaflet qui affiche la gestion du cache hors ligne dans un moda
 
 ```json
 {
-  "ui": {
-    "showCacheButton": true  // Par défaut true
-  }
+    "ui": {
+        "showCacheButton": true // Par défaut true
+    }
 }
 ```
 
@@ -94,6 +94,7 @@ GeoLeaf.UI.CacheButton.closeModal();
 ## Positionnement du bouton
 
 Le bouton est positionné dans la barre Leaflet `topleft`, entre :
+
 - **Au-dessus** : Bouton plein écran
 - **En-dessous** : Bouton de géolocalisation
 
@@ -114,8 +115,8 @@ Le cache control est initialisé au premier clic sur le bouton. Les clics suivan
 ## Architecture
 
 ```
-src/static/js/ui/cache-button.js          # Module JavaScript
-src/static/css/cache-modal.css            # Styles du modal
+src/modules/ui/cache-button.js          # Module JavaScript
+src/css/cache-modal.css                    # Styles du modal
 ```
 
 ### Dépendances
@@ -131,18 +132,18 @@ src/static/css/cache-modal.css            # Styles du modal
 #### Methods
 
 - **`init(map, cfg)`** : Initialise et ajoute le bouton à la carte
-  - `map` : Instance Leaflet map
-  - `cfg` : Configuration GeoLeaf
-  - Returns : `L.Control` ou `null`
+    - `map` : Instance Leaflet map
+    - `cfg` : Configuration GeoLeaf
+    - Returns : `L.Control` ou `null`
 
 - **`openModal()`** : Ouvre le modal de cache
-  - Crée le modal s'il n'existe pas
-  - Initialise le cache control au premier appel
-  - Affiche le modal avec animation
+    - Crée le modal s'il n'existe pas
+    - Initialise le cache control au premier appel
+    - Affiche le modal avec animation
 
 - **`closeModal()`** : Ferme le modal
-  - Masque le modal (ne le détruit pas)
-  - Le contenu est préservé pour les ouvertures suivantes
+    - Masque le modal (ne le détruit pas)
+    - Le contenu est préservé pour les ouvertures suivantes
 
 ## Exemples
 
@@ -150,9 +151,9 @@ src/static/css/cache-modal.css            # Styles du modal
 
 ```json
 {
-  "ui": {
-    "showCacheButton": false
-  }
+    "ui": {
+        "showCacheButton": false
+    }
 }
 ```
 

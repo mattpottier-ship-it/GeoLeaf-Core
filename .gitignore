@@ -1,85 +1,58 @@
-# ============================================
-# GeoLeaf-Core — Public Repository .gitignore
-# ============================================
-
-# -- Dependencies --
+# Dépendances Node
 node_modules/
+
+# Builds temporaires
 .cache/
 .parcel-cache/
 
-# -- OS / IDE --
+# Dossiers systèmes / éditeurs
 .DS_Store
 Thumbs.db
-*.swp
-*.swo
 .vscode/
-.idea/
 
-# -- Environment --
-.env
-.env.*
-
-# -- Coverage & Testing (internal dev only) --
-coverage/
-.jest-cache/
-.nyc_output/
-__tests__/
-tests/
-
-# -- CI / Quality (internal dev only) --
-sonar-project.properties
-.husky/
-.eslintrc*
-.eslintignore
-.prettierrc*
-.prettierignore
-jest.config.js
-nyc.config.js
-playwright.config.js
-jsconfig.json
-
-# -- Internal scripts --
-scripts/
-
-# -- Server config (internal dev only) --
-server/
-
-# -- Python virtual env --
+# Python virtual environment
 .venv/
 
-# -- Logs --
-*.log
+# Logs
 npm-debug.log*
 yarn-debug.log*
 pnpm-debug.log*
 
-# -- Build analysis --
-dist/stats.html
+# Build final
+dist/
 
-# -- 🔒 Premium plugins — NEVER publish --
-# Plugin source entry points
+# Tests
+coverage/
+.jest-cache/
+*.log
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Deployment output
+deploy/
+
+# ──────────────────────────────────────────
+# 🔒 Paid Plugins — excluded from open-source repo
+# ──────────────────────────────────────────
+# Plugin entry points
 src/plugins/geoleaf-storage.plugin.js
 src/plugins/geoleaf-addpoi.plugin.js
 
 # Storage / Cache modules (offline, IndexedDB)
-src/static/js/storage/
-src/static/js/cache/
-src/static/js/ui/cache-button/
+src/modules/storage/
+src/modules/ui/cache-button/
 
 # AddPOI modules (form, placement, image upload)
-src/static/js/poi/form/
-src/static/js/poi/add-poi*.js
-src/static/js/poi/placement-mode.js
-src/static/js/poi/image-upload.js
+src/modules/poi/form/
+src/modules/poi/add-poi*.js
+src/modules/poi/placement-mode.js
+src/modules/poi/image-upload.js
 
-# Optional plugin CSS
-src/static/css/cache-modal.css
-src/static/css/poi-form.css
-src/static/css/poi-realtime-validation.css
-
-# Built optional plugin bundles
+# Built plugin bundles
 dist/geoleaf-storage.plugin.js
 dist/geoleaf-storage.plugin.js.map
 dist/geoleaf-addpoi.plugin.js
 dist/geoleaf-addpoi.plugin.js.map
-dist/sw.js

@@ -1,10 +1,11 @@
-﻿# GeoLeaf.Baselayers â€“ Documentation du module Baselayers
-**Product Version:** GeoLeaf Platform V1  
-**Version**: 3.2.0  
-**Fichier**: `src/static/js/geoleaf.baselayers.js`  
+# GeoLeaf.Baselayers â€“ Documentation du module Baselayers
+
+Product Version: GeoLeaf Platform V1 **Version**: 4.0.0  
+**Fichier**: `src/modules/geoleaf.baselayers.js`  
 **DerniÃ¨re mise Ã  jour**: 19 janvier 2026
 
 ---
+
 Le module **GeoLeaf.Baselayers** gÃ¨re lâ€™ensemble des **fonds de carte (basemaps)** dans GeoLeaf.  
 Il fournit :
 
@@ -22,18 +23,18 @@ Il se concentre exclusivement sur la logique cartographique des tuiles.
 ## 1. RÃ´le fonctionnel de GeoLeaf.Baselayers
 
 1. **DÃ©finir les basemaps disponibles**, incluant :
-   - Street (OSM)
-   - Topo (OpenTopoMap)
-   - Satellite (Esri World Imagery)
+    - Street (OSM)
+    - Topo (OpenTopoMap)
+    - Satellite (Esri World Imagery)
 2. **CrÃ©er et attacher** la couche de tuiles Leaflet correspondant Ã  la basemap active.
 3. **Permettre de changer dynamiquement** la basemap active :
-   - depuis le code
-   - depuis lâ€™UI (Ã©lÃ©ments HTML possÃ©dant `data-gl-baselayer="..."`)
+    - depuis le code
+    - depuis lâ€™UI (Ã©lÃ©ments HTML possÃ©dant `data-gl-baselayer="..."`)
 4. Normaliser les options internes :
-   - attribution,
-   - maxZoom,
-   - gestion dâ€™erreurs,
-   - logs explicites.
+    - attribution,
+    - maxZoom,
+    - gestion dâ€™erreurs,
+    - logs explicites.
 
 ---
 
@@ -55,25 +56,25 @@ Initialise le module et active un fond de carte.
 
 ```js
 GeoLeaf.Baselayers.init({
-  map: map,                 // instance Leaflet
-  defaultKey: "street"      // clÃ© du fond actif initial
+    map: map, // instance Leaflet
+    defaultKey: "street", // clÃ© du fond actif initial
 });
 ```
 
 ### 3.1 ParamÃ¨tres
 
-| ParamÃ¨tre    | Type     | Obligatoire | Description                               |
-|--------------|----------|-------------|-------------------------------------------|
-| `map`        | `L.Map`  | oui         | Instance Leaflet existante                |
-| `defaultKey` | `string` | non         | Identifiant du baselayer initial          |
+| ParamÃ¨tre   | Type     | Obligatoire | Description                      |
+| ------------ | -------- | ----------- | -------------------------------- |
+| `map`        | `L.Map`  | oui         | Instance Leaflet existante       |
+| `defaultKey` | `string` | non         | Identifiant du baselayer initial |
 
 ### 3.2 Comportement
 
 - VÃ©rifie que `map` est une instance valide.
 - Charge le registre interne des basemaps par dÃ©faut.
 - DÃ©termine le baselayer initial :
-  - celui fourni via `defaultKey`, ou
-  - `"street"` par dÃ©faut.
+    - celui fourni via `defaultKey`, ou
+    - `"street"` par dÃ©faut.
 - Monte la couche de tuiles sur la carte.
 
 ---
@@ -116,27 +117,27 @@ Ajoute un fond de carte personnalisÃ© au registre.
 
 ```js
 GeoLeaf.Baselayers.registerBaseLayer("mytiles", {
-  url: "https://tiles.example.com/{z}/{x}/{y}.png",
-  options: {
-    attribution: "Â© Example Tiles",
-    maxZoom: 20
-  }
+    url: "https://tiles.example.com/{z}/{x}/{y}.png",
+    options: {
+        attribution: "Â© Example Tiles",
+        maxZoom: 20,
+    },
 });
 ```
 
 ### 5.1 ParamÃ¨tres
 
-| ParamÃ¨tre     | Type     | Obligatoire | Description                  |
-|---------------|----------|-------------|------------------------------|
-| `key`         | string   | oui         | Identifiant unique           |
-| `definition`  | object   | oui         | Contient `url` + `options`   |
+| ParamÃ¨tre   | Type   | Obligatoire | Description                |
+| ------------ | ------ | ----------- | -------------------------- |
+| `key`        | string | oui         | Identifiant unique         |
+| `definition` | object | oui         | Contient `url` + `options` |
 
 ### 5.2 RÃ¨gles
 
 - Si la clÃ© existe dÃ©jÃ , elle est Ã©crasÃ©e.
 - La dÃ©finition doit contenir au minimum :
-  - `url: string`
-  - `options: object`
+    - `url: string`
+    - `options: object`
 
 ---
 
@@ -159,8 +160,8 @@ GeoLeaf.Baselayers.setBaseLayer("topo");
 ### 6.2 Gestion des erreurs
 
 - Si la clÃ© nâ€™existe pas :
-  - log `[GeoLeaf.Baselayers] baselayer introuvable : {key}`
-  - aucun changement nâ€™est appliquÃ©.
+    - log `[GeoLeaf.Baselayers] baselayer introuvable : {key}`
+    - aucun changement nâ€™est appliquÃ©.
 
 ---
 
@@ -189,9 +190,9 @@ Exemple JSON :
 
 ```json
 {
-  "basemap": {
-    "id": "topo"
-  }
+    "basemap": {
+        "id": "topo"
+    }
 }
 ```
 
@@ -199,8 +200,8 @@ Exemple intÃ©gration :
 
 ```js
 GeoLeaf.Baselayers.init({
-  map,
-  defaultKey: config.basemap?.id || "street"
+    map,
+    defaultKey: config.basemap?.id || "street",
 });
 ```
 
@@ -211,8 +212,8 @@ GeoLeaf.Baselayers.init({
 1. `GeoLeaf.Config` charge le JSON
 2. `GeoLeaf.Core.init()` crÃ©e la carte
 3. `GeoLeaf.Baselayers.init({ map, defaultKey })` :
-   - charge le registre interne
-   - installe la basemap par dÃ©faut
+    - charge le registre interne
+    - installe la basemap par dÃ©faut
 4. Les contrÃ´les UI baselayers deviennent actifs
 5. Les autres modules (POI, Route, Legendâ€¦) sâ€™appuient sur la carte dÃ©jÃ  initialisÃ©e
 
@@ -220,19 +221,107 @@ GeoLeaf.Baselayers.init({
 
 ## 10. RÃ©sumÃ© rapide de lâ€™API
 
-| MÃ©thode                                  | RÃ´le |
-|------------------------------------------|------|
-| `init(options)`                          | Initialise le module et active un fond |
-| `registerBaseLayer(key, definition)`     | Ajoute un fond personnalisÃ© |
-| `setBaseLayer(key)`                      | Change le fond de carte |
-| `getActiveKey()`                         | Retourne la clÃ© du fond actif |
-| `getRegistry()`                          | Retourne la liste des basemaps disponibles |
+| MÃ©thode                            | RÃ´le                                      |
+| ------------------------------------ | ------------------------------------------ |
+| `init(options)`                      | Initialise le module et active un fond     |
+| `registerBaseLayer(key, definition)` | Ajoute un fond personnalisÃ©              |
+| `setBaseLayer(key)`                  | Change le fond de carte                    |
+| `getActiveKey()`                     | Retourne la clÃ© du fond actif            |
+| `getRegistry()`                      | Retourne la liste des basemaps disponibles |
 
 ---
 
 ## 11. Bonnes pratiques
 
-- Toujours initialiser Baselayers **aprÃ¨s** GeoLeaf.Core.
-- Toujours fournir un `defaultKey` cohÃ©rent avec le JSON.
-- PrÃ©voir des attributs `data-gl-baselayer="..."` dans lâ€™UI pour un changement fluide.
-- Documenter les licences des fournisseurs de tuiles (OSM, Topo, Esriâ€¦).
+- Toujours initialiser Baselayers **après** GeoLeaf.Core.
+- Toujours fournir un `defaultKey` cohérent avec le JSON.
+- Prévoir des attributs `data-gl-baselayer="..."` dans l'UI pour un changement fluide.
+- Documenter les licences des fournisseurs de tuiles (OSM, Topo, Esri…).
+
+---
+
+## 12. Basemaps vectorielles (MapLibre GL)
+
+> **Ajouté en v4.0.0-alpha — Scénario B hybride**
+
+GeoLeaf supporte les **basemaps vectorielles rendues en WebGL** via le plugin
+[`@maplibre/maplibre-gl-leaflet`](https://github.com/maplibre/maplibre-gl-leaflet).
+Le basemap MapLibre s'insère comme un `L.Layer` standard — aucun overlay GeoLeaf
+n'est impacté.
+
+### 12.1 Syntaxe `registerBaseLayer()` avec `type: "maplibre"`
+
+```js
+GeoLeaf.Baselayers.registerBaseLayer("vector-liberty", {
+    type: "maplibre",
+    label: "Vector (Liberty)",
+    style: "https://tiles.openfreemap.org/styles/liberty",
+    fallbackUrl: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    attribution: "© OpenFreeMap © OpenMapTiles © OpenStreetMap",
+});
+```
+
+| Paramètre     | Type   | Obligatoire | Description                                         |
+| ------------- | ------ | ----------- | --------------------------------------------------- |
+| `type`        | string | oui\*       | `"maplibre"` — ou omis si `style` est présent       |
+| `style`       | string | oui         | URL du style JSON MapLibre (ou objet style inline)  |
+| `fallbackUrl` | string | non         | URL raster de secours si le plugin n'est pas chargé |
+| `attribution` | string | non         | Texte d'attribution                                 |
+| `label`       | string | non         | Nom d'affichage dans l'UI                           |
+
+\* La présence de `definition.style` suffit à déclencher le chemin MapLibre,
+même sans `type: "maplibre"` explicite.
+
+### 12.2 Mécanisme de fallback
+
+Si le plugin `@maplibre/maplibre-gl-leaflet` n'est **pas chargé** dans la page
+(CDN manquant, erreur réseau) :
+
+1. Log `warn` indiquant le fallback.
+2. Si `fallbackUrl` est fourni → `L.tileLayer(fallbackUrl)` en raster.
+3. Sinon → basemap `street` par défaut (OSM raster).
+
+### 12.3 Providers gratuits de tuiles vectorielles
+
+| Provider        | URL style                                                     | Gratuit        |
+| --------------- | ------------------------------------------------------------- | -------------- |
+| **OpenFreeMap** | `https://tiles.openfreemap.org/styles/liberty`                | ✅ 100%        |
+| **OpenFreeMap** | `https://tiles.openfreemap.org/styles/dark`                   | ✅ 100%        |
+| **MapTiler**    | `https://api.maptiler.com/maps/streets-v2/style.json?key=KEY` | Freemium       |
+| **Versatiles**  | Auto-hébergé                                                  | ✅ Open-source |
+| **PMTiles**     | Fichier `.pmtiles` local                                      | ✅ Gratuit     |
+
+### 12.4 Accéder à l'instance MapLibre sous-jacente
+
+```js
+const glLayer = GeoLeaf.Baselayers.getActiveLayer();
+// Si c'est un layer MapLibre, on peut accéder au moteur :
+if (glLayer && typeof glLayer.getMaplibreMap === "function") {
+    const mlMap = glLayer.getMaplibreMap();
+    mlMap.on("load", () => {
+        // Ajouter des sources/layers MapLibre supplémentaires
+    });
+}
+```
+
+### 12.5 Configuration JSON (profile.json)
+
+```json
+{
+    "basemaps": {
+        "street-vector": {
+            "id": "street-vector",
+            "label": "Carte vectorielle",
+            "type": "maplibre",
+            "style": "https://tiles.openfreemap.org/styles/liberty",
+            "fallbackUrl": "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+            "attribution": "© OpenFreeMap © OpenMapTiles © OpenStreetMap",
+            "defaultBasemap": true,
+            "offline": true
+        }
+    }
+}
+```
+
+Les basemaps **sans** `type`/`style` continuent de fonctionner en raster
+via `L.tileLayer()`. Rétrocompatibilité totale.

@@ -1,12 +1,13 @@
-﻿# GeoLeaf.Themes – Documentation du module Themes
+# GeoLeaf.Themes – Documentation du module Themes
 
 Product Version: GeoLeaf Platform V1  
-**Version**: 3.2.0  
+**Version**: 4.0.0  
 **Fichiers**:
-- `src/static/js/themes/theme-selector.js` (561 lignes)
-- `src/static/js/themes/theme-loader.js`
-- `src/static/js/themes/theme-applier/` ⭐ (4 sous-modules : core.js, visibility.js, deferred.js, ui-sync.js)  
-**Dernière mise à jour**: 14 février 2026
+
+- `src/modules/themes/theme-selector.js` (561 lignes)
+- `src/modules/themes/theme-loader.js`
+- `src/modules/themes/theme-applier/` ⭐ (4 sous-modules : core.js, visibility.js, deferred.js, ui-sync.js)  
+  **Dernière mise à jour**: 14 février 2026
 
 ---
 
@@ -30,21 +31,27 @@ Le module **GeoLeaf.Themes** fournit un système avancé de gestion des thèmes 
 Le module Themes est composé de 3 sous-modules complémentaires :
 
 ### 1. **theme-selector.js** (561 lignes)
+
 Contrôleur principal :
+
 - Orchestration du système
 - Gestion de l'état
 - Rendu de l'interface utilisateur
 - Gestion des événements UI
 
 ### 2. **theme-loader.js**
+
 Chargement de la configuration :
+
 - Lecture des thèmes depuis `profile.json`
 - Validation de la structure
 - Classification (primaire/secondaire)
 - Cache des thèmes
 
-### 3. **theme-applier/** (4 sous-modules v3.2.0)
+### 3. **theme-applier/** (4 sous-modules v4.0.0)
+
 Application des thèmes, éclaté en :
+
 - **core.js** : État, init/cleanup, applyTheme orchestrator
 - **visibility.js** : Visibilité couches, styles, labels
 - **deferred.js** : Chargement différé, résolution URLs
@@ -59,21 +66,25 @@ Application des thèmes, éclaté en :
 Initialise le système de thèmes pour une carte.
 
 **Signature** :
+
 ```js
-GeoLeaf.ThemeSelector.init(map, profileId)
+GeoLeaf.ThemeSelector.init(map, profileId);
 ```
 
 **Paramètres** :
+
 - `map` (L.Map) - Instance de la carte Leaflet
 - `profileId` (String) - ID du profil actif (optionnel)
 
 **Retour** :
+
 - (Boolean) - `true` si initialisation réussie
 
 **Exemple** :
+
 ```js
 const map = GeoLeaf.Core.getMap();
-GeoLeaf.ThemeSelector.init(map, 'tourism');
+GeoLeaf.ThemeSelector.init(map, "tourism");
 ```
 
 ---
@@ -83,27 +94,32 @@ GeoLeaf.ThemeSelector.init(map, 'tourism');
 Change le thème actif.
 
 **Signature** :
+
 ```js
-GeoLeaf.ThemeSelector.setTheme(themeId)
+GeoLeaf.ThemeSelector.setTheme(themeId);
 ```
 
 **Paramètres** :
+
 - `themeId` (String) - ID du thème à activer
 
 **Retour** :
+
 - (Boolean) - `true` si changement réussi
 
 **Événements** :
+
 - `theme:changed` - Émis après changement de thème
 
 **Exemple** :
+
 ```js
 // Changer vers un thème spécifique
-GeoLeaf.ThemeSelector.setTheme('dark');
+GeoLeaf.ThemeSelector.setTheme("dark");
 
 // Écouter les changements
-document.addEventListener('theme:changed', (e) => {
-    console.log('Nouveau thème:', e.detail.themeId);
+document.addEventListener("theme:changed", (e) => {
+    console.log("Nouveau thème:", e.detail.themeId);
 });
 ```
 
@@ -114,17 +130,20 @@ document.addEventListener('theme:changed', (e) => {
 Récupère le thème actuellement actif.
 
 **Signature** :
+
 ```js
 GeoLeaf.ThemeSelector.getCurrentTheme() : String|null
 ```
 
 **Retour** :
+
 - (String|null) - ID du thème actif, ou `null` si aucun
 
 **Exemple** :
+
 ```js
 const currentTheme = GeoLeaf.ThemeSelector.getCurrentTheme();
-console.log('Thème actif:', currentTheme);
+console.log("Thème actif:", currentTheme);
 ```
 
 ---
@@ -134,18 +153,21 @@ console.log('Thème actif:', currentTheme);
 Liste tous les thèmes disponibles.
 
 **Signature** :
+
 ```js
 GeoLeaf.ThemeSelector.getAvailableThemes() : Object
 ```
 
 **Retour** :
+
 - (Object) - Objet avec `primary` et `secondary` arrays
 
 **Exemple** :
+
 ```js
 const themes = GeoLeaf.ThemeSelector.getAvailableThemes();
-console.log('Thèmes primaires:', themes.primary);
-console.log('Thèmes secondaires:', themes.secondary);
+console.log("Thèmes primaires:", themes.primary);
+console.log("Thèmes secondaires:", themes.secondary);
 ```
 
 ---
@@ -155,11 +177,13 @@ console.log('Thèmes secondaires:', themes.secondary);
 Nettoie le module et supprime les écouteurs.
 
 **Signature** :
+
 ```js
-GeoLeaf.ThemeSelector.destroy()
+GeoLeaf.ThemeSelector.destroy();
 ```
 
 **Exemple** :
+
 ```js
 GeoLeaf.ThemeSelector.destroy();
 ```
@@ -216,22 +240,22 @@ Les thèmes sont définis dans la section `themes` du fichier de profil :
 
 ### Structure d'un thème
 
-| Propriété | Type | Obligatoire | Description |
-|-----------|------|-------------|-------------|
-| `id` | String | ✅ | Identifiant unique du thème |
-| `label` | String | ✅ | Nom affiché à l'utilisateur |
-| `icon` | String | ❌ | Emoji ou icône Unicode |
-| `cssClass` | String | ✅ | Classe CSS appliquée au conteneur |
-| `basedOn` | String | ❌ | Thème parent (pour secondaires) |
+| Propriété  | Type   | Obligatoire | Description                       |
+| ---------- | ------ | ----------- | --------------------------------- |
+| `id`       | String | ✅          | Identifiant unique du thème       |
+| `label`    | String | ✅          | Nom affiché à l'utilisateur       |
+| `icon`     | String | ❌          | Emoji ou icône Unicode            |
+| `cssClass` | String | ✅          | Classe CSS appliquée au conteneur |
+| `basedOn`  | String | ❌          | Thème parent (pour secondaires)   |
 
 ### Options UI
 
-| Propriété | Type | Défaut | Description |
-|-----------|------|--------|-------------|
-| `position` | String | `"topright"` | Position Leaflet : `topleft`, `topright`, `bottomleft`, `bottomright` |
-| `style` | String | `"dropdown"` | Style d'UI : `"dropdown"` (menu déroulant) ou `"buttons"` (boutons) |
-| `showLabels` | Boolean | `true` | Afficher les labels texte |
-| `groupSecondary` | Boolean | `true` | Grouper les thèmes secondaires séparément |
+| Propriété        | Type    | Défaut       | Description                                                           |
+| ---------------- | ------- | ------------ | --------------------------------------------------------------------- |
+| `position`       | String  | `"topright"` | Position Leaflet : `topleft`, `topright`, `bottomleft`, `bottomright` |
+| `style`          | String  | `"dropdown"` | Style d'UI : `"dropdown"` (menu déroulant) ou `"buttons"` (boutons)   |
+| `showLabels`     | Boolean | `true`       | Afficher les labels texte                                             |
+| `groupSecondary` | Boolean | `true`       | Grouper les thèmes secondaires séparément                             |
 
 ---
 
@@ -300,16 +324,16 @@ Les thèmes sont définis dans la section `themes` du fichier de profil :
 
 ```js
 // Initialiser avec détection automatique
-GeoLeaf.ThemeSelector.init(map, 'tourism');
+GeoLeaf.ThemeSelector.init(map, "tourism");
 
 // Changer de thème selon l'heure
 const hour = new Date().getHours();
-const theme = (hour >= 6 && hour < 18) ? 'light' : 'dark';
+const theme = hour >= 6 && hour < 18 ? "light" : "dark";
 GeoLeaf.ThemeSelector.setTheme(theme);
 
 // Changer selon préférence système
-if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-    GeoLeaf.ThemeSelector.setTheme('dark');
+if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    GeoLeaf.ThemeSelector.setTheme("dark");
 }
 ```
 
@@ -318,26 +342,26 @@ if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
 ```js
 // Panneau de préférences personnalisé
 const userPrefs = {
-    theme: 'light',
+    theme: "light",
     largeText: false,
-    highContrast: false
+    highContrast: false,
 };
 
 // Appliquer les préférences
 let themeId = userPrefs.theme;
 
 if (userPrefs.highContrast) {
-    themeId = 'high-contrast';
+    themeId = "high-contrast";
 } else if (userPrefs.largeText) {
-    themeId = 'large-text';
+    themeId = "large-text";
 }
 
 GeoLeaf.ThemeSelector.setTheme(themeId);
 
 // Sauvegarder les préférences
-document.addEventListener('theme:changed', (e) => {
+document.addEventListener("theme:changed", (e) => {
     userPrefs.theme = e.detail.themeId;
-    localStorage.setItem('userPrefs', JSON.stringify(userPrefs));
+    localStorage.setItem("userPrefs", JSON.stringify(userPrefs));
 });
 ```
 
@@ -357,12 +381,12 @@ document.addEventListener('theme:changed', (e) => {
     --color-secondary: #8b5cf6;
     --color-background: #ffffff;
     --color-text: #1f2937;
-    
+
     /* Couleurs de la carte */
     --map-background: #f3f4f6;
     --map-water: #93c5fd;
     --map-land: #e5e7eb;
-    
+
     /* UI éléments */
     --ui-panel-bg: rgba(255, 255, 255, 0.95);
     --ui-panel-border: #d1d5db;
@@ -420,7 +444,7 @@ const _state = {
     secondaryContainer: null,
     dropdown: null,
     // Event cleanup
-    _eventCleanups: []
+    _eventCleanups: [],
 };
 ```
 
@@ -451,29 +475,31 @@ sequenceDiagram
 function applyTheme(themeId) {
     const theme = findTheme(themeId);
     if (!theme) return false;
-    
+
     // 1. Enlever les anciennes classes
-    _state.themes.forEach(t => {
+    _state.themes.forEach((t) => {
         mapContainer.classList.remove(t.cssClass);
     });
-    
+
     // 2. Appliquer la nouvelle classe
     mapContainer.classList.add(theme.cssClass);
-    
+
     // 3. Charger CSS additionnel si nécessaire
     if (theme.cssFile) {
         loadStylesheet(theme.cssFile);
     }
-    
+
     // 4. Mettre à jour l'état
     _state.currentTheme = themeId;
-    localStorage.setItem('geoleaf-theme', themeId);
-    
+    localStorage.setItem("geoleaf-theme", themeId);
+
     // 5. Émettre événement
-    document.dispatchEvent(new CustomEvent('theme:changed', {
-        detail: { themeId, theme }
-    }));
-    
+    document.dispatchEvent(
+        new CustomEvent("theme:changed", {
+            detail: { themeId, theme },
+        })
+    );
+
     return true;
 }
 ```
@@ -497,9 +523,7 @@ function applyTheme(themeId) {
             <div class="theme-option" data-theme-id="dark">🌙 Sombre</div>
         </div>
         <div class="theme-group secondary">
-            <div class="theme-option" data-theme-id="high-contrast">
-                👁️ Contraste élevé
-            </div>
+            <div class="theme-option" data-theme-id="high-contrast">👁️ Contraste élevé</div>
         </div>
     </div>
 </div>
@@ -525,15 +549,18 @@ function applyTheme(themeId) {
 ## ⚠️ Limitations et notes
 
 ### 1. Performance
+
 - ✅ Changement de thème instantané (pas de rechargement)
 - ⚠️ Le chargement de CSS externes peut prendre 100-300ms
 
 ### 2. Compatibilité
+
 - ✅ Fonctionne avec tous les navigateurs modernes
 - ✅ Support des thèmes système (prefers-color-scheme)
 - ⚠️ Les thèmes personnalisés doivent être testés sur tous les navigateurs
 
 ### 3. Persistance
+
 - ✅ Thème sauvegardé dans localStorage
 - ✅ Récupération automatique au rechargement
 - ⚠️ Effacé si l'utilisateur vide le cache
@@ -551,12 +578,14 @@ function applyTheme(themeId) {
 ## 📈 Améliorations futures
 
 ### Prévues
+
 - [ ] Import/export de thèmes personnalisés
 - [ ] Éditeur de thèmes visuel
 - [ ] Prévisualisation avant application
 - [ ] Thèmes adaptatifs selon l'heure
 
 ### En discussion
+
 - [ ] Thèmes animés (transitions élaborées)
 - [ ] Synchronisation multi-appareils
 - [ ] Marketplace de thèmes communautaires
@@ -569,26 +598,26 @@ function applyTheme(themeId) {
 // 1. Configuration dans profile.json
 const profile = {
     themes: {
-        default: 'light',
+        default: "light",
         primary: [
-            { id: 'light', label: 'Jour', icon: '☀️', cssClass: 'theme-light' },
-            { id: 'dark', label: 'Nuit', icon: '🌙', cssClass: 'theme-dark' }
+            { id: "light", label: "Jour", icon: "☀️", cssClass: "theme-light" },
+            { id: "dark", label: "Nuit", icon: "🌙", cssClass: "theme-dark" },
         ],
         secondary: [
-            { 
-                id: 'sunset', 
-                label: 'Coucher de soleil', 
-                icon: '🌅', 
-                cssClass: 'theme-sunset',
-                basedOn: 'light'
-            }
+            {
+                id: "sunset",
+                label: "Coucher de soleil",
+                icon: "🌅",
+                cssClass: "theme-sunset",
+                basedOn: "light",
+            },
         ],
         ui: {
-            position: 'topright',
-            style: 'dropdown',
-            showLabels: true
-        }
-    }
+            position: "topright",
+            style: "dropdown",
+            showLabels: true,
+        },
+    },
 };
 
 // 2. Initialiser GeoLeaf avec le profil
@@ -596,12 +625,12 @@ GeoLeaf.Config.load(profile);
 
 // 3. Initialiser le sélecteur de thèmes
 const map = GeoLeaf.Core.getMap();
-GeoLeaf.ThemeSelector.init(map, 'tourism');
+GeoLeaf.ThemeSelector.init(map, "tourism");
 
 // 4. Écouter les changements de thème
-document.addEventListener('theme:changed', (e) => {
-    console.log('Thème changé:', e.detail.themeId);
-    
+document.addEventListener("theme:changed", (e) => {
+    console.log("Thème changé:", e.detail.themeId);
+
     // Synchroniser avec d'autres composants
     updateChartColors(e.detail.theme);
 });
@@ -610,17 +639,17 @@ document.addEventListener('theme:changed', (e) => {
 function autoSwitchTheme() {
     const hour = new Date().getHours();
     let themeId;
-    
+
     if (hour >= 6 && hour < 12) {
-        themeId = 'light';
+        themeId = "light";
     } else if (hour >= 12 && hour < 18) {
-        themeId = 'light';
+        themeId = "light";
     } else if (hour >= 18 && hour < 20) {
-        themeId = 'sunset';
+        themeId = "sunset";
     } else {
-        themeId = 'dark';
+        themeId = "dark";
     }
-    
+
     GeoLeaf.ThemeSelector.setTheme(themeId);
 }
 
@@ -632,4 +661,4 @@ setInterval(autoSwitchTheme, 3600000);
 ---
 
 **Dernière mise à jour** : 19 janvier 2026  
-**Version GeoLeaf** : 3.2.0
+**Version GeoLeaf** : 4.0.0

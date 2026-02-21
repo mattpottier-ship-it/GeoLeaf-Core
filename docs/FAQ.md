@@ -1,12 +1,12 @@
-﻿# â“ FAQ - GeoLeaf.js
+# â“ FAQ - GeoLeaf.js
 
 > **Questions frÃ©quemment posÃ©es** et leurs rÃ©ponses
 
 **Version produit**: GeoLeaf Platform V1  
-**Version**: 3.2.0  
+**Version**: 4.0.0  
 **DerniÃ¨re mise Ã  jour**: 14 fÃ©vrier 2026
 
-> Convention de versioning : **Platform V1** est le label produit ; le SemVer technique de ce dépôt reste en **3.2.0**.
+> Convention de versioning : **Platform V1** est le label produit ; le SemVer technique des packages/releases reste en **4.x**. Voir [VERSIONING_POLICY.md](VERSIONING_POLICY.md).
 
 ---
 
@@ -30,6 +30,7 @@
 ### Q: Quelles sont les dÃ©pendances requises?
 
 **R**: GeoLeaf.js nÃ©cessite:
+
 - **Leaflet.js** v1.9.4 ou supÃ©rieur (obligatoire)
 - **Navigateur moderne** avec support ES6+, IndexedDB
 
@@ -55,9 +56,9 @@
 
 ```javascript
 GeoLeaf.init({
-    target: 'map',  // ID du conteneur HTML
-    center: [48.8566, 2.3522],  // [latitude, longitude]
-    zoom: 12
+    target: "map", // ID du conteneur HTML
+    center: [48.8566, 2.3522], // [latitude, longitude]
+    zoom: 12,
 });
 ```
 
@@ -73,13 +74,13 @@ GeoLeaf.init({
 
 **R**: GeoLeaf propose **3 profils prÃ©configurÃ©s**:
 
-| Profil | Usage | Layers | FonctionnalitÃ©s |
-|--------|-------|--------|-----------------|
+| Profil      | Usage             | Layers                                   | FonctionnalitÃ©s                     |
+| ----------- | ----------------- | ---------------------------------------- | ------------------------------------- |
 | **tourism** | Tourisme, loisirs | 35+ layers climatiques, POI touristiques | Monuments, restaurants, itinÃ©raires |
 
 ```javascript
 // Profil tourisme
-GeoLeaf.init({ target: 'map', profile: 'tourism' });
+GeoLeaf.init({ target: "map", profile: "tourism" });
 ```
 
 ---
@@ -95,17 +96,17 @@ GeoLeaf.init({ target: 'map', profile: 'tourism' });
 
 ```javascript
 const map1 = GeoLeaf.init({
-    target: 'map1',
-    profile: 'tourism',
+    target: "map1",
+    profile: "tourism",
     center: [48.8566, 2.3522],
-    zoom: 12
+    zoom: 12,
 });
 
 const map2 = GeoLeaf.init({
-    target: 'map2',
-    profile: 'tourism',
-    center: [45.7640, 4.8357],
-    zoom: 13
+    target: "map2",
+    profile: "tourism",
+    center: [45.764, 4.8357],
+    zoom: 13,
 });
 ```
 
@@ -122,18 +123,18 @@ npm install geoleaf-js leaflet
 Utilisation:
 
 ```javascript
-import L from 'leaflet';
-import GeoLeaf from 'geoleaf-js';
+import L from "leaflet";
+import GeoLeaf from "geoleaf-js";
 
 // CSS
-import 'leaflet/dist/leaflet.css';
-import 'geoleaf-js/dist/geoleaf.min.css';
+import "leaflet/dist/leaflet.css";
+import "geoleaf-js/dist/geoleaf.min.css";
 
 // Initialisation
 GeoLeaf.init({
-    target: 'map',
+    target: "map",
     center: [48.8566, 2.3522],
-    zoom: 12
+    zoom: 12,
 });
 ```
 
@@ -158,7 +159,7 @@ map.setView([48.8566, 2.3522], 15);
 
 // MÃ©thode 4: Avec animation
 map.flyTo([48.8566, 2.3522], 15, {
-    duration: 2 // secondes
+    duration: 2, // secondes
 });
 ```
 
@@ -170,29 +171,29 @@ map.flyTo([48.8566, 2.3522], 15, {
 
 ```javascript
 // DÃ©placement carte
-GeoLeaf.on('map:moveend', (event) => {
+GeoLeaf.on("map:moveend", (event) => {
     const center = event.center;
     console.log(`Carte dÃ©placÃ©e: ${center.lat}, ${center.lng}`);
 });
 
 // Changement zoom
-GeoLeaf.on('map:zoomend', (event) => {
+GeoLeaf.on("map:zoomend", (event) => {
     console.log(`Nouveau zoom: ${event.zoom}`);
 });
 
 // Clic sur carte
-GeoLeaf.on('map:click', (event) => {
+GeoLeaf.on("map:click", (event) => {
     console.log(`Clic: ${event.latlng.lat}, ${event.latlng.lng}`);
 });
 
 // POI ajoutÃ©
-GeoLeaf.on('poi:added', (poi) => {
-    console.log('POI ajoutÃ©:', poi);
+GeoLeaf.on("poi:added", (poi) => {
+    console.log("POI ajoutÃ©:", poi);
 });
 
 // ThÃ¨me changÃ©
-GeoLeaf.on('theme:changed', (theme) => {
-    console.log('ThÃ¨me:', theme); // 'light' ou 'dark'
+GeoLeaf.on("theme:changed", (theme) => {
+    console.log("ThÃ¨me:", theme); // 'light' ou 'dark'
 });
 ```
 
@@ -206,9 +207,9 @@ GeoLeaf.on('theme:changed', (theme) => {
 const map = GeoLeaf.getMap();
 const bounds = map.getBounds();
 
-console.log('Nord-Est:', bounds.getNorthEast());
-console.log('Sud-Ouest:', bounds.getSouthWest());
-console.log('Centre:', bounds.getCenter());
+console.log("Nord-Est:", bounds.getNorthEast());
+console.log("Sud-Ouest:", bounds.getSouthWest());
+console.log("Centre:", bounds.getCenter());
 
 // Obtenir POI dans bounds
 const visiblePOIs = await GeoLeaf.POI.getInBounds(bounds);
@@ -223,13 +224,13 @@ console.log(`${visiblePOIs.length} POI visibles`);
 
 ```javascript
 // Types: 'success', 'error', 'warning', 'info'
-GeoLeaf.UI.notify('âœ… OpÃ©ration rÃ©ussie', 'success');
-GeoLeaf.UI.notify('âŒ Erreur survenue', 'error');
-GeoLeaf.UI.notify('âš ï¸ Attention!', 'warning');
-GeoLeaf.UI.notify('â„¹ï¸ Information', 'info');
+GeoLeaf.UI.notify("âœ… OpÃ©ration rÃ©ussie", "success");
+GeoLeaf.UI.notify("âŒ Erreur survenue", "error");
+GeoLeaf.UI.notify("âš ï¸ Attention!", "warning");
+GeoLeaf.UI.notify("â„¹ï¸ Information", "info");
 
 // Avec durÃ©e personnalisÃ©e (millisecondes)
-GeoLeaf.UI.notify('Message temporaire', 'info', 3000);
+GeoLeaf.UI.notify("Message temporaire", "info", 3000);
 ```
 
 ---
@@ -243,35 +244,35 @@ GeoLeaf.UI.notify('Message temporaire', 'info', 3000);
 ```javascript
 const poi = await GeoLeaf.POI.add({
     // REQUIS
-    type: 'restaurant',
-    name: 'Le Bon Restaurant',
+    type: "restaurant",
+    name: "Le Bon Restaurant",
     lat: 48.8566,
     lng: 2.3522,
-    
+
     // OPTIONNELS
-    description: 'Excellent restaurant franÃ§ais',
-    address: '1 Rue de la Paix, 75001 Paris',
-    phone: '+33 1 23 45 67 89',
-    website: 'https://example.com',
-    email: 'contact@example.com',
-    tags: ['gastronomie', 'terrasse', 'wifi'],
-    images: ['image1.jpg', 'image2.jpg'],
+    description: "Excellent restaurant franÃ§ais",
+    address: "1 Rue de la Paix, 75001 Paris",
+    phone: "+33 1 23 45 67 89",
+    website: "https://example.com",
+    email: "contact@example.com",
+    tags: ["gastronomie", "terrasse", "wifi"],
+    images: ["image1.jpg", "image2.jpg"],
     hours: {
-        monday: '12:00-14:00, 19:00-22:00',
-        tuesday: '12:00-14:00, 19:00-22:00'
+        monday: "12:00-14:00, 19:00-22:00",
+        tuesday: "12:00-14:00, 19:00-22:00",
         // ...
     },
-    price: 'â‚¬â‚¬â‚¬',
+    price: "â‚¬â‚¬â‚¬",
     rating: 4.5,
-    
+
     // Champs personnalisÃ©s
     customFields: {
         capacity: 50,
-        outdoor_seating: true
-    }
+        outdoor_seating: true,
+    },
 });
 
-console.log('POI ajoutÃ© avec ID:', poi.id);
+console.log("POI ajoutÃ© avec ID:", poi.id);
 ```
 
 ---
@@ -282,14 +283,14 @@ console.log('POI ajoutÃ© avec ID:', poi.id);
 
 ```javascript
 // RÃ©cupÃ©rer POI
-const poi = await GeoLeaf.POI.get('poi-123');
+const poi = await GeoLeaf.POI.get("poi-123");
 
 // Modifier
-const updated = await GeoLeaf.POI.update('poi-123', {
-    name: 'Nouveau Nom',
-    description: 'Nouvelle description',
+const updated = await GeoLeaf.POI.update("poi-123", {
+    name: "Nouveau Nom",
+    description: "Nouvelle description",
     rating: 5.0,
-    tags: [...poi.tags, 'nouveau-tag']
+    tags: [...poi.tags, "nouveau-tag"],
 });
 ```
 
@@ -301,16 +302,16 @@ const updated = await GeoLeaf.POI.update('poi-123', {
 
 ```javascript
 // Supprimer par ID
-await GeoLeaf.POI.delete('poi-123');
+await GeoLeaf.POI.delete("poi-123");
 
 // Supprimer plusieurs POI
-const poisToDelete = ['poi-123', 'poi-456', 'poi-789'];
+const poisToDelete = ["poi-123", "poi-456", "poi-789"];
 for (const id of poisToDelete) {
     await GeoLeaf.POI.delete(id);
 }
 
 // Supprimer tous les POI d'un type
-const restaurants = await GeoLeaf.POI.getByType('restaurant');
+const restaurants = await GeoLeaf.POI.getByType("restaurant");
 for (const restaurant of restaurants) {
     await GeoLeaf.POI.delete(restaurant.id);
 }
@@ -324,10 +325,10 @@ for (const restaurant of restaurants) {
 
 ```javascript
 // 1. Recherche textuelle (nom, description, tags)
-const results = await GeoLeaf.POI.search('pizza');
+const results = await GeoLeaf.POI.search("pizza");
 
 // 2. Par type
-const restaurants = await GeoLeaf.POI.getByType('restaurant');
+const restaurants = await GeoLeaf.POI.getByType("restaurant");
 
 // 3. Dans une zone (bounds)
 const bounds = map.getBounds();
@@ -336,18 +337,16 @@ const poisInBounds = await GeoLeaf.POI.getInBounds(bounds);
 // 4. Par proximitÃ© (rayon)
 const nearby = await GeoLeaf.POI.getNearby(
     48.8566, // latitude
-    2.3522,  // longitude
-    1000     // rayon en mÃ¨tres
+    2.3522, // longitude
+    1000 // rayon en mÃ¨tres
 );
 
 // 5. Tous les POI
 const allPOIs = await GeoLeaf.POI.getAll();
 
 // 6. Recherche avancÃ©e (filtre custom)
-const filtered = allPOIs.filter(poi => {
-    return poi.rating >= 4.5 &&
-           poi.tags.includes('terrasse') &&
-           poi.price === 'â‚¬â‚¬';
+const filtered = allPOIs.filter((poi) => {
+    return poi.rating >= 4.5 && poi.tags.includes("terrasse") && poi.price === "â‚¬â‚¬";
 });
 ```
 
@@ -359,10 +358,10 @@ const filtered = allPOIs.filter(poi => {
 
 ```javascript
 GeoLeaf.init({
-    target: 'map',
+    target: "map",
     poi: {
-        clustering: false  // DÃ©sactiver clustering
-    }
+        clustering: false, // DÃ©sactiver clustering
+    },
 });
 
 // Ou modifier aprÃ¨s initialisation
@@ -381,10 +380,10 @@ GeoLeaf.POI.enableClustering();
 ```javascript
 // Ajouter POI
 const poi = await GeoLeaf.POI.add({
-    type: 'custom',
-    name: 'Point Custom',
+    type: "custom",
+    name: "Point Custom",
     lat: 48.8566,
-    lng: 2.3522
+    lng: 2.3522,
 });
 
 // RÃ©cupÃ©rer marker
@@ -392,10 +391,10 @@ const marker = GeoLeaf.POI.getMarker(poi.id);
 
 // IcÃ´ne personnalisÃ©e
 const customIcon = L.icon({
-    iconUrl: 'my-icon.png',
+    iconUrl: "my-icon.png",
     iconSize: [32, 32],
     iconAnchor: [16, 32],
-    popupAnchor: [0, -32]
+    popupAnchor: [0, -32],
 });
 
 marker.setIcon(customIcon);
@@ -403,8 +402,8 @@ marker.setIcon(customIcon);
 // Ou DivIcon (HTML)
 const divIcon = L.divIcon({
     html: '<div style="background: red; width: 30px; height: 30px; border-radius: 50%;"></div>',
-    className: 'custom-marker',
-    iconSize: [30, 30]
+    className: "custom-marker",
+    iconSize: [30, 30],
 });
 
 marker.setIcon(divIcon);
@@ -418,10 +417,10 @@ marker.setIcon(divIcon);
 
 ```javascript
 // Masquer un POI
-GeoLeaf.POI.hide('poi-123');
+GeoLeaf.POI.hide("poi-123");
 
 // Afficher un POI
-GeoLeaf.POI.show('poi-123');
+GeoLeaf.POI.show("poi-123");
 
 // Masquer tous les POI
 GeoLeaf.POI.hideAll();
@@ -430,8 +429,8 @@ GeoLeaf.POI.hideAll();
 GeoLeaf.POI.showAll();
 
 // Masquer par type
-const restaurants = await GeoLeaf.POI.getByType('restaurant');
-restaurants.forEach(poi => GeoLeaf.POI.hide(poi.id));
+const restaurants = await GeoLeaf.POI.getByType("restaurant");
+restaurants.forEach((poi) => GeoLeaf.POI.hide(poi.id));
 ```
 
 ---
@@ -476,23 +475,27 @@ GeoLeaf.GeoJSON.addData(geojson, {
 
 ```javascript
 GeoLeaf.GeoJSON.load({
-    url: '/data/departments.geojson',
-    layerId: 'departments',
+    url: "/data/departments.geojson",
+    layerId: "departments",
     style: (feature) => {
         // Style basÃ© sur propriÃ©tÃ©s
         const population = feature.properties.population;
-        
+
         return {
-            fillColor: population > 1000000 ? '#800026' :
-                       population > 500000  ? '#E31A1C' :
-                       population > 200000  ? '#FD8D3C' :
-                                              '#FFEDA0',
+            fillColor:
+                population > 1000000
+                    ? "#800026"
+                    : population > 500000
+                      ? "#E31A1C"
+                      : population > 200000
+                        ? "#FD8D3C"
+                        : "#FFEDA0",
             weight: 2,
             opacity: 1,
-            color: 'white',
-            fillOpacity: 0.7
+            color: "white",
+            fillOpacity: 0.7,
         };
-    }
+    },
 });
 ```
 
@@ -504,11 +507,11 @@ GeoLeaf.GeoJSON.load({
 
 ```javascript
 // Supprimer layer par ID
-GeoLeaf.GeoJSON.remove('regions');
+GeoLeaf.GeoJSON.remove("regions");
 
 // Supprimer tous les layers GeoJSON
 const layers = GeoLeaf.GeoJSON.getAll();
-layers.forEach(layer => {
+layers.forEach((layer) => {
     GeoLeaf.GeoJSON.remove(layer.id);
 });
 ```
@@ -521,20 +524,20 @@ layers.forEach(layer => {
 
 ```javascript
 await GeoLeaf.Route.load({
-    url: '/tracks/randonnee.gpx',
-    routeId: 'rando-1',
+    url: "/tracks/randonnee.gpx",
+    routeId: "rando-1",
     style: {
-        color: '#ff0000',
+        color: "#ff0000",
         weight: 4,
-        opacity: 0.7
+        opacity: 0.7,
     },
-    showMarkers: true,      // Marqueurs dÃ©part/arrivÃ©e
-    showWaypoints: true,    // Waypoints intermÃ©diaires
-    fitBounds: true,        // Zoom auto sur route
+    showMarkers: true, // Marqueurs dÃ©part/arrivÃ©e
+    showWaypoints: true, // Waypoints intermÃ©diaires
+    fitBounds: true, // Zoom auto sur route
     onLoad: (route) => {
-        console.log('Distance:', route.distance, 'km');
-        console.log('DÃ©nivelÃ©:', route.elevation, 'm');
-    }
+        console.log("Distance:", route.distance, "km");
+        console.log("DÃ©nivelÃ©:", route.elevation, "m");
+    },
 });
 ```
 
@@ -546,18 +549,18 @@ await GeoLeaf.Route.load({
 
 ```javascript
 // GeoJSON layer
-const layer = GeoLeaf.GeoJSON.get('regions');
+const layer = GeoLeaf.GeoJSON.get("regions");
 if (layer) {
     // Masquer
     layer.remove();
-    
+
     // Afficher
     layer.addTo(map);
 }
 
 // Route GPX
-GeoLeaf.Route.hide('rando-1');
-GeoLeaf.Route.show('rando-1');
+GeoLeaf.Route.hide("rando-1");
+GeoLeaf.Route.show("rando-1");
 ```
 
 ---
@@ -570,12 +573,12 @@ GeoLeaf.Route.show('rando-1');
 
 ```javascript
 GeoLeaf.init({
-    target: 'map',
+    target: "map",
     storage: {
-        enabled: true,                     // Activer cache
-        quota: 200 * 1024 * 1024,         // 200 MB
-        ttl: 30 * 24 * 60 * 60 * 1000     // 30 jours
-    }
+        enabled: true, // Activer cache
+        quota: 200 * 1024 * 1024, // 200 MB
+        ttl: 30 * 24 * 60 * 60 * 1000, // 30 jours
+    },
 });
 ```
 
@@ -590,20 +593,16 @@ GeoLeaf.init({
 GeoLeaf.Storage.openCacheModal();
 
 // Ou tÃ©lÃ©charger programmatiquement
-await GeoLeaf.Storage.downloadLayers([
-    'tourism_poi_all',
-    'tourism_itineraries',
-    'base_osm_tiles'
-], {
+await GeoLeaf.Storage.downloadLayers(["tourism_poi_all", "tourism_itineraries", "base_osm_tiles"], {
     onProgress: (progress) => {
         console.log(`${progress.percent}% - ${progress.current}/${progress.total}`);
     },
     onComplete: () => {
-        console.log('âœ… TÃ©lÃ©chargement terminÃ©');
+        console.log("âœ… TÃ©lÃ©chargement terminÃ©");
     },
     onError: (error) => {
-        console.error('âŒ Erreur:', error);
-    }
+        console.error("âŒ Erreur:", error);
+    },
 });
 ```
 
@@ -616,12 +615,12 @@ await GeoLeaf.Storage.downloadLayers([
 ```javascript
 const info = await GeoLeaf.Storage.getCacheInfo();
 
-console.log('Taille totale:', (info.size / (1024 * 1024)).toFixed(2), 'MB');
-console.log('Layers en cache:', info.layers);
-console.log('Dernier update:', new Date(info.lastUpdate));
+console.log("Taille totale:", (info.size / (1024 * 1024)).toFixed(2), "MB");
+console.log("Layers en cache:", info.layers);
+console.log("Dernier update:", new Date(info.lastUpdate));
 
 // Par layer
-info.layers.forEach(layer => {
+info.layers.forEach((layer) => {
     console.log(`${layer.id}: ${(layer.size / 1024).toFixed(2)} KB`);
 });
 ```
@@ -637,14 +636,14 @@ info.layers.forEach(layer => {
 await GeoLeaf.Storage.clearCache();
 
 // Supprimer layer spÃ©cifique
-await GeoLeaf.Storage.clearLayer('tourism_poi_all');
+await GeoLeaf.Storage.clearLayer("tourism_poi_all");
 
 // Supprimer layers expirÃ©s (TTL dÃ©passÃ©)
 await GeoLeaf.Storage.cleanExpired();
 
 // Supprimer layers par pattern
 const allLayers = await GeoLeaf.Storage.getCacheInfo();
-const tourismLayers = allLayers.layers.filter(l => l.id.startsWith('tourism_'));
+const tourismLayers = allLayers.layers.filter((l) => l.id.startsWith("tourism_"));
 for (const layer of tourismLayers) {
     await GeoLeaf.Storage.clearLayer(layer.id);
 }
@@ -659,17 +658,17 @@ for (const layer of tourismLayers) {
 ```javascript
 // Ã‰tat actuel
 const online = GeoLeaf.Storage.isOnline();
-console.log('En ligne:', online);
+console.log("En ligne:", online);
 
 // Ã‰couter changements
-GeoLeaf.on('online', () => {
-    console.log('âœ… Connexion rÃ©tablie');
-    GeoLeaf.UI.notify('Connexion rÃ©tablie', 'success');
+GeoLeaf.on("online", () => {
+    console.log("âœ… Connexion rÃ©tablie");
+    GeoLeaf.UI.notify("Connexion rÃ©tablie", "success");
 });
 
-GeoLeaf.on('offline', () => {
-    console.log('ðŸ“´ Mode offline');
-    GeoLeaf.UI.notify('Mode offline - Utilisation du cache', 'warning');
+GeoLeaf.on("offline", () => {
+    console.log("ðŸ“´ Mode offline");
+    GeoLeaf.UI.notify("Mode offline - Utilisation du cache", "warning");
 });
 ```
 
@@ -685,14 +684,14 @@ GeoLeaf.on('offline', () => {
 
 ```javascript
 // VÃ©rifier si layer en cache avant utilisation
-const isCached = await GeoLeaf.Storage.isLayerCached('tourism_poi_all');
+const isCached = await GeoLeaf.Storage.isLayerCached("tourism_poi_all");
 
 if (!isCached && !GeoLeaf.Storage.isOnline()) {
-    GeoLeaf.UI.notify('âš ï¸ Layer non disponible offline', 'warning');
+    GeoLeaf.UI.notify("âš ï¸ Layer non disponible offline", "warning");
 } else {
     await GeoLeaf.GeoJSON.load({
-        url: '/data/pois.geojson',
-        layerId: 'tourism_poi_all'
+        url: "/data/pois.geojson",
+        layerId: "tourism_poi_all",
     });
 }
 ```
@@ -710,12 +709,12 @@ if (!isCached && !GeoLeaf.Storage.isOnline()) {
 GeoLeaf.init({
     poi: {
         clustering: true,
-        clusterRadius: 80  // Ajuster selon densitÃ©
-    }
+        clusterRadius: 80, // Ajuster selon densitÃ©
+    },
 });
 
 // 2. Charger POI par zone (lazy loading)
-GeoLeaf.on('map:moveend', async () => {
+GeoLeaf.on("map:moveend", async () => {
     const bounds = map.getBounds();
     const pois = await GeoLeaf.POI.getInBounds(bounds);
     // Afficher seulement POI visibles
@@ -728,7 +727,7 @@ const limitedPOIs = allPOIs.slice(0, MAX_POIS);
 
 // 4. Utiliser debounce pour recherche
 let searchTimeout;
-searchInput.addEventListener('input', (e) => {
+searchInput.addEventListener("input", (e) => {
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => {
         GeoLeaf.POI.search(e.target.value);
@@ -751,18 +750,18 @@ if (zoom < 12) {
 ```javascript
 // 1. TÃ©lÃ©charger seulement layers essentiels
 const essentialLayers = [
-    'tourism_poi_restaurants',  // Pas tourism_poi_all
-    'base_osm_tiles_z12_z15'   // Seulement zooms 12-15
+    "tourism_poi_restaurants", // Pas tourism_poi_all
+    "base_osm_tiles_z12_z15", // Seulement zooms 12-15
 ];
 
 // 2. Limiter zone gÃ©ographique
 const bounds = L.latLngBounds(
-    [48.8, 2.2],  // Sud-Ouest
-    [48.9, 2.4]   // Nord-Est
+    [48.8, 2.2], // Sud-Ouest
+    [48.9, 2.4] // Nord-Est
 );
 
 await GeoLeaf.Storage.downloadLayers(essentialLayers, {
-    bounds: bounds  // Seulement cette zone
+    bounds: bounds, // Seulement cette zone
 });
 
 // 3. Compresser donnÃ©es avant cache
@@ -781,29 +780,29 @@ await GeoLeaf.Storage.cleanExpired();
 ```javascript
 // 1. Activer mode debug
 GeoLeaf.init({
-    target: 'map',
+    target: "map",
     debug: true,
-    logLevel: 'debug'
+    logLevel: "debug",
 });
 
 // 2. Performance API
-performance.mark('geoleaf-init-start');
-await GeoLeaf.init({ target: 'map' });
-performance.mark('geoleaf-init-end');
+performance.mark("geoleaf-init-start");
+await GeoLeaf.init({ target: "map" });
+performance.mark("geoleaf-init-end");
 
-performance.measure('geoleaf-init', 'geoleaf-init-start', 'geoleaf-init-end');
-const measure = performance.getEntriesByName('geoleaf-init')[0];
+performance.measure("geoleaf-init", "geoleaf-init-start", "geoleaf-init-end");
+const measure = performance.getEntriesByName("geoleaf-init")[0];
 console.log(`Init time: ${measure.duration.toFixed(2)}ms`);
 
 // 3. Memory usage
 if (performance.memory) {
-    console.log('Heap size:', (performance.memory.usedJSHeapSize / 1048576).toFixed(2), 'MB');
+    console.log("Heap size:", (performance.memory.usedJSHeapSize / 1048576).toFixed(2), "MB");
 }
 
 // 4. Network monitoring
-if ('connection' in navigator) {
-    console.log('Type connexion:', navigator.connection.effectiveType);
-    console.log('Downlink:', navigator.connection.downlink, 'Mbps');
+if ("connection" in navigator) {
+    console.log("Type connexion:", navigator.connection.effectiveType);
+    console.log("Downlink:", navigator.connection.downlink, "Mbps");
 }
 ```
 
@@ -817,17 +816,17 @@ if ('connection' in navigator) {
 
 ```javascript
 // ThÃ¨me clair
-GeoLeaf.setTheme('light');
+GeoLeaf.setTheme("light");
 
 // ThÃ¨me sombre
-GeoLeaf.setTheme('dark');
+GeoLeaf.setTheme("dark");
 
 // RÃ©cupÃ©rer thÃ¨me actuel
 const theme = GeoLeaf.getTheme(); // 'light' ou 'dark'
 
 // Toggle thÃ¨me
 const currentTheme = GeoLeaf.getTheme();
-GeoLeaf.setTheme(currentTheme === 'light' ? 'dark' : 'light');
+GeoLeaf.setTheme(currentTheme === "light" ? "dark" : "light");
 ```
 
 ---
@@ -837,42 +836,42 @@ GeoLeaf.setTheme(currentTheme === 'light' ? 'dark' : 'light');
 **R**: Enregistrer thÃ¨me custom:
 
 ```javascript
-GeoLeaf.UI.registerTheme('custom', {
-    name: 'Mon ThÃ¨me',
+GeoLeaf.UI.registerTheme("custom", {
+    name: "Mon ThÃ¨me",
     colors: {
-        primary: '#007bff',
-        secondary: '#6c757d',
-        success: '#28a745',
-        danger: '#dc3545',
-        warning: '#ffc107',
-        info: '#17a2b8',
-        background: '#ffffff',
-        text: '#212529',
-        border: '#dee2e6'
+        primary: "#007bff",
+        secondary: "#6c757d",
+        success: "#28a745",
+        danger: "#dc3545",
+        warning: "#ffc107",
+        info: "#17a2b8",
+        background: "#ffffff",
+        text: "#212529",
+        border: "#dee2e6",
     },
     styles: {
         popup: {
-            background: '#ffffff',
-            color: '#212529',
-            border: '1px solid #dee2e6',
-            borderRadius: '8px',
-            boxShadow: '0 2px 6px rgba(0,0,0,0.3)'
+            background: "#ffffff",
+            color: "#212529",
+            border: "1px solid #dee2e6",
+            borderRadius: "8px",
+            boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
         },
         control: {
-            background: 'rgba(255, 255, 255, 0.9)',
-            color: '#212529',
-            border: '1px solid #ccc'
+            background: "rgba(255, 255, 255, 0.9)",
+            color: "#212529",
+            border: "1px solid #ccc",
         },
         marker: {
-            default: '#007bff',
-            hover: '#0056b3',
-            selected: '#28a745'
-        }
-    }
+            default: "#007bff",
+            hover: "#0056b3",
+            selected: "#28a745",
+        },
+    },
 });
 
 // Activer thÃ¨me custom
-GeoLeaf.setTheme('custom');
+GeoLeaf.setTheme("custom");
 ```
 
 ---
@@ -884,7 +883,7 @@ GeoLeaf.setTheme('custom');
 ```javascript
 // Lors de l'ajout POI
 const poi = await GeoLeaf.POI.add({
-    name: 'Restaurant',
+    name: "Restaurant",
     lat: 48.8566,
     lng: 2.3522,
     // ...
@@ -898,23 +897,35 @@ const customPopup = `
     <div style="padding: 15px; min-width: 250px;">
         <h3 style="margin: 0 0 10px 0; color: #007bff;">${poi.name}</h3>
         
-        ${poi.images && poi.images[0] ? `
+        ${
+            poi.images && poi.images[0]
+                ? `
             <img src="${poi.images[0]}" style="width: 100%; border-radius: 4px; margin-bottom: 10px;">
-        ` : ''}
+        `
+                : ""
+        }
         
-        <p style="margin: 5px 0;">${poi.description || ''}</p>
+        <p style="margin: 5px 0;">${poi.description || ""}</p>
         
-        ${poi.rating ? `
+        ${
+            poi.rating
+                ? `
             <div style="margin: 10px 0;">
-                ${'â­'.repeat(Math.floor(poi.rating))} ${poi.rating}/5
+                ${"â­".repeat(Math.floor(poi.rating))} ${poi.rating}/5
             </div>
-        ` : ''}
+        `
+                : ""
+        }
         
-        ${poi.address ? `
+        ${
+            poi.address
+                ? `
             <p style="margin: 5px 0; font-size: 12px; color: #666;">
                 ðŸ“ ${poi.address}
             </p>
-        ` : ''}
+        `
+                : ""
+        }
         
         <button onclick="alert('RÃ©server ${poi.name}')" style="width: 100%; padding: 8px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px;">
             RÃ©server
@@ -924,7 +935,7 @@ const customPopup = `
 
 marker.bindPopup(customPopup, {
     maxWidth: 300,
-    className: 'custom-popup'
+    className: "custom-popup",
 });
 ```
 
@@ -966,32 +977,32 @@ document.addEventListener('DOMContentLoaded', () => {
 ```javascript
 // 1. VÃ©rifier que POI sont ajoutÃ©s
 const pois = await GeoLeaf.POI.getAll();
-console.log('Nombre POI:', pois.length);
+console.log("Nombre POI:", pois.length);
 
 // 2. VÃ©rifier coordonnÃ©es valides
-pois.forEach(poi => {
+pois.forEach((poi) => {
     if (isNaN(poi.lat) || isNaN(poi.lng)) {
-        console.error('CoordonnÃ©es invalides:', poi);
+        console.error("CoordonnÃ©es invalides:", poi);
     }
 });
 
 // 3. VÃ©rifier bounds
 const bounds = map.getBounds();
-console.log('Bounds carte:', bounds);
+console.log("Bounds carte:", bounds);
 
 const poisInBounds = await GeoLeaf.POI.getInBounds(bounds);
-console.log('POI dans bounds:', poisInBounds.length);
+console.log("POI dans bounds:", poisInBounds.length);
 
 // 4. VÃ©rifier zoom
 const zoom = map.getZoom();
-console.log('Zoom actuel:', zoom);
+console.log("Zoom actuel:", zoom);
 if (zoom < 10) {
-    console.warn('Zoom trop faible pour voir POI');
+    console.warn("Zoom trop faible pour voir POI");
 }
 
 // 5. VÃ©rifier filtres actifs
 const filters = GeoLeaf.Filters.getActive();
-console.log('Filtres actifs:', filters);
+console.log("Filtres actifs:", filters);
 
 // 6. Forcer refresh
 GeoLeaf.POI.refresh();
@@ -1033,36 +1044,36 @@ fetch(url, { mode: 'no-cors' })
 
 ```javascript
 // 1. VÃ©rifier support IndexedDB
-if ('indexedDB' in window) {
-    console.log('âœ… IndexedDB supportÃ©');
+if ("indexedDB" in window) {
+    console.log("âœ… IndexedDB supportÃ©");
 } else {
-    console.error('âŒ IndexedDB non supportÃ©');
+    console.error("âŒ IndexedDB non supportÃ©");
     // Solution: utiliser browser moderne
 }
 
 // 2. VÃ©rifier quota storage
-navigator.storage.estimate().then(estimate => {
-    console.log('Usage:', (estimate.usage / 1048576).toFixed(2), 'MB');
-    console.log('Quota:', (estimate.quota / 1048576).toFixed(2), 'MB');
-    console.log('Disponible:', ((estimate.quota - estimate.usage) / 1048576).toFixed(2), 'MB');
+navigator.storage.estimate().then((estimate) => {
+    console.log("Usage:", (estimate.usage / 1048576).toFixed(2), "MB");
+    console.log("Quota:", (estimate.quota / 1048576).toFixed(2), "MB");
+    console.log("Disponible:", ((estimate.quota - estimate.usage) / 1048576).toFixed(2), "MB");
 });
 
 // 3. Demander persistent storage
-navigator.storage.persist().then(granted => {
-    console.log('Persistent storage:', granted ? 'âœ… AccordÃ©' : 'âŒ RefusÃ©');
+navigator.storage.persist().then((granted) => {
+    console.log("Persistent storage:", granted ? "âœ… AccordÃ©" : "âŒ RefusÃ©");
 });
 
 // 4. VÃ©rifier permissions
-navigator.permissions.query({ name: 'persistent-storage' }).then(result => {
-    console.log('Permission:', result.state);
+navigator.permissions.query({ name: "persistent-storage" }).then((result) => {
+    console.log("Permission:", result.state);
 });
 
 // 5. Tester Ã©criture/lecture
 try {
     await GeoLeaf.Storage.test();
-    console.log('âœ… Storage opÃ©rationnel');
+    console.log("âœ… Storage opÃ©rationnel");
 } catch (error) {
-    console.error('âŒ Erreur storage:', error);
+    console.error("âŒ Erreur storage:", error);
 }
 ```
 
@@ -1075,15 +1086,15 @@ try {
 ```javascript
 // 1. Activer clustering
 GeoLeaf.init({
-    poi: { clustering: true, clusterRadius: 80 }
+    poi: { clustering: true, clusterRadius: 80 },
 });
 
 // 2. Lazy loading par zone
 let loadedBounds = null;
 
-GeoLeaf.on('map:moveend', async () => {
+GeoLeaf.on("map:moveend", async () => {
     const currentBounds = map.getBounds();
-    
+
     // Charger seulement si bounds changÃ©s significativement
     if (!loadedBounds || !loadedBounds.contains(currentBounds)) {
         const pois = await fetchPOIsInBounds(currentBounds);
@@ -1094,7 +1105,7 @@ GeoLeaf.on('map:moveend', async () => {
 
 // 3. Throttle events
 let lastMove = 0;
-GeoLeaf.on('map:move', () => {
+GeoLeaf.on("map:move", () => {
     const now = Date.now();
     if (now - lastMove < 100) return; // Max 10 fois/seconde
     lastMove = now;
@@ -1105,7 +1116,7 @@ GeoLeaf.on('map:move', () => {
 // Utiliser library comme react-window pour tables POI
 
 // 5. Web Worker pour calculs lourds
-const worker = new Worker('distance-calculator.js');
+const worker = new Worker("distance-calculator.js");
 worker.postMessage({ pois, center });
 worker.onmessage = (e) => {
     const sortedPOIs = e.data;
@@ -1121,16 +1132,17 @@ worker.onmessage = (e) => {
 
 **R**: Navigateurs modernes avec ES6+:
 
-| Navigateur | Version Minimale | Support |
-|------------|------------------|---------|
-| Chrome | 90+ | âœ… Complet |
-| Firefox | 88+ | âœ… Complet |
-| Safari | 14+ | âœ… Complet |
-| Edge | 90+ | âœ… Complet |
-| Opera | 76+ | âœ… Complet |
-| IE 11 | âŒ | Non supportÃ© |
+| Navigateur | Version Minimale | Support        |
+| ---------- | ---------------- | -------------- |
+| Chrome     | 90+              | âœ… Complet    |
+| Firefox    | 88+              | âœ… Complet    |
+| Safari     | 14+              | âœ… Complet    |
+| Edge       | 90+              | âœ… Complet    |
+| Opera      | 76+              | âœ… Complet    |
+| IE 11      | âŒ               | Non supportÃ© |
 
 **FonctionnalitÃ©s requises**:
+
 - ES6 (let/const, arrow functions, classes)
 - Promises & async/await
 - IndexedDB (cache offline)
@@ -1147,25 +1159,21 @@ worker.onmessage = (e) => {
 const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
 GeoLeaf.init({
-    target: 'map',
+    target: "map",
     // Adapter config pour mobile
     controls: {
-        zoom: !isMobile,  // DÃ©sactiver zoom buttons sur mobile (pinch-zoom suffit)
-        fullscreen: isMobile
+        zoom: !isMobile, // DÃ©sactiver zoom buttons sur mobile (pinch-zoom suffit)
+        fullscreen: isMobile,
     },
     poi: {
-        clusterRadius: isMobile ? 60 : 80  // Clusters plus petits mobile
-    }
+        clusterRadius: isMobile ? 60 : 80, // Clusters plus petits mobile
+    },
 });
 
 // GÃ©olocalisation mobile
-if (isMobile && 'geolocation' in navigator) {
+if (isMobile && "geolocation" in navigator) {
     navigator.geolocation.getCurrentPosition((position) => {
-        GeoLeaf.centerOn(
-            position.coords.latitude,
-            position.coords.longitude,
-            15
-        );
+        GeoLeaf.centerOn(position.coords.latitude, position.coords.longitude, 15);
     });
 }
 ```
@@ -1197,20 +1205,45 @@ npm install @babel/core @babel/preset-env
 // babel.config.js
 module.exports = {
     presets: [
-        ['@babel/preset-env', {
-            targets: { browsers: ['> 1%', 'not dead', 'not IE 11'] }
-        }]
-    ]
+        [
+            "@babel/preset-env",
+            {
+                targets: { browsers: ["> 1%", "not dead", "not IE 11"] },
+            },
+        ],
+    ],
 };
 ```
 
 ---
 
-## 🔄 Updates
+## ðŸ”„ Migration & Updates
 
-### Q: Comment mettre à jour GeoLeaf proprement?
+### Q: Comment migrer de v2.x vers v3.0?
 
-**R**: Passez à la dernière version stable, relancez le build et vérifiez vos fichiers de configuration de profil.
+**R**: Voir [MIGRATION_GUIDE_V3.md](MIGRATION_GUIDE_V3.md) complet.
+
+**Changements majeurs**:
+
+```javascript
+// v2.x (ANCIEN)
+geoleafMap.addPOI({ name: "POI", coordinates: [48.8, 2.3] });
+
+// v3.0 (NOUVEAU)
+GeoLeaf.POI.add({ name: "POI", lat: 48.8, lng: 2.3 });
+
+// v2.x (ANCIEN)
+geoleafMap.loadGeoJSON("/data.geojson", "layer-id");
+
+// v3.0 (NOUVEAU)
+GeoLeaf.GeoJSON.load({ url: "/data.geojson", layerId: "layer-id" });
+
+// v2.x (ANCIEN)
+geoleafMap.setMapTheme("dark");
+
+// v3.0 (NOUVEAU)
+GeoLeaf.setTheme("dark");
+```
 
 ---
 
@@ -1219,12 +1252,12 @@ module.exports = {
 **R**: AccÃ©der version:
 
 ```javascript
-console.log('Version GeoLeaf:', GeoLeaf.version);
+console.log("Version GeoLeaf:", GeoLeaf.version);
 // Output: "3.0.0"
 
 // Comparer versions
-if (GeoLeaf.version.startsWith('3.')) {
-    console.log('âœ… v3.x installÃ©e');
+if (GeoLeaf.version.startsWith("3.")) {
+    console.log("âœ… v3.x installÃ©e");
 }
 ```
 
@@ -1239,9 +1272,10 @@ if (GeoLeaf.version.startsWith('3.')) {
 - **Patch** (v3.0.0 â†’ v3.0.1): âœ… Compatible (bug fixes)
 
 **Exemple**:
+
 - v3.0.0 â†’ v3.0.5 : âœ… Update safe (patches)
 - v3.0.0 â†’ v3.1.0 : âœ… Update safe (features)
-- v3.0.0 â†’ v4.0.0 : ✅ Mettre à jour et vérifier la configuration
+- v3.0.0 â†’ v4.0.0 : âš ï¸ Lire migration guide
 
 ---
 
@@ -1256,11 +1290,11 @@ if (GeoLeaf.version.startsWith('3.')) {
 - ðŸ’¬ **Discussions**: [github.com/geonatwork/geoleaf-js/discussions](https://github.com/geonatwork/geoleaf-js/discussions)
 - ðŸ“§ **Email**: support@geonatwork.fr
 - ðŸ“š **Guides**:
-  - [Guide Utilisateur](USER_GUIDE.md)
-  - [Cookbook](COOKBOOK.md)
-  - [Guide de Configuration](CONFIGURATION_GUIDE.md)
-  - [Guide de DÃ©marrage](GETTING_STARTED.md)
-  - [Guide Contribution](CONTRIBUTING.md)
+    - [Guide Utilisateur](USER_GUIDE.md)
+    - [Cookbook](COOKBOOK.md)
+    - [Guide de Configuration](CONFIGURATION_GUIDE.md)
+    - [Guide de DÃ©marrage](GETTING_STARTED.md)
+    - [Guide Contribution](CONTRIBUTING.md)
 
 ---
 
@@ -1268,13 +1302,14 @@ if (GeoLeaf.version.startsWith('3.')) {
 
 **R**: CrÃ©er GitHub Issue:
 
-```markdown
+````markdown
 **Titre**: [Bug] Description courte
 
 **Description**:
 DÃ©crire le bug clairement
 
 **Reproduction**:
+
 1. Ã‰tape 1
 2. Ã‰tape 2
 3. Bug survient
@@ -1286,19 +1321,23 @@ Ce qui devrait se passer
 Ce qui se passe rÃ©ellement
 
 **Environnement**:
+
 - GeoLeaf version: 3.0.0
 - Browser: Chrome 120
 - OS: Windows 11
 
 **Code exemple** (si possible):
+
 ```javascript
-GeoLeaf.init({ target: 'map' });
+GeoLeaf.init({ target: "map" });
 // Code reproduisant bug
 ```
+````
 
 **Screenshots** (si pertinent):
 [Ajouter captures]
-```
+
+````
 
 ---
 
@@ -1323,7 +1362,7 @@ Use cases, exemples d'utilisation
 
 **BÃ©nÃ©fices**:
 Pourquoi ajouter cette feature?
-```
+````
 
 ---
 
@@ -1337,7 +1376,7 @@ Pourquoi ajouter cette feature?
 ---
 
 **DerniÃ¨re mise Ã  jour**: 19 janvier 2026  
-**Version**: 3.2.0  
+**Version**: 4.0.0  
 **Auteurs**: Ã‰quipe GeoLeaf
 
 ---

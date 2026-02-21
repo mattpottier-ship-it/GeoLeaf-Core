@@ -1,4 +1,4 @@
-# Limitation : Paramètre `normalized` et système de mapping
+﻿# Limitation : Paramètre `normalized` et système de mapping
 
 Product Version: GeoLeaf Platform V1  
 **Date :** 10 décembre 2025  
@@ -19,15 +19,15 @@ Les paramètres `normalized` et `mappingId` dans `profile.json` sont **déclaré
 
 ```json
 {
-  "id": "world_countries_public",
-  "type": "geojson",
-  "url": "https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson",
-  
-  "normalized": false,           // ⚠️ Devrait déclencher une transformation
-  "mappingId": "world-countries-public",  // ⚠️ Devrait référencer le mapping à appliquer
-  
-  "geometryType": "polygon",
-  // ... autres options
+    "id": "world_countries_public",
+    "type": "geojson",
+    "url": "https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson",
+
+    "normalized": false, // ⚠️ Devrait déclencher une transformation
+    "mappingId": "world-countries-public", // ⚠️ Devrait référencer le mapping à appliquer
+
+    "geometryType": "polygon"
+    // ... autres options
 }
 ```
 
@@ -35,15 +35,15 @@ Les paramètres `normalized` et `mappingId` dans `profile.json` sont **déclaré
 
 ```json
 {
-  "source": "public_world_geo",
-  "mapping": {
-    "id": "properties.name",
-    "title": "properties.name",
-    "location.lat": "geometry.coordinates[0][0][1]",
-    "location.lng": "geometry.coordinates[0][0][0]",
-    "attributes.region": "properties.region",
-    "attributes.subregion": "properties.subregion"
-  }
+    "source": "public_world_geo",
+    "mapping": {
+        "id": "properties.name",
+        "title": "properties.name",
+        "location.lat": "geometry.coordinates[0][0][1]",
+        "location.lng": "geometry.coordinates[0][0][0]",
+        "attributes.region": "properties.region",
+        "attributes.subregion": "properties.subregion"
+    }
 }
 ```
 
@@ -51,58 +51,69 @@ Les paramètres `normalized` et `mappingId` dans `profile.json` sont **déclaré
 
 ## 🐛 Comportement actuel
 
-### 1. Chargement du profil (`src/static/js/config/profile.js`)
+### 1. Chargement du profil (`src/modules/config/profile.js`)
 
 **Ligne 214 :**
+
 ```javascript
-requiresMapping = profile.layers.some(layer => layer.normalized === false);
+requiresMapping = profile.layers.some((layer) => layer.normalized === false);
 ```
 
 ✅ **Ce qui fonctionne :**
+
 - Le système détecte correctement si au moins une couche a `normalized: false`
 - Il charge alors le fichier `mapping.json` depuis le profil
 
 **Lignes 218-222 :**
+
 ```javascript
-const mappingPromise = isPoiMappingEnabled && requiresMapping
-    ? Loader.fetchJson(`${baseUrl}/mapping.json?t=${timestamp}`, fetchOptions).catch((err) => {
-          Log.error("[GeoLeaf.Config.Profile] mapping.json requis (normalized:false) mais non trouvé ou invalide.", err);
-          return null;
-      })
-    : Promise.resolve(null);
+const mappingPromise =
+    isPoiMappingEnabled && requiresMapping
+        ? Loader.fetchJson(`${baseUrl}/mapping.json?t=${timestamp}`, fetchOptions).catch((err) => {
+              Log.error(
+                  "[GeoLeaf.Config.Profile] mapping.json requis (normalized:false) mais non trouvé ou invalide.",
+                  err
+              );
+              return null;
+          })
+        : Promise.resolve(null);
 ```
 
 ✅ Le fichier `mapping.json` est bien chargé en mémoire
 
 ---
 
-### 2. Conversion des données (`src/static/js/geojson/loader.js`)
+### 2. Conversion des données (`src/modules/geojson/loader.js`)
 
 **Ligne 294 :**
+
 ```javascript
 geojsonData = DataConverter ? DataConverter.autoConvert(rawData) : rawData;
 ```
 
 ❌ **Le problème :**
+
 - La fonction `autoConvert` est appelée **sans passer** :
-  - Le paramètre `normalized` de la couche
-  - Le `mappingId` de la couche
-  - L'objet `mapping` chargé depuis `mapping.json`
+    - Le paramètre `normalized` de la couche
+    - Le `mappingId` de la couche
+    - L'objet `mapping` chargé depuis `mapping.json`
 
 ---
 
-### 3. Auto-conversion (`src/static/js/config/data-converter.js`)
+### 3. Auto-conversion (`src/modules/config/data-converter.js`)
 
 **Lignes 481-484 :**
+
 ```javascript
 // Cas 1 : Déjà GeoJSON
 if (data.type === "FeatureCollection" && Array.isArray(data.features)) {
     Log.debug("[DataConverter.autoConvert] Données déjà en GeoJSON, passage direct");
-    return data;  // ⚠️ AUCUNE TRANSFORMATION APPLIQUÉE
+    return data; // ⚠️ AUCUNE TRANSFORMATION APPLIQUÉE
 }
 ```
 
 ❌ **Le problème :**
+
 - Si les données sont déjà au format GeoJSON, elles sont retournées telles quelles
 - **Aucun mapping n'est appliqué**, même si `normalized: false`
 - Le paramètre `mappingId` n'est jamais consulté
@@ -116,32 +127,34 @@ if (data.type === "FeatureCollection" && Array.isArray(data.features)) {
 Les couches publiques comme `world_countries_public` s'affichent car :
 
 1. **GeoJSON standard compatible** :
-   ```json
-   {
-     "type": "FeatureCollection",
-     "features": [
-       {
-         "type": "Feature",
-         "geometry": { ... },
-         "properties": {
-           "name": "France",
-           "region": "Europe"
-         }
-       }
-     ]
-   }
-   ```
+
+    ```json
+    {
+      "type": "FeatureCollection",
+      "features": [
+        {
+          "type": "Feature",
+          "geometry": { ... },
+          "properties": {
+            "name": "France",
+            "region": "Europe"
+          }
+        }
+      ]
+    }
+    ```
 
 2. **Accès direct aux properties** :
-   - `properties.name` est accessible pour les popups
-   - Les `styleRules` peuvent référencer `properties.name`
-   - Les tooltips fonctionnent avec `field: "properties.name"`
+    - `properties.name` est accessible pour les popups
+    - Les `styleRules` peuvent référencer `properties.name`
+    - Les tooltips fonctionnent avec `field: "properties.name"`
 
 ### Limitations observées
 
 Cependant, vous **perdez** :
 
 ❌ **Structure normalisée GeoLeaf** :
+
 ```javascript
 {
   id: "france",
@@ -158,6 +171,7 @@ Cependant, vous **perdez** :
 ```
 
 ❌ **Fonctionnalités impactées** :
+
 - Recherche textuelle avancée (indexation limitée)
 - Centrage automatique sur un élément
 - Intégration cohérente avec les POI normalisés
@@ -169,6 +183,7 @@ Cependant, vous **perdez** :
 ## 📊 Comparaison : Données attendues vs reçues
 
 ### Données source (GeoJSON public)
+
 ```json
 {
   "type": "Feature",
@@ -185,6 +200,7 @@ Cependant, vous **perdez** :
 ```
 
 ### Après mapping (attendu mais non appliqué)
+
 ```javascript
 {
   id: "france",                    // ⬅️ properties.name
@@ -199,6 +215,7 @@ Cependant, vous **perdez** :
 ```
 
 ### Résultat actuel (sans transformation)
+
 ```javascript
 {
   type: "Feature",
@@ -221,28 +238,28 @@ Mettez `normalized: true` et utilisez directement les `properties` :
 
 ```json
 {
-  "id": "world_countries_public",
-  "normalized": true,        // ✅ Reflète la réalité
-  // Ne pas utiliser mappingId
-  
-  "popup": {
-    "detailPopup": [
-      {
-        "field": "properties.name",   // ✅ Accès direct
-        "label": "Pays"
-      }
+    "id": "world_countries_public",
+    "normalized": true, // ✅ Reflète la réalité
+    // Ne pas utiliser mappingId
+
+    "popup": {
+        "detailPopup": [
+            {
+                "field": "properties.name", // ✅ Accès direct
+                "label": "Pays"
+            }
+        ]
+    },
+
+    "styleRules": [
+        {
+            "when": {
+                "field": "properties.name", // ✅ Fonctionne
+                "operator": "eq",
+                "value": "France"
+            }
+        }
     ]
-  },
-  
-  "styleRules": [
-    {
-      "when": {
-        "field": "properties.name",   // ✅ Fonctionne
-        "operator": "eq",
-        "value": "France"
-      }
-    }
-  ]
 }
 ```
 
@@ -273,10 +290,11 @@ Créez un fichier GeoJSON normalisé localement :
 ```
 
 Puis dans le profil :
+
 ```json
 {
-  "url": "../profiles/tourism/datas/countries_normalized.json",
-  "normalized": true
+    "url": "../profiles/tourism/datas/countries_normalized.json",
+    "normalized": true
 }
 ```
 
@@ -289,12 +307,13 @@ Puis dans le profil :
 geojsonData = DataConverter ? DataConverter.autoConvert(rawData) : rawData;
 
 // Ligne 294 - APRÈS
-const mappingConfig = (def.normalized === false && def.mappingId) 
-    ? GeoLeaf.Config.Profile.getMappingById(def.mappingId) 
-    : null;
+const mappingConfig =
+    def.normalized === false && def.mappingId
+        ? GeoLeaf.Config.Profile.getMappingById(def.mappingId)
+        : null;
 
-geojsonData = DataConverter 
-    ? DataConverter.autoConvert(rawData, def.normalized, mappingConfig) 
+geojsonData = DataConverter
+    ? DataConverter.autoConvert(rawData, def.normalized, mappingConfig)
     : rawData;
 ```
 
@@ -313,7 +332,7 @@ autoConvert(data, normalized = true, mappingConfig = null) {
         }
         return data;
     }
-    
+
     // ... reste du code
 }
 
@@ -327,7 +346,7 @@ applyMapping(geojsonData, mappingConfig) {
 
     const mappedFeatures = geojsonData.features.map(feature => {
         const mappedProperties = {};
-        
+
         // Appliquer chaque règle de mapping
         for (const [targetField, sourcePath] of Object.entries(mappingConfig.mapping)) {
             const value = this._getNestedValue(feature, sourcePath);
@@ -390,32 +409,32 @@ Pour vérifier cette limitation, vous pouvez :
 ```javascript
 // Dans la console navigateur
 const profile = GeoLeaf.Config.Profile.getActiveProfile();
-const worldLayer = profile.layers.find(l => l.id === 'world_countries_public');
+const worldLayer = profile.layers.find((l) => l.id === "world_countries_public");
 
-console.log('Normalized:', worldLayer.normalized);
-console.log('MappingId:', worldLayer.mappingId);
+console.log("Normalized:", worldLayer.normalized);
+console.log("MappingId:", worldLayer.mappingId);
 
 // Vérifier le mapping chargé
 const mapping = GeoLeaf.Config.Profile._activeProfileMapping;
-console.log('Mapping loaded:', mapping);
+console.log("Mapping loaded:", mapping);
 
 // Vérifier les données réelles
-const layerData = GeoLeaf.GeoJSON.getLayerData('world_countries_public');
-console.log('Feature properties:', layerData?.[0]?.properties);
-console.log('Has normalized title?', layerData?.[0]?.title); // undefined
+const layerData = GeoLeaf.GeoJSON.getLayerData("world_countries_public");
+console.log("Feature properties:", layerData?.[0]?.properties);
+console.log("Has normalized title?", layerData?.[0]?.title); // undefined
 ```
 
 ---
 
 ## 🔗 Fichiers concernés
 
-| Fichier | Ligne | Statut | Description |
-|---------|-------|--------|-------------|
-| `src/static/js/config/profile.js` | 214 | ✅ Fonctionne | Détection du besoin de mapping |
-| `src/static/js/config/profile.js` | 218-222 | ✅ Fonctionne | Chargement de `mapping.json` |
-| `src/static/js/geojson/loader.js` | 294 | ❌ Incomplet | N'applique pas le mapping |
-| `src/static/js/config/data-converter.js` | 481-484 | ❌ Incomplet | Retourne GeoJSON sans transformation |
-| `src/static/js/config/data-converter.js` | - | ❌ Manquant | Fonction `applyMapping()` inexistante |
+| Fichier                                | Ligne   | Statut        | Description                           |
+| -------------------------------------- | ------- | ------------- | ------------------------------------- |
+| `src/modules/config/profile.js`        | 214     | ✅ Fonctionne | Détection du besoin de mapping        |
+| `src/modules/config/profile.js`        | 218-222 | ✅ Fonctionne | Chargement de `mapping.json`          |
+| `src/modules/geojson/loader.js`        | 294     | ❌ Incomplet  | N'applique pas le mapping             |
+| `src/modules/config/data-converter.js` | 481-484 | ❌ Incomplet  | Retourne GeoJSON sans transformation  |
+| `src/modules/config/data-converter.js` | -       | ❌ Manquant   | Fonction `applyMapping()` inexistante |
 
 ---
 

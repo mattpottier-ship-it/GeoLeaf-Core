@@ -1,5 +1,11 @@
 {
   "debug": false,
+  "_comment": "branding est la source unique pour le branding GeoLeaf. Ne pas dupliquer dans profile.json.",
+  "branding": {
+    "enabled": true,
+    "text": "Propulsé par © GeoLeaf with Leaflet - Données © OpenStreetMap contributors",
+    "position": "bottomleft"
+  },
   "data": {
     "activeProfile": "tourism",
     "profilesBasePath": "./profiles"

@@ -1,6 +1,7 @@
-﻿# GeoLeaf.Table â€“ Documentation du module Table
-Product Version: GeoLeaf Platform V1  **Version**: 3.2.0  
-**Fichier**: `src/static/js/geoleaf.table.js`  
+# GeoLeaf.Table â€“ Documentation du module Table
+
+Product Version: GeoLeaf Platform V1 **Version**: 4.0.0  
+**Fichier**: `src/modules/geoleaf.table.js`  
 **DerniÃ¨re mise Ã  jour**: 19 janvier 2026
 
 ---
@@ -8,6 +9,7 @@ Product Version: GeoLeaf Platform V1  **Version**: 3.2.0
 Le module **GeoLeaf.Table** fournit une vue tabulaire des donnÃ©es cartographiques, complÃ©mentaire Ã  l'affichage sur la carte.
 
 Il permet de :
+
 - **Afficher** les attributs des entitÃ©s GeoJSON dans un tableau
 - **Trier** les donnÃ©es par colonne (ascendant/descendant)
 - **SÃ©lectionner** des entitÃ©s et synchroniser avec la carte
@@ -42,17 +44,17 @@ GeoLeaf.Table.init(options);
 ```
 
 - **ParamÃ¨tres :**
-  - `options` : objet de configuration **requis**
-    - `options.map` : `L.Map` - instance de la carte Leaflet **(requis)**
-    - `options.config` : `Object` - configuration personnalisÃ©e (optionnel)
-      - `enabled` : `boolean` - activer le module (dÃ©faut : `true`)
-      - `defaultVisible` : `boolean` - visible au dÃ©marrage (dÃ©faut : `false`)
-      - `pageSize` : `number` - lignes par page (dÃ©faut : `50`)
-      - `maxRowsPerLayer` : `number` - limite de lignes (dÃ©faut : `1000`)
-      - `enableExportButton` : `boolean` - bouton export (dÃ©faut : `true`)
-      - `virtualScrolling` : `boolean` - scroll virtuel (dÃ©faut : `true`)
-      - `defaultHeight` : `string` - hauteur par dÃ©faut (dÃ©faut : `'40%'`)
-      - `resizable` : `boolean` - redimensionnable (dÃ©faut : `false`)
+    - `options` : objet de configuration **requis**
+        - `options.map` : `L.Map` - instance de la carte Leaflet **(requis)**
+        - `options.config` : `Object` - configuration personnalisÃ©e (optionnel)
+            - `enabled` : `boolean` - activer le module (dÃ©faut : `true`)
+            - `defaultVisible` : `boolean` - visible au dÃ©marrage (dÃ©faut : `false`)
+            - `pageSize` : `number` - lignes par page (dÃ©faut : `50`)
+            - `maxRowsPerLayer` : `number` - limite de lignes (dÃ©faut : `1000`)
+            - `enableExportButton` : `boolean` - bouton export (dÃ©faut : `true`)
+            - `virtualScrolling` : `boolean` - scroll virtuel (dÃ©faut : `true`)
+            - `defaultHeight` : `string` - hauteur par dÃ©faut (dÃ©faut : `'40%'`)
+            - `resizable` : `boolean` - redimensionnable (dÃ©faut : `false`)
 
 - **Retour :** `void`
 
@@ -62,7 +64,7 @@ GeoLeaf.Table.init(options);
 const map = GeoLeaf.Core.getMap();
 
 GeoLeaf.Table.init({
-  map: map
+    map: map,
 });
 ```
 
@@ -70,14 +72,14 @@ GeoLeaf.Table.init({
 
 ```js
 GeoLeaf.Table.init({
-  map: map,
-  config: {
-    defaultVisible: true,
-    pageSize: 100,
-    maxRowsPerLayer: 2000,
-    defaultHeight: '50%',
-    resizable: true
-  }
+    map: map,
+    config: {
+        defaultVisible: true,
+        pageSize: 100,
+        maxRowsPerLayer: 2000,
+        defaultHeight: "50%",
+        resizable: true,
+    },
 });
 ```
 
@@ -97,8 +99,8 @@ GeoLeaf.Table.show();
 
 ```js
 // Bouton pour afficher le tableau
-document.getElementById('show-table-btn').addEventListener('click', () => {
-  GeoLeaf.Table.show();
+document.getElementById("show-table-btn").addEventListener("click", () => {
+    GeoLeaf.Table.show();
 });
 ```
 
@@ -118,8 +120,8 @@ GeoLeaf.Table.hide();
 
 ```js
 // Bouton pour masquer le tableau
-document.getElementById('hide-table-btn').addEventListener('click', () => {
-  GeoLeaf.Table.hide();
+document.getElementById("hide-table-btn").addEventListener("click", () => {
+    GeoLeaf.Table.hide();
 });
 ```
 
@@ -137,8 +139,8 @@ GeoLeaf.Table.toggle();
 
 ```js
 // Bouton toggle
-document.getElementById('toggle-table-btn').addEventListener('click', () => {
-  GeoLeaf.Table.toggle();
+document.getElementById("toggle-table-btn").addEventListener("click", () => {
+    GeoLeaf.Table.toggle();
 });
 ```
 
@@ -153,7 +155,7 @@ GeoLeaf.Table.setLayer(layerId);
 ```
 
 - **ParamÃ¨tres :**
-  - `layerId` : `string` - ID de la couche GeoJSON (ou `null` pour vider)
+    - `layerId` : `string` - ID de la couche GeoJSON (ou `null` pour vider)
 
 - **Ã‰vÃ©nements Ã©mis :** `geoleaf:table:layerChanged` avec `{layerId}`
 
@@ -163,9 +165,9 @@ GeoLeaf.Table.setLayer(layerId);
 
 ```js
 // SÃ©lecteur de couche
-document.getElementById('layer-select').addEventListener('change', (e) => {
-  const layerId = e.target.value;
-  GeoLeaf.Table.setLayer(layerId);
+document.getElementById("layer-select").addEventListener("change", (e) => {
+    const layerId = e.target.value;
+    GeoLeaf.Table.setLayer(layerId);
 });
 ```
 
@@ -175,26 +177,26 @@ Dans `geoleaf.config.json` :
 
 ```json
 {
-  "geojson": {
-    "layers": [
-      {
-        "id": "restaurants",
-        "url": "data/restaurants.geojson",
-        "table": {
-          "enabled": true,
-          "columns": [
-            {"field": "properties.name", "label": "Nom", "width": "30%"},
-            {"field": "properties.category", "label": "CatÃ©gorie", "width": "20%"},
-            {"field": "properties.rating", "label": "Note", "width": "15%"}
-          ],
-          "defaultSort": {
-            "field": "properties.name",
-            "direction": "asc"
-          }
-        }
-      }
-    ]
-  }
+    "geojson": {
+        "layers": [
+            {
+                "id": "restaurants",
+                "url": "data/restaurants.geojson",
+                "table": {
+                    "enabled": true,
+                    "columns": [
+                        { "field": "properties.name", "label": "Nom", "width": "30%" },
+                        { "field": "properties.category", "label": "CatÃ©gorie", "width": "20%" },
+                        { "field": "properties.rating", "label": "Note", "width": "15%" }
+                    ],
+                    "defaultSort": {
+                        "field": "properties.name",
+                        "direction": "asc"
+                    }
+                }
+            }
+        ]
+    }
 }
 ```
 
@@ -214,8 +216,8 @@ Utilise la couche actuellement sÃ©lectionnÃ©e et rÃ©applique les filtres, 
 
 ```js
 // RafraÃ®chir aprÃ¨s un changement de filtre
-map.on('geoleaf:filters:changed', () => {
-  GeoLeaf.Table.refresh();
+map.on("geoleaf:filters:changed", () => {
+    GeoLeaf.Table.refresh();
 });
 ```
 
@@ -230,12 +232,12 @@ GeoLeaf.Table.sortByField(field);
 ```
 
 - **ParamÃ¨tres :**
-  - `field` : `string` - chemin du champ (notation point : `properties.name`)
+    - `field` : `string` - chemin du champ (notation point : `properties.name`)
 
 - **Comportement :** Cycle de tri sur la mÃªme colonne :
-  1. Premier clic : tri ascendant
-  2. DeuxiÃ¨me clic : tri descendant
-  3. TroisiÃ¨me clic : pas de tri (ordre original)
+    1. Premier clic : tri ascendant
+    2. DeuxiÃ¨me clic : tri descendant
+    3. TroisiÃ¨me clic : pas de tri (ordre original)
 
 - **Ã‰vÃ©nements Ã©mis :** `geoleaf:table:sortChanged` avec `{field, direction}`
 
@@ -243,11 +245,11 @@ GeoLeaf.Table.sortByField(field);
 
 ```js
 // Click sur en-tÃªte de colonne
-document.querySelectorAll('.table-header').forEach(header => {
-  header.addEventListener('click', () => {
-    const field = header.dataset.field;
-    GeoLeaf.Table.sortByField(field);
-  });
+document.querySelectorAll(".table-header").forEach((header) => {
+    header.addEventListener("click", () => {
+        const field = header.dataset.field;
+        GeoLeaf.Table.sortByField(field);
+    });
 });
 ```
 
@@ -262,8 +264,8 @@ GeoLeaf.Table.setSelection(ids, add);
 ```
 
 - **ParamÃ¨tres :**
-  - `ids` : `Array<string>` - IDs des entitÃ©s Ã  sÃ©lectionner
-  - `add` : `boolean` - ajouter Ã  la sÃ©lection existante (`true`) ou remplacer (`false`, dÃ©faut)
+    - `ids` : `Array<string>` - IDs des entitÃ©s Ã  sÃ©lectionner
+    - `add` : `boolean` - ajouter Ã  la sÃ©lection existante (`true`) ou remplacer (`false`, dÃ©faut)
 
 - **Ã‰vÃ©nements Ã©mis :** `geoleaf:table:selectionChanged` avec `{layerId, selectedIds}`
 
@@ -271,10 +273,10 @@ GeoLeaf.Table.setSelection(ids, add);
 
 ```js
 // SÃ©lectionner des entitÃ©s spÃ©cifiques
-GeoLeaf.Table.setSelection(['poi-1', 'poi-5', 'poi-12']);
+GeoLeaf.Table.setSelection(["poi-1", "poi-5", "poi-12"]);
 
 // Ajouter Ã  la sÃ©lection existante
-GeoLeaf.Table.setSelection(['poi-20'], true);
+GeoLeaf.Table.setSelection(["poi-20"], true);
 ```
 
 ---
@@ -312,8 +314,8 @@ GeoLeaf.Table.clearSelection();
 
 ```js
 // Bouton "Tout dÃ©sÃ©lectionner"
-document.getElementById('clear-selection-btn').addEventListener('click', () => {
-  GeoLeaf.Table.clearSelection();
+document.getElementById("clear-selection-btn").addEventListener("click", () => {
+    GeoLeaf.Table.clearSelection();
 });
 ```
 
@@ -334,15 +336,15 @@ GeoLeaf.Table.zoomToSelection();
 
 ```js
 // Bouton "Zoom sur sÃ©lection"
-document.getElementById('zoom-selection-btn').addEventListener('click', () => {
-  const selected = GeoLeaf.Table.getSelectedIds();
-  
-  if (selected.length === 0) {
-    alert('Aucune entitÃ© sÃ©lectionnÃ©e');
-    return;
-  }
-  
-  GeoLeaf.Table.zoomToSelection();
+document.getElementById("zoom-selection-btn").addEventListener("click", () => {
+    const selected = GeoLeaf.Table.getSelectedIds();
+
+    if (selected.length === 0) {
+        alert("Aucune entitÃ© sÃ©lectionnÃ©e");
+        return;
+    }
+
+    GeoLeaf.Table.zoomToSelection();
 });
 ```
 
@@ -357,7 +359,7 @@ GeoLeaf.Table.highlightSelection(active);
 ```
 
 - **ParamÃ¨tres :**
-  - `active` : `boolean` - activer (`true`) ou dÃ©sactiver (`false`)
+    - `active` : `boolean` - activer (`true`) ou dÃ©sactiver (`false`)
 
 - **Ã‰vÃ©nements Ã©mis :** `geoleaf:table:highlightSelection` avec `{layerId, selectedIds, active}`
 
@@ -367,9 +369,9 @@ GeoLeaf.Table.highlightSelection(active);
 // Toggle surbrillance
 let highlighted = false;
 
-document.getElementById('highlight-btn').addEventListener('click', () => {
-  highlighted = !highlighted;
-  GeoLeaf.Table.highlightSelection(highlighted);
+document.getElementById("highlight-btn").addEventListener("click", () => {
+    highlighted = !highlighted;
+    GeoLeaf.Table.highlightSelection(highlighted);
 });
 ```
 
@@ -391,30 +393,30 @@ GeoLeaf.Table.exportSelection();
 
 ```js
 // Bouton export
-document.getElementById('export-btn').addEventListener('click', () => {
-  GeoLeaf.Table.exportSelection();
+document.getElementById("export-btn").addEventListener("click", () => {
+    GeoLeaf.Table.exportSelection();
 });
 
 // Ã‰couter l'Ã©vÃ©nement pour implÃ©menter l'export
-map.on('geoleaf:table:exportSelection', (e) => {
-  const { rows } = e;
-  
-  // Export CSV
-  const csv = convertToCSV(rows);
-  downloadFile(csv, 'export.csv', 'text/csv');
+map.on("geoleaf:table:exportSelection", (e) => {
+    const { rows } = e;
+
+    // Export CSV
+    const csv = convertToCSV(rows);
+    downloadFile(csv, "export.csv", "text/csv");
 });
 
 function convertToCSV(rows) {
-  // ImplÃ©mentation export CSV
-  const headers = Object.keys(rows[0].properties);
-  const csvLines = [headers.join(',')];
-  
-  rows.forEach(row => {
-    const values = headers.map(h => row.properties[h] || '');
-    csvLines.push(values.join(','));
-  });
-  
-  return csvLines.join('\n');
+    // ImplÃ©mentation export CSV
+    const headers = Object.keys(rows[0].properties);
+    const csvLines = [headers.join(",")];
+
+    rows.forEach((row) => {
+        const values = headers.map((h) => row.properties[h] || "");
+        csvLines.push(values.join(","));
+    });
+
+    return csvLines.join("\n");
 }
 ```
 
@@ -426,20 +428,20 @@ function convertToCSV(rows) {
 
 ```json
 {
-  "ui": {
-    "table": {
-      "enabled": true,
-      "defaultVisible": false,
-      "pageSize": 50,
-      "maxRowsPerLayer": 1000,
-      "enableExportButton": true,
-      "virtualScrolling": true,
-      "defaultHeight": "40%",
-      "minHeight": "20%",
-      "maxHeight": "60%",
-      "resizable": false
+    "ui": {
+        "table": {
+            "enabled": true,
+            "defaultVisible": false,
+            "pageSize": 50,
+            "maxRowsPerLayer": 1000,
+            "enableExportButton": true,
+            "virtualScrolling": true,
+            "defaultHeight": "40%",
+            "minHeight": "20%",
+            "maxHeight": "60%",
+            "resizable": false
+        }
     }
-  }
 }
 ```
 
@@ -447,49 +449,49 @@ function convertToCSV(rows) {
 
 ```json
 {
-  "geojson": {
-    "layers": [
-      {
-        "id": "restaurants",
-        "url": "data/restaurants.geojson",
-        "table": {
-          "enabled": true,
-          "columns": [
+    "geojson": {
+        "layers": [
             {
-              "field": "properties.name",
-              "label": "Nom",
-              "width": "30%",
-              "sortable": true
-            },
-            {
-              "field": "properties.category",
-              "label": "CatÃ©gorie",
-              "width": "20%",
-              "sortable": true
-            },
-            {
-              "field": "properties.address",
-              "label": "Adresse",
-              "width": "35%",
-              "sortable": false
-            },
-            {
-              "field": "properties.rating",
-              "label": "Note",
-              "width": "15%",
-              "sortable": true,
-              "formatter": "rating"
+                "id": "restaurants",
+                "url": "data/restaurants.geojson",
+                "table": {
+                    "enabled": true,
+                    "columns": [
+                        {
+                            "field": "properties.name",
+                            "label": "Nom",
+                            "width": "30%",
+                            "sortable": true
+                        },
+                        {
+                            "field": "properties.category",
+                            "label": "CatÃ©gorie",
+                            "width": "20%",
+                            "sortable": true
+                        },
+                        {
+                            "field": "properties.address",
+                            "label": "Adresse",
+                            "width": "35%",
+                            "sortable": false
+                        },
+                        {
+                            "field": "properties.rating",
+                            "label": "Note",
+                            "width": "15%",
+                            "sortable": true,
+                            "formatter": "rating"
+                        }
+                    ],
+                    "defaultSort": {
+                        "field": "properties.rating",
+                        "direction": "desc"
+                    },
+                    "searchFields": ["properties.name", "properties.category"]
+                }
             }
-          ],
-          "defaultSort": {
-            "field": "properties.rating",
-            "direction": "desc"
-          },
-          "searchFields": ["properties.name", "properties.category"]
-        }
-      }
-    ]
-  }
+        ]
+    }
 }
 ```
 
@@ -499,16 +501,16 @@ function convertToCSV(rows) {
 
 Le module Table Ã©met les Ã©vÃ©nements suivants :
 
-| Ã‰vÃ©nement | DÃ©tail | Description |
-|-----------|--------|-------------|
-| `geoleaf:table:opened` | - | Tableau affichÃ© |
-| `geoleaf:table:closed` | - | Tableau masquÃ© |
-| `geoleaf:table:layerChanged` | `{layerId}` | Couche affichÃ©e modifiÃ©e |
-| `geoleaf:table:sortChanged` | `{field, direction}` | Tri modifiÃ© |
-| `geoleaf:table:selectionChanged` | `{layerId, selectedIds}` | SÃ©lection modifiÃ©e |
-| `geoleaf:table:zoomToSelection` | `{layerId, selectedIds}` | Zoom sur sÃ©lection dÃ©clenchÃ© |
+| Ã‰vÃ©nement                       | DÃ©tail                         | Description                           |
+| ---------------------------------- | -------------------------------- | ------------------------------------- |
+| `geoleaf:table:opened`             | -                                | Tableau affichÃ©                     |
+| `geoleaf:table:closed`             | -                                | Tableau masquÃ©                      |
+| `geoleaf:table:layerChanged`       | `{layerId}`                      | Couche affichÃ©e modifiÃ©e          |
+| `geoleaf:table:sortChanged`        | `{field, direction}`             | Tri modifiÃ©                         |
+| `geoleaf:table:selectionChanged`   | `{layerId, selectedIds}`         | SÃ©lection modifiÃ©e                |
+| `geoleaf:table:zoomToSelection`    | `{layerId, selectedIds}`         | Zoom sur sÃ©lection dÃ©clenchÃ©    |
 | `geoleaf:table:highlightSelection` | `{layerId, selectedIds, active}` | Surbrillance activÃ©e/dÃ©sactivÃ©e |
-| `geoleaf:table:exportSelection` | `{layerId, selectedIds, rows}` | Export demandÃ© |
+| `geoleaf:table:exportSelection`    | `{layerId, selectedIds, rows}`   | Export demandÃ©                      |
 
 ### Exemple d'Ã©coute
 
@@ -516,17 +518,17 @@ Le module Table Ã©met les Ã©vÃ©nements suivants :
 const map = GeoLeaf.Core.getMap();
 
 // Ã‰couter les changements de sÃ©lection
-map.on('geoleaf:table:selectionChanged', (e) => {
-  console.log(`${e.selectedIds.length} entitÃ©s sÃ©lectionnÃ©es`);
-  
-  // Synchroniser avec la carte (exemple)
-  highlightFeaturesOnMap(e.selectedIds);
+map.on("geoleaf:table:selectionChanged", (e) => {
+    console.log(`${e.selectedIds.length} entitÃ©s sÃ©lectionnÃ©es`);
+
+    // Synchroniser avec la carte (exemple)
+    highlightFeaturesOnMap(e.selectedIds);
 });
 
 // Ã‰couter les changements de couche
-map.on('geoleaf:table:layerChanged', (e) => {
-  console.log(`Couche affichÃ©e: ${e.layerId}`);
-  updateUIControls(e.layerId);
+map.on("geoleaf:table:layerChanged", (e) => {
+    console.log(`Couche affichÃ©e: ${e.layerId}`);
+    updateUIControls(e.layerId);
 });
 ```
 
@@ -563,8 +565,8 @@ Le tableau se synchronise automatiquement avec les filtres :
 ```js
 // Appliquer un filtre
 GeoLeaf.Filters.filterPOI({
-  category: 'restaurant',
-  rating: { min: 4 }
+    category: "restaurant",
+    rating: { min: 4 },
 });
 
 // Le tableau se met Ã  jour automatiquement
@@ -575,27 +577,27 @@ GeoLeaf.Filters.filterPOI({
 
 ```js
 // SÃ©lection dans le tableau â†’ surbrillance sur carte
-map.on('geoleaf:table:selectionChanged', (e) => {
-  const { selectedIds } = e;
-  
-  // Appliquer style de surbrillance
-  const layer = GeoLeaf.GeoJSON.getLayerById('restaurants');
-  layer.eachLayer((feature) => {
-    if (selectedIds.includes(feature.feature.id)) {
-      feature.setStyle({ fillColor: 'yellow', fillOpacity: 0.8 });
-    } else {
-      feature.setStyle({ fillColor: 'blue', fillOpacity: 0.5 });
-    }
-  });
+map.on("geoleaf:table:selectionChanged", (e) => {
+    const { selectedIds } = e;
+
+    // Appliquer style de surbrillance
+    const layer = GeoLeaf.GeoJSON.getLayerById("restaurants");
+    layer.eachLayer((feature) => {
+        if (selectedIds.includes(feature.feature.id)) {
+            feature.setStyle({ fillColor: "yellow", fillOpacity: 0.8 });
+        } else {
+            feature.setStyle({ fillColor: "blue", fillOpacity: 0.5 });
+        }
+    });
 });
 
 // Clic sur carte â†’ sÃ©lection dans table
-map.on('click', (e) => {
-  const clickedFeature = e.layer;
-  if (clickedFeature && clickedFeature.feature) {
-    const featureId = clickedFeature.feature.id;
-    GeoLeaf.Table.setSelection([featureId], true); // Ajouter Ã  la sÃ©lection
-  }
+map.on("click", (e) => {
+    const clickedFeature = e.layer;
+    if (clickedFeature && clickedFeature.feature) {
+        const featureId = clickedFeature.feature.id;
+        GeoLeaf.Table.setSelection([featureId], true); // Ajouter Ã  la sÃ©lection
+    }
 });
 ```
 
@@ -608,22 +610,22 @@ map.on('click', (e) => {
 ```js
 // Initialiser
 GeoLeaf.Table.init({ map: map });
-GeoLeaf.Table.setLayer('restaurants');
+GeoLeaf.Table.setLayer("restaurants");
 GeoLeaf.Table.show();
 
 // Ajouter recherche personnalisÃ©e
-document.getElementById('search-input').addEventListener('input', (e) => {
-  const searchTerm = e.target.value.toLowerCase();
-  
-  // Filtrer les donnÃ©es
-  const filteredData = allFeatures.filter(f => {
-    const name = f.properties.name.toLowerCase();
-    const category = f.properties.category.toLowerCase();
-    return name.includes(searchTerm) || category.includes(searchTerm);
-  });
-  
-  // Mettre Ã  jour l'affichage (nÃ©cessite accÃ¨s au renderer)
-  GeoLeaf.Table.refresh();
+document.getElementById("search-input").addEventListener("input", (e) => {
+    const searchTerm = e.target.value.toLowerCase();
+
+    // Filtrer les donnÃ©es
+    const filteredData = allFeatures.filter((f) => {
+        const name = f.properties.name.toLowerCase();
+        const category = f.properties.category.toLowerCase();
+        return name.includes(searchTerm) || category.includes(searchTerm);
+    });
+
+    // Mettre Ã  jour l'affichage (nÃ©cessite accÃ¨s au renderer)
+    GeoLeaf.Table.refresh();
 });
 ```
 
@@ -631,43 +633,43 @@ document.getElementById('search-input').addEventListener('input', (e) => {
 
 ```js
 // Ã‰couter l'Ã©vÃ©nement d'export
-map.on('geoleaf:table:exportSelection', (e) => {
-  const { rows, layerId } = e;
-  
-  // Proposer format
-  const format = prompt('Format d\'export (csv/json/geojson):', 'csv');
-  
-  switch (format) {
-    case 'csv':
-      exportCSV(rows, `${layerId}.csv`);
-      break;
-    case 'json':
-      exportJSON(rows, `${layerId}.json`);
-      break;
-    case 'geojson':
-      exportGeoJSON(rows, `${layerId}.geojson`);
-      break;
-  }
+map.on("geoleaf:table:exportSelection", (e) => {
+    const { rows, layerId } = e;
+
+    // Proposer format
+    const format = prompt("Format d'export (csv/json/geojson):", "csv");
+
+    switch (format) {
+        case "csv":
+            exportCSV(rows, `${layerId}.csv`);
+            break;
+        case "json":
+            exportJSON(rows, `${layerId}.json`);
+            break;
+        case "geojson":
+            exportGeoJSON(rows, `${layerId}.geojson`);
+            break;
+    }
 });
 
 function exportCSV(rows, filename) {
-  const headers = Object.keys(rows[0].properties);
-  const csvContent = [
-    headers.join(','),
-    ...rows.map(row => headers.map(h => row.properties[h] || '').join(','))
-  ].join('\n');
-  
-  downloadFile(csvContent, filename, 'text/csv');
+    const headers = Object.keys(rows[0].properties);
+    const csvContent = [
+        headers.join(","),
+        ...rows.map((row) => headers.map((h) => row.properties[h] || "").join(",")),
+    ].join("\n");
+
+    downloadFile(csvContent, filename, "text/csv");
 }
 
 function downloadFile(content, filename, mimeType) {
-  const blob = new Blob([content], { type: mimeType });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
 }
 ```
 
@@ -676,33 +678,33 @@ function downloadFile(content, filename, mimeType) {
 ```js
 // Configuration avec pagination
 GeoLeaf.Table.init({
-  map: map,
-  config: {
-    pageSize: 25,
-    virtualScrolling: false
-  }
+    map: map,
+    config: {
+        pageSize: 25,
+        virtualScrolling: false,
+    },
 });
 
 // Ajouter contrÃ´les de pagination
 let currentPage = 1;
 const pageSize = 25;
 
-document.getElementById('prev-page').addEventListener('click', () => {
-  if (currentPage > 1) {
-    currentPage--;
-    renderPage(currentPage);
-  }
+document.getElementById("prev-page").addEventListener("click", () => {
+    if (currentPage > 1) {
+        currentPage--;
+        renderPage(currentPage);
+    }
 });
 
-document.getElementById('next-page').addEventListener('click', () => {
-  currentPage++;
-  renderPage(currentPage);
+document.getElementById("next-page").addEventListener("click", () => {
+    currentPage++;
+    renderPage(currentPage);
 });
 
 function renderPage(page) {
-  const start = (page - 1) * pageSize;
-  const end = start + pageSize;
-  // Logique de rendu de la page
+    const start = (page - 1) * pageSize;
+    const end = start + pageSize;
+    // Logique de rendu de la page
 }
 ```
 
@@ -803,23 +805,23 @@ GeoLeaf.Table (API publique)
 ```js
 // Pour trÃ¨s grandes tables (10k+ lignes)
 GeoLeaf.Table.init({
-  map: map,
-  config: {
-    maxRowsPerLayer: 5000,
-    virtualScrolling: true,
-    pageSize: 100
-  }
+    map: map,
+    config: {
+        maxRowsPerLayer: 5000,
+        virtualScrolling: true,
+        pageSize: 100,
+    },
 });
 
 // Debounce recherche
-const searchInput = document.getElementById('search');
+const searchInput = document.getElementById("search");
 let searchTimeout;
 
-searchInput.addEventListener('input', (e) => {
-  clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(() => {
-    applySearch(e.target.value);
-  }, 300);
+searchInput.addEventListener("input", (e) => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        applySearch(e.target.value);
+    }, 300);
 });
 ```
 
@@ -838,6 +840,7 @@ searchInput.addEventListener('input', (e) => {
 **Cause** : `field` ne correspond pas Ã  la structure GeoJSON
 
 **Solution** : VÃ©rifier les chemins de propriÃ©tÃ©s
+
 ```js
 // Structure GeoJSON
 {
@@ -864,11 +867,10 @@ searchInput.addEventListener('input', (e) => {
 **Cause** : Colonne non marquÃ©e comme `sortable`
 
 **Solution** :
+
 ```json
 {
-  "columns": [
-    {"field": "properties.name", "label": "Nom", "sortable": true}
-  ]
+    "columns": [{ "field": "properties.name", "label": "Nom", "sortable": true }]
 }
 ```
 

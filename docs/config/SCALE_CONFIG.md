@@ -1,4 +1,4 @@
-# Configuration Scale Control (scaleConfig)
+﻿# Configuration Scale Control (scaleConfig)
 
 Product Version: GeoLeaf Platform V1  
 **Date de création**: Décembre 2025  
@@ -12,7 +12,7 @@ Le module `ScaleControl` affiche l'échelle de la carte sous différentes formes
 
 ## Localisation dans le code
 
-- **Module**: `src/static/js/map/scale-control.js`
+- **Module**: `src/modules/map/scale-control.js`
 - **Initialisation**: `demo/demo.js` (appel de `GeoLeaf.initScaleControl(map)`)
 - **Chargement**: `src/bundle-entry.js` (import dans l'ordre Rollup)
 
@@ -20,13 +20,13 @@ Le module `ScaleControl` affiche l'échelle de la carte sous différentes formes
 
 ```json
 {
-  "scaleConfig": {
-    "scaleGraphic": true,
-    "scaleNumeric": true,
-    "scaleNumericEditable": false,
-    "scaleNivel": true,
-    "position": "bottomleft"
-  }
+    "scaleConfig": {
+        "scaleGraphic": true,
+        "scaleNumeric": true,
+        "scaleNumericEditable": false,
+        "scaleNivel": true,
+        "position": "bottomleft"
+    }
 }
 ```
 
@@ -39,16 +39,18 @@ Active/désactive l'échelle graphique Leaflet standard (barre horizontale avec 
 **Valeur par défaut:** `true`
 
 **Comportement:**
+
 - `true` : Affiche l'échelle graphique Leaflet native (L.control.scale)
 - `false` : N'affiche pas l'échelle graphique
 
 **Exemple:**
+
 ```json
 {
-  "scaleConfig": {
-    "scaleGraphic": true,
-    "position": "bottomleft"
-  }
+    "scaleConfig": {
+        "scaleGraphic": true,
+        "position": "bottomleft"
+    }
 }
 ```
 
@@ -59,18 +61,20 @@ Active/désactive l'affichage de l'échelle numérique au format "1:250 000".
 **Valeur par défaut:** `false`
 
 **Comportement:**
+
 - `true` : Affiche l'échelle numérique dans un bloc personnalisé
 - `false` : N'affiche pas l'échelle numérique
 
 **Format:** L'échelle est calculée automatiquement en fonction du niveau de zoom et de la latitude du centre de la carte.
 
 **Exemple:**
+
 ```json
 {
-  "scaleConfig": {
-    "scaleNumeric": true,
-    "position": "bottomleft"
-  }
+    "scaleConfig": {
+        "scaleNumeric": true,
+        "position": "bottomleft"
+    }
 }
 ```
 
@@ -85,27 +89,31 @@ Rend l'échelle numérique éditable via un champ input. L'utilisateur peut sais
 **Prérequis:** `scaleNumeric` doit être `true`
 
 **Comportement:**
+
 - `true` : L'échelle devient un champ input éditable
 - `false` : L'échelle est affichée en lecture seule
 
 **Utilisation:**
+
 1. L'utilisateur clique sur le champ
 2. Saisit une échelle au format "1:xxx xxx" (ex: "1:100 000")
 3. Valide avec Entrée ou en cliquant ailleurs
 4. La carte effectue un zoom pour atteindre cette échelle
 
 **Exemple:**
+
 ```json
 {
-  "scaleConfig": {
-    "scaleNumeric": true,
-    "scaleNumericEditable": true,
-    "position": "bottomleft"
-  }
+    "scaleConfig": {
+        "scaleNumeric": true,
+        "scaleNumericEditable": true,
+        "position": "bottomleft"
+    }
 }
 ```
 
 **Formats acceptés:**
+
 - `1:250000`
 - `1:250 000`
 - `1: 250000`
@@ -117,16 +125,18 @@ Active/désactive l'affichage du niveau de zoom Leaflet (ex: "Zoom: 12").
 **Valeur par défaut:** `false`
 
 **Comportement:**
+
 - `true` : Affiche le niveau de zoom actuel
 - `false` : N'affiche pas le niveau de zoom
 
 **Exemple:**
+
 ```json
 {
-  "scaleConfig": {
-    "scaleNivel": true,
-    "position": "bottomleft"
-  }
+    "scaleConfig": {
+        "scaleNivel": true,
+        "position": "bottomleft"
+    }
 }
 ```
 
@@ -139,69 +149,76 @@ Définit la position du contrôle d'échelle sur la carte.
 **Valeur par défaut:** `"bottomleft"`
 
 **Valeurs possibles:**
+
 - `"topleft"` : Coin supérieur gauche
 - `"topright"` : Coin supérieur droit
 - `"bottomleft"` : Coin inférieur gauche (recommandé, même position que branding/coordinates)
 - `"bottomright"` : Coin inférieur droit
 
 **Exemple:**
+
 ```json
 {
-  "scaleConfig": {
-    "scaleGraphic": true,
-    "scaleNumeric": true,
-    "scaleNivel": true,
-    "position": "bottomright"
-  }
+    "scaleConfig": {
+        "scaleGraphic": true,
+        "scaleNumeric": true,
+        "scaleNivel": true,
+        "position": "bottomright"
+    }
 }
 ```
 
 ## Exemples d'utilisation
 
 ### Configuration minimale (échelle graphique uniquement)
+
 ```json
 {
-  "scaleConfig": {
-    "scaleGraphic": true
-  }
+    "scaleConfig": {
+        "scaleGraphic": true
+    }
 }
 ```
 
 ### Configuration complète non-éditable
+
 ```json
 {
-  "scaleConfig": {
-    "scaleGraphic": true,
-    "scaleNumeric": true,
-    "scaleNumericEditable": false,
-    "scaleNivel": true,
-    "position": "bottomleft"
-  }
+    "scaleConfig": {
+        "scaleGraphic": true,
+        "scaleNumeric": true,
+        "scaleNumericEditable": false,
+        "scaleNivel": true,
+        "position": "bottomleft"
+    }
 }
 ```
 
 ### Configuration avec échelle éditable
+
 ```json
 {
-  "scaleConfig": {
-    "scaleGraphic": false,
-    "scaleNumeric": true,
-    "scaleNumericEditable": true,
-    "scaleNivel": true,
-    "position": "bottomright"
-  }
+    "scaleConfig": {
+        "scaleGraphic": false,
+        "scaleNumeric": true,
+        "scaleNumericEditable": true,
+        "scaleNivel": true,
+        "position": "bottomright"
+    }
 }
 ```
 
 ### Désactiver complètement
+
 Supprimer `scaleConfig` du profile.json ou définir tous les paramètres à `false`:
+
 ```json
 {
-  "scaleConfig": {
-    "scaleGraphic": false,
-    "scaleNumeric": false,
-    "scaleNivel": false
-  }
+    "scaleConfig": {
+        "scaleGraphic": false,
+        "scaleNumeric": false,
+        "scaleNivel": false
+    }
 }
 ```
 
@@ -210,12 +227,14 @@ Supprimer `scaleConfig` du profile.json ou définir tous les paramètres à `fal
 ### Calcul de l'échelle
 
 L'échelle est calculée avec la formule :
+
 ```javascript
-metersPerPixel = 156543.03392 * cos(lat * π / 180) / 2^zoom
-scale = metersPerPixel * 96 / 0.0254
+metersPerPixel = ((156543.03392 * cos((lat * π) / 180)) / 2) ^ zoom;
+scale = (metersPerPixel * 96) / 0.0254;
 ```
 
 **Facteurs:**
+
 - `156543.03392` : Taille du monde en mètres au niveau de zoom 0
 - Latitude du centre de la carte (cos pour projection Web Mercator)
 - Résolution d'écran : 96 DPI
@@ -224,9 +243,10 @@ scale = metersPerPixel * 96 / 0.0254
 ### Calcul du zoom depuis l'échelle
 
 Pour calculer le niveau de zoom nécessaire pour atteindre une échelle donnée :
+
 ```javascript
-metersPerPixel = targetScale * 0.0254 / 96
-zoom = log2(156543.03392 * cos(lat * π / 180) / metersPerPixel)
+metersPerPixel = (targetScale * 0.0254) / 96;
+zoom = log2((156543.03392 * cos((lat * π) / 180)) / metersPerPixel);
 ```
 
 Le zoom est arrondi à l'entier le plus proche et limité entre 0 et 22.
@@ -237,13 +257,13 @@ Le module utilise les variables CSS GeoLeaf :
 
 ```css
 .gl-scale-control {
-  background: var(--gl-color-bg-surface);
-  color: var(--gl-color-text-main);
-  box-shadow: var(--gl-shadow-small);
+    background: var(--gl-color-bg-surface);
+    color: var(--gl-color-text-main);
+    box-shadow: var(--gl-shadow-small);
 }
 
 .gl-scale-zoom {
-  color: var(--gl-color-text-muted);
+    color: var(--gl-color-text-muted);
 }
 ```
 
@@ -263,11 +283,11 @@ GeoLeaf.initScaleControl(map);
 ```javascript
 // Initialisation avec config personnalisée
 GeoLeaf.ScaleControl.init(map, {
-  scaleGraphic: true,
-  scaleNumeric: true,
-  scaleNumericEditable: false,
-  scaleNivel: true,
-  position: 'bottomleft'
+    scaleGraphic: true,
+    scaleNumeric: true,
+    scaleNumericEditable: false,
+    scaleNivel: true,
+    position: "bottomleft",
 });
 ```
 
@@ -281,6 +301,7 @@ GeoLeaf.ScaleControl.destroy();
 ## Événements
 
 Le contrôle écoute automatiquement les événements Leaflet suivants :
+
 - `zoomend` : Mise à jour lors du changement de zoom
 - `moveend` : Mise à jour lors du déplacement de la carte
 
@@ -291,6 +312,7 @@ Ces événements déclenchent une mise à jour de l'échelle et du niveau de zoo
 ### Précision de l'échelle
 
 L'échelle calculée est approximative car :
+
 - Elle dépend de la latitude (projection Web Mercator déforme aux latitudes élevées)
 - La résolution d'écran peut varier (96 DPI est une valeur standard)
 - Les arrondis sont appliqués pour la lisibilité
@@ -298,6 +320,7 @@ L'échelle calculée est approximative car :
 ### Performance
 
 Le module est optimisé :
+
 - Mise à jour uniquement sur `zoomend` et `moveend` (pas en temps réel pendant le déplacement)
 - Calculs mathématiques légers
 - Pas d'impact sur les performances de rendu
@@ -310,7 +333,7 @@ Le module est optimisé :
 
 ## Fichiers concernés
 
-- `src/static/js/map/scale-control.js` - Module principal
+- `src/modules/map/scale-control.js` - Module principal
 - `src/bundle-entry.js` - Chargement du module
 - `demo/demo.js` - Initialisation dans la démo
 - `profiles/*/profile.json` - Configuration
@@ -318,8 +341,8 @@ Le module est optimisé :
 ## Historique
 
 - **v3.0.0**: Création du module ScaleControl
-  - Échelle graphique Leaflet
-  - Échelle numérique calculée
-  - Échelle éditable avec input
-  - Affichage du niveau de zoom
-  - Positionnement configurable
+    - Échelle graphique Leaflet
+    - Échelle numérique calculée
+    - Échelle éditable avec input
+    - Affichage du niveau de zoom
+    - Positionnement configurable

@@ -1,9 +1,10 @@
-﻿# GeoLeaf.UI.Controls â€“ Documentation
+# GeoLeaf.UI.Controls â€“ Documentation
+
 Product Version: GeoLeaf Platform V1  
 Module de contrÃ´les Leaflet personnalisÃ©s.
 
-**Version**: 3.2.0  
-**Fichier**: `src/static/js/ui/controls.js` (165 lignes)  
+**Version**: 4.0.0  
+**Fichier**: `src/modules/ui/controls.js` (165 lignes)  
 **DerniÃ¨re mise Ã  jour**: DÃ©cembre 2, 2025
 
 ---
@@ -21,6 +22,7 @@ Le module Controls gÃ¨re les contrÃ´les personnalisÃ©s Leaflet ajoutÃ©s 
 Active/dÃ©sactive le mode plein Ã©cran de la carte.
 
 **Configuration**:
+
 ```json
 {
     "ui": {
@@ -44,7 +46,7 @@ Les contrÃ´les sont automatiquement ajoutÃ©s lors de `GeoLeaf.Core.init()` s
 
 ## RÃ©fÃ©rences
 
-- **Code source**: `src/static/js/ui/controls.js`
+- **Code source**: `src/modules/ui/controls.js`
 - **Phase 4 Refactoring**: `SPRINT4_SUMMARY.md`
 
 ---

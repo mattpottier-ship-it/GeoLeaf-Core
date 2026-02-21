@@ -1,9 +1,7 @@
-﻿# GeoLeaf.Errors â€“ Documentation du module Errors
+# GeoLeaf.Errors â€“ Documentation du module Errors
 
-**Product Version:** GeoLeaf Platform V1  
-
-**Version**: 3.2.0  
-**Fichier**: `src/static/js/geoleaf.errors.js` (297 lignes)  
+Product Version: GeoLeaf Platform V1 **Version**: 4.0.0  
+**Fichier**: `src/modules/geoleaf.errors.js` (297 lignes)  
 **Date**: DÃ©cembre 2025
 
 ---
@@ -47,18 +45,19 @@ Error (native)
 Classe de base pour toutes les erreurs GeoLeaf.
 
 ```js
-const error = new GeoLeaf.Errors.GeoLeafError(
-  'Erreur gÃ©nÃ©rique',
-  { module: 'Core', operation: 'init' }
-);
+const error = new GeoLeaf.Errors.GeoLeafError("Erreur gÃ©nÃ©rique", {
+    module: "Core",
+    operation: "init",
+});
 
-console.log(error.name);       // 'GeoLeafError'
-console.log(error.message);    // 'Erreur gÃ©nÃ©rique'
-console.log(error.context);    // { module: 'Core', operation: 'init' }
-console.log(error.timestamp);  // '2025-12-09T10:30:00.000Z'
+console.log(error.name); // 'GeoLeafError'
+console.log(error.message); // 'Erreur gÃ©nÃ©rique'
+console.log(error.context); // { module: 'Core', operation: 'init' }
+console.log(error.timestamp); // '2025-12-09T10:30:00.000Z'
 ```
 
 **MÃ©thodes** :
+
 - `toJSON()` : Conversion en objet sÃ©rialisable
 - `toString()` : Formatage lisible avec contexte
 
@@ -69,30 +68,34 @@ console.log(error.timestamp);  // '2025-12-09T10:30:00.000Z'
 Erreur de validation de donnÃ©es.
 
 **UtilisÃ©e pour** :
+
 - CoordonnÃ©es invalides
 - ParamÃ¨tres manquants ou incorrects
 - Format de donnÃ©es non conforme
 
 ```js
 // Exemple 1 : CoordonnÃ©es invalides
-throw new GeoLeaf.Errors.ValidationError(
-  'Latitude must be between -90 and 90',
-  { lat: 95, lng: -73, expected: 'Range: -90 to 90' }
-);
+throw new GeoLeaf.Errors.ValidationError("Latitude must be between -90 and 90", {
+    lat: 95,
+    lng: -73,
+    expected: "Range: -90 to 90",
+});
 
 // Exemple 2 : ParamÃ¨tre manquant
-throw new GeoLeaf.Errors.ValidationError(
-  'Missing required parameter: target',
-  { provided: null, required: 'target' }
-);
+throw new GeoLeaf.Errors.ValidationError("Missing required parameter: target", {
+    provided: null,
+    required: "target",
+});
 
 // Catch spÃ©cifique
 try {
-  GeoLeaf.Core.init({ /* options */ });
+    GeoLeaf.Core.init({
+        /* options */
+    });
 } catch (error) {
-  if (error instanceof GeoLeaf.Errors.ValidationError) {
-    console.error('Erreur de validation:', error.context);
-  }
+    if (error instanceof GeoLeaf.Errors.ValidationError) {
+        console.error("Erreur de validation:", error.context);
+    }
 }
 ```
 
@@ -103,28 +106,26 @@ try {
 Erreur de sÃ©curitÃ© dÃ©tectÃ©e.
 
 **UtilisÃ©e pour** :
+
 - DÃ©tection de contenu XSS
 - Protocole URL non autorisÃ©
 - Contenu non sÃ©curisÃ©
 
 ```js
 // Exemple : Protocole dangereux
-throw new GeoLeaf.Errors.SecurityError(
-  'Protocol not allowed: javascript:',
-  {
-    url: 'javascript:alert(1)',
-    allowedProtocols: ['http:', 'https:', 'data:']
-  }
-);
+throw new GeoLeaf.Errors.SecurityError("Protocol not allowed: javascript:", {
+    url: "javascript:alert(1)",
+    allowedProtocols: ["http:", "https:", "data:"],
+});
 
 // Catch spÃ©cifique
 try {
-  GeoLeaf.Security.validateUrl(userUrl);
+    GeoLeaf.Security.validateUrl(userUrl);
 } catch (error) {
-  if (error instanceof GeoLeaf.Errors.SecurityError) {
-    console.error('âš ï¸ Tentative de sÃ©curitÃ© dÃ©tectÃ©e');
-    // Logger pour analyse
-  }
+    if (error instanceof GeoLeaf.Errors.SecurityError) {
+        console.error("âš ï¸ Tentative de sÃ©curitÃ© dÃ©tectÃ©e");
+        // Logger pour analyse
+    }
 }
 ```
 
@@ -135,29 +136,27 @@ try {
 Erreur de configuration.
 
 **UtilisÃ©e pour** :
+
 - Configuration JSON invalide
 - Champ de configuration manquant
 - Structure de profil incorrecte
 
 ```js
 // Exemple : Configuration invalide
-throw new GeoLeaf.Errors.ConfigError(
-  'Invalid profile structure: missing layers',
-  {
-    profileId: 'tourism',
-    expected: 'Array',
-    received: 'undefined'
-  }
-);
+throw new GeoLeaf.Errors.ConfigError("Invalid profile structure: missing layers", {
+    profileId: "tourism",
+    expected: "Array",
+    received: "undefined",
+});
 
 // Utilisation
 try {
-  GeoLeaf.Config.loadProfile('tourism');
+    GeoLeaf.Config.loadProfile("tourism");
 } catch (error) {
-  if (error instanceof GeoLeaf.Errors.ConfigError) {
-    // Afficher message d'aide Ã  l'utilisateur
-    console.error('Configuration incorrecte:', error.message);
-  }
+    if (error instanceof GeoLeaf.Errors.ConfigError) {
+        // Afficher message d'aide Ã  l'utilisateur
+        console.error("Configuration incorrecte:", error.message);
+    }
 }
 ```
 
@@ -168,33 +167,31 @@ try {
 Erreur rÃ©seau ou HTTP.
 
 **UtilisÃ©e pour** :
+
 - Ã‰chec de fetch()
 - Timeout rÃ©seau
 - Status HTTP 4xx/5xx
 
 ```js
 // Exemple : Ã‰chec de chargement
-throw new GeoLeaf.Errors.NetworkError(
-  'Failed to load POI data',
-  {
-    url: '/api/poi',
+throw new GeoLeaf.Errors.NetworkError("Failed to load POI data", {
+    url: "/api/poi",
     status: 404,
-    statusText: 'Not Found'
-  }
-);
+    statusText: "Not Found",
+});
 
 // Retry avec gestion d'erreur
 async function loadWithRetry() {
-  try {
-    return await GeoLeaf.Config.loadConfig('config.json');
-  } catch (error) {
-    if (error instanceof GeoLeaf.Errors.NetworkError) {
-      console.warn('Retry aprÃ¨s 3s...');
-      await GeoLeaf.Helpers.wait(3000);
-      return await GeoLeaf.Config.loadConfig('config.json');
+    try {
+        return await GeoLeaf.Config.loadConfig("config.json");
+    } catch (error) {
+        if (error instanceof GeoLeaf.Errors.NetworkError) {
+            console.warn("Retry aprÃ¨s 3s...");
+            await GeoLeaf.Helpers.wait(3000);
+            return await GeoLeaf.Config.loadConfig("config.json");
+        }
+        throw error;
     }
-    throw error;
-  }
 }
 ```
 
@@ -205,18 +202,16 @@ async function loadWithRetry() {
 Erreur lors de l'initialisation.
 
 **UtilisÃ©e pour** :
+
 - Ã‰chec de crÃ©ation de la carte
 - DOM introuvable
 - DÃ©pendance manquante (Leaflet)
 
 ```js
-throw new GeoLeaf.Errors.InitializationError(
-  'Failed to create map: target element not found',
-  {
-    target: 'map-container',
-    domReady: document.readyState
-  }
-);
+throw new GeoLeaf.Errors.InitializationError("Failed to create map: target element not found", {
+    target: "map-container",
+    domReady: document.readyState,
+});
 ```
 
 ---
@@ -226,18 +221,16 @@ throw new GeoLeaf.Errors.InitializationError(
 Erreur liÃ©e Ã  la carte Leaflet.
 
 **UtilisÃ©e pour** :
+
 - OpÃ©ration carte invalide
 - Bounds invalides
 - Layer introuvable
 
 ```js
-throw new GeoLeaf.Errors.MapError(
-  'Cannot fit bounds: no features loaded',
-  {
-    operation: 'fitBounds',
-    featureCount: 0
-  }
-);
+throw new GeoLeaf.Errors.MapError("Cannot fit bounds: no features loaded", {
+    operation: "fitBounds",
+    featureCount: 0,
+});
 ```
 
 ---
@@ -247,19 +240,17 @@ throw new GeoLeaf.Errors.MapError(
 Erreur lors de la gestion des POI.
 
 **UtilisÃ©e pour** :
+
 - POI mal formÃ©
 - Chargement POI Ã©chouÃ©
 - Marker invalide
 
 ```js
-throw new GeoLeaf.Errors.POIError(
-  'Invalid POI: missing latlng',
-  {
-    poiId: 'poi-123',
-    provided: { id: 'poi-123', label: 'Test' },
-    expected: 'latlng: [lat, lng]'
-  }
-);
+throw new GeoLeaf.Errors.POIError("Invalid POI: missing latlng", {
+    poiId: "poi-123",
+    provided: { id: "poi-123", label: "Test" },
+    expected: "latlng: [lat, lng]",
+});
 ```
 
 ---
@@ -269,18 +260,16 @@ throw new GeoLeaf.Errors.POIError(
 Erreur lors du traitement GeoJSON.
 
 **UtilisÃ©e pour** :
+
 - Structure GeoJSON invalide
 - GÃ©omÃ©trie incorrecte
 - Parsing Ã©chouÃ©
 
 ```js
-throw new GeoLeaf.Errors.GeoJSONError(
-  'Invalid GeoJSON: missing features array',
-  {
-    type: 'FeatureCollection',
-    features: undefined
-  }
-);
+throw new GeoLeaf.Errors.GeoJSONError("Invalid GeoJSON: missing features array", {
+    type: "FeatureCollection",
+    features: undefined,
+});
 ```
 
 ---
@@ -290,18 +279,16 @@ throw new GeoLeaf.Errors.GeoJSONError(
 Erreur lors du traitement des itinÃ©raires.
 
 **UtilisÃ©e pour** :
+
 - GPX mal formÃ©
 - Parsing GPX Ã©chouÃ©
 - Route vide
 
 ```js
-throw new GeoLeaf.Errors.RouteError(
-  'Failed to parse GPX: invalid XML',
-  {
-    url: 'route.gpx',
-    parseError: 'Unexpected end of input'
-  }
-);
+throw new GeoLeaf.Errors.RouteError("Failed to parse GPX: invalid XML", {
+    url: "route.gpx",
+    parseError: "Unexpected end of input",
+});
 ```
 
 ---
@@ -312,20 +299,18 @@ throw new GeoLeaf.Errors.RouteError(
 
 ```js
 function validatePOI(poi) {
-  if (!poi.latlng || !Array.isArray(poi.latlng)) {
-    throw new GeoLeaf.Errors.ValidationError(
-      'POI must have latlng array',
-      { poiId: poi.id, provided: poi.latlng }
-    );
-  }
-  
-  const validation = GeoLeaf.Validators.validateCoordinates(
-    poi.latlng[0],
-    poi.latlng[1],
-    { throwOnError: true }
-  );
-  
-  // ValidationError lancÃ©e automatiquement si invalide
+    if (!poi.latlng || !Array.isArray(poi.latlng)) {
+        throw new GeoLeaf.Errors.ValidationError("POI must have latlng array", {
+            poiId: poi.id,
+            provided: poi.latlng,
+        });
+    }
+
+    const validation = GeoLeaf.Validators.validateCoordinates(poi.latlng[0], poi.latlng[1], {
+        throwOnError: true,
+    });
+
+    // ValidationError lancÃ©e automatiquement si invalide
 }
 ```
 
@@ -335,20 +320,20 @@ function validatePOI(poi) {
 
 ```js
 try {
-  await GeoLeaf.Config.loadConfig('config.json');
+    await GeoLeaf.Config.loadConfig("config.json");
 } catch (error) {
-  if (error instanceof GeoLeaf.Errors.NetworkError) {
-    console.error('âš ï¸ ProblÃ¨me rÃ©seau, mode offline activÃ©');
-    activateOfflineMode();
-  } else if (error instanceof GeoLeaf.Errors.ConfigError) {
-    console.error('âŒ Configuration invalide');
-    showConfigHelp();
-  } else if (error instanceof GeoLeaf.Errors.SecurityError) {
-    console.error('ðŸš¨ ProblÃ¨me de sÃ©curitÃ© dÃ©tectÃ©');
-    reportSecurityIssue(error);
-  } else {
-    console.error('Erreur inconnue:', error);
-  }
+    if (error instanceof GeoLeaf.Errors.NetworkError) {
+        console.error("âš ï¸ ProblÃ¨me rÃ©seau, mode offline activÃ©");
+        activateOfflineMode();
+    } else if (error instanceof GeoLeaf.Errors.ConfigError) {
+        console.error("âŒ Configuration invalide");
+        showConfigHelp();
+    } else if (error instanceof GeoLeaf.Errors.SecurityError) {
+        console.error("ðŸš¨ ProblÃ¨me de sÃ©curitÃ© dÃ©tectÃ©");
+        reportSecurityIssue(error);
+    } else {
+        console.error("Erreur inconnue:", error);
+    }
 }
 ```
 
@@ -358,21 +343,21 @@ try {
 
 ```js
 try {
-  // Code risquÃ©
+    // Code risquÃ©
 } catch (error) {
-  if (error instanceof GeoLeaf.Errors.GeoLeafError) {
-    // Erreur typÃ©e GeoLeaf : logger avec contexte complet
-    console.error({
-      type: error.name,
-      message: error.message,
-      context: error.context,
-      timestamp: error.timestamp,
-      stack: error.stack
-    });
-  } else {
-    // Erreur standard
-    console.error(error);
-  }
+    if (error instanceof GeoLeaf.Errors.GeoLeafError) {
+        // Erreur typÃ©e GeoLeaf : logger avec contexte complet
+        console.error({
+            type: error.name,
+            message: error.message,
+            context: error.context,
+            timestamp: error.timestamp,
+            stack: error.stack,
+        });
+    } else {
+        // Erreur standard
+        console.error(error);
+    }
 }
 ```
 
@@ -394,13 +379,13 @@ __tests__/core/errors-extended.test.js
 
 ## ðŸ“Š Statistiques d'erreurs
 
-| Type d'erreur | FrÃ©quence | CriticitÃ© |
-|---------------|-----------|-----------|
-| ValidationError | 45% | âš ï¸ Moyenne |
-| ConfigError | 25% | ðŸ”´ Haute |
-| NetworkError | 15% | âš ï¸ Moyenne |
-| SecurityError | 5% | ðŸ”´ Haute |
-| Autres | 10% | ðŸŸ¡ Variable |
+| Type d'erreur   | FrÃ©quence | CriticitÃ©   |
+| --------------- | ----------- | ------------- |
+| ValidationError | 45%         | âš ï¸ Moyenne |
+| ConfigError     | 25%         | ðŸ”´ Haute    |
+| NetworkError    | 15%         | âš ï¸ Moyenne |
+| SecurityError   | 5%          | ðŸ”´ Haute    |
+| Autres          | 10%         | ðŸŸ¡ Variable |
 
 ---
 

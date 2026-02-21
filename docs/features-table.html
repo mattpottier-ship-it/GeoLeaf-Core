@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>GeoLeaf — Tableau fonctionnalités Core / Plugins</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; }
+    h2 { margin-top: 40px; }
+    table { border-collapse: collapse; width: 100%; margin-bottom: 40px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background: #f5f5f5; }
+    .core { background: #e6f7ff; }
+    .plugin { background: #fffbe6; }
+  </style>
+</head>
+<body>
+  <h1>GeoLeaf — Tableau fonctionnalités Core / Plugins</h1>
+
+  <h2>Core GeoLeaf (MIT)</h2>
+  <table>
+    <tr>
+      <th>Fonctionnalité</th>
+      <th>API / Namespace</th>
+      <th>Disponibilité</th>
+      <th>Licence</th>
+    </tr>
+    <tr class="core">
+      <td>Initialisation application</td>
+      <td>GeoLeaf.init(config)</td>
+      <td>Core</td>
+      <td>MIT</td>
+    </tr>
+    <tr class="core">
+      <td>Chargement configuration</td>
+      <td>GeoLeaf.loadConfig(input)</td>
+      <td>Core</td>
+      <td>MIT</td>
+    </tr>
+    <tr class="core">
+      <td>Gestion thèmes</td>
+      <td>GeoLeaf.setTheme(theme), GeoLeaf.Themes.*</td>
+      <td>Core</td>
+      <td>MIT</td>
+    </tr>
+    <tr class="core">
+      <td>Multi-cartes</td>
+      <td>GeoLeaf.createMap/getMap/getAllMaps/removeMap</td>
+      <td>Core</td>
+      <td>MIT</td>
+    </tr>
+    <tr class="core">
+      <td>Gestion POI standard</td>
+      <td>GeoLeaf.POI.add/update/remove/getAll</td>
+      <td>Core</td>
+      <td>MIT</td>
+    </tr>
+    <tr class="core">
+      <td>Couches GeoJSON</td>
+      <td>GeoLeaf.GeoJSON.*</td>
+      <td>Core</td>
+      <td>MIT</td>
+    </tr>
+    <tr class="core">
+      <td>Filtres / Recherche / UI</td>
+      <td>GeoLeaf.Filters.*, GeoLeaf.UI.*</td>
+      <td>Core</td>
+      <td>MIT</td>
+    </tr>
+    <tr class="core">
+      <td>Sécurité XSS</td>
+      <td>GeoLeaf.Security.escapeHtml/sanitizeHTML</td>
+      <td>Core</td>
+      <td>MIT</td>
+    </tr>
+    <tr class="core">
+      <td>Registre plugins / santé API</td>
+      <td>GeoLeaf.plugins.*, GeoLeaf.getHealth()</td>
+      <td>Core</td>
+      <td>MIT</td>
+    </tr>
+  </table>
+
+  <h2>Plugin Storage (Commercial)</h2>
+  <table>
+    <tr>
+      <th>Fonctionnalité</th>
+      <th>API / Namespace</th>
+      <th>Package</th>
+      <th>Licence</th>
+    </tr>
+    <tr class="plugin">
+      <td>Initialisation stockage premium</td>
+      <td>GeoLeaf.Storage.init(options)</td>
+      <td>@geoleaf-plugins/storage</td>
+      <td>Commerciale</td>
+    </tr>
+    <tr class="plugin">
+      <td>IndexedDB / cache profil</td>
+      <td>GeoLeaf.Storage.DB.*, GeoLeaf.Storage.CacheManager.*</td>
+      <td>@geoleaf-plugins/storage</td>
+      <td>Commerciale</td>
+    </tr>
+    <tr class="plugin">
+      <td>Offline detector / sync</td>
+      <td>GeoLeaf.Storage.OfflineDetector.*, GeoLeaf.SyncManager.*</td>
+      <td>@geoleaf-plugins/storage</td>
+      <td>Commerciale</td>
+    </tr>
+    <tr class="plugin">
+      <td>Service Worker premium et stats</td>
+      <td>GeoLeaf._SWRegister.*, GeoLeaf.Storage.getStats()</td>
+      <td>@geoleaf-plugins/storage</td>
+      <td>Commerciale</td>
+    </tr>
+  </table>
+
+  <h2>Plugin AddPOI (Commercial)</h2>
+  <table>
+    <tr>
+      <th>Fonctionnalité</th>
+      <th>API / Namespace</th>
+      <th>Package</th>
+      <th>Licence</th>
+    </tr>
+    <tr class="plugin">
+      <td>Formulaire POI (CRUD)</td>
+      <td>GeoLeaf.POI.AddForm.openAddForm/openEditForm/submitForm/deletePoi</td>
+      <td>@geoleaf-plugins/addpoi</td>
+      <td>Commerciale</td>
+    </tr>
+    <tr class="plugin">
+      <td>Mode placement carte</td>
+      <td>GeoLeaf.POI.PlacementMode.*</td>
+      <td>@geoleaf-plugins/addpoi</td>
+      <td>Commerciale</td>
+    </tr>
+    <tr class="plugin">
+      <td>Upload image / validation live</td>
+      <td>GeoLeaf.POI.ImageUpload.*, GeoLeaf.POI.AddForm.*</td>
+      <td>@geoleaf-plugins/addpoi</td>
+      <td>Commerciale</td>
+    </tr>
+    <tr class="plugin">
+      <td>Bridge sync (si Storage présent)</td>
+      <td>GeoLeaf.POI.SyncHandler.*</td>
+      <td>@geoleaf-plugins/addpoi</td>
+      <td>Commerciale</td>
+    </tr>
+  </table>
+
+  <p style="font-size: 0.9em; color: #888;">Core = MIT. Plugins = licence commerciale. Redistribution du code premium interdite. Voir <a href="../LICENCE_PREMIUM.md">LICENCE_PREMIUM.md</a> et <a href="guides/GUIDE_LICENCE_PREMIUM.md">GUIDE_LICENCE_PREMIUM.md</a>.</p>
+</body>
+</html>

@@ -1,6 +1,7 @@
-﻿# GeoLeaf.Validators â€“ Documentation du module Validators
-Product Version: GeoLeaf Platform V1  **Version**: 3.2.0  
-**Fichier**: `src/static/js/geoleaf.validators.js` (441 lignes)  
+# GeoLeaf.Validators â€“ Documentation du module Validators
+
+Product Version: GeoLeaf Platform V1 **Version**: 4.0.0  
+**Fichier**: `src/modules/geoleaf.validators.js` (441 lignes)  
 **DerniÃ¨re mise Ã  jour**: 19 janvier 2026  
 **DerniÃ¨re vÃ©rification**: 19 janvier 2026
 
@@ -28,6 +29,7 @@ Le module **GeoLeaf.Validators** fournit des fonctions de validation centralisÃ
 Valide des coordonnÃ©es gÃ©ographiques.
 
 **Signature** :
+
 ```js
 GeoLeaf.Validators.validateCoordinates(
   lat: number,
@@ -37,6 +39,7 @@ GeoLeaf.Validators.validateCoordinates(
 ```
 
 **Exemples** :
+
 ```js
 // CoordonnÃ©es valides
 const result = GeoLeaf.Validators.validateCoordinates(45.5017, -73.5673);
@@ -48,13 +51,14 @@ const result2 = GeoLeaf.Validators.validateCoordinates(95, -73);
 
 // Mode strict (lance exception)
 try {
-  GeoLeaf.Validators.validateCoordinates(95, -73, { throwOnError: true });
+    GeoLeaf.Validators.validateCoordinates(95, -73, { throwOnError: true });
 } catch (error) {
-  console.error('CoordonnÃ©es invalides:', error.message);
+    console.error("CoordonnÃ©es invalides:", error.message);
 }
 ```
 
 **Validations effectuÃ©es** :
+
 - âœ… Type number (pas string ou autre)
 - âœ… Valeurs finies (pas NaN, Infinity)
 - âœ… Latitude entre -90 et +90
@@ -67,6 +71,7 @@ try {
 Valide une URL avec options de protocole.
 
 **Signature** :
+
 ```js
 GeoLeaf.Validators.validateUrl(
   url: string,
@@ -79,23 +84,25 @@ GeoLeaf.Validators.validateUrl(
 ```
 
 **Exemples** :
+
 ```js
 // URL HTTPS valide
-const result = GeoLeaf.Validators.validateUrl('https://example.com/data.json');
+const result = GeoLeaf.Validators.validateUrl("https://example.com/data.json");
 // Returns: { valid: true, error: null, url: 'https://example.com/data.json' }
 
 // Protocole non autorisÃ©
-const result2 = GeoLeaf.Validators.validateUrl('ftp://example.com/file');
+const result2 = GeoLeaf.Validators.validateUrl("ftp://example.com/file");
 // Returns: { valid: false, error: 'Protocol not allowed', url: null }
 
 // Autoriser seulement HTTPS
-const result3 = GeoLeaf.Validators.validateUrl('http://example.com', {
-  allowedProtocols: ['https:']
+const result3 = GeoLeaf.Validators.validateUrl("http://example.com", {
+    allowedProtocols: ["https:"],
 });
 // Returns: { valid: false, error: 'Protocol not allowed', url: null }
 ```
 
 **Options par dÃ©faut** :
+
 - `allowedProtocols`: `['http:', 'https:', 'data:']`
 - `allowDataImages`: `true`
 - `throwOnError`: `false`
@@ -107,6 +114,7 @@ const result3 = GeoLeaf.Validators.validateUrl('http://example.com', {
 Valide un format d'email.
 
 **Signature** :
+
 ```js
 GeoLeaf.Validators.validateEmail(
   email: string,
@@ -115,19 +123,20 @@ GeoLeaf.Validators.validateEmail(
 ```
 
 **Exemples** :
+
 ```js
 // Email valide
-GeoLeaf.Validators.validateEmail('user@example.com');
+GeoLeaf.Validators.validateEmail("user@example.com");
 // Returns: { valid: true, error: null }
 
 // Email invalide
-GeoLeaf.Validators.validateEmail('not-an-email');
+GeoLeaf.Validators.validateEmail("not-an-email");
 // Returns: { valid: false, error: 'Invalid email format' }
 
 // Formats supportÃ©s
-GeoLeaf.Validators.validateEmail('user+tag@sub.example.com');  // âœ…
-GeoLeaf.Validators.validateEmail('user@localhost');  // âœ…
-GeoLeaf.Validators.validateEmail('user@domain.co.uk');  // âœ…
+GeoLeaf.Validators.validateEmail("user+tag@sub.example.com"); // âœ…
+GeoLeaf.Validators.validateEmail("user@localhost"); // âœ…
+GeoLeaf.Validators.validateEmail("user@domain.co.uk"); // âœ…
 ```
 
 ---
@@ -137,6 +146,7 @@ GeoLeaf.Validators.validateEmail('user@domain.co.uk');  // âœ…
 Valide un format de couleur CSS.
 
 **Signature** :
+
 ```js
 GeoLeaf.Validators.validateColor(
   color: string,
@@ -145,6 +155,7 @@ GeoLeaf.Validators.validateColor(
 ```
 
 **Formats supportÃ©s** :
+
 - Hex court : `#fff`, `#000`
 - Hex long : `#ffffff`, `#000000`
 - RGB : `rgb(255, 0, 0)`
@@ -154,16 +165,17 @@ GeoLeaf.Validators.validateColor(
 - NommÃ©es : `red`, `blue`, `green`, etc.
 
 **Exemples** :
+
 ```js
 // Couleurs valides
-GeoLeaf.Validators.validateColor('#ff0000');  // âœ… Hex
-GeoLeaf.Validators.validateColor('rgb(255, 0, 0)');  // âœ… RGB
-GeoLeaf.Validators.validateColor('red');  // âœ… NommÃ©e
-GeoLeaf.Validators.validateColor('hsl(120, 100%, 50%)');  // âœ… HSL
+GeoLeaf.Validators.validateColor("#ff0000"); // âœ… Hex
+GeoLeaf.Validators.validateColor("rgb(255, 0, 0)"); // âœ… RGB
+GeoLeaf.Validators.validateColor("red"); // âœ… NommÃ©e
+GeoLeaf.Validators.validateColor("hsl(120, 100%, 50%)"); // âœ… HSL
 
 // Couleurs invalides
-GeoLeaf.Validators.validateColor('#gggggg');  // âŒ
-GeoLeaf.Validators.validateColor('rgb(300, 0, 0)');  // âŒ (> 255)
+GeoLeaf.Validators.validateColor("#gggggg"); // âŒ
+GeoLeaf.Validators.validateColor("rgb(300, 0, 0)"); // âŒ (> 255)
 ```
 
 ---
@@ -173,6 +185,7 @@ GeoLeaf.Validators.validateColor('rgb(300, 0, 0)');  // âŒ (> 255)
 Valide la structure d'un objet GeoJSON.
 
 **Signature** :
+
 ```js
 GeoLeaf.Validators.validateGeoJSON(
   geojson: object,
@@ -184,17 +197,18 @@ GeoLeaf.Validators.validateGeoJSON(
 ```
 
 **Exemples** :
+
 ```js
 // FeatureCollection valide
 const geojson = {
-  type: "FeatureCollection",
-  features: [
-    {
-      type: "Feature",
-      geometry: { type: "Point", coordinates: [-73.5673, 45.5017] },
-      properties: { name: "Montreal" }
-    }
-  ]
+    type: "FeatureCollection",
+    features: [
+        {
+            type: "Feature",
+            geometry: { type: "Point", coordinates: [-73.5673, 45.5017] },
+            properties: { name: "Montreal" },
+        },
+    ],
 };
 
 GeoLeaf.Validators.validateGeoJSON(geojson);
@@ -202,8 +216,8 @@ GeoLeaf.Validators.validateGeoJSON(geojson);
 
 // GeoJSON invalide
 const invalid = {
-  type: "FeatureCollection"
-  // Manque 'features'
+    type: "FeatureCollection",
+    // Manque 'features'
 };
 
 GeoLeaf.Validators.validateGeoJSON(invalid, { requireFeatures: true });
@@ -211,6 +225,7 @@ GeoLeaf.Validators.validateGeoJSON(invalid, { requireFeatures: true });
 ```
 
 **Validations effectuÃ©es** :
+
 - âœ… Type valide (FeatureCollection, Feature, Geometry)
 - âœ… Structure conforme Ã  la spec GeoJSON
 - âœ… GÃ©omÃ©tries valides (Point, LineString, Polygon, etc.)
@@ -223,39 +238,39 @@ GeoLeaf.Validators.validateGeoJSON(invalid, { requireFeatures: true });
 ### `isString(value)`
 
 ```js
-GeoLeaf.Validators.isString('hello');  // true
-GeoLeaf.Validators.isString(123);  // false
+GeoLeaf.Validators.isString("hello"); // true
+GeoLeaf.Validators.isString(123); // false
 ```
 
 ### `isNumber(value)`
 
 ```js
-GeoLeaf.Validators.isNumber(42);  // true
-GeoLeaf.Validators.isNumber('42');  // false
+GeoLeaf.Validators.isNumber(42); // true
+GeoLeaf.Validators.isNumber("42"); // false
 ```
 
 ### `isObject(value)`
 
 ```js
-GeoLeaf.Validators.isObject({ key: 'value' });  // true
-GeoLeaf.Validators.isObject([1, 2, 3]);  // false (array)
+GeoLeaf.Validators.isObject({ key: "value" }); // true
+GeoLeaf.Validators.isObject([1, 2, 3]); // false (array)
 ```
 
 ### `isArray(value)`
 
 ```js
-GeoLeaf.Validators.isArray([1, 2, 3]);  // true
-GeoLeaf.Validators.isArray({ 0: 1, 1: 2 });  // false
+GeoLeaf.Validators.isArray([1, 2, 3]); // true
+GeoLeaf.Validators.isArray({ 0: 1, 1: 2 }); // false
 ```
 
 ### `isEmpty(value)`
 
 ```js
-GeoLeaf.Validators.isEmpty('');  // true
-GeoLeaf.Validators.isEmpty([]);  // true
-GeoLeaf.Validators.isEmpty({});  // true
-GeoLeaf.Validators.isEmpty(null);  // true
-GeoLeaf.Validators.isEmpty(undefined);  // true
+GeoLeaf.Validators.isEmpty(""); // true
+GeoLeaf.Validators.isEmpty([]); // true
+GeoLeaf.Validators.isEmpty({}); // true
+GeoLeaf.Validators.isEmpty(null); // true
+GeoLeaf.Validators.isEmpty(undefined); // true
 ```
 
 ---
@@ -264,31 +279,31 @@ GeoLeaf.Validators.isEmpty(undefined);  // true
 
 ### OÃ¹ les validateurs sont utilisÃ©s
 
-| Module | Validations appliquÃ©es |
-|--------|------------------------|
-| **Core** | `validateCoordinates()` pour center |
-| **POI** | `validateCoordinates()`, `validateColor()` |
-| **GeoJSON** | `validateGeoJSON()`, `validateUrl()` |
-| **Route** | `validateCoordinates()`, `validateUrl()` |
-| **Config** | `validateUrl()`, type validations |
-| **BaseLayers** | `validateUrl()` pour tiles |
+| Module         | Validations appliquÃ©es                   |
+| -------------- | ------------------------------------------ |
+| **Core**       | `validateCoordinates()` pour center        |
+| **POI**        | `validateCoordinates()`, `validateColor()` |
+| **GeoJSON**    | `validateGeoJSON()`, `validateUrl()`       |
+| **Route**      | `validateCoordinates()`, `validateUrl()`   |
+| **Config**     | `validateUrl()`, type validations          |
+| **BaseLayers** | `validateUrl()` pour tiles                 |
 
 ### Exemple d'utilisation interne
 
 ```js
 // Dans GeoLeaf.Core.init()
 function init(options) {
-  const validation = GeoLeaf.Validators.validateCoordinates(
-    options.center[0],
-    options.center[1],
-    { throwOnError: true }
-  );
-  
-  if (!validation.valid) {
-    throw new Error(`Invalid coordinates: ${validation.error}`);
-  }
-  
-  // Continue initialization...
+    const validation = GeoLeaf.Validators.validateCoordinates(
+        options.center[0],
+        options.center[1],
+        { throwOnError: true }
+    );
+
+    if (!validation.valid) {
+        throw new Error(`Invalid coordinates: ${validation.error}`);
+    }
+
+    // Continue initialization...
 }
 ```
 

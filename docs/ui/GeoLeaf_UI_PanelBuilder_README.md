@@ -1,9 +1,10 @@
-﻿# GeoLeaf.UI.PanelBuilder â€“ Documentation
+# GeoLeaf.UI.PanelBuilder â€“ Documentation
+
 Product Version: GeoLeaf Platform V1  
 Module de construction de panneaux de dÃ©tails POI avec layouts configurables.
 
-**Version**: 3.2.0  
-**Fichier**: `src/static/js/ui/panel-builder.js` (485 lignes)  
+**Version**: 4.0.0  
+**Fichier**: `src/modules/ui/panel-builder.js` (485 lignes)  
 **DerniÃ¨re mise Ã  jour**: DÃ©cembre 2, 2025
 
 ---
@@ -29,10 +30,11 @@ Construit le HTML complet d'un panneau latÃ©ral POI.
 **Retour**: `string` - HTML du panneau
 
 **Exemple**:
+
 ```javascript
-const poi = GeoLeaf.POI.getPoiById('restaurant-123');
+const poi = GeoLeaf.POI.getPoiById("restaurant-123");
 const panelHTML = GeoLeaf.UI.PanelBuilder.buildPoiSidePanel(poi);
-document.getElementById('sidepanel').innerHTML = panelHTML;
+document.getElementById("sidepanel").innerHTML = panelHTML;
 ```
 
 ---
@@ -41,25 +43,25 @@ document.getElementById('sidepanel').innerHTML = panelHTML;
 
 ### Types de champs supportÃ©s
 
-| Type | Description | Attributs |
-|------|-------------|-----------|
-| `title` | Titre principal (H2) | `field`, `prefix` |
-| `subtitle` | Sous-titre (H3) | `field` |
-| `text` | Texte simple | `field`, `label`, `icon` |
-| `paragraph` | Paragraphe long | `field` |
-| `rating` | Ã‰toiles (â˜…â˜…â˜…â˜…â˜†) | `field`, `maxStars` |
-| `image` | Image | `field`, `fullWidth`, `alt` |
-| `gallery` | Galerie d'images | `field`, `columns` |
-| `link` | Lien hypertexte | `field`, `label`, `icon` |
-| `phone` | Lien tÃ©lÃ©phone | `field`, `icon` |
-| `email` | Lien email | `field`, `icon` |
-| `address` | Adresse formatÃ©e | `field` |
-| `badge` | Badge colorÃ© | `field`, `color` |
-| `tags` | Liste de tags | `field` |
-| `section` | Section groupÃ©e | `title`, `fields[]` |
-| `accordion` | Section repliable | `title`, `fields[]`, `defaultOpen` |
-| `divider` | SÃ©parateur | - |
-| `html` | HTML brut | `content` |
+| Type        | Description                | Attributs                          |
+| ----------- | -------------------------- | ---------------------------------- |
+| `title`     | Titre principal (H2)       | `field`, `prefix`                  |
+| `subtitle`  | Sous-titre (H3)            | `field`                            |
+| `text`      | Texte simple               | `field`, `label`, `icon`           |
+| `paragraph` | Paragraphe long            | `field`                            |
+| `rating`    | Ã‰toiles (â˜…â˜…â˜…â˜…â˜†) | `field`, `maxStars`                |
+| `image`     | Image                      | `field`, `fullWidth`, `alt`        |
+| `gallery`   | Galerie d'images           | `field`, `columns`                 |
+| `link`      | Lien hypertexte            | `field`, `label`, `icon`           |
+| `phone`     | Lien tÃ©lÃ©phone         | `field`, `icon`                    |
+| `email`     | Lien email                 | `field`, `icon`                    |
+| `address`   | Adresse formatÃ©e         | `field`                            |
+| `badge`     | Badge colorÃ©             | `field`, `color`                   |
+| `tags`      | Liste de tags              | `field`                            |
+| `section`   | Section groupÃ©e          | `title`, `fields[]`                |
+| `accordion` | Section repliable          | `title`, `fields[]`, `defaultOpen` |
+| `divider`   | SÃ©parateur               | -                                  |
+| `html`      | HTML brut                  | `content`                          |
 
 ### Structure Layout
 
@@ -89,8 +91,9 @@ document.getElementById('sidepanel').innerHTML = panelHTML;
 RÃ©sout un chemin avec notation point (ex: `"attributes.shortDescription"`).
 
 **Exemple**:
+
 ```javascript
-const value = GeoLeaf.UI.PanelBuilder.resolveField(poi, 'attributes.rating');
+const value = GeoLeaf.UI.PanelBuilder.resolveField(poi, "attributes.rating");
 // Ã‰quivalent Ã : poi.attributes?.rating
 ```
 
@@ -98,7 +101,7 @@ const value = GeoLeaf.UI.PanelBuilder.resolveField(poi, 'attributes.rating');
 
 ## RÃ©fÃ©rences
 
-- **Code source**: `src/static/js/ui/panel-builder.js`
+- **Code source**: `src/modules/ui/panel-builder.js`
 - **Phase 4 Refactoring**: `SPRINT4_SUMMARY.md`
 - **Module POI**: `docs/poi/GeoLeaf_POI_README.md`
 

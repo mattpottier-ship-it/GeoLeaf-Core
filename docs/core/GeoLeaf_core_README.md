@@ -1,9 +1,7 @@
-﻿# GeoLeaf.Core â€“ Documentation du module Core
+# GeoLeaf.Core â€“ Documentation du module Core
 
-**Product Version:** GeoLeaf Platform V1  
-
-**Version**: 3.2.0  
-**Fichier**: `src/static/js/geoleaf.core.js`  
+Product Version: GeoLeaf Platform V1 **Version**: 4.0.0  
+**Fichier**: `src/modules/geoleaf.core.js`  
 **DerniÃ¨re mise Ã  jour**: 19 janvier 2026
 
 ---
@@ -11,6 +9,7 @@
 Le module **GeoLeaf.Core** constitue le noyau de la librairie **GeoLeaf**.
 
 Il gÃ¨re :
+
 - lâ€™initialisation de la carte **Leaflet** ;
 - la conservation dâ€™une instance unique de carte (`L.Map`) ;
 - la gestion et la synchronisation du **thÃ¨me UI** (clair / sombre) avec les autres modules.
@@ -28,6 +27,7 @@ GeoLeaf.Core a trois responsabilitÃ©s principales :
 3. Centraliser le **thÃ¨me UI courant** (light/dark) et offrir une API simple pour le lire / le modifier.
 
 > Important : GeoLeaf.Core ne gÃ¨re **pas** :
+>
 > - les couches de fond (basemaps) ;
 > - les POI / GeoJSON / itinÃ©raires ;
 > - les contrÃ´les UI avancÃ©s.
@@ -48,19 +48,19 @@ const map = GeoLeaf.Core.init(options);
 ```
 
 - **ParamÃ¨tres :**
-  - `options` : objet de configuration du Core.
+    - `options` : objet de configuration du Core.
 
 - **Retour :**
-  - lâ€™instance `L.Map` de Leaflet si lâ€™initialisation rÃ©ussit ;
-  - `null` en cas dâ€™erreur bloquante (par exemple `target` introuvable).
+    - lâ€™instance `L.Map` de Leaflet si lâ€™initialisation rÃ©ussit ;
+    - `null` en cas dâ€™erreur bloquante (par exemple `target` introuvable).
 
 #### Exemple minimal
 
 ```js
 const map = GeoLeaf.Core.init({
-  target: "geoleaf-map",
-  center: [-32.95, -60.65], // Rosario, AR
-  zoom: 12
+    target: "geoleaf-map",
+    center: [-32.95, -60.65], // Rosario, AR
+    zoom: 12,
 });
 ```
 
@@ -68,10 +68,10 @@ const map = GeoLeaf.Core.init({
 
 ```js
 const map = GeoLeaf.Core.init({
-  target: "geoleaf-map",
-  center: [-32.95, -60.65],
-  zoom: 12,
-  theme: "dark"
+    target: "geoleaf-map",
+    center: [-32.95, -60.65],
+    zoom: 12,
+    theme: "dark",
 });
 ```
 
@@ -114,9 +114,9 @@ Exemple JS correspondant :
 
 ```js
 GeoLeaf.Core.init({
-  target: "geoleaf-map",
-  center: [-32.95, -60.65],
-  zoom: 12
+    target: "geoleaf-map",
+    center: [-32.95, -60.65],
+    zoom: 12,
 });
 ```
 
@@ -128,7 +128,7 @@ GeoLeaf.Core.init({
 En cas de problÃ¨me (`target` manquant, vide ou DOM introuvable) :
 
 1. GeoLeaf.Core logge une erreur dans la console :
-   - `[GeoLeaf.Core] target introuvable ou invalide`
+    - `[GeoLeaf.Core] target introuvable ou invalide`
 2. Aucune carte nâ€™est crÃ©Ã©e.
 3. La fonction retourne `null`.
 
@@ -144,25 +144,25 @@ En cas de problÃ¨me (`target` manquant, vide ou DOM introuvable) :
 Exemple :
 
 ```js
-center: [-32.95, -60.65] // Rosario, AR
+center: [-32.95, -60.65]; // Rosario, AR
 ```
 
 **Validations :**
 
 - `center` doit Ãªtre :
-  - un tableau de longueur 2 ;
-  - contenant deux valeurs numÃ©riques (`lat`, `lng`).
+    - un tableau de longueur 2 ;
+    - contenant deux valeurs numÃ©riques (`lat`, `lng`).
 - Intervalles recommandÃ©s :
-  - `lat` âˆˆ [-90 ; +90]
-  - `lng` âˆˆ [-180 ; +180]
+    - `lat` âˆˆ [-90 ; +90]
+    - `lng` âˆˆ [-180 ; +180]
 
 En cas de valeur invalide (type incorrect, taille diffÃ©rente de 2, valeurs non numÃ©riques, etc.) :
 
 - GeoLeaf.Core logge une erreur :
-  - `[GeoLeaf.Core] center invalide`
+    - `[GeoLeaf.Core] center invalide`
 - Selon lâ€™implÃ©mentation exacte :
-  - soit lâ€™initialisation est refusÃ©e et `init()` retourne `null` ;
-  - soit un centre par dÃ©faut interne est utilisÃ© (ex. `[0, 0]`).
+    - soit lâ€™initialisation est refusÃ©e et `init()` retourne `null` ;
+    - soit un centre par dÃ©faut interne est utilisÃ© (ex. `[0, 0]`).
 
 > Recommandation : toujours fournir un `center` explicite dans la configuration, mÃªme si la carte est recentrÃ©e plus tard.
 
@@ -178,7 +178,7 @@ En cas de valeur invalide (type incorrect, taille diffÃ©rente de 2, valeurs no
 Exemple :
 
 ```js
-zoom: 12
+zoom: 12;
 ```
 
 **Intervalles recommandÃ©s :**
@@ -189,9 +189,9 @@ zoom: 12
 **Validations et comportement :**
 
 - Si `zoom` nâ€™est pas fourni, nâ€™est pas numÃ©rique, ou est manifestement hors plage :
-  - GeoLeaf.Core logge un **avertissement** :
-    - `[GeoLeaf.Core] zoom invalide, utilisation dâ€™une valeur par dÃ©faut`
-  - un zoom par dÃ©faut interne (ex. `3`) peut Ãªtre utilisÃ©.
+    - GeoLeaf.Core logge un **avertissement** :
+        - `[GeoLeaf.Core] zoom invalide, utilisation dâ€™une valeur par dÃ©faut`
+    - un zoom par dÃ©faut interne (ex. `3`) peut Ãªtre utilisÃ©.
 
 ---
 
@@ -200,8 +200,8 @@ zoom: 12
 - **Type** : `"light"` | `"dark"`
 - **Obligatoire** : **non**
 - **Valeur par dÃ©faut** :
-  - `"light"` si aucun thÃ¨me prÃ©cÃ©dent nâ€™est enregistrÃ© ;
-  - ou le dernier thÃ¨me connu (par exemple stockÃ© par `GeoLeaf.UI`).
+    - `"light"` si aucun thÃ¨me prÃ©cÃ©dent nâ€™est enregistrÃ© ;
+    - ou le dernier thÃ¨me connu (par exemple stockÃ© par `GeoLeaf.UI`).
 
 - **Description** : thÃ¨me UI courant pour GeoLeaf.  
   Il sâ€™applique Ã  **lâ€™interface** (header, boutons, panneaux, lÃ©gende, etc.) et **jamais** aux tuiles (fond de carte).
@@ -209,30 +209,30 @@ zoom: 12
 Exemples :
 
 ```js
-theme: "light"
+theme: "light";
 ```
 
 ou
 
 ```js
-theme: "dark"
+theme: "dark";
 ```
 
 **Comportement :**
 
 1. Si `theme` vaut `"light"` ou `"dark"` :
-   - GeoLeaf.Core enregistre ce thÃ¨me comme thÃ¨me courant ;
-   - si `GeoLeaf.UI` est chargÃ©, il met Ã  jour lâ€™UI (classes CSS, variables de thÃ¨me).
+    - GeoLeaf.Core enregistre ce thÃ¨me comme thÃ¨me courant ;
+    - si `GeoLeaf.UI` est chargÃ©, il met Ã  jour lâ€™UI (classes CSS, variables de thÃ¨me).
 
 2. Si `theme` est **absent** :
-   - GeoLeaf.Core laisse lâ€™UI dÃ©cider ;
-   - `GeoLeaf.UI` peut, par exemple, relire une valeur depuis `localStorage` (prÃ©fÃ©rence utilisateur) ;
-   - sinon, le thÃ¨me `"light"` est utilisÃ© par dÃ©faut.
+    - GeoLeaf.Core laisse lâ€™UI dÃ©cider ;
+    - `GeoLeaf.UI` peut, par exemple, relire une valeur depuis `localStorage` (prÃ©fÃ©rence utilisateur) ;
+    - sinon, le thÃ¨me `"light"` est utilisÃ© par dÃ©faut.
 
 3. Si `theme` a une valeur **inconnue** (ex. `"blue"`) :
-   - GeoLeaf.Core logge un avertissement :
-     - `[GeoLeaf.Core] theme inconnu, fallback sur 'light'`
-   - le thÃ¨me `"light"` est appliquÃ©.
+    - GeoLeaf.Core logge un avertissement :
+        - `[GeoLeaf.Core] theme inconnu, fallback sur 'light'`
+    - le thÃ¨me `"light"` est appliquÃ©.
 
 > Rappel : le choix des tuiles (Street / Topo / Satellite) est gÃ©rÃ© par `GeoLeaf.Baselayers` et **ne dÃ©pend pas** du thÃ¨me UI.
 
@@ -248,13 +248,13 @@ Retourne lâ€™instance de carte Leaflet dÃ©jÃ  initialisÃ©e, ou `null`
 const map = GeoLeaf.Core.getMap();
 
 if (map) {
-  map.setView([-32.95, -60.65], 12);
+    map.setView([-32.95, -60.65], 12);
 }
 ```
 
 - **Usage recommandÃ© :**
-  - dans les autres modules GeoLeaf (POI, GeoJSON, Route, Legend, etc.) ;
-  - dans du code externe qui souhaite manipuler la carte sans la rÃ©initialiser.
+    - dans les autres modules GeoLeaf (POI, GeoJSON, Route, Legend, etc.) ;
+    - dans du code externe qui souhaite manipuler la carte sans la rÃ©initialiser.
 
 ---
 
@@ -267,7 +267,7 @@ GeoLeaf.Core.setTheme("dark");
 ```
 
 - **ParamÃ¨tre :**
-  - `theme` : `"light"` ou `"dark"`.
+    - `theme` : `"light"` ou `"dark"`.
 
 **Comportement :**
 
@@ -290,7 +290,7 @@ const currentTheme = GeoLeaf.Core.getTheme(); // "light" ou "dark"
 ```
 
 - **Usage typique :**
-  - synchroniser un composant externe (par exemple un widget personnalisÃ©) avec lâ€™Ã©tat visuel de GeoLeaf.
+    - synchroniser un composant externe (par exemple un widget personnalisÃ©) avec lâ€™Ã©tat visuel de GeoLeaf.
 
 ---
 
@@ -302,14 +302,14 @@ Dans la dÃ©mo officielle, les options de GeoLeaf.Core proviennent gÃ©nÃ©ra
 
 ```json
 {
-  "map": {
-    "target": "geoleaf-map",
-    "center": [-32.95, -60.65],
-    "zoom": 12
-  },
-  "ui": {
-    "theme": "light"
-  }
+    "map": {
+        "target": "geoleaf-map",
+        "center": [-32.95, -60.65],
+        "zoom": 12
+    },
+    "ui": {
+        "theme": "light"
+    }
 }
 ```
 
@@ -320,28 +320,28 @@ Dans la dÃ©mo officielle, les options de GeoLeaf.Core proviennent gÃ©nÃ©ra
 ```js
 // Approche classique (toujours supportée)
 GeoLeaf.Config.init({
-  url: "../data/geoleaf-poi.json",
-  autoEvent: true,
-  onLoaded(config) {
-    const mapOptions = {
-      target: config.map.target,
-      center: config.map.center,
-      zoom: config.map.zoom,
-      theme: config.ui?.theme
-    };
+    url: "../data/geoleaf-poi.json",
+    autoEvent: true,
+    onLoaded(config) {
+        const mapOptions = {
+            target: config.map.target,
+            center: config.map.center,
+            zoom: config.map.zoom,
+            theme: config.ui?.theme,
+        };
 
-    const map = GeoLeaf.Core.init(mapOptions);
+        const map = GeoLeaf.Core.init(mapOptions);
 
-    if (!map) {
-      console.error("[GeoLeaf.Demo] Impossible d'initialiser la carte GeoLeaf.Core.");
-      return;
-    }
+        if (!map) {
+            console.error("[GeoLeaf.Demo] Impossible d'initialiser la carte GeoLeaf.Core.");
+            return;
+        }
 
-    // Initialisation des autres modules (Baselayers, POI, Route, Legend, etc.)
-    // GeoLeaf.Baselayers.init({ map, ... });
-    // GeoLeaf.POI.init({ map, ... });
-    // ...
-  }
+        // Initialisation des autres modules (Baselayers, POI, Route, Legend, etc.)
+        // GeoLeaf.Baselayers.init({ map, ... });
+        // GeoLeaf.POI.init({ map, ... });
+        // ...
+    },
 });
 ```
 
@@ -361,22 +361,22 @@ GeoLeaf.Core privilÃ©gie un comportement **expliqueÌ** (logs explicites) pl
 ### 6.1 RÃ©sumÃ© des cas principaux
 
 - **`target` manquant ou DOM introuvable**
-  - Log : erreur critique (`[GeoLeaf.Core] target introuvable ou invalide`)
-  - Carte : non crÃ©Ã©e
-  - Retour : `null`
+    - Log : erreur critique (`[GeoLeaf.Core] target introuvable ou invalide`)
+    - Carte : non crÃ©Ã©e
+    - Retour : `null`
 
 - **`center` invalide**
-  - Log : erreur (`[GeoLeaf.Core] center invalide`)
-  - Carte : soit non crÃ©Ã©e, soit centrÃ©e sur une valeur par dÃ©faut interne (selon implÃ©mentation)
-  - Retour : `null` ou carte valide mais centrÃ©e par dÃ©faut
+    - Log : erreur (`[GeoLeaf.Core] center invalide`)
+    - Carte : soit non crÃ©Ã©e, soit centrÃ©e sur une valeur par dÃ©faut interne (selon implÃ©mentation)
+    - Retour : `null` ou carte valide mais centrÃ©e par dÃ©faut
 
 - **`zoom` invalide**
-  - Log : avertissement (`[GeoLeaf.Core] zoom invalide, utilisation d'une valeur par dÃ©faut`)
-  - Carte : crÃ©Ã©e, mais avec un zoom par dÃ©faut interne
+    - Log : avertissement (`[GeoLeaf.Core] zoom invalide, utilisation d'une valeur par dÃ©faut`)
+    - Carte : crÃ©Ã©e, mais avec un zoom par dÃ©faut interne
 
 - **`theme` inconnu**
-  - Log : avertissement (`[GeoLeaf.Core] theme inconnu, fallback sur 'light'`)
-  - ThÃ¨me : `"light"` ou dernier thÃ¨me valide appliquÃ©
+    - Log : avertissement (`[GeoLeaf.Core] theme inconnu, fallback sur 'light'`)
+    - ThÃ¨me : `"light"` ou dernier thÃ¨me valide appliquÃ©
 
 ### 6.2 Bonne pratique
 
@@ -386,8 +386,8 @@ AprÃ¨s appel Ã  `GeoLeaf.Core.init()` :
 const map = GeoLeaf.Core.init(options);
 
 if (!map) {
-  console.error("[GeoLeaf.App] Carte non initialisÃ©e, vÃ©rifie la configuration Core.");
-  // Ã‰ventuellement afficher un message d'erreur dans l'UI.
+    console.error("[GeoLeaf.App] Carte non initialisÃ©e, vÃ©rifie la configuration Core.");
+    // Ã‰ventuellement afficher un message d'erreur dans l'UI.
 }
 ```
 
@@ -396,51 +396,50 @@ if (!map) {
 ## 7. Bonnes pratiques dâ€™utilisation
 
 1. **Toujours fournir les options obligatoires** :
-   - `target`
-   - `center`
-   - `zoom`
+    - `target`
+    - `center`
+    - `zoom`
 
 2. **Laisser `theme` optionnel** si lâ€™utilisateur peut le gÃ©rer via lâ€™UI :
-   - par exemple via un bouton toggle light/dark ;
-   - `GeoLeaf.UI` se chargera dâ€™enregistrer le thÃ¨me et de le relire.
+    - par exemple via un bouton toggle light/dark ;
+    - `GeoLeaf.UI` se chargera dâ€™enregistrer le thÃ¨me et de le relire.
 
 3. **Ne pas crÃ©er la carte directement avec Leaflet** :
-   - toujours passer par `GeoLeaf.Core.init()` ;
-   - toujours rÃ©cupÃ©rer la carte avec `GeoLeaf.Core.getMap()`.
+    - toujours passer par `GeoLeaf.Core.init()` ;
+    - toujours rÃ©cupÃ©rer la carte avec `GeoLeaf.Core.getMap()`.
 
 4. **Centraliser la configuration** :
-   - idÃ©alement, toutes les options Core viennent dâ€™un seul fichier de configuration (JSON ou JS) ;
-   - cela Ã©vite les divergences entre modules et dÃ©mos.
+    - idÃ©alement, toutes les options Core viennent dâ€™un seul fichier de configuration (JSON ou JS) ;
+    - cela Ã©vite les divergences entre modules et dÃ©mos.
 
 5. **Surveiller les logs console `[GeoLeaf.Core]` en dÃ©veloppement** :
-   - ils indiquent prÃ©cisÃ©ment quelle option est manquante ou invalide ;
-   - ils aident Ã  diagnostiquer pourquoi la carte nâ€™est pas initialisÃ©e.
+    - ils indiquent prÃ©cisÃ©ment quelle option est manquante ou invalide ;
+    - ils aident Ã  diagnostiquer pourquoi la carte nâ€™est pas initialisÃ©e.
 
 ---
 
 ## 8. RÃ©sumÃ© rapide des options Core
 
-| Option  | Type                | Obligatoire | Valeur par dÃ©faut | RÃ´le principal                                 |
-|--------|---------------------|-------------|-------------------|-----------------------------------------------|
-| target | `string`            | oui         | aucune            | ID du conteneur DOM de la carte              |
-| center | `[number, number]`  | oui         | aucune            | Centre initial de la carte (lat, lng)        |
-| zoom   | `number`            | oui         | aucune            | Zoom initial de la carte                     |
+| Option | Type                | Obligatoire | Valeur par dÃ©faut               | RÃ´le principal                                        |
+| ------ | ------------------- | ----------- | --------------------------------- | ------------------------------------------------------ |
+| target | `string`            | oui         | aucune                            | ID du conteneur DOM de la carte                        |
+| center | `[number, number]`  | oui         | aucune                            | Centre initial de la carte (lat, lng)                  |
+| zoom   | `number`            | oui         | aucune                            | Zoom initial de la carte                               |
 | theme  | `"light" \| "dark"` | non         | `"light"` ou dernier thÃ¨me connu | ThÃ¨me UI (light/dark), uniquement pour lâ€™interface |
 
-Ce tableau rÃ©sume ce qui est **obligatoire**, **optionnel** et la fonction de chaque option dans GeoLeaf.Core.
----
+## Ce tableau rÃ©sume ce qui est **obligatoire**, **optionnel** et la fonction de chaque option dans GeoLeaf.Core.
 
 ## 9. Boot System (`src/app/`)
 
-Depuis la v3.2.0, l'initialisation de GeoLeaf est orchestrée par le **boot system** situé dans `src/app/`. Ce système gère le chargement séquentiel : core → plugins → démarrage.
+Depuis la v4.0.0, l'initialisation de GeoLeaf est orchestrée par le **boot system** situé dans `src/app/`. Ce système gère le chargement séquentiel : core → plugins → démarrage.
 
 ### 9.1 Fichiers du boot system
 
-| Fichier | Rôle |
-|---------|------|
-| `src/app/helpers.js` | Fonctions utilitaires partagées (DOM, events, validation) |
-| `src/app/init.js` | Initialisation des modules core + détection de l'environnement |
-| `src/app/boot.js` | Point d'entrée principal — orchestre le chargement et émet `geoleaf:ready` |
+| Fichier              | Rôle                                                                       |
+| -------------------- | -------------------------------------------------------------------------- |
+| `src/app/helpers.js` | Fonctions utilitaires partagées (DOM, events, validation)                  |
+| `src/app/init.js`    | Initialisation des modules core + détection de l'environnement             |
+| `src/app/boot.js`    | Point d'entrée principal — orchestre le chargement et émet `geoleaf:ready` |
 
 ### 9.2 Flux de démarrage
 
@@ -456,15 +455,15 @@ Point d'entrée recommandé pour démarrer GeoLeaf :
 
 ```js
 // Attendre que le DOM soit prêt
-document.addEventListener('DOMContentLoaded', () => {
-  GeoLeaf.boot();
+document.addEventListener("DOMContentLoaded", () => {
+    GeoLeaf.boot();
 });
 
 // Écouter l'événement de fin d'initialisation
-document.addEventListener('geoleaf:ready', () => {
-  console.log('GeoLeaf prêt, tous les modules chargés');
-  // Charger la configuration et initialiser la carte
-  GeoLeaf.loadConfig({ url: 'geoleaf.config.json' });
+document.addEventListener("geoleaf:ready", () => {
+    console.log("GeoLeaf prêt, tous les modules chargés");
+    // Charger la configuration et initialiser la carte
+    GeoLeaf.loadConfig({ url: "geoleaf.config.json" });
 });
 ```
 
@@ -478,10 +477,10 @@ Le boot system vérifie la cohérence des plugins chargés via un guard system :
 
 ### 9.5 Plugins disponibles
 
-| Plugin | Fichier | Namespace enrichi |
-|--------|---------|-------------------|
+| Plugin  | Fichier                     | Namespace enrichi                                                      |
+| ------- | --------------------------- | ---------------------------------------------------------------------- |
 | Storage | `geoleaf-storage.plugin.js` | `GeoLeaf.Storage`, `GeoLeaf._StorageDB`, `GeoLeaf._CacheManager`, etc. |
-| AddPOI | `geoleaf-addpoi.plugin.js` | `GeoLeaf.AddPOI`, `GeoLeaf._POIForm`, etc. |
+| AddPOI  | `geoleaf-addpoi.plugin.js`  | `GeoLeaf.AddPOI`, `GeoLeaf._POIForm`, etc.                             |
 
 Voir [Architecture Plugin](../plugins/GeoLeaf_Plugins_README.md) pour la documentation complète.
 

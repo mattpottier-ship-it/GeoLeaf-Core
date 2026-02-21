@@ -1,10 +1,10 @@
-﻿# 🎨 GeoLeaf UI Components - Documentation Détaillée
+# 🎨 GeoLeaf UI Components - Documentation Détaillée
 
-Product Version: GeoLeaf Platform V1  
+Product Version: GeoLeaf Platform V1
 
 **Modules** : `GeoLeaf._UIComponents`, `GeoLeaf._UIDomUtils`, `GeoLeaf.UI.Notifications`, et composants UI  
-**Version** : 3.2.0  
-**Fichiers source** : `src/static/js/ui/*.js` (19 fichiers)  
+**Version** : 4.0.0  
+**Fichiers source** : `src/modules/ui/*.js` (19 fichiers)  
 **Dernière mise à jour** : 19 janvier 2026
 
 ---
@@ -12,6 +12,7 @@ Product Version: GeoLeaf Platform V1
 ## 📋 Vue d'ensemble
 
 Le système de **composants UI** GeoLeaf fournit des **briques réutilisables** pour construire l'interface utilisateur de la cartographie. Ces composants standardisent :
+
 - La création d'éléments DOM avec cleanup automatique
 - Les patterns d'accordéons et panneaux
 - Les notifications toast
@@ -66,36 +67,34 @@ Fournit des **composants réutilisables** pour Legend et LayerManager : accordé
 Crée un accordéon avec header cliquable et body collapsible.
 
 **Paramètres** :
+
 - `container` (HTMLElement) : Conteneur parent
 - `config` (Object) :
-  - `layerId` : ID de la couche
-  - `label` : Titre de l'accordéon
-  - `collapsed` : État initial (replié ou non)
-  - `visible` : Couche visible (grise si false)
-  - `onToggle` : Callback lors du toggle
+    - `layerId` : ID de la couche
+    - `label` : Titre de l'accordéon
+    - `collapsed` : État initial (replié ou non)
+    - `visible` : Couche visible (grise si false)
+    - `onToggle` : Callback lors du toggle
 
 **Retourne** : `{ accordionEl, headerEl, bodyEl, toggleEl }`
 
 **Exemple** :
 
 ```javascript
-const legendContainer = document.querySelector('.gl-legend__body');
+const legendContainer = document.querySelector(".gl-legend__body");
 
-const { accordionEl, bodyEl } = GeoLeaf._UIComponents.createAccordion(
-  legendContainer,
-  {
-    layerId: 'parcs',
-    label: 'Parcs et Jardins',
+const { accordionEl, bodyEl } = GeoLeaf._UIComponents.createAccordion(legendContainer, {
+    layerId: "parcs",
+    label: "Parcs et Jardins",
     collapsed: false,
     visible: true,
     onToggle: (layerId, isExpanded) => {
-      console.log(`Accordéon ${layerId} est maintenant ${isExpanded ? 'ouvert' : 'fermé'}`);
-    }
-  }
-);
+        console.log(`Accordéon ${layerId} est maintenant ${isExpanded ? "ouvert" : "fermé"}`);
+    },
+});
 
 // Ajouter du contenu dans le body
-bodyEl.appendChild(document.createTextNode('Contenu de la légende'));
+bodyEl.appendChild(document.createTextNode("Contenu de la légende"));
 ```
 
 #### `renderCircleSymbol(container, config)`
@@ -103,36 +102,37 @@ bodyEl.appendChild(document.createTextNode('Contenu de la légende'));
 Rend un symbole circulaire (pour POI/markers) avec icône SVG optionnelle.
 
 **Paramètres** :
+
 - `container` : Conteneur du symbole
 - `config` :
-  - `radius` : Rayon en pixels (défaut: 8)
-  - `fillColor` : Couleur de remplissage
-  - `color` : Couleur de bordure
-  - `weight` : Épaisseur bordure
-  - `fillOpacity` : Opacité
-  - `icon` : ID d'icône SVG sprite (ex: `'#tree'`)
-  - `iconColor` : Couleur de l'icône
+    - `radius` : Rayon en pixels (défaut: 8)
+    - `fillColor` : Couleur de remplissage
+    - `color` : Couleur de bordure
+    - `weight` : Épaisseur bordure
+    - `fillOpacity` : Opacité
+    - `icon` : ID d'icône SVG sprite (ex: `'#tree'`)
+    - `iconColor` : Couleur de l'icône
 
 **Exemple** :
 
 ```javascript
-const symbolContainer = document.createElement('div');
+const symbolContainer = document.createElement("div");
 
 // Cercle simple
 GeoLeaf._UIComponents.renderCircleSymbol(symbolContainer, {
-  radius: 10,
-  fillColor: '#228B22',
-  color: '#006400',
-  weight: 2,
-  fillOpacity: 0.8
+    radius: 10,
+    fillColor: "#228B22",
+    color: "#006400",
+    weight: 2,
+    fillOpacity: 0.8,
 });
 
 // Cercle avec icône
 GeoLeaf._UIComponents.renderCircleSymbol(symbolContainer, {
-  radius: 12,
-  fillColor: '#FF5733',
-  icon: '#restaurant',
-  iconColor: '#FFFFFF'
+    radius: 12,
+    fillColor: "#FF5733",
+    icon: "#restaurant",
+    iconColor: "#FFFFFF",
 });
 ```
 
@@ -142,10 +142,10 @@ Rend un symbole de ligne (pour routes/LineString).
 
 ```javascript
 GeoLeaf._UIComponents.renderLineSymbol(symbolContainer, {
-  color: '#3388ff',
-  weight: 3,
-  opacity: 1,
-  dashArray: '5, 10' // Ligne pointillée
+    color: "#3388ff",
+    weight: 3,
+    opacity: 1,
+    dashArray: "5, 10", // Ligne pointillée
 });
 ```
 
@@ -155,10 +155,10 @@ Rend un symbole de polygone (pour zones/Polygon).
 
 ```javascript
 GeoLeaf._UIComponents.renderPolygonSymbol(symbolContainer, {
-  fillColor: '#3388ff',
-  fillOpacity: 0.4,
-  color: '#0066cc',
-  weight: 2
+    fillColor: "#3388ff",
+    fillOpacity: 0.4,
+    color: "#0066cc",
+    weight: 2,
 });
 ```
 
@@ -167,7 +167,7 @@ GeoLeaf._UIComponents.renderPolygonSymbol(symbolContainer, {
 Vide un élément DOM de manière sécurisée (évite innerHTML).
 
 ```javascript
-const container = document.getElementById('legend-body');
+const container = document.getElementById("legend-body");
 GeoLeaf._UIComponents.clearElement(container);
 // Tous les enfants sont retirés
 ```
@@ -178,9 +178,9 @@ Crée un message d'état vide (aucune donnée, chargement, etc.).
 
 ```javascript
 GeoLeaf._UIComponents.createEmptyMessage(
-  container,
-  'Aucune couche à afficher.',
-  'gl-legend__empty'
+    container,
+    "Aucune couche à afficher.",
+    "gl-legend__empty"
 );
 ```
 
@@ -189,10 +189,8 @@ GeoLeaf._UIComponents.createEmptyMessage(
 Attache un event listener avec cleanup automatique.
 
 ```javascript
-const cleanup = GeoLeaf._UIComponents.attachEventHandler(
-  button,
-  'click',
-  () => console.log('Clicked!')
+const cleanup = GeoLeaf._UIComponents.attachEventHandler(button, "click", () =>
+    console.log("Clicked!")
 );
 
 // Plus tard : retirer le listener
@@ -214,6 +212,7 @@ Utilitaires DOM pour résolution de champs, taxonomie, et manipulation UI.
 Résout une valeur via un chemin de propriété (dot notation).
 
 **Paramètres** :
+
 - `obj` : Objet source (POI, route, etc.)
 - `fieldPath` : Chemin séparé par des points (ex: `'attributes.reviews.rating'`)
 
@@ -223,25 +222,25 @@ Résout une valeur via un chemin de propriété (dot notation).
 
 ```javascript
 const poi = {
-  id: 'poi_123',
-  title: 'Restaurant',
-  attributes: {
-    address: '10 rue Paris',
-    reviews: {
-      rating: 4.5,
-      count: 127
-    }
-  }
+    id: "poi_123",
+    title: "Restaurant",
+    attributes: {
+        address: "10 rue Paris",
+        reviews: {
+            rating: 4.5,
+            count: 127,
+        },
+    },
 };
 
 // Résoudre des champs imbriqués
-const rating = GeoLeaf._UIDomUtils.resolveField(poi, 'attributes.reviews.rating');
+const rating = GeoLeaf._UIDomUtils.resolveField(poi, "attributes.reviews.rating");
 // → 4.5
 
-const address = GeoLeaf._UIDomUtils.resolveField(poi, 'attributes.address');
+const address = GeoLeaf._UIDomUtils.resolveField(poi, "attributes.address");
 // → '10 rue Paris'
 
-const missing = GeoLeaf._UIDomUtils.resolveField(poi, 'attributes.website');
+const missing = GeoLeaf._UIDomUtils.resolveField(poi, "attributes.website");
 // → undefined
 ```
 
@@ -250,7 +249,7 @@ const missing = GeoLeaf._UIDomUtils.resolveField(poi, 'attributes.website');
 Attache le comportement d'accordéon à un conteneur (délégation d'événements).
 
 ```javascript
-const panelContainer = document.querySelector('.gl-panel');
+const panelContainer = document.querySelector(".gl-panel");
 GeoLeaf._UIDomUtils.attachAccordionBehavior(panelContainer);
 
 // Tous les éléments .gl-accordion__header deviennent cliquables
@@ -262,8 +261,8 @@ Récupère le profil actif depuis `GeoLeaf.Config`.
 
 ```javascript
 const profile = GeoLeaf._UIDomUtils.getActiveProfileConfig();
-console.log('Profile ID:', profile.id);
-console.log('Layers:', profile.layers);
+console.log("Profile ID:", profile.id);
+console.log("Layers:", profile.layers);
 ```
 
 #### `populateSelectOptionsFromTaxonomy(selectEl, profile, optionsFrom)`
@@ -271,21 +270,18 @@ console.log('Layers:', profile.layers);
 Peuple un `<select>` avec des options depuis la taxonomie du profil.
 
 **Chemins supportés** :
+
 - `'taxonomy.categories'` : Toutes les catégories
 - `'taxonomy.categories[*].subcategories'` : Toutes les sous-catégories
 
 **Exemple** :
 
 ```javascript
-const selectEl = document.createElement('select');
+const selectEl = document.createElement("select");
 const profile = GeoLeaf._UIDomUtils.getActiveProfileConfig();
 
 // Peupler avec les catégories
-GeoLeaf._UIDomUtils.populateSelectOptionsFromTaxonomy(
-  selectEl,
-  profile,
-  'taxonomy.categories'
-);
+GeoLeaf._UIDomUtils.populateSelectOptionsFromTaxonomy(selectEl, profile, "taxonomy.categories");
 
 // HTML généré :
 // <option value="">— Tous —</option>
@@ -306,16 +302,16 @@ Système de **toast notifications** avec animations et auto-dismiss.
 
 ```javascript
 class NotificationSystem {
-  constructor() {
-    this.container = null;
-    this.maxVisible = 3;
-    this.durations = {
-      success: 3000,
-      error: 5000,
-      warning: 4000,
-      info: 3000
-    };
-  }
+    constructor() {
+        this.container = null;
+        this.maxVisible = 3;
+        this.durations = {
+            success: 3000,
+            error: 5000,
+            warning: 4000,
+            info: 3000,
+        };
+    }
 }
 ```
 
@@ -326,6 +322,7 @@ class NotificationSystem {
 Initialise le système de notifications.
 
 **Config** :
+
 - `container` : Sélecteur du conteneur (défaut: `'#gl-notifications'`)
 - `maxVisible` : Nombre max de toasts visibles (défaut: 3)
 - `durations` : Durées par type (ms)
@@ -336,13 +333,13 @@ Initialise le système de notifications.
 
 ```javascript
 GeoLeaf.UI.Notifications.init({
-  container: '#gl-notifications',
-  maxVisible: 5,
-  position: 'top-right',
-  durations: {
-    success: 2000,
-    error: 7000
-  }
+    container: "#gl-notifications",
+    maxVisible: 5,
+    position: "top-right",
+    durations: {
+        success: 2000,
+        error: 7000,
+    },
 });
 ```
 
@@ -351,8 +348,8 @@ GeoLeaf.UI.Notifications.init({
 Affiche une notification de succès.
 
 ```javascript
-GeoLeaf.UI.Notifications.success('Données chargées avec succès !');
-GeoLeaf.UI.Notifications.success('Sauvegarde réussie', 5000); // Durée personnalisée
+GeoLeaf.UI.Notifications.success("Données chargées avec succès !");
+GeoLeaf.UI.Notifications.success("Sauvegarde réussie", 5000); // Durée personnalisée
 ```
 
 #### `error(message, duration)`
@@ -360,8 +357,8 @@ GeoLeaf.UI.Notifications.success('Sauvegarde réussie', 5000); // Durée personn
 Affiche une notification d'erreur.
 
 ```javascript
-GeoLeaf.UI.Notifications.error('Impossible de charger les données');
-GeoLeaf.UI.Notifications.error('Erreur réseau', 10000);
+GeoLeaf.UI.Notifications.error("Impossible de charger les données");
+GeoLeaf.UI.Notifications.error("Erreur réseau", 10000);
 ```
 
 #### `warning(message, duration)`
@@ -369,7 +366,7 @@ GeoLeaf.UI.Notifications.error('Erreur réseau', 10000);
 Affiche une notification d'avertissement.
 
 ```javascript
-GeoLeaf.UI.Notifications.warning('Connexion instable');
+GeoLeaf.UI.Notifications.warning("Connexion instable");
 ```
 
 #### `info(message, duration)`
@@ -377,7 +374,7 @@ GeoLeaf.UI.Notifications.warning('Connexion instable');
 Affiche une notification d'information.
 
 ```javascript
-GeoLeaf.UI.Notifications.info('Chargement en cours...');
+GeoLeaf.UI.Notifications.info("Chargement en cours...");
 ```
 
 #### `clear()`
@@ -392,13 +389,13 @@ GeoLeaf.UI.Notifications.clear();
 
 ```html
 <div id="gl-notifications" class="gl-notifications gl-notifications--bottom-center">
-  <div class="gl-toast gl-toast--success" role="alert" aria-live="polite">
-    <div class="gl-toast__icon">✓</div>
-    <div class="gl-toast__content">
-      <div class="gl-toast__message">Données chargées avec succès !</div>
+    <div class="gl-toast gl-toast--success" role="alert" aria-live="polite">
+        <div class="gl-toast__icon">✓</div>
+        <div class="gl-toast__content">
+            <div class="gl-toast__message">Données chargées avec succès !</div>
+        </div>
+        <button class="gl-toast__close" aria-label="Fermer">×</button>
     </div>
-    <button class="gl-toast__close" aria-label="Fermer">×</button>
-  </div>
 </div>
 ```
 
@@ -406,32 +403,32 @@ GeoLeaf.UI.Notifications.clear();
 
 ```css
 .gl-toast {
-  display: flex;
-  align-items: center;
-  padding: 12px 16px;
-  border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-  animation: slideIn 0.3s ease-out;
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    animation: slideIn 0.3s ease-out;
 }
 
 .gl-toast--success {
-  background-color: #10B981;
-  color: white;
+    background-color: #10b981;
+    color: white;
 }
 
 .gl-toast--error {
-  background-color: #EF4444;
-  color: white;
+    background-color: #ef4444;
+    color: white;
 }
 
 .gl-toast--warning {
-  background-color: #F59E0B;
-  color: white;
+    background-color: #f59e0b;
+    color: white;
 }
 
 .gl-toast--info {
-  background-color: #3B82F6;
-  color: white;
+    background-color: #3b82f6;
+    color: white;
 }
 ```
 
@@ -450,17 +447,18 @@ Affiche les **coordonnées du curseur** en temps réel sur la carte.
 Initialise l'affichage des coordonnées.
 
 **Options** :
+
 - `position` : Position Leaflet (défaut: `'bottomleft'`)
 - `decimals` : Nombre de décimales (défaut: 6)
 
 **Exemple** :
 
 ```javascript
-const map = L.map('map');
+const map = L.map("map");
 
 GeoLeaf.UI.CoordinatesDisplay.init(map, {
-  position: 'bottomleft',
-  decimals: 4
+    position: "bottomleft",
+    decimals: 4,
 });
 
 // Affichage : "Lat: 48.8566, Lng: 2.3522"
@@ -472,9 +470,9 @@ Le module s'intègre automatiquement au wrapper d'échelle si disponible :
 
 ```html
 <div class="gl-scale-main-wrapper">
-  <div class="gl-scale-numeric">1:25000 Z12</div>
-  <div class="gl-scale-separator"></div>
-  <div class="gl-scale-coordinates">Lat: 48.8566, Lng: 2.3522</div>
+    <div class="gl-scale-numeric">1:25000 Z12</div>
+    <div class="gl-scale-separator"></div>
+    <div class="gl-scale-coordinates">Lat: 48.8566, Lng: 2.3522</div>
 </div>
 ```
 
@@ -482,9 +480,9 @@ Le module s'intègre automatiquement au wrapper d'échelle si disponible :
 
 ```json
 {
-  "ui": {
-    "showCoordinates": true
-  }
+    "ui": {
+        "showCoordinates": true
+    }
 }
 ```
 
@@ -503,10 +501,11 @@ Contrôle d'échelle de la carte (graphique ou numérique).
 Initialise le contrôle d'échelle.
 
 **Options** :
+
 - `position` : Position (défaut: `'bottomleft'`)
 - `scaleType` : Type d'échelle (`'graphic'` ou `'numeric'`)
-  - `'graphic'` : Échelle Leaflet classique (barre avec distances)
-  - `'numeric'` : Échelle numérique (1:25000 Z12)
+    - `'graphic'` : Échelle Leaflet classique (barre avec distances)
+    - `'numeric'` : Échelle numérique (1:25000 Z12)
 - `metric` : Afficher échelle métrique (défaut: true)
 - `imperial` : Afficher échelle impériale (défaut: false)
 - `maxWidth` : Largeur max barre graphique (défaut: 150)
@@ -514,19 +513,19 @@ Initialise le contrôle d'échelle.
 **Exemples** :
 
 ```javascript
-const map = L.map('map');
+const map = L.map("map");
 
 // Échelle graphique (Leaflet par défaut)
 GeoLeaf.UI.ScaleControl.init(map, {
-  scaleType: 'graphic',
-  metric: true,
-  imperial: false
+    scaleType: "graphic",
+    metric: true,
+    imperial: false,
 });
 
 // Échelle numérique (1:25000 Z12)
 GeoLeaf.UI.ScaleControl.init(map, {
-  scaleType: 'numeric',
-  position: 'bottomright'
+    scaleType: "numeric",
+    position: "bottomright",
 });
 ```
 
@@ -534,10 +533,10 @@ GeoLeaf.UI.ScaleControl.init(map, {
 
 ```json
 {
-  "ui": {
-    "showScale": true,
-    "scaleType": "numeric"
-  }
+    "ui": {
+        "showScale": true,
+        "scaleType": "numeric"
+    }
 }
 ```
 
@@ -551,6 +550,7 @@ résolution = (40075016.686 * |cos(lat * π/180)|) / 2^(zoom + 8)
 ```
 
 **Exemple** :
+
 - Zoom 12 à Paris (48.8566°N) : 1:27000
 - Zoom 15 à Paris : 1:3400
 
@@ -578,8 +578,8 @@ filter-panel/
 
 ```html
 <div class="gl-filter-control gl-filter-control--search">
-  <label for="search-input">Recherche</label>
-  <input type="text" id="search-input" placeholder="Rechercher...">
+    <label for="search-input">Recherche</label>
+    <input type="text" id="search-input" placeholder="Rechercher..." />
 </div>
 ```
 
@@ -587,12 +587,12 @@ filter-panel/
 
 ```html
 <div class="gl-filter-control gl-filter-control--select">
-  <label for="category-select">Catégorie</label>
-  <select id="category-select">
-    <option value="">— Tous —</option>
-    <option value="restaurant">Restaurants</option>
-    <option value="hotel">Hôtels</option>
-  </select>
+    <label for="category-select">Catégorie</label>
+    <select id="category-select">
+        <option value="">— Tous —</option>
+        <option value="restaurant">Restaurants</option>
+        <option value="hotel">Hôtels</option>
+    </select>
 </div>
 ```
 
@@ -600,12 +600,12 @@ filter-panel/
 
 ```html
 <div class="gl-filter-control gl-filter-control--checkboxes">
-  <label>Tags</label>
-  <div class="gl-filter-checkboxes">
-    <label><input type="checkbox" value="parking"> Parking</label>
-    <label><input type="checkbox" value="wifi"> WiFi</label>
-    <label><input type="checkbox" value="terrasse"> Terrasse</label>
-  </div>
+    <label>Tags</label>
+    <div class="gl-filter-checkboxes">
+        <label><input type="checkbox" value="parking" /> Parking</label>
+        <label><input type="checkbox" value="wifi" /> WiFi</label>
+        <label><input type="checkbox" value="terrasse" /> Terrasse</label>
+    </div>
 </div>
 ```
 
@@ -613,10 +613,10 @@ filter-panel/
 
 ```html
 <div class="gl-filter-control gl-filter-control--proximity">
-  <label>Proximité</label>
-  <input type="range" min="0" max="5000" step="100" value="1000">
-  <span class="proximity-value">1.0 km</span>
-  <button class="proximity-center-btn">📍 Centrer ici</button>
+    <label>Proximité</label>
+    <input type="range" min="0" max="5000" step="100" value="1000" />
+    <span class="proximity-value">1.0 km</span>
+    <button class="proximity-center-btn">📍 Centrer ici</button>
 </div>
 ```
 
@@ -624,15 +624,15 @@ filter-panel/
 
 ```html
 <div class="gl-filter-active-tags">
-  <span class="gl-filter-tag" data-filter-type="category" data-filter-value="restaurant">
-    Restaurant
-    <button class="gl-filter-tag__remove">×</button>
-  </span>
-  <span class="gl-filter-tag" data-filter-type="tag" data-filter-value="wifi">
-    WiFi
-    <button class="gl-filter-tag__remove">×</button>
-  </span>
-  <button class="gl-filter-clear-all">Tout effacer</button>
+    <span class="gl-filter-tag" data-filter-type="category" data-filter-value="restaurant">
+        Restaurant
+        <button class="gl-filter-tag__remove">×</button>
+    </span>
+    <span class="gl-filter-tag" data-filter-type="tag" data-filter-value="wifi">
+        WiFi
+        <button class="gl-filter-tag__remove">×</button>
+    </span>
+    <button class="gl-filter-clear-all">Tout effacer</button>
 </div>
 ```
 
@@ -640,15 +640,15 @@ filter-panel/
 
 ```javascript
 const filterState = {
-  search: 'restaurant',
-  category: 'food',
-  subcategory: '',
-  tags: ['parking', 'wifi'],
-  proximity: {
-    enabled: true,
-    radius: 1000, // mètres
-    center: [48.8566, 2.3522]
-  }
+    search: "restaurant",
+    category: "food",
+    subcategory: "",
+    tags: ["parking", "wifi"],
+    proximity: {
+        enabled: true,
+        radius: 1000, // mètres
+        center: [48.8566, 2.3522],
+    },
 };
 ```
 
@@ -662,35 +662,35 @@ Tous les composants UI utilisent des **classes CSS BEM** pour faciliter la perso
 
 ```css
 :root {
-  /* Notifications */
-  --gl-toast-success: #10B981;
-  --gl-toast-error: #EF4444;
-  --gl-toast-warning: #F59E0B;
-  --gl-toast-info: #3B82F6;
-  
-  /* Accordéons */
-  --gl-accordion-header-bg: #f5f5f5;
-  --gl-accordion-header-bg-hover: #e0e0e0;
-  --gl-accordion-border: #ddd;
-  
-  /* Symboles */
-  --gl-symbol-size: 16px;
-  --gl-symbol-border: #666;
-  
-  /* Filtres */
-  --gl-filter-bg: white;
-  --gl-filter-border: #ddd;
-  --gl-filter-tag-bg: #3B82F6;
-  --gl-filter-tag-color: white;
+    /* Notifications */
+    --gl-toast-success: #10b981;
+    --gl-toast-error: #ef4444;
+    --gl-toast-warning: #f59e0b;
+    --gl-toast-info: #3b82f6;
+
+    /* Accordéons */
+    --gl-accordion-header-bg: #f5f5f5;
+    --gl-accordion-header-bg-hover: #e0e0e0;
+    --gl-accordion-border: #ddd;
+
+    /* Symboles */
+    --gl-symbol-size: 16px;
+    --gl-symbol-border: #666;
+
+    /* Filtres */
+    --gl-filter-bg: white;
+    --gl-filter-border: #ddd;
+    --gl-filter-tag-bg: #3b82f6;
+    --gl-filter-tag-color: white;
 }
 
 /* Thème sombre */
 [data-theme="dark"] {
-  --gl-accordion-header-bg: #2C3E50;
-  --gl-accordion-header-bg-hover: #34495E;
-  --gl-accordion-border: #555;
-  --gl-filter-bg: #2C3E50;
-  --gl-filter-border: #555;
+    --gl-accordion-header-bg: #2c3e50;
+    --gl-accordion-header-bg-hover: #34495e;
+    --gl-accordion-border: #555;
+    --gl-filter-bg: #2c3e50;
+    --gl-filter-border: #555;
 }
 ```
 
@@ -698,41 +698,68 @@ Tous les composants UI utilisent des **classes CSS BEM** pour faciliter la perso
 
 ```css
 /* Accordéons */
-.gl-legend__accordion { }
-.gl-legend__accordion--collapsed { }
-.gl-legend__accordion--inactive { }
-.gl-legend__accordion-header { }
-.gl-legend__accordion-body { }
-.gl-legend__accordion-toggle { }
+.gl-legend__accordion {
+}
+.gl-legend__accordion--collapsed {
+}
+.gl-legend__accordion--inactive {
+}
+.gl-legend__accordion-header {
+}
+.gl-legend__accordion-body {
+}
+.gl-legend__accordion-toggle {
+}
 
 /* Symboles */
-.gl-legend__circle { }
-.gl-legend__line { }
-.gl-legend__polygon { }
+.gl-legend__circle {
+}
+.gl-legend__line {
+}
+.gl-legend__polygon {
+}
 
 /* Notifications */
-.gl-toast { }
-.gl-toast--success { }
-.gl-toast--error { }
-.gl-toast--warning { }
-.gl-toast--info { }
-.gl-toast--removing { }
+.gl-toast {
+}
+.gl-toast--success {
+}
+.gl-toast--error {
+}
+.gl-toast--warning {
+}
+.gl-toast--info {
+}
+.gl-toast--removing {
+}
 
 /* Filtres */
-.gl-filter-control { }
-.gl-filter-control--search { }
-.gl-filter-control--select { }
-.gl-filter-control--checkboxes { }
-.gl-filter-control--proximity { }
-.gl-filter-active-tags { }
-.gl-filter-tag { }
-.gl-filter-tag__remove { }
+.gl-filter-control {
+}
+.gl-filter-control--search {
+}
+.gl-filter-control--select {
+}
+.gl-filter-control--checkboxes {
+}
+.gl-filter-control--proximity {
+}
+.gl-filter-active-tags {
+}
+.gl-filter-tag {
+}
+.gl-filter-tag__remove {
+}
 
 /* Échelle et coordonnées */
-.gl-scale-main-wrapper { }
-.gl-scale-numeric { }
-.gl-scale-coordinates { }
-.gl-zoom-badge { }
+.gl-scale-main-wrapper {
+}
+.gl-scale-numeric {
+}
+.gl-scale-coordinates {
+}
+.gl-zoom-badge {
+}
 ```
 
 ---
@@ -743,30 +770,27 @@ Tous les composants UI utilisent des **classes CSS BEM** pour faciliter la perso
 
 ```javascript
 // Dans legend-renderer.js
-const { accordionEl, bodyEl } = GeoLeaf._UIComponents.createAccordion(
-  container,
-  {
-    layerId: 'parcs',
-    label: 'Parcs et Jardins',
+const { accordionEl, bodyEl } = GeoLeaf._UIComponents.createAccordion(container, {
+    layerId: "parcs",
+    label: "Parcs et Jardins",
     collapsed: false,
-    visible: true
-  }
-);
+    visible: true,
+});
 
 // Ajouter des symboles dans le body
 const items = [
-  { label: 'Parc urbain', color: '#228B22' },
-  { label: 'Jardin public', color: '#90EE90' }
+    { label: "Parc urbain", color: "#228B22" },
+    { label: "Jardin public", color: "#90EE90" },
 ];
 
-items.forEach(item => {
-  const itemEl = L.DomUtil.create('div', 'gl-legend__item', bodyEl);
-  GeoLeaf._UIComponents.renderCircleSymbol(itemEl, {
-    fillColor: item.color,
-    radius: 8
-  });
-  const labelEl = L.DomUtil.create('span', 'gl-legend__item-label', itemEl);
-  labelEl.textContent = item.label;
+items.forEach((item) => {
+    const itemEl = L.DomUtil.create("div", "gl-legend__item", bodyEl);
+    GeoLeaf._UIComponents.renderCircleSymbol(itemEl, {
+        fillColor: item.color,
+        radius: 8,
+    });
+    const labelEl = L.DomUtil.create("span", "gl-legend__item-label", itemEl);
+    labelEl.textContent = item.label;
 });
 ```
 
@@ -775,30 +799,30 @@ items.forEach(item => {
 ```javascript
 // panel-builder.js
 const panelLayout = {
-  sections: [
-    {
-      type: 'plain',
-      fields: [
-        { type: 'title', field: 'title' },
-        { type: 'text', label: 'Adresse', field: 'attributes.address' },
-        { type: 'rating', field: 'attributes.reviews.rating' }
-      ]
-    }
-  ]
+    sections: [
+        {
+            type: "plain",
+            fields: [
+                { type: "title", field: "title" },
+                { type: "text", label: "Adresse", field: "attributes.address" },
+                { type: "rating", field: "attributes.reviews.rating" },
+            ],
+        },
+    ],
 };
 
 function renderPanel(poi, layout) {
-  layout.sections.forEach(section => {
-    section.fields.forEach(fieldDef => {
-      // Résoudre la valeur du champ
-      const value = GeoLeaf._UIDomUtils.resolveField(poi, fieldDef.field);
-      
-      // Rendu selon le type
-      if (fieldDef.type === 'rating') {
-        renderRating(value); // 4.5 → ★★★★☆
-      }
+    layout.sections.forEach((section) => {
+        section.fields.forEach((fieldDef) => {
+            // Résoudre la valeur du champ
+            const value = GeoLeaf._UIDomUtils.resolveField(poi, fieldDef.field);
+
+            // Rendu selon le type
+            if (fieldDef.type === "rating") {
+                renderRating(value); // 4.5 → ★★★★☆
+            }
+        });
     });
-  });
 }
 ```
 
@@ -807,13 +831,15 @@ function renderPanel(poi, layout) {
 ```javascript
 // geojson-loader.js
 GeoLeaf.GeoJSON.load({
-  id: 'parcs',
-  url: '/data/parcs.geojson'
-}).then(() => {
-  GeoLeaf.UI.Notifications.success('Couche "Parcs" chargée avec succès !');
-}).catch(error => {
-  GeoLeaf.UI.Notifications.error(`Erreur de chargement : ${error.message}`);
-});
+    id: "parcs",
+    url: "/data/parcs.geojson",
+})
+    .then(() => {
+        GeoLeaf.UI.Notifications.success('Couche "Parcs" chargée avec succès !');
+    })
+    .catch((error) => {
+        GeoLeaf.UI.Notifications.error(`Erreur de chargement : ${error.message}`);
+    });
 ```
 
 ---
@@ -840,22 +866,25 @@ GeoLeaf.GeoJSON.load({
 ## 🚀 Améliorations futures
 
 ### Phase 1 (Q1 2026)
+
 - [ ] Notifications empilables (queuing system)
 - [ ] Thèmes de notifications personnalisables
 - [ ] Accordéons imbriqués (support récursif)
 
 ### Phase 2 (Q2 2026)
+
 - [ ] Composant Modal réutilisable
 - [ ] Composant Dropdown menu
 - [ ] Composant Tooltip avancé
 
 ### Phase 3 (Q3 2026)
+
 - [ ] Web Components API (Custom Elements)
 - [ ] Framework-agnostic (React/Vue adapters)
 - [ ] Storybook pour showcase composants
 
 ---
 
-**Version** : 3.2.0  
+**Version** : 4.0.0  
 **Dernière mise à jour** : 19 janvier 2026  
 **Sprint 3** : Documentation complète des composants UI ✅

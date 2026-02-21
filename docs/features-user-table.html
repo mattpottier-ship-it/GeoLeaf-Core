@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GeoLeaf — Ce que vous pouvez faire</title>
+  <style>
+    :root {
+      --bg: #f7f9fc;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --core: #0ea5e9;
+      --storage: #f59e0b;
+      --addpoi: #10b981;
+      --ok: #16a34a;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+
+    .wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 28px 18px 40px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #0f172a, #1e3a8a);
+      color: #fff;
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: 1.8rem;
+    }
+
+    .hero p {
+      margin: 0;
+      color: #dbeafe;
+      max-width: 900px;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 14px 0 18px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #fff;
+      border: 1px solid var(--line);
+      color: var(--text);
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+    .dot-core { background: var(--core); }
+    .dot-storage { background: var(--storage); }
+    .dot-addpoi { background: var(--addpoi); }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+    }
+
+    .table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      min-width: 960px;
+      border-collapse: collapse;
+    }
+
+    thead th {
+      text-align: left;
+      background: #f8fafc;
+      color: #111827;
+      font-size: 0.9rem;
+      padding: 12px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+
+    tbody td {
+      padding: 12px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+      font-size: 0.95rem;
+    }
+
+    tbody tr:hover { background: #f9fbff; }
+
+    .cat { font-weight: 700; white-space: nowrap; }
+
+    .availability {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+      font-size: 0.86rem;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid;
+      margin: 0 6px 6px 0;
+      white-space: nowrap;
+    }
+
+    .a-core { color: #075985; border-color: #bae6fd; background: #e0f2fe; }
+    .a-storage { color: #92400e; border-color: #fde68a; background: #fffbeb; }
+    .a-addpoi { color: #065f46; border-color: #a7f3d0; background: #ecfdf5; }
+
+    .note {
+      margin-top: 14px;
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 10px;
+      padding: 12px;
+      color: #7c2d12;
+      font-size: 0.92rem;
+    }
+
+    .footer {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .ok { color: var(--ok); font-weight: 700; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <h1>GeoLeaf — Fonctionnalités côté utilisateur</h1>
+      <p>
+        Tableau orienté usage final (non technique) : ce que l’utilisateur peut faire dans l’application,
+        et si la fonction est disponible en Core (MIT) ou via plugins premium.
+      </p>
+    </section>
+
+    <div class="legend">
+      <span class="pill"><span class="dot dot-core"></span> Core (MIT)</span>
+      <span class="pill"><span class="dot dot-storage"></span> Plugin Storage (Commercial)</span>
+      <span class="pill"><span class="dot dot-addpoi"></span> Plugin AddPOI (Commercial)</span>
+    </div>
+
+    <section class="card table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Catégorie</th>
+            <th>Ce que l’utilisateur peut faire</th>
+            <th>Description simple</th>
+            <th>Disponibilité</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="cat">Carte</td>
+            <td>Afficher une carte interactive</td>
+            <td>Navigation fluide (zoom, déplacement), affichage multi-couches.</td>
+            <td><span class="availability a-core">Core</span></td>
+          </tr>
+          <tr>
+            <td class="cat">Fond de carte</td>
+            <td>Choisir un basemap</td>
+            <td>Street / Topo / Satellite / URL raster personnalisée, avec option basemap vectorielle MapLibre selon configuration.</td>
+            <td><span class="availability a-core">Core</span></td>
+          </tr>
+          <tr>
+            <td class="cat">Basemap vectoriel</td>
+            <td>Utiliser une base tuile vectorielle MapLibre</td>
+            <td>Support des fonds vectoriels de type MapLibre (avec fallback raster si le plugin MapLibre n’est pas chargé).</td>
+            <td><span class="availability a-core">Core</span></td>
+          </tr>
+          <tr>
+            <td class="cat">Emprise géo</td>
+            <td>Limiter la zone de navigation</td>
+            <td>Possibilité de fixer une emprise géographique (bounds) et des niveaux de zoom min/max.</td>
+            <td><span class="availability a-core">Core</span></td>
+          </tr>
+          <tr>
+            <td class="cat">Données</td>
+            <td>Lire des données JSON / GeoJSON en HTTP et en local</td>
+            <td>Chargement de couches via URL HTTP(S) et via fichiers locaux du profil (JSON / GeoJSON).</td>
+            <td><span class="availability a-core">Core</span></td>
+          </tr>
+          <tr>
+            <td class="cat">Configuration</td>
+            <td>Paramétrer l’environnement via JSON (sans code)</td>
+            <td>L’environnement (carte, UI, couches, styles, comportements) se configure par fichiers JSON, sans développement spécifique.</td>
+            <td><span class="availability a-core">Core</span></td>
+          </tr>
+          <tr>
+            <td class="cat">Itinéraires GPX</td>
+            <td>Charger des traces GPX locales</td>
+            <td>Import GPX pour afficher des trajets/points (conversion et affichage côté carte).</td>
+            <td><span class="availability a-core">Core</span></td>
+          </tr>
+          <tr>
+            <td class="cat">Styles</td>
+            <td>Styler lignes, points et polygones</td>
+            <td>Styles complets (couleur, opacité, épaisseur, symboles), y compris styles conditionnels par valeurs d’attribut.</td>
+            <td><span class="availability a-core">Core</span></td>
+          </tr>
+          <tr>
+            <td class="cat">Styles avancés</td>
+            <td>Appliquer plusieurs styles dans une même couche</td>
+            <td>Règles `styleRules` pour changer automatiquement le rendu selon les attributs des objets.</td>
+            <td><span class="availability a-core">Core</span></td>
+          </tr>
+          <tr>
+            <td class="cat">Polygones</td>
+            <td>Polygones avec hachures</td>
+            <td>Hachurage SVG pris en charge (diagonal, horizontal, vertical, croix, points).</td>
+            <td><span class="availability a-core">Core</span></td>
+          </tr>
+          <tr>
+            <td class="cat">Labels</td>
+            <td>Afficher/masquer des labels</td>
+            <td>Libellés configurables, avec visibilité pilotée par le niveau de zoom.</td>
+            <td><span class="availability a-core">Core</span></td>
+          </tr>
+          <tr>
+            <td class="cat">Seuils de zoom</td>
+            <td>Contrôler l’affichage selon le zoom</td>
+            <td>Seuils pour les couches et seuils indépendants pour les labels.</td>
+            <td><span class="availability a-core">Core</span></td>
+          </tr>
+          <tr>
+            <td class="cat">Légende</td>
+            <td>Afficher une légende dynamique</td>
+            <td>Légende auto selon couches/styles actifs, configurable (titre, position, repliée).</td>
+            <td><span class="availability a-core">Core</span></td>
+          </tr>
+          <tr>
+            <td class="cat">Géolocalisation</td>
+            <td>Se localiser sur la carte</td>
+            <td>Bouton de géolocalisation ON/OFF, suivi GPS, centrage carte et cercle de précision.</td>
+            <td><span class="availability a-core">Core</span></td>
+          </tr>
+          <tr>
+            <td class="cat">Thèmes</td>
+            <td>Appliquer un thème métier</td>
+            <td>Un thème = un ensemble cohérent de couches visibles/masquées.</td>
+            <td><span class="availability a-core">Core</span></td>
+          </tr>
+          <tr>
+            <td class="cat">Mode métier</td>
+            <td>Basculer à la volée entre plusieurs métiers</td>
+            <td>Chaque métier peut avoir sa propre configuration d’interface et son propre jeu de données, avec changement instantané pendant l’usage.</td>
+            <td><span class="availability a-core">Core</span></td>
+          </tr>
+          <tr>
+            <td class="cat">Interface</td>
+            <td>Personnaliser les panneaux UI</td>
+            <td>Afficher/masquer légende, gestionnaire de couches, filtres, recherche, side panel et positionnement des panneaux.</td>
+            <td><span class="availability a-core">Core</span></td>
+          </tr>
+          <tr>
+            <td class="cat">Recherche & filtres</td>
+            <td>Trouver rapidement une donnée</td>
+            <td>Recherche texte paramétrable (champs configurables), filtres catégorie/sous-catégorie et filtres par tags.</td>
+            <td><span class="availability a-core">Core</span></td>
+          </tr>
+          <tr>
+            <td class="cat">Tooltip</td>
+            <td>Configurer l’infobulle au survol</td>
+            <td>Contenu tooltip configurable par couche/POI (champs, format, comportement d’affichage).</td>
+            <td><span class="availability a-core">Core</span></td>
+          </tr>
+          <tr>
+            <td class="cat">Popup</td>
+            <td>Configurer un popup moderne</td>
+            <td>Popup personnalisable (contenu riche, badges, images, lien “voir plus”, sécurité HTML).</td>
+            <td><span class="availability a-core">Core</span></td>
+          </tr>
+          <tr>
+            <td class="cat">POI</td>
+            <td>Consulter des points d’intérêt</td>
+            <td>Affichage, popup, catégorisation, regroupement (clustering) si besoin.</td>
+            <td><span class="availability a-core">Core</span></td>
+          </tr>
+          <tr>
+            <td class="cat">POI</td>
+            <td>Personnaliser les icônes POI par attribut</td>
+            <td>Association d’icônes depuis un sprite SVG selon les attributs métier (catégorie / sous-catégorie).</td>
+            <td><span class="availability a-core">Core</span></td>
+          </tr>
+          <tr>
+            <td class="cat">Side panel</td>
+            <td>Afficher un panneau droit de détail</td>
+            <td>Panneau latéral de détail ouvrable/fermable pour un élément, pilotable par configuration.</td>
+            <td><span class="availability a-core">Core</span></td>
+          </tr>
+          <tr>
+            <td class="cat">Side panel métier</td>
+            <td>Adapter le contenu selon le métier</td>
+            <td>Layout configurable: galerie photo, avis clients, lien externe, listes à puces, tableaux, tags, sections accordéon.</td>
+            <td><span class="availability a-core">Core</span></td>
+          </tr>
+          <tr>
+            <td class="cat">POI avancé</td>
+            <td>Créer / éditer / supprimer des POI</td>
+            <td>Formulaire CRUD, mode placement carte, validation temps réel, upload image.</td>
+            <td>
+              <span class="availability a-addpoi">Plugin AddPOI</span>
+            </td>
+          </tr>
+          <tr>
+            <td class="cat">Itinéraires</td>
+            <td>Afficher des trajets</td>
+            <td>Prise en charge de routes (GeoJSON/GPX), styles de ligne et cadrage automatique.</td>
+            <td><span class="availability a-core">Core</span></td>
+          </tr>
+          <tr>
+            <td class="cat">Données tabulaires</td>
+            <td>Afficher un tableau des objets</td>
+            <td>Vue tableau pour explorer les entités cartographiques.</td>
+            <td><span class="availability a-core">Core</span></td>
+          </tr>
+          <tr>
+            <td class="cat">Offline</td>
+            <td>Utiliser l’app sans réseau</td>
+            <td>Cache IndexedDB + Service Worker + sync (selon configuration projet).</td>
+            <td><span class="availability a-storage">Plugin Storage</span></td>
+          </tr>
+          <tr>
+            <td class="cat">Gros volumes</td>
+            <td>Gérer les téléchargements volumineux</td>
+            <td>Estimation de taille avant cache, alertes quota et recommandations réseau (Wi-Fi).</td>
+            <td><span class="availability a-storage">Plugin Storage</span></td>
+          </tr>
+          <tr>
+            <td class="cat">Sécurité</td>
+            <td>Sécuriser les contenus affichés</td>
+            <td>Protection XSS (sanitization/escaping) pour réduire les risques d’injection HTML.</td>
+            <td><span class="availability a-core">Core</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <p class="footer">
+      Core = licence MIT. Plugins = licence commerciale. Voir <a href="../LICENCE_PREMIUM.md">LICENCE_PREMIUM.md</a>
+      et <a href="guides/GUIDE_LICENCE_PREMIUM.md">GUIDE_LICENCE_PREMIUM.md</a>.
+    </p>
+  </div>
+</body>
+</html>

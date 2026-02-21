@@ -5,7 +5,16 @@
   "geometry": "polyline",
   "data": {
     "directory": "data",
-    "file": "reseau_ferroviaire.geojson"
+    "file": "reseau_ferroviaire.geojson",
+    "vectorTiles": {
+      "enabled": true,
+      "tilesDirectory": "tiles",
+      "layerName": "reseau_ferroviaire",
+      "minZoom": 0,
+      "maxNativeZoom": 14,
+      "maxZoom": 18,
+      "interactive": false
+    }
   },
   "styles": {
     "directory": "styles",
