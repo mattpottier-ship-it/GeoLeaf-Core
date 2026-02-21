@@ -1,5 +1,7 @@
 # GeoLeaf Notice and License Attribution
 
+Product Version: GeoLeaf Platform V1  
+
 ## License
 
 **GeoLeaf Core** is released under the **MIT License**.

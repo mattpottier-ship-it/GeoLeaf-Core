@@ -1,5 +1,7 @@
 ﻿# GeoLeaf.Errors â€“ Documentation du module Errors
 
+**Product Version:** GeoLeaf Platform V1  
+
 **Version**: 3.2.0  
 **Fichier**: `src/static/js/geoleaf.errors.js` (297 lignes)  
 **Date**: DÃ©cembre 2025

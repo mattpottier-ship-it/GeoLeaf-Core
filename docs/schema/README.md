@@ -1,5 +1,6 @@
 ﻿# 📐 GeoLeaf JSON Schema Documentation
 
+Product Version: GeoLeaf Platform V1  
 **Version**: 3.2.0  
 **Last Updated**: January 22, 2026
 

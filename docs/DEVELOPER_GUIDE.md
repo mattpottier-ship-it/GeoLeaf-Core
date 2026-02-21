@@ -1,8 +1,11 @@
 # GeoLeaf Developer Guide
 
+**Product Version:** GeoLeaf Platform V1  
 **Version:** 3.2.0  
 **Last Updated:** February 2026  
 **Audience:** Contributors and advanced developers
+
+> Versioning convention: **Platform V1** is the product label; technical SemVer in this repository remains **3.2.0** for compatibility.
 
 ---
 

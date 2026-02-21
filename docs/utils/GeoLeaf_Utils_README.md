@@ -1,5 +1,7 @@
 ﻿# 🛠️ GeoLeaf.Utils - Utilitaires Généraux
 
+Product Version: GeoLeaf Platform V1  
+
 **Module** : `GeoLeaf.Utils`  
 **Version** : 3.2.0  
 **Fichiers source** : `src/static/js/utils/*.js` (12 modules)  

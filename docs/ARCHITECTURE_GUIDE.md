@@ -1,8 +1,11 @@
 # GeoLeaf – Architecture Technique
 
+> **Version produit**: GeoLeaf Platform V1  
 > **Version**: 3.2.0  
 > **Dernière mise à jour**: 15 février 2026  
 > **Architecture**: Modulaire + Plugin System + Content Builder v1.0.0
+
+> Convention de versioning : **Platform V1** est le label produit ; le SemVer technique de ce dépôt reste en **3.2.0**.
 
 ## Table des Matières
 

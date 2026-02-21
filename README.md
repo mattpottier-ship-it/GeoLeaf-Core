@@ -4,6 +4,9 @@
 
 **Modular JavaScript mapping library built on Leaflet**
 
+**Product Line:** GeoLeaf Platform V1 (product naming)  
+**Technical package SemVer in this repository:** 3.2.0
+
 [![Version](https://img.shields.io/badge/version-3.2.0-blue.svg)](https://github.com/mattpottier-ship-it/GeoLeaf-Core/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Leaflet](https://img.shields.io/badge/Leaflet-1.9.4-199900.svg)](https://leafletjs.com)

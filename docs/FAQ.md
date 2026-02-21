@@ -2,8 +2,11 @@
 
 > **Questions frÃ©quemment posÃ©es** et leurs rÃ©ponses
 
+**Version produit**: GeoLeaf Platform V1  
 **Version**: 3.2.0  
 **DerniÃ¨re mise Ã  jour**: 14 fÃ©vrier 2026
+
+> Convention de versioning : **Platform V1** est le label produit ; le SemVer technique de ce dépôt reste en **3.2.0**.
 
 ---
 

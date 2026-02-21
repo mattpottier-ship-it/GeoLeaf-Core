@@ -1,5 +1,5 @@
 ﻿# GeoLeaf.UI.Theme â€“ Documentation
-
+Product Version: GeoLeaf Platform V1  
 Module de gestion des thÃ¨mes (light, dark, auto).
 
 **Version**: 3.2.0  

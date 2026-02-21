@@ -1,8 +1,11 @@
 # profile.json - Référence Complète
 
+**Version produit :** GeoLeaf Platform V1  
 **Version:** 3.2.0  
 **Date de dernière mise à jour:** 28 janvier 2026  
 **Statut:** ✅ Production Ready
+
+> Convention de versioning : **Platform V1** est le label produit ; le SemVer technique de ce dépôt reste en **3.2.0**.
 
 ---
 

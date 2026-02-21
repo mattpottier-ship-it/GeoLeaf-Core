@@ -1,5 +1,7 @@
 # GeoLeaf - Chemin critique d'initialisation (v3.2.0)
 
+Product Version: GeoLeaf Platform V1  
+
 ## Vue d'ensemble
 
 Ce document trace le **flux d'initialisation complet** de GeoLeaf, depuis le chargement des modules jusqu'à l'affichage final de la carte avec toutes ses couches.

@@ -1,5 +1,7 @@
 # GeoLeaf.GeoJSON – Documentation du module GeoJSON
 
+**Product Version:** GeoLeaf Platform V1  
+
 **Version**: 3.2.0  
 **Fichiers**: `src/static/js/geoleaf.geojson.js` + sous-modules `geojson/` (incl. `layer-manager/` et `loader/`)  
 **Dernière mise à jour**: 14 février 2026

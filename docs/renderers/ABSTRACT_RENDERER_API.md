@@ -1,6 +1,5 @@
 ﻿# ðŸ—ï¸ AbstractRenderer - Base Class Documentation
-
-**Version**: 3.2.0  
+Product Version: GeoLeaf Platform V1  **Version**: 3.2.0  
 **Phase**: Phase 5 - Code Optimization  
 **Author**: GeoLeaf Team
 

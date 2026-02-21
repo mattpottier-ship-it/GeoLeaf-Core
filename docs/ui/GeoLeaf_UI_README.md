@@ -1,5 +1,6 @@
 # GeoLeaf.UI – Documentation du module UI
 
+Product Version: GeoLeaf Platform V1  
 **Version :** 2.1.0 (Phase 4)  
 **Module :** `geoleaf.ui.js` + sous-modules spécialisés
 

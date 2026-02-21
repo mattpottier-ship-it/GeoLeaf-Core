@@ -1,8 +1,11 @@
 ﻿# GeoLeaf JS User Guide
 
+**Product Version:** GeoLeaf Platform V1  
 **Version:** 3.2.0  
 **Last Updated:** January 2026  
 **Target Audience:** Developers integrating GeoLeaf into applications
+
+> Versioning convention: **Platform V1** is the product label; technical SemVer in this repository remains **3.2.0** for compatibility.
 
 This comprehensive guide covers all features of GeoLeaf JS, from basic usage to advanced configurations.
 

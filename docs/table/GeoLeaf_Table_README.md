@@ -1,6 +1,5 @@
 ﻿# GeoLeaf.Table â€“ Documentation du module Table
-
-**Version**: 3.2.0  
+Product Version: GeoLeaf Platform V1  **Version**: 3.2.0  
 **Fichier**: `src/static/js/geoleaf.table.js`  
 **DerniÃ¨re mise Ã  jour**: 19 janvier 2026
 

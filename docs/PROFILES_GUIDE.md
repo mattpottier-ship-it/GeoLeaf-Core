@@ -1,8 +1,11 @@
 ﻿# GeoLeaf Profiles Guide
 
+**Product Version:** GeoLeaf Platform V1  
 **Version:** 3.2.0  
 **Last Updated:** January 2026  
 **Audience:** Developers creating custom business profiles
+
+> Versioning convention: **Platform V1** is the product label; technical SemVer in this repository remains **3.2.0** for compatibility.
 
 ---
 

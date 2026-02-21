@@ -1,7 +1,10 @@
 # GeoLeaf-JS - Arborescence Complète du Projet
 
+**Version produit**: GeoLeaf Platform V1  
 **Date**: 15 février 2026  
 **Version**: 3.2.0 (Audit Phases 1-3 + Plugin Architecture)
+
+> Convention de versioning : **Platform V1** est le label produit ; le SemVer technique de ce dépôt reste en **3.2.0**.
 
 > **Note v3.2.0**: 6 fichiers monolithiques éclatés en 23 sous-modules (voir CHANGELOG.md).
 > Fichiers supprimés: `main.js`, `early-loader.js`, `format-utils.js`.

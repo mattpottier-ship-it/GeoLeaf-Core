@@ -1,5 +1,7 @@
 # INSTRUCTIONS DE TEST - Vérification des Popups
 
+Product Version: GeoLeaf Platform V1  
+
 ## Étape 1: Préparer l'Environnement
 
 1. Assurez-vous que le projet GeoLeaf est chargé

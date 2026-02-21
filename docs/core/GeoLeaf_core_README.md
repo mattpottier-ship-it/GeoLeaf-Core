@@ -1,5 +1,7 @@
 ﻿# GeoLeaf.Core â€“ Documentation du module Core
 
+**Product Version:** GeoLeaf Platform V1  
+
 **Version**: 3.2.0  
 **Fichier**: `src/static/js/geoleaf.core.js`  
 **DerniÃ¨re mise Ã  jour**: 19 janvier 2026

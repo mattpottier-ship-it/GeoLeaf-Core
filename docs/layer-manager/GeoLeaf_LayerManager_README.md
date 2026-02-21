@@ -1,5 +1,7 @@
 ﻿# 🗂️ GeoLeaf.LayerManager & Legend - Documentation Détaillée
 
+**Product Version:** GeoLeaf Platform V1  
+
 **Modules** : `GeoLeaf.LayerManager` (alias `GeoLeaf.Legend`), `GeoLeaf._LayerManagerControl`, `GeoLeaf._LayerManagerRenderer`  
 **Version** : 3.2.0  
 **Fichiers source** :

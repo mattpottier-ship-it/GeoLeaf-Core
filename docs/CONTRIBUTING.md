@@ -2,8 +2,11 @@
 
 > **Bienvenue!** Merci de votre intérêt pour contribuer à GeoLeaf.js. Ce guide vous aidera à démarrer.
 
+**Version produit**: GeoLeaf Platform V1  
 **Version**: 3.2.0  
 **Dernière mise à jour**: 14 février 2026
+
+> Convention de versioning : **Platform V1** est le label produit ; le SemVer technique de ce dépôt reste en **3.2.0**.
 
 ---
 

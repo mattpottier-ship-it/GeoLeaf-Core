@@ -1,5 +1,7 @@
 ﻿# GeoLeaf.Labels – Documentation du module Labels
 
+**Product Version:** GeoLeaf Platform V1  
+
 **Version**: 3.2.0  
 **Fichiers**: 
 - `src/static/js/labels/labels.js` (365 lignes)

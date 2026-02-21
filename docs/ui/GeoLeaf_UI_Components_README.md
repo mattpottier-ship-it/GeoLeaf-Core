@@ -1,5 +1,7 @@
 ﻿# 🎨 GeoLeaf UI Components - Documentation Détaillée
 
+Product Version: GeoLeaf Platform V1  
+
 **Modules** : `GeoLeaf._UIComponents`, `GeoLeaf._UIDomUtils`, `GeoLeaf.UI.Notifications`, et composants UI  
 **Version** : 3.2.0  
 **Fichiers source** : `src/static/js/ui/*.js` (19 fichiers)  

@@ -1,5 +1,7 @@
 # 🚀 GeoLeaf JS — Phase 4 : Migration ESM Complète → V4.0.0
 
+Product Version: GeoLeaf Platform V1  
+
 > **Version** : 2.2  
 > **Date** : 15 février 2026  
 > **Prérequis** : Phases 1-3 terminées (sécurité, hygiène, refactorisation)  

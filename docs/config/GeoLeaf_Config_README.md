@@ -1,5 +1,6 @@
 # GeoLeaf.Config – Documentation du module Config (Chargement JSON)
 
+Product Version: GeoLeaf Platform V1  
 **Version**: 3.2.0  
 **Fichiers**: `src/static/js/config/geoleaf-config/` (4 sous-modules : config-core.js, config-validation.js, config-loaders.js, config-accessors.js)  
 **Dernière mise à jour**: 14 février 2026

@@ -1,5 +1,7 @@
 # Layer Configuration Schema
 
+Product Version: GeoLeaf Platform V1  
+
 ## Overview
 
 This document defines the structure and requirements for layer configuration files in GeoLeaf. Each layer in a profile requires a `*_config.json` file that defines how the layer should be loaded, displayed, and styled.

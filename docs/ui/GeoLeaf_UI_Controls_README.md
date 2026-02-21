@@ -1,5 +1,5 @@
 ﻿# GeoLeaf.UI.Controls â€“ Documentation
-
+Product Version: GeoLeaf Platform V1  
 Module de contrÃ´les Leaflet personnalisÃ©s.
 
 **Version**: 3.2.0  

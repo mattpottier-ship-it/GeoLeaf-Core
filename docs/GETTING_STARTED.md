@@ -1,8 +1,13 @@
 # Getting Started with GeoLeaf JS
 
+**Product Version:** GeoLeaf Platform V1  
+**Technical SemVer (repository):** 3.2.0
+
 **Estimated time:** 5 minutes  
 **Level:** Beginner  
 **Prerequisites:** Basic HTML/JavaScript knowledge
+
+> Versioning convention: **Platform V1** is the product label; technical package/release SemVer in this repository remains **3.2.0**.
 
 This guide will help you create your first interactive map with GeoLeaf in just 5 minutes.
 

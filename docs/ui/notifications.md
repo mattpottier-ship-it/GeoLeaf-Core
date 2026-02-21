@@ -1,5 +1,6 @@
 # GeoLeaf.UI.Notifications – Système de Notifications Toast
 
+Product Version: GeoLeaf Platform V1  
 **Dernière mise à jour :** 23 janvier 2026  
 **Version :** 4.4.1  
 **Module :** `ui/notifications.js`

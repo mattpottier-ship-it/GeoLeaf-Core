@@ -1,5 +1,7 @@
 # License Headers in GeoLeaf
 
+Product Version: GeoLeaf Platform V1  
+
 This guide explains how license headers are used in GeoLeaf and how to add them to new files.
 
 ---

@@ -1,8 +1,11 @@
 ﻿# GeoLeaf Demo System Guide
 
+**Product Version:** GeoLeaf Platform V1  
 **Version:** 3.2.0  
 **Last Updated:** January 2026  
 **Target Audience:** Developers testing and demonstrating GeoLeaf features
+
+> Versioning convention: **Platform V1** is the product label; technical SemVer in this repository remains **3.2.0** for compatibility.
 
 This guide documents the GeoLeaf demo system architecture, including the demo page structure, DemoLog system, profile/theme selectors, and verbose debugging mode.
 

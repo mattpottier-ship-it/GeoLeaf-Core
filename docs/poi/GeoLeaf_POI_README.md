@@ -1,5 +1,5 @@
 ﻿# GeoLeaf.POI â€“ Documentation du module POI
-
+Product Version: GeoLeaf Platform V1  
 Le module **GeoLeaf.POI** gÃ¨re l'ensemble de la logique liÃ©e aux **Points d'IntÃ©rÃªt (POI)** dans GeoLeaf.
 
 **Version**: 3.2.0  

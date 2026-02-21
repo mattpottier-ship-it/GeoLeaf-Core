@@ -1,5 +1,6 @@
 # Limitation : Paramètre `normalized` et système de mapping
 
+Product Version: GeoLeaf Platform V1  
 **Date :** 10 décembre 2025  
 **Statut :** ⚠️ Fonctionnalité partiellement implémentée  
 **Impact :** Moyen - Le système charge `mapping.json` mais ne l'applique jamais

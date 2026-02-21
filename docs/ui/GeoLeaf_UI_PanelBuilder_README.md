@@ -1,5 +1,5 @@
 ﻿# GeoLeaf.UI.PanelBuilder â€“ Documentation
-
+Product Version: GeoLeaf Platform V1  
 Module de construction de panneaux de dÃ©tails POI avec layouts configurables.
 
 **Version**: 3.2.0  

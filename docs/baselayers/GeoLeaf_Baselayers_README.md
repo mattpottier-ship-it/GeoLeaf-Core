@@ -1,4 +1,5 @@
 ﻿# GeoLeaf.Baselayers â€“ Documentation du module Baselayers
+**Product Version:** GeoLeaf Platform V1  
 **Version**: 3.2.0  
 **Fichier**: `src/static/js/geoleaf.baselayers.js`  
 **DerniÃ¨re mise Ã  jour**: 19 janvier 2026

@@ -1,8 +1,11 @@
 # GeoLeaf Configuration Guide
 
+**Product Version:** GeoLeaf Platform V1  
 **Version:** 3.2.0  
 **Last Updated:** January 2026  
 **Level:** Intermediate to Advanced
+
+> Versioning convention: **Platform V1** is the product label; technical SemVer in this repository remains **3.2.0** for compatibility.
 
 This comprehensive guide documents all JSON configuration files used by GeoLeaf JS to customize behavior, appearance, and data sources for different business profiles (Tourism, Custom…).
 

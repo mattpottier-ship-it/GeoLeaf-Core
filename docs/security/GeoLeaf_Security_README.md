@@ -1,5 +1,6 @@
 # GeoLeaf.Security – Documentation du module Security
 
+Product Version: GeoLeaf Platform V1  
 **Version**: 3.2.0 (Phase 1 XSS hardening)  
 **Fichier**: `src/static/js/geoleaf.security.js` (541 lignes)  
 **Date**: Février 2026

@@ -1,5 +1,7 @@
 ﻿# GeoLeaf.CONSTANTS – Documentation des constantes globales
 
+**Product Version:** GeoLeaf Platform V1  
+
 **Version**: 3.2.0  
 **Fichier**: `src/static/js/geoleaf.constants.js` (31 lignes)  
 **Dernière mise à jour**: 19 janvier 2026

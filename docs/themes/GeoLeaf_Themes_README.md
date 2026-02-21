@@ -1,5 +1,6 @@
 ﻿# GeoLeaf.Themes – Documentation du module Themes
 
+Product Version: GeoLeaf Platform V1  
 **Version**: 3.2.0  
 **Fichiers**:
 - `src/static/js/themes/theme-selector.js` (561 lignes)

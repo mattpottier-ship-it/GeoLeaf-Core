@@ -1,5 +1,5 @@
 ﻿# GeoLeaf.Storage â€“ Documentation du module Storage
-**Version**: 3.2.0  
+Product Version: GeoLeaf Platform V1  **Version**: 3.2.0  
 **Fichier**: `src/plugins/geoleaf-storage.plugin.js` + sous-modules `src/static/js/storage/`  
 **Dernière mise à jour**: 15 février 2026
 

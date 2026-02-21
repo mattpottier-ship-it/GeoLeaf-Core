@@ -1,5 +1,7 @@
 ﻿# 💾 GeoLeaf Storage & Cache - Documentation Avancée
 
+Product Version: GeoLeaf Platform V1  
+
 **Modules** : `GeoLeaf.CacheManager`, `GeoLeaf.StorageDB`, `GeoLeaf.SyncManager`, `GeoLeaf.OfflineDetector`  
 **Modules future-ready** : `GeoLeaf.Storage.Compression`, `GeoLeaf.Storage.CachingStrategy`  
 **Version** : 3.2.0  

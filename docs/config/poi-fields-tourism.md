@@ -2,6 +2,7 @@
 ## Spécification des champs horaires, prix, avis voyageurs  
 ### + Gestion officielle des sections accordéon (UI mobile)
 
+Product Version: GeoLeaf Platform V1  
 **Date de création**: Décembre 2025  
 **Dernière vérification**: 19 janvier 2026
 

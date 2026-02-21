@@ -1,5 +1,7 @@
 ﻿# Label Button Manager
 
+**Product Version:** GeoLeaf Platform V1  
+
 **Module:** `src/static/js/labels/label-button-manager.js`  
 **Version:** 3.2.0  
 **Last Updated:** January 2026  

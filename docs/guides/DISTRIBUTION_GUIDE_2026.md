@@ -1,4 +1,6 @@
 # 📦 DISTRIBUTION - AUDIT GEOLEAF JS
+
+Product Version: GeoLeaf Platform V1  
 **Date**: 21 janvier 2026  
 **Total Files**: 11 documents  
 **Total Size**: ~170 KB  

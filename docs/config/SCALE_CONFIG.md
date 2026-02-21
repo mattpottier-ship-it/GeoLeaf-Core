@@ -1,5 +1,6 @@
 # Configuration Scale Control (scaleConfig)
 
+Product Version: GeoLeaf Platform V1  
 **Date de création**: Décembre 2025  
 **Dernière vérification**: 19 janvier 2026
 

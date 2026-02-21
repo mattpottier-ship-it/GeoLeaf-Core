@@ -1,5 +1,7 @@
 # GeoLeaf Testing Guide
 
+Product Version: GeoLeaf Platform V1  
+
 ## Overview
 
 GeoLeaf uses Jest for unit testing. This guide documents testing patterns, best practices, and key insights from the test suite development.

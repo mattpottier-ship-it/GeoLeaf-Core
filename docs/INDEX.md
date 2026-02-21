@@ -1,7 +1,10 @@
 ﻿# GeoLeaf Documentation Index
 
+**Product Version:** GeoLeaf Platform V1  
 **Version:** 3.2.0  
 **Last Updated:** February 15, 2026
+
+> Versioning convention: Product label is **Platform V1**; technical SemVer values in this repository remain **3.2.0** for historical compatibility.
 
 Welcome to the GeoLeaf documentation! This index provides quick access to all documentation resources organized by category.
 

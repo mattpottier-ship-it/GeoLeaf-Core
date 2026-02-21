@@ -1,5 +1,7 @@
 ﻿# 🔄 GeoLeaf - Système de Normalisation de Données
 
+Product Version: GeoLeaf Platform V1  
+
 **Modules** : `GeoLeaf._Normalizer`, `GeoLeaf.Config.Normalization`, `GeoLeaf.Config.DataConverter`  
 **Version** : 3.2.0  
 **Fichiers source** :

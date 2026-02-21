@@ -1,6 +1,5 @@
 ﻿# ðŸ” SonarQube Integration Guide
-
-**Version**: 3.2.0  
+Product Version: GeoLeaf Platform V1  **Version**: 3.2.0  
 **Phase**: Phase 5 Section 5.3 - Static Analysis  
 **Platform**: SonarQube Cloud
 

@@ -1,5 +1,7 @@
 # GeoLeaf — IndexedDB & IDB Helper
 
+Product Version: GeoLeaf Platform V1  
+
 > **Version** : 3.2.0 — **Date** : 15 février 2026
 > **Plugin** : Storage (`geoleaf-storage.plugin.js`)
 
