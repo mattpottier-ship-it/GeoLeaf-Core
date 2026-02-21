@@ -1133,13 +1133,13 @@ Label configuration for this style.
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `enabled` | boolean | ✅ | Whether labels are supported for this style |
-| `visibleByDefault` | boolean | ✅ | Initial label visibility when layer activated (⚠️ **BREAKING CHANGE** in v3.1 - see migration guide) |
+| `visibleByDefault` | boolean | ✅ | Initial label visibility when layer activated |
 | `field` | string | ❌ | GeoJSON property field to use for label text |
 | `format` | string | ❌ | Label template with `{fieldName}` placeholders |
 | `minZoom` | number | ❌ | Minimum zoom for label visibility (overrides `labelScale.minZoom`) |
 | `maxZoom` | number | ❌ | Maximum zoom for label visibility |
 
-**⚠️ CRITICAL:** As of v3.1.0, `visibleByDefault` **must** be in the style file, not in the layer config. See [LABELS_MIGRATION_GUIDE.md](LABELS_MIGRATION_GUIDE.md).
+**⚠️ CRITICAL:** `visibleByDefault` **must** be in the style file, not in the layer config.
 
 **Label format examples:**
 
@@ -1528,42 +1528,6 @@ profiles/
 - **Use `name_{lang}` pattern** for translations
 - **Support fallback** - If `name_fr` missing, use `name`
 - **Separate UI strings** from config when possible
-
----
-
-## Migration Notes
-
-### v3.0 → v3.1
-
-**⚠️ BREAKING CHANGE:** Label `visibleByDefault` moved from layer config to style files.
-
-**Before (v3.0):**
-
-```json
-// layers/cities/config.json
-{
-  "id": "cities",
-  "labels": {
-    "enabled": true,
-    "visibleByDefault": false
-  }
-}
-```
-
-**After (v3.1):**
-
-```json
-// layers/cities/styles/default.json
-{
-  "id": "default",
-  "label": {
-    "enabled": true,
-    "visibleByDefault": false  ← Moved here
-  }
-}
-```
-
-See [LABELS_MIGRATION_GUIDE.md](LABELS_MIGRATION_GUIDE.md) for full migration instructions.
 
 ---
 

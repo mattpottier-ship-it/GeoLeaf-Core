@@ -92,7 +92,7 @@ These files implement major GeoLeaf features:
 - `src/static/js/ui/geoleaf.ui.js` - UI system
 - `src/static/js/poi/geoleaf.poi.js` - Points of Interest
 - `src/static/js/baselayers/geoleaf.baselayers.js` - Basemap switching
-- `src/static/js/geojson/geoleaf.geojson.js` - GeoJSON support
+- `src/static/js/geojson/core.js` - GeoJSON support
 - `src/static/js/route/geoleaf.route.js` - Routing
 - `src/static/js/storage/geoleaf.storage.js` - Offline caching
 - `src/static/js/layer-manager/geoleaf.layermanager.js` - Layer management

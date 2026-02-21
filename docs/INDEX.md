@@ -157,23 +157,6 @@ Complete API documentation with examples.
 
 ---
 
-## 🔄 Migration Guides
-
-Upgrade guides for breaking changes.
-
-| Document | Versions | Breaking Changes |
-|----------|----------|-----------------|
-| [Labels Migration Guide](LABELS_MIGRATION_GUIDE.md) | v2.x → v3.0 → v3.1 | label.visibleByDefault config |
-
-**Migration topics:**
-- Label configuration moved from layers.json to style/*.json
-- `label.visibleByDefault` property usage
-- Backward compatibility (v3.0 → v3.1)
-- Testing and validation
-- Common errors and solutions
-
----
-
 ## 🧩 Module Documentation
 
 Deep-dive documentation for individual modules.
@@ -291,7 +274,7 @@ Help and debugging resources.
 |----------|-------------|-----------|
 | [FAQ](FAQ.md) | Common questions | Answers & workarounds |
 | [Developer Guide](DEVELOPER_GUIDE.md#getting-help) | Dev troubleshooting | Build/test issues |
-| [Labels Migration Guide](LABELS_MIGRATION_GUIDE.md#troubleshooting) | Label errors | Config fixes |
+| [Configuration Guide](CONFIGURATION_GUIDE.md#labels--multi-label-system-v310) | Label errors | Config fixes |
 
 **Common issues:**
 - Build failures → Clean install

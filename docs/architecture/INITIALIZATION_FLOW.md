@@ -232,7 +232,7 @@ sequenceDiagram
 | **5** | **UI** | `geoleaf.ui.js` | ~100-200ms | UI.init() synchrone | Conteneurs DOM absents |
 | **5.5** | **Storage + SW** | `geoleaf-storage.plugin.js` | ~100-300ms | Storage.init() Promise | IndexedDB indisponible, SW 404 |
 | **6** | **BaseLayers** | `geoleaf.baselayers.js` | ~50ms | BaseLayers.init() synchrone | URL tuiles invalide |
-| **7** | **GeoJSON** | `geoleaf.geojson.js` | ~200-2000ms | loadFromProfile() Promise | GeoJSON malformé, mapping incomplet |
+| **7** | **GeoJSON** | `geojson/core.js` | ~200-2000ms | loadFromProfile() Promise | GeoJSON malformé, mapping incomplet |
 | **8** | **POI** | `geoleaf.poi.js` | ~100-500ms | POI.init() + loadAndDisplay() | Normalisation échouée, coords invalides |
 | **9** | **Routes** | `geoleaf.route.js` | ~100-500ms | Route.draw() Promise | GPX invalide, conversion échouée |
 | **10** | **Légende** | `GeoLeaf.LayerManager.js` | ~50ms | Legend.init() synchrone | Template HTML absent |
@@ -275,9 +275,9 @@ Promise.all(layers.map(layer => GeoJSON.load(layer.url)))
 
 ---
 
-## Modes d'initialisation
+## Mode d'initialisation
 
-### Mode 1: Layers-only (v2.0, recommandé)
+### Layers-only (recommandé)
 
 ```javascript
 // config.data.useLegacyProfileData = false (défaut)
@@ -296,15 +296,6 @@ Promise.all(layers.map(layer => GeoJSON.load(layer.url)))
 ```
 
 **Flux** : Config → Profile → GeoJSON.loadFromProfile() → Map
-
-### Mode 2: Legacy (v1.x, backward compat)
-
-```javascript
-// config.data.useLegacyProfileData = true
-// poi.json + routes.json chargés séparément
-```
-
-**Flux** : Config → Profile → POI.init() → Route.draw() → Map
 
 ---
 
@@ -436,7 +427,7 @@ console.log('[Demo] Carte ajustée sur emprise')
 2. `config/geoleaf-config/config-core.js:90` → Config chargée
 3. `config/profile.js:120` → Profil chargé
 4. `geoleaf.core.js:85` → Carte créée
-5. `geoleaf.geojson.js:200` → Couches ajoutées
+5. `geojson/core.js` → Couches ajoutées
 
 ### DevTools Network
 
@@ -450,14 +441,15 @@ console.log('[Demo] Carte ajustée sur emprise')
 
 ---
 
-## Migration v1 → v2
+## Évolution du modèle de données
 
-### Changements majeurs
+### Principes actuels
 
-| v1.x | v2.0 | Migration |
-|------|------|-----------|
-| `poi.json` chargé automatiquement | Couches GeoJSON dans `profile.json` | Convertir POI → GeoJSON |
-| Mapping toujours utilisé | `normalized: true` skip mapping | Pré-normaliser données |
+| Modèle | Comportement |
+|--------|--------------|
+| Couches GeoJSON dans `profile.json` | Chargement centralisé via `GeoJSON.loadFromProfile()` |
+| Données `normalized: true` | Chargement direct sans mapping |
+| Données non normalisées | Mapping appliqué avant rendu |
 | Routes séparées | Routes = couches GeoJSON | Inclure dans layers[] |
 
 ### Checklist migration

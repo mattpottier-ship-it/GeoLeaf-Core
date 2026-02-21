@@ -138,7 +138,6 @@ GeoLeaf-Core/
 │           ├── geoleaf.api.js
 │           ├── geoleaf.ui.js
 │           ├── geoleaf.filters.js
-│           ├── geoleaf.geojson.js
 │           ├── geoleaf.poi.js
 │           ├── geoleaf.route.js
 │           ├── geoleaf.table.js

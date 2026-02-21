@@ -91,7 +91,6 @@ Split 6 monolithic files (total ~5,900 lines) into 23 focused sub-modules:
 - [PROFILES_GUIDE.md](docs/PROFILES_GUIDE.md) - Custom profile creation guide (1,200+ lines)
 - [API_REFERENCE.md](docs/API_REFERENCE.md) - Complete API documentation (1,900+ lines, 80+ methods)
 - [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) - Development workflow and architecture (11,700+ lines)
-- [LABELS_MIGRATION_GUIDE.md](docs/LABELS_MIGRATION_GUIDE.md) - Label system migration guide
 - [DEMO_SYSTEM_GUIDE.md](docs/DEMO_SYSTEM_GUIDE.md) - Demo page and DemoLog API documentation
 - [ARCHITECTURE_GUIDE.md](docs/ARCHITECTURE_GUIDE.md) - System architecture and design patterns
 
@@ -144,7 +143,7 @@ Split 6 monolithic files (total ~5,900 lines) into 23 focused sub-modules:
 - **Label configuration moved** from `layers.json` to `style/*.json` files
   - Old: `layers.json` → `layers[].label.visibleByDefault`
   - New: `styles/*.json` → `label.visibleByDefault`
-  - See [LABELS_MIGRATION_GUIDE.md](docs/LABELS_MIGRATION_GUIDE.md) for migration steps
+  - See [CONFIGURATION_GUIDE.md](docs/CONFIGURATION_GUIDE.md#labels--multi-label-system-v310) for current format
 
 **Documentation Structure:**
 - Standardized naming conventions (UPPERCASE_GUIDE.md for main guides)
@@ -270,54 +269,6 @@ Split 6 monolithic files (total ~5,900 lines) into 23 focused sub-modules:
 | 3.0.0 | 2025-12-15 | Multi-profile system, themes, complete rewrite | Complete API redesign |
 | 2.5.0 | 2025-06-10 | Basic profiles, themes | None |
 | 2.0.0 | 2024-12-01 | Initial release | N/A |
-
----
-
-## Upgrade Guides
-
-### Upgrading to 3.1.0 from 3.0.0
-
-**Label Configuration:**
-1. Move `label.visibleByDefault` from `layers.json` to style files
-2. Update style files for each layer
-3. Test label visibility after migration
-4. See [LABELS_MIGRATION_GUIDE.md](docs/LABELS_MIGRATION_GUIDE.md)
-
-**Example:**
-```json
-// Before (v3.0): layers.json
-{
-  "layers": [
-    {
-      "id": "parks",
-      "label": {
-        "enabled": true,
-        "visibleByDefault": true  // ❌ Old location
-      }
-    }
-  ]
-}
-
-// After (v3.1): styles/default.json
-{
-  "label": {
-    "enabled": true,
-    "visibleByDefault": true  // ✅ New location
-  }
-}
-```
-
-### Upgrading to 3.0.0 from 2.x
-
-**Complete migration required:**
-1. Update configuration format (JS objects → JSON profiles)
-2. Update initialization code (new API)
-3. Update POI management calls (new methods)
-4. Update event handling (new event system)
-5. Remove jQuery dependency
-6. Test thoroughly
-
-Not backward compatible. See v3.0.0 migration guide (archived).
 
 ---
 

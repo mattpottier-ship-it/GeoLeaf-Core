@@ -431,7 +431,7 @@ Each layer can have multiple styles in `layers/<layer-name>/styles/<style-id>.js
 - `style` - Leaflet style options for the layer
 - `legend` - Legend configuration
 
-**âš ï¸ Important:** As of v3.1, `visibleByDefault` **must** be in the style file, not in the layer configuration. See [LABELS_MIGRATION_GUIDE.md](LABELS_MIGRATION_GUIDE.md) for details.
+**âš ï¸ Important:** `visibleByDefault` **must** be in the style file, not in the layer configuration.
 
 ---
 
@@ -1027,7 +1027,7 @@ const geojson = GeoLeaf.Export.toGeoJSON({
 2. Verify zoom level is within `labelScale` range
 3. Toggle label button in layer manager
 4. Check style file has `label.visibleByDefault` property
-5. See [LABELS_MIGRATION_GUIDE.md](LABELS_MIGRATION_GUIDE.md) if upgrading from older versions
+5. Check your style configuration if labels still do not appear
 
 #### 9.5 Theme Not Switching
 
@@ -1088,7 +1088,6 @@ Check console for detailed logs prefixed with `[GeoLeaf]`.
 - **[Developer Guide](DEVELOPER_GUIDE.md)** - Contributing, building, testing
 - **[API Reference](API_REFERENCE.md)** - Complete API documentation
 - **[Cookbook](COOKBOOK.md)** - 8 practical recipes for common scenarios
-- **[Migration Guide](MIGRATION_GUIDE.md)** - Upgrading from older versions
 
 ### ðŸŽ“ Tutorials
 

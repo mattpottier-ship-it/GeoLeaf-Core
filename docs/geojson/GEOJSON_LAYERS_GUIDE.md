@@ -429,7 +429,7 @@ Les méthodes `loadUrl()`, `addData()`, `clear()`, `getLayer()` sont **conservé
 
 ## Références
 
-- **Module Core** : [`src/static/js/geoleaf.geojson.js`](../../src/static/js/geoleaf.geojson.js)
+- **Module Core** : [`src/static/js/geojson/core.js`](../../src/static/js/geojson/core.js)
 - **API Publique** : [`src/static/js/geoleaf.api.js`](../../src/static/js/geoleaf.api.js)
 - **Tests** : [`__tests__/geojson-layers.test.js`](../../__tests__/geojson-layers.test.js)
 - **Exemples Profile** : [`data/profiles/tourism/profile.json`](../../data/profiles/tourism/profile.json)

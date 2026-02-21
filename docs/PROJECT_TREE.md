@@ -112,11 +112,9 @@ docs/
 ├── GETTING_STARTED.md ✅ (créé jan 2026 - tutoriel 5 min)
 ├── USER_GUIDE.md ✅ (créé jan 2026 - guide complet 10 sections)
 ├── CONFIGURATION_GUIDE.md ✅ (créé jan 2026 - 9 types JSON)
-├── LABELS_MIGRATION_GUIDE.md ✅ (créé jan 2026 - breaking change v3.1)
 ├── BASEMAP_CACHE_PARAMETERS.md
 ├── POI_STYLE_PARAMETERS.md
 ├── readme.config-json.md
-├── REFACTORING_V3_GUIDE.md
 ├── STYLE_SELECTOR.md
 ├── usage-cdn.md
 │
@@ -216,7 +214,6 @@ src/
 │   ├── init.js (initApp — orchestrateur d'initialisation, 648 lignes)
 │   └── boot.js (startApp, GeoLeaf.boot() — API publique)
 ├── bundle-entry.js ⭐ (point d'entrée Rollup — bundle core)
-├── load-modules.js
 ├── plugins/ ⭐ (v3.2.0 - architecture plugin)
 │   ├── geoleaf-storage.plugin.js (~45 imports — Storage, Cache, SW, UI)
 │   └── geoleaf-addpoi.plugin.js (~14 imports — POI Add Form, Sync, Upload)
@@ -282,7 +279,6 @@ static/js/
 │   ├── geoleaf.core.js
 │   ├── geoleaf.errors.js
 │   ├── geoleaf.filters.js
-│   ├── geoleaf.geojson.js
 │   ├── geoleaf.helpers.js
 │   ├── geoleaf.layer-manager.js
 │   ├── geoleaf.legend.js
@@ -615,7 +611,7 @@ __tests__/
 
 - `geoleaf.api.js` → `api/` (5 modules)
 - `geoleaf.config.js` → `config/` (6 modules)
-- `geoleaf.geojson.js` → `geojson/` (9 modules)
+- `geojson/core.js` + `geojson/` (9 modules)
 - `geoleaf.route.js` → `route/` (4 modules)
 - `geoleaf.legend.js` → `legend/` (4 modules)
 

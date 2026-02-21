@@ -1206,33 +1206,11 @@ module.exports = {
 
 ---
 
-## ðŸ”„ Migration & Updates
+## 🔄 Updates
 
-### Q: Comment migrer de v2.x vers v3.0?
+### Q: Comment mettre à jour GeoLeaf proprement?
 
-**R**: Voir [MIGRATION_GUIDE_V3.md](MIGRATION_GUIDE_V3.md) complet.
-
-**Changements majeurs**:
-
-```javascript
-// v2.x (ANCIEN)
-geoleafMap.addPOI({ name: 'POI', coordinates: [48.8, 2.3] });
-
-// v3.0 (NOUVEAU)
-GeoLeaf.POI.add({ name: 'POI', lat: 48.8, lng: 2.3 });
-
-// v2.x (ANCIEN)
-geoleafMap.loadGeoJSON('/data.geojson', 'layer-id');
-
-// v3.0 (NOUVEAU)
-GeoLeaf.GeoJSON.load({ url: '/data.geojson', layerId: 'layer-id' });
-
-// v2.x (ANCIEN)
-geoleafMap.setMapTheme('dark');
-
-// v3.0 (NOUVEAU)
-GeoLeaf.setTheme('dark');
-```
+**R**: Passez à la dernière version stable, relancez le build et vérifiez vos fichiers de configuration de profil.
 
 ---
 
@@ -1263,7 +1241,7 @@ if (GeoLeaf.version.startsWith('3.')) {
 **Exemple**:
 - v3.0.0 â†’ v3.0.5 : âœ… Update safe (patches)
 - v3.0.0 â†’ v3.1.0 : âœ… Update safe (features)
-- v3.0.0 â†’ v4.0.0 : âš ï¸ Lire migration guide
+- v3.0.0 â†’ v4.0.0 : ✅ Mettre à jour et vérifier la configuration
 
 ---
 

@@ -145,7 +145,6 @@ import './static/js/geojson/loader/data.js';
 import './static/js/geojson/loader/single-layer.js';
 import './static/js/geojson/loader/profile.js';
 import './static/js/geojson/core.js';
-import './static/js/geoleaf.geojson.js';
 
 // Route - Sous-modules
 import './static/js/route/style-resolver.js';

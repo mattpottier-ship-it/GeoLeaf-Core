@@ -672,7 +672,6 @@ console.log('Layer state:', state);
 - **[Labels System](../labels/README.md)** - Complete label system overview
 - **[Label Renderer](../labels/LABEL_RENDERER.md)** - Label rendering engine
 - **[Label Style Loader](../labels/LABEL_STYLE_LOADER.md)** - Style loading and validation
-- **[Labels Migration Guide](../LABELS_MIGRATION_GUIDE.md)** - v3.0 to v3.1 migration
 - **[Layer Manager](../ui/layer-manager/README.md)** - Layer Manager integration
 
 ---

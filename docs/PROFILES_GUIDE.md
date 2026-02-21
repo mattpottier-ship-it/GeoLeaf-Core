@@ -951,61 +951,7 @@ profiles/my-profile/
 └── poi.json           # POIs (extracted)
 ```
 
-**See:** [Refactoring v3 Guide](REFACTORING_V3_GUIDE.md) for complete migration
 
----
-
-### v3.0 to v3.1
-
-**Key Changes:**
-
-1. **Label configuration moved** - `visibleByDefault` now in style files
-2. **Breaking change** - Layer config `label.visibleByDefault` deprecated
-
-**Migration Steps:**
-
-**Before (v3.0) - Layer config:**
-
-```json
-{
-  "layers": [
-    {
-      "id": "my-layer",
-      "label": {
-        "enabled": true,
-        "visibleByDefault": true,  // ❌ DEPRECATED
-        "field": "name"
-      }
-    }
-  ]
-}
-```
-
-**After (v3.1) - Style file:**
-
-```json
-{
-  "id": "default",
-  "label": {
-    "enabled": true,
-    "visibleByDefault": true,  // ✅ NOW HERE
-    "field": "name"
-  },
-  "style": { /* ... */ }
-}
-```
-
-**Automated Migration:**
-
-```bash
-# Run migration script
-node scripts/migrate-label-config.cjs
-
-# Or manually use label migrator
-node scripts/add-missing-label-config.cjs
-```
-
-**See:** [Labels Migration Guide](LABELS_MIGRATION_GUIDE.md) for complete details
 
 ---
 
@@ -1200,8 +1146,8 @@ node scripts/add-missing-label-config.cjs
 4. **visibleByDefault = false**
    - Click label button in Layer Manager to enable
 
-5. **v3.0 config still in use**
-   - Migrate to v3.1: [Labels Migration Guide](LABELS_MIGRATION_GUIDE.md)
+5. **Outdated config still in use**
+  - Align labels settings with the current schema in [Configuration Guide](CONFIGURATION_GUIDE.md#labels--multi-label-system-v310)
 
 ---
 
@@ -1256,7 +1202,6 @@ node scripts/add-missing-label-config.cjs
 - **[User Guide](USER_GUIDE.md)** - Using GeoLeaf features
 - **[Examples](../examples/README.md)** - Working profile examples
 - **[Schema Documentation](../schema/README.md)** - JSON Schema validation
-- **[Labels Migration Guide](LABELS_MIGRATION_GUIDE.md)** - v3.0 to v3.1 migration
 
 ---
 
