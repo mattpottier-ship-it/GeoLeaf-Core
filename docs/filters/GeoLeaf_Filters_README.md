@@ -100,7 +100,7 @@ const restaurants = GeoLeaf.Filters.filterPoiList(allPois, {
 });
 
 // Filtrage multi-critÃ¨res
-const premiumRestaurants = GeoLeaf.Filters.filterPoiList(allPois, {
+const filteredRestaurants = GeoLeaf.Filters.filterPoiList(allPois, {
     categoryIds: ['restaurant'],
     tags: ['terrasse', 'wifi'],
     minRating: 4.5,

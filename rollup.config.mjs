@@ -248,7 +248,7 @@ const addPoiPluginConfigs = fs.existsSync(ADDPOI_PLUGIN)
  * Reads the SW template, replaces __GEOLEAF_VERSION__ placeholders,
  * and emits dist/sw.js as a raw asset (no bundling/wrapping).
  * Attached to the Storage plugin build so sw.js is only produced
- * when the premium Storage module is being built.
+ * when the Storage module is being built.
  */
 function swVersionPlugin(version) {
   const SW_SOURCE = "src/static/js/storage/sw.js";

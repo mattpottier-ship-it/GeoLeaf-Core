@@ -72,12 +72,12 @@ src/static/js/poi/add-poi*.js
 src/static/js/poi/placement-mode.js
 src/static/js/poi/image-upload.js
 
-# Premium CSS
+# Optional plugin CSS
 src/static/css/cache-modal.css
 src/static/css/poi-form.css
 src/static/css/poi-realtime-validation.css
 
-# Built premium plugin bundles
+# Built optional plugin bundles
 dist/geoleaf-storage.plugin.js
 dist/geoleaf-storage.plugin.js.map
 dist/geoleaf-addpoi.plugin.js

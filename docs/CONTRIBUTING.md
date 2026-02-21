@@ -819,21 +819,10 @@ You must have **npm publish permissions** on the [geoleaf npm package](https://n
    - Publish to npm registry
    - Create GitHub Release with artifacts
 
-#### Required GitHub Secrets
+#### CI/CD Configuration
 
-For automated npm publishing, configure these secrets in repository settings:
-
-**Secret Name**: `NPM_TOKEN`
-- **Description**: npm authentication token for automated publishing
-- **Value**: Your npm token with "Automation" or "Read and Publish" permissions
-- **How to create**:
-  1. Go to [npmjs.com/settings/tokens](https://npmjs.com/settings/tokens)
-  2. Click "Generate New Token"
-  3. Select "Automation" permission level
-  4. Copy the token
-  5. Add to GitHub: Settings → Secrets and variables → Actions → New repository secret
-
-**Note**: Store the `NPM_TOKEN` securely. Never commit it to the repository.
+Automated publishing requires CI configuration in your repository settings.
+Do not commit credentials or environment configuration values to the repository.
 
 ### Manual Publishing (if needed)
 

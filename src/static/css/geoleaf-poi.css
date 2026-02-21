@@ -118,7 +118,7 @@
     border: 1px solid var(--gl-color-popup-border);
     box-shadow: var(--gl-shadow-medium);
     border-radius: 0.5rem;
-    backdrop-filter: blur(6px);             /* optionnel : garde un côté premium */
+    backdrop-filter: blur(6px);             /* optionnel : adoucit visuellement le fond */
 }
 
 /* Flèche du popup */
