@@ -510,11 +510,12 @@ function swCoreVersionPlugin(version) {
         source: content,
       });
     },
-    // Copy sw-core.js to demo/ so the demo can register it (same directory as demo/index.html)
+    // Copy sw-core.js to demo/ if it exists (local dev only — not required in CI)
     writeBundle(options) {
       const distFile = path.join(options.dir || path.dirname(options.file || "dist/geoleaf.min.js"), "sw-core.js");
-      const demoFile = path.resolve("demo", "sw-core.js");
-      if (fs.existsSync(distFile)) {
+      const demoDir = path.resolve("demo");
+      const demoFile = path.resolve(demoDir, "sw-core.js");
+      if (fs.existsSync(distFile) && fs.existsSync(demoDir)) {
         fs.copyFileSync(distFile, demoFile);
       }
     },

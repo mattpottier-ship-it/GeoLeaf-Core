@@ -177,7 +177,9 @@ export function createErrorByType(type, message, context = {}) {
     return createError(ErrorClass, message, context);
 }
 
-export function sanitizeErrorMessage(message, maxLength = 500) {
+const MAX_ERROR_MESSAGE_LENGTH = 500;
+
+export function sanitizeErrorMessage(message, maxLength = MAX_ERROR_MESSAGE_LENGTH) {
     if (message == null) return 'Unknown error';
     let str = typeof message === 'string' ? message : String(message);
     str = str

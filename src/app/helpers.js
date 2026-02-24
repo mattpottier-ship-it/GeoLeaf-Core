@@ -127,10 +127,10 @@ _app.checkPlugins = function (cfg) {
 _app.showNotification = function (message, duration) {
     duration = duration || 3500;
     if (GeoLeaf.UI && GeoLeaf.UI.Notifications && typeof GeoLeaf.UI.Notifications.success === "function") {
-        try { GeoLeaf.UI.Notifications.success(message, duration); return true; } catch (e) {}
+        try { GeoLeaf.UI.Notifications.success(message, duration); return true; } catch (_) { /* notification API may not be ready */ }
     }
     if (GeoLeaf._UINotifications && typeof GeoLeaf._UINotifications.success === "function") {
-        try { GeoLeaf._UINotifications.success(message, duration); return true; } catch (e) {}
+        try { GeoLeaf._UINotifications.success(message, duration); return true; } catch (_) { /* notification API may not be ready */ }
     }
     _app.AppLog.log(message + " (notifications indisponibles)");
     return false;

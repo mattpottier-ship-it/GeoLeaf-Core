@@ -300,7 +300,7 @@ const WorkerManager = {
         if (typeof location !== "undefined" && url && !url.includes("://")) {
             try {
                 absoluteUrl = new URL(url, location.href).href;
-            } catch (_) {}
+            } catch (_) { /* invalid URL, use original */ }
         }
 
         var worker = _createWorker();

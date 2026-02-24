@@ -17,16 +17,25 @@ import { Security } from '../security/index.js';
  * Default configuration for fetch operations
  * @private
  */
+const FETCH_DEFAULTS = {
+    timeout: 10000,
+    retries: 2,
+    retryDelay: 1000,
+    retryDelayMultiplier: 1.5,
+    maxPerDomain: 50,
+    windowMs: 10000
+};
+
 const DEFAULT_CONFIG = {
-    timeout: 10000,        // 10s timeout (was 5s in helpers.js)
-    retries: 2,           // Max retry attempts
-    retryDelay: 1000,     // Delay between retries (ms)
-    retryDelayMultiplier: 1.5,  // Exponential backoff multiplier
-    cache: 'default',     // Cache strategy
-    credentials: 'same-origin', // CORS credentials
-    parseResponse: true,  // Auto-parse JSON/text responses
-    throwOnError: true,   // Throw on HTTP errors (4xx, 5xx)
-    validateUrl: true     // Use Security.validateUrl if available
+    timeout: FETCH_DEFAULTS.timeout,
+    retries: FETCH_DEFAULTS.retries,
+    retryDelay: FETCH_DEFAULTS.retryDelay,
+    retryDelayMultiplier: FETCH_DEFAULTS.retryDelayMultiplier,
+    cache: 'default',
+    credentials: 'same-origin',
+    parseResponse: true,
+    throwOnError: true,
+    validateUrl: true
 };
 
 /**
@@ -37,9 +46,9 @@ const _rateLimiter = {
     /** @type {Map<string, number[]>} Per-domain request timestamps */
     _requests: new Map(),
     /** Max requests per domain per window */
-    maxPerDomain: 50,
+    maxPerDomain: FETCH_DEFAULTS.maxPerDomain,
     /** Time window in ms (10 seconds) */
-    windowMs: 10000,
+    windowMs: FETCH_DEFAULTS.windowMs,
 
     /**
      * Check if a request to this domain is allowed.
