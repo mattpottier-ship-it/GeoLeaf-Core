@@ -70,6 +70,20 @@ function validateUrl(url, options = {}) {
             }
         }
 
+        // When data: is allowed, still restrict to data:image only
+        if (protocol === "data:") {
+            if (!allowDataImages) {
+                throw new Errors.SecurityError("Data URLs are not allowed", { url, protocol });
+            }
+            const dataType = url.substring(5, url.indexOf(",") || url.indexOf(";")).trim();
+            if (!dataType.startsWith("image/")) {
+                throw new Errors.SecurityError("Only data:image URLs are allowed", {
+                    url,
+                    dataType,
+                });
+            }
+        }
+
         return { valid: true, error: null, url: parsed.href };
     } catch (err) {
         if (throwOnError) throw err;

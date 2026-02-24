@@ -7,7 +7,7 @@
  * → src/modules/geoleaf.helpers.js + src/modules/utils/general-utils.js
  * @module src/helpers
  */
-import { Helpers } from '../modules/geoleaf.helpers.js';
+import { Helpers as HelpersBase } from '../modules/geoleaf.helpers.js';
 import { debounce, throttle } from '../modules/utils/general-utils.js';
 
 // Fonctions disponibles dans l'objet Helpers
@@ -35,7 +35,7 @@ export const {
     isEmpty,
     wait,
     retryWithBackoff
-} = Helpers;
+} = HelpersBase;
 
 // Fonctions disponibles dans utils
 export { debounce, throttle };
@@ -51,10 +51,23 @@ export function fetchWithTimeout(url, options = {}, timeout = 5000) {
 }
 
 /**
- * @stub batchDomOperations — ancienne API, exécute chaque fn
+ * @stub batchDomOperations — accepte un callback unique ou un tableau de fonctions
  */
-export function batchDomOperations(operations = []) {
-    if (Array.isArray(operations)) operations.forEach(fn => typeof fn === 'function' && fn());
+export function batchDomOperations(operations) {
+    if (typeof operations === 'function') {
+        return operations();
+    }
+    if (Array.isArray(operations)) {
+        operations.forEach(fn => typeof fn === 'function' && fn());
+    }
+    return null;
 }
 
-export { Helpers };
+// Helpers étendu pour compatibilité tests/consommateurs (debounce, throttle, stubs)
+export const Helpers = {
+    ...HelpersBase,
+    debounce,
+    throttle,
+    fetchWithTimeout,
+    batchDomOperations,
+};

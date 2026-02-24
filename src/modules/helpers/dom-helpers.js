@@ -185,11 +185,20 @@ function removeElement(element) {
  */
 
 function requestFrame(callback) {
-    return window.requestAnimationFrame(callback);
+    const w = typeof window !== "undefined" ? window : _g;
+    if (typeof w.requestAnimationFrame === "function") {
+        return w.requestAnimationFrame(callback);
+    }
+    return setTimeout(callback, 0);
 }
 
 function cancelFrame(id) {
-    window.cancelAnimationFrame(id);
+    const w = typeof window !== "undefined" ? window : _g;
+    if (typeof w.cancelAnimationFrame === "function") {
+        w.cancelAnimationFrame(id);
+    } else {
+        clearTimeout(id);
+    }
 }
 
 /**
