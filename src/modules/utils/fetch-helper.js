@@ -9,9 +9,8 @@
  * @since Sprint 3.3 - Performance Phase
  */
 
-import { Log } from '../log/index.js';
-import { Security } from '../security/index.js';
-
+import { Log } from "../log/index.js";
+import { Security } from "../security/index.js";
 
 /**
  * Default configuration for fetch operations
@@ -23,7 +22,7 @@ const FETCH_DEFAULTS = {
     retryDelay: 1000,
     retryDelayMultiplier: 1.5,
     maxPerDomain: 50,
-    windowMs: 10000
+    windowMs: 10000,
 };
 
 const DEFAULT_CONFIG = {
@@ -31,11 +30,11 @@ const DEFAULT_CONFIG = {
     retries: FETCH_DEFAULTS.retries,
     retryDelay: FETCH_DEFAULTS.retryDelay,
     retryDelayMultiplier: FETCH_DEFAULTS.retryDelayMultiplier,
-    cache: 'default',
-    credentials: 'same-origin',
+    cache: "default",
+    credentials: "same-origin",
     parseResponse: true,
     throwOnError: true,
-    validateUrl: true
+    validateUrl: true,
 };
 
 /**
@@ -58,16 +57,16 @@ const _rateLimiter = {
     allow(url) {
         let domain;
         try {
-            domain = new URL(url, globalThis.location?.origin || 'https://localhost').hostname;
+            domain = new URL(url, globalThis.location?.origin || "https://localhost").hostname;
         } catch {
-            domain = '_relative';
+            domain = "_relative";
         }
 
         const now = Date.now();
         let timestamps = this._requests.get(domain) || [];
 
         // Purge old entries
-        timestamps = timestamps.filter(t => now - t < this.windowMs);
+        timestamps = timestamps.filter((t) => now - t < this.windowMs);
 
         if (timestamps.length >= this.maxPerDomain) {
             return false;
@@ -81,7 +80,7 @@ const _rateLimiter = {
     /** Reset rate limiter (for testing) */
     reset() {
         this._requests.clear();
-    }
+    },
 };
 
 /**
@@ -90,7 +89,6 @@ const _rateLimiter = {
  * @description Unified HTTP client with advanced features
  */
 export const FetchHelper = {
-
     /**
      * Execute HTTP request with comprehensive error handling and retry logic
      *
@@ -133,13 +131,12 @@ export const FetchHelper = {
     async fetch(url, options = {}) {
         const config = { ...DEFAULT_CONFIG, ...options };
         let attempt = 0;
-        let lastError;
 
         // Rate limiting
         if (!_rateLimiter.allow(url)) {
-            throw new FetchError('Rate limit exceeded for this domain', {
+            throw new FetchError("Rate limit exceeded for this domain", {
                 url,
-                type: 'rate_limit_error'
+                type: "rate_limit_error",
             });
         }
 
@@ -147,19 +144,19 @@ export const FetchHelper = {
         if (config.validateUrl && Security?.validateUrl) {
             try {
                 const validation = Security.validateUrl(url);
-                if (validation && typeof validation === 'object') {
+                if (validation && typeof validation === "object") {
                     if (!validation.valid) {
-                        throw new Error(validation.error || 'URL validation failed');
+                        throw new Error(validation.error || "URL validation failed");
                     }
                     url = validation.url || url;
-                } else if (typeof validation === 'string') {
+                } else if (typeof validation === "string") {
                     url = validation;
                 }
             } catch (error) {
                 throw new FetchError(`URL validation failed: ${error.message}`, {
                     url,
                     cause: error,
-                    type: 'validation_error'
+                    type: "validation_error",
                 });
             }
         }
@@ -175,9 +172,7 @@ export const FetchHelper = {
                 }
 
                 return result;
-
             } catch (error) {
-                lastError = error;
                 attempt++;
 
                 // If this was the last attempt, throw the error
@@ -188,25 +183,28 @@ export const FetchHelper = {
                             url,
                             attempts: attempt,
                             cause: error,
-                            type: error.name === 'AbortError' ? 'timeout' : 'network_error'
+                            type: error.name === "AbortError" ? "timeout" : "network_error",
                         }
                     );
                 }
 
                 // Calculate delay with exponential backoff
-                const delay = config.retryDelay * Math.pow(config.retryDelayMultiplier, attempt - 1);
+                const delay =
+                    config.retryDelay * Math.pow(config.retryDelayMultiplier, attempt - 1);
 
                 // Call retry callback if provided
-                if (config.onRetry && typeof config.onRetry === 'function') {
+                if (config.onRetry && typeof config.onRetry === "function") {
                     try {
                         config.onRetry(attempt, error, delay);
                     } catch (callbackError) {
-                        Log.warn('[FetchHelper] onRetry callback failed:', callbackError);
+                        Log.warn("[FetchHelper] onRetry callback failed:", callbackError);
                     }
                 }
 
                 if (Log) {
-                    Log.warn(`[FetchHelper] Retry ${attempt}/${config.retries} for ${url} in ${delay}ms (${error.message})`);
+                    Log.warn(
+                        `[FetchHelper] Retry ${attempt}/${config.retries} for ${url} in ${delay}ms (${error.message})`
+                    );
                 }
 
                 // Wait before retry
@@ -224,11 +222,11 @@ export const FetchHelper = {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => {
             controller.abort();
-            if (config.onTimeout && typeof config.onTimeout === 'function') {
+            if (config.onTimeout && typeof config.onTimeout === "function") {
                 try {
                     config.onTimeout(url, config.timeout, attempt);
                 } catch (callbackError) {
-                    Log.warn('[FetchHelper] onTimeout callback failed:', callbackError);
+                    Log.warn("[FetchHelper] onTimeout callback failed:", callbackError);
                 }
             }
         }, config.timeout);
@@ -266,12 +264,11 @@ export const FetchHelper = {
             }
 
             return response;
-
         } catch (error) {
             clearTimeout(timeoutId);
 
             // Enhance AbortError with more context
-            if (error.name === 'AbortError') {
+            if (error.name === "AbortError") {
                 throw new Error(`Request timed out after ${config.timeout}ms`);
             }
 
@@ -284,17 +281,17 @@ export const FetchHelper = {
      * @private
      */
     async _parseResponse(response) {
-        const contentType = response.headers.get('content-type') || '';
+        const contentType = response.headers.get("content-type") || "";
 
-        if (contentType.includes('application/json')) {
+        if (contentType.includes("application/json")) {
             return await response.json();
         }
 
-        if (contentType.includes('text/') || contentType.includes('application/javascript')) {
+        if (contentType.includes("text/") || contentType.includes("application/javascript")) {
             return await response.text();
         }
 
-        if (contentType.startsWith('image/') || contentType.includes('application/octet-stream')) {
+        if (contentType.startsWith("image/") || contentType.includes("application/octet-stream")) {
             return await response.blob();
         }
 
@@ -307,7 +304,7 @@ export const FetchHelper = {
      * @private
      */
     async _delay(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
+        return new Promise((resolve) => setTimeout(resolve, ms));
     },
 
     /**
@@ -318,7 +315,7 @@ export const FetchHelper = {
      * @returns {Promise} Parsed response data
      */
     async get(url, options = {}) {
-        return this.fetch(url, { ...options, method: 'GET' });
+        return this.fetch(url, { ...options, method: "GET" });
     },
 
     /**
@@ -332,12 +329,12 @@ export const FetchHelper = {
     async post(url, data, options = {}) {
         const postOptions = {
             ...options,
-            method: 'POST',
+            method: "POST",
             headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
+                "Content-Type": "application/json",
+                ...options.headers,
             },
-            body: typeof data === 'string' ? data : JSON.stringify(data)
+            body: typeof data === "string" ? data : JSON.stringify(data),
         };
 
         return this.fetch(url, postOptions);
@@ -353,8 +350,8 @@ export const FetchHelper = {
     async head(url, options = {}) {
         return this.fetch(url, {
             ...options,
-            method: 'HEAD',
-            parseResponse: false
+            method: "HEAD",
+            parseResponse: false,
         });
     },
 
@@ -369,7 +366,7 @@ export const FetchHelper = {
         try {
             const response = await this.head(url, {
                 ...options,
-                throwOnError: false
+                throwOnError: false,
             });
             return response.ok;
         } catch (error) {
@@ -390,7 +387,7 @@ export const FetchHelper = {
      */
     configure(config) {
         Object.assign(DEFAULT_CONFIG, config);
-        Log.debug('[FetchHelper] Configuration updated:', DEFAULT_CONFIG);
+        Log.debug("[FetchHelper] Configuration updated:", DEFAULT_CONFIG);
     },
 
     /**
@@ -400,7 +397,15 @@ export const FetchHelper = {
      */
     getConfig() {
         return { ...DEFAULT_CONFIG };
-    }
+    },
+
+    /**
+     * Expose the internal rate limiter (for testing and diagnostics).
+     * @internal
+     */
+    get _rateLimiter() {
+        return _rateLimiter;
+    },
 };
 
 /**
@@ -412,10 +417,10 @@ export const FetchHelper = {
 export class FetchError extends Error {
     constructor(message, context = {}) {
         super(message);
-        this.name = 'FetchError';
+        this.name = "FetchError";
         this.url = context.url;
         this.attempts = context.attempts;
-        this.type = context.type || 'unknown';
+        this.type = context.type || "unknown";
         this.cause = context.cause;
 
         // Maintain stack trace
@@ -428,5 +433,3 @@ export class FetchError extends Error {
 // Export to GeoLeaf namespace
 
 // Convenient aliases for common usage
-
-
