@@ -1,11 +1,11 @@
 # profile.json - Référence Complète
 
 **Version produit :** GeoLeaf Platform V1  
-**Version:** 4.0.0  
+**Version:** 1.1.0  
 **Date de dernière mise à jour:** 28 janvier 2026  
 **Statut:** ✅ Production Ready
 
-> Convention de versioning : **Platform V1** est le label produit ; le SemVer technique des packages/releases reste en **4.x**. Voir [VERSIONING_POLICY.md](VERSIONING_POLICY.md).
+> Convention de versioning : **Platform V1** est le label produit ; le SemVer technique des packages/releases reste en **1.1.x**. Voir [VERSIONING_POLICY.md](VERSIONING_POLICY.md).
 
 ---
 
@@ -1033,7 +1033,7 @@ opts.maxZoom = typeof definition.maxZoom === "number" ? definition.maxZoom : 19;
 
 **Comportement:** Si `type: "maplibre"` (ou si `style` est présent), le module Baselayers crée un layer MapLibre GL au lieu d'un `L.tileLayer`. Si le plugin MapLibre n'est pas chargé, un fallback raster est utilisé.
 
-**Ajouté en:** v4.0.0 (Scénario B hybride)
+**Ajouté en:** v1.1.0 (Scénario B hybride)
 
 **État:** ✅ Actif et fonctionnel
 
@@ -1059,7 +1059,7 @@ https://tiles.openfreemap.org/styles/liberty
 
 **Valeur par défaut:** Aucune (requis pour les basemaps MapLibre)
 
-**Ajouté en:** v4.0.0 (Scénario B hybride)
+**Ajouté en:** v1.1.0 (Scénario B hybride)
 
 **État:** ✅ Actif et fonctionnel
 
@@ -1081,7 +1081,7 @@ https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png
 
 **Valeur par défaut:** URL de la basemap `street` par défaut
 
-**Ajouté en:** v4.0.0 (Scénario B hybride)
+**Ajouté en:** v1.1.0 (Scénario B hybride)
 
 **État:** ✅ Actif et fonctionnel
 

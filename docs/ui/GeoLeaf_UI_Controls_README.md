@@ -3,7 +3,7 @@
 Product Version: GeoLeaf Platform V1  
 Module de contrÃ´les Leaflet personnalisÃ©s.
 
-**Version**: 4.0.0  
+**Version**: 1.1.0  
 **Fichier**: `src/modules/ui/controls.js` (165 lignes)  
 **DerniÃ¨re mise Ã  jour**: DÃ©cembre 2, 2025
 

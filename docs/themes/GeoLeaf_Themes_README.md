@@ -1,7 +1,7 @@
 # GeoLeaf.Themes – Documentation du module Themes
 
 Product Version: GeoLeaf Platform V1  
-**Version**: 4.0.0  
+**Version**: 1.1.0  
 **Fichiers**:
 
 - `packages/core/src/modules/themes/` (theme-selector, theme-loader, theme-applier/)  
@@ -46,7 +46,7 @@ Chargement de la configuration :
 - Classification (primaire/secondaire)
 - Cache des thèmes
 
-### 3. **theme-applier/** (4 sous-modules v4.0.0)
+### 3. **theme-applier/** (4 sous-modules v1.1.0)
 
 Application des thèmes, éclaté en :
 
@@ -659,4 +659,4 @@ setInterval(autoSwitchTheme, 3600000);
 ---
 
 **Dernière mise à jour** : 19 janvier 2026  
-**Version GeoLeaf** : 4.0.0
+**Version GeoLeaf** : 1.1.0

@@ -3,7 +3,7 @@
 Product Version: GeoLeaf Platform V1  
 Module de gestion des thÃ¨mes (light, dark, auto).
 
-**Version**: 4.0.0  
+**Version**: 1.1.0  
 **Fichier**: `src/modules/ui/theme.js` (250 lignes)  
 **DerniÃ¨re mise Ã  jour**: DÃ©cembre 2, 2025
 

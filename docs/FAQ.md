@@ -3,10 +3,10 @@
 > **Questions frÃ©quemment posÃ©es** et leurs rÃ©ponses
 
 **Version produit**: GeoLeaf Platform V1  
-**Version**: 4.0.0  
+**Version**: 1.1.0  
 **DerniÃ¨re mise Ã  jour**: 14 fÃ©vrier 2026
 
-> Convention de versioning : **Platform V1** est le label produit ; le SemVer technique des packages/releases reste en **4.x**. Voir [VERSIONING_POLICY.md](VERSIONING_POLICY.md).
+> Convention de versioning : **Platform V1** est le label produit ; le SemVer technique des packages/releases reste en **1.1.x**. Voir [VERSIONING_POLICY.md](VERSIONING_POLICY.md).
 
 ---
 
@@ -1275,7 +1275,7 @@ if (GeoLeaf.version.startsWith("3.")) {
 
 - v3.0.0 â†’ v3.0.5 : âœ… Update safe (patches)
 - v3.0.0 â†’ v3.1.0 : âœ… Update safe (features)
-- v3.0.0 â†’ v4.0.0 : âš ï¸ Lire migration guide
+- v3.0.0 â†’ v1.1.0 : âš ï¸ Lire migration guide
 
 ---
 
@@ -1376,7 +1376,7 @@ Pourquoi ajouter cette feature?
 ---
 
 **DerniÃ¨re mise Ã  jour**: 19 janvier 2026  
-**Version**: 4.0.0  
+**Version**: 1.1.0  
 **Auteurs**: Ã‰quipe GeoLeaf
 
 ---

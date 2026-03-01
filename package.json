@@ -1,7 +1,7 @@
 {
     "name": "@geoleaf/core",
     "version": "1.1.0",
-    "description": "GeoLeaf — Modular JavaScript mapping library built on Leaflet. v4.0: Full ESM migration, tree-shaking, selective imports. Features: Security (XSS protection), Performance (optimized build pipeline), Typed Errors, Validators, and comprehensive TypeScript support.",
+    "description": "GeoLeaf — Modular JavaScript mapping library built on Leaflet. v1.1: Full ESM migration, tree-shaking, selective imports. Features: Security (XSS protection), Performance (optimized build pipeline), Typed Errors, Validators, and comprehensive TypeScript support.",
     "type": "module",
     "main": "dist/geoleaf.umd.js",
     "module": "dist/geoleaf.esm.js",

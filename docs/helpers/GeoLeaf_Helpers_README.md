@@ -1,6 +1,6 @@
 # GeoLeaf.Helpers â€“ Documentation du module Helpers
 
-Product Version: GeoLeaf Platform V1 **Version**: 4.0.0  
+Product Version: GeoLeaf Platform V1 **Version**: 1.1.0  
 **Fichier**: `src/modules/geoleaf.helpers.js` (613 lignes)  
 **DerniÃ¨re mise Ã  jour**: 19 janvier 2026  
 **DerniÃ¨re vÃ©rification**: 19 janvier 2026

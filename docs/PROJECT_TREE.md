@@ -1,7 +1,7 @@
 # GeoLeaf-Js — Arborescence du projet (monorepo)
 
 **Product Version:** GeoLeaf Platform V1  
-**Version:** 4.0.0  
+**Version:** 1.1.0  
 **Date:** février 2026  
 **Architecture:** Monorepo (Turborepo, npm workspaces) — Core MIT + plugins (commercial)
 
@@ -224,4 +224,4 @@ Voir [MONOREPO_WORKFLOW.md](MONOREPO_WORKFLOW.md) et [guides/DISTRIBUTION_GUIDE_
 
 ---
 
-_Dernière mise à jour : février 2026 — v4.0.0 (monorepo)_
+_Dernière mise à jour : février 2026 — v1.1.0 (monorepo)_

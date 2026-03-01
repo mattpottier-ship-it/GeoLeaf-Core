@@ -71,3 +71,4 @@ Prérequis et étapes détaillées : [MONOREPO_WORKFLOW.md — Section 3 Release
 
 - [Developer Guide](../DEVELOPER_GUIDE.md) — structure projet, commandes de build détaillées, tests, contribution.
 - [MONOREPO_WORKFLOW.md](../MONOREPO_WORKFLOW.md) — workflow quotidien, release, CI, sécurité et distribution.
+- [PUBLICATION_NPM_CORE.md](PUBLICATION_NPM_CORE.md) — tutoriel pour publier le package @geoleaf/core sur le npm public (GeoLeaf-Core, v1.1.0).

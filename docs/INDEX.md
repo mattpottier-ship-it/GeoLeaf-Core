@@ -1,7 +1,7 @@
 # GeoLeaf Core — Documentation Index
 
 **Product Version:** GeoLeaf Platform V1  
-**Version:** 4.0.0  
+**Version:** 1.1.0  
 **License:** MIT
 
 Documentation for the **GeoLeaf Core** library (MIT only). This index is intended for the public repository. It describes only MIT-licensed Core; it does not include plugin documentation or commercial legal terms. For plugin licensing, see each plugin package (@geoleaf-plugins/storage, @geoleaf-plugins/addpoi).

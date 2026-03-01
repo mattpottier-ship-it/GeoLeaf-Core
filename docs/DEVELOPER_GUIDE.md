@@ -1,11 +1,11 @@
 # GeoLeaf Developer Guide
 
 **Product Version:** GeoLeaf Platform V1  
-**Version:** 4.0.0  
+**Version:** 1.1.0  
 **Last Updated:** February 2026  
 **Audience:** Contributors and advanced developers
 
-> Versioning convention: **Platform V1** is the product label; technical package/release SemVer remains **4.x**. See [VERSIONING_POLICY.md](VERSIONING_POLICY.md).
+> Versioning convention: **Platform V1** is the product label; technical package/release SemVer remains **1.1.x**. See [VERSIONING_POLICY.md](VERSIONING_POLICY.md).
 
 ---
 
@@ -1145,7 +1145,7 @@ npm run benchmark
 ```
 MAJOR.MINOR.PATCH
 
-4.0.0
+1.1.0
 │ │ │
 │ │ └─ Patch: Bug fixes
 │ └─── Minor: New features (backward compatible)
@@ -1155,8 +1155,8 @@ MAJOR.MINOR.PATCH
 **Examples:**
 
 - `3.1.0` → `3.1.1` - Bug fix
-- `3.1.1` → `4.0.0` - New feature (Phase 1-3 refactoring)
-- `4.0.0` → `4.0.0` - Breaking API change (ESM migration)
+- `1.0.0` → `1.1.0` - New feature (Phase 1-3 refactoring)
+- `1.1.0` → `2.0.0` - Breaking API change (ESM migration)
 
 ### Changelog
 
@@ -1317,4 +1317,4 @@ npm run format
 ---
 
 **Last Updated:** February 14, 2026  
-**GeoLeaf Version:** 4.0.0
+**GeoLeaf Version:** 1.1.0

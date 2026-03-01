@@ -1,11 +1,11 @@
 # GeoLeaf Demo System Guide
 
 **Product Version:** GeoLeaf Platform V1  
-**Version:** 4.0.0  
+**Version:** 1.1.0  
 **Last Updated:** January 2026  
 **Target Audience:** Developers testing and demonstrating GeoLeaf features
 
-> Versioning convention: **Platform V1** is the product label; technical package/release SemVer remains **4.x**. See [VERSIONING_POLICY.md](VERSIONING_POLICY.md).
+> Versioning convention: **Platform V1** is the product label; technical package/release SemVer remains **1.1.x**. See [VERSIONING_POLICY.md](VERSIONING_POLICY.md).
 
 This guide documents the GeoLeaf demo system architecture, including the demo page structure, DemoLog system, profile/theme selectors, and verbose debugging mode.
 
@@ -122,7 +122,7 @@ const map = GeoLeaf.init({
     <!-- Branding -->
     <div class="demo-branding">
         <h1>GeoLeaf JS Demo</h1>
-        <p>Version 4.0.0 | Interactive Mapping Library</p>
+        <p>Version 1.1.0 | Interactive Mapping Library</p>
     </div>
 
     <!-- Profile Selector -->

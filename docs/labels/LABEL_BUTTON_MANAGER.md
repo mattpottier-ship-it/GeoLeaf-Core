@@ -3,7 +3,7 @@
 Product Version: GeoLeaf Platform V1
 
 **Module:** `src/modules/labels/label-button-manager.js`  
-**Version:** 4.0.0  
+**Version:** 1.1.0  
 **Last Updated:** January 2026  
 **Lines:** 267
 
@@ -291,7 +291,7 @@ The module does NOT store layer state. It queries live state from:
 
 ## Decision Logic
 
-### Simplified Rules (v4.0.0)
+### Simplified Rules (v1.1.0)
 
 The button follows these **simple rules**:
 
@@ -702,4 +702,4 @@ For issues or questions about Label Button Manager:
 ---
 
 **Last Updated:** January 23, 2026  
-**Module Version:** 4.0.0
+**Module Version:** 1.1.0

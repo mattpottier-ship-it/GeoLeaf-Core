@@ -1,6 +1,6 @@
 # GeoLeaf.Core â€“ Documentation du module Core
 
-Product Version: GeoLeaf Platform V1 **Version**: 4.0.0  
+Product Version: GeoLeaf Platform V1 **Version**: 1.1.0  
 **Fichier (monorepo)** : `packages/core/src/modules/core/` (et point d'entrée bundle)  
 **DerniÃ¨re mise Ã  jour**: 19 janvier 2026
 
@@ -431,7 +431,7 @@ if (!map) {
 
 ## 9. Boot System (`src/app/`)
 
-Depuis la v4.0.0, l'initialisation de GeoLeaf est orchestrée par le **boot system** situé dans `src/app/`. Ce système gère le chargement séquentiel : core → plugins → démarrage.
+Depuis la v1.1.0, l'initialisation de GeoLeaf est orchestrée par le **boot system** situé dans `src/app/`. Ce système gère le chargement séquentiel : core → plugins → démarrage.
 
 ### 9.1 Fichiers du boot system
 

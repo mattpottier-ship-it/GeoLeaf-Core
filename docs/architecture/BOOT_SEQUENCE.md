@@ -1,4 +1,4 @@
-# GeoLeaf JS — Boot Sequence (v4.0.0)
+# GeoLeaf JS — Boot Sequence (v1.1.0)
 
 Product Version: GeoLeaf Platform V1
 
@@ -95,7 +95,7 @@ Après la Map, les resolvers sont enregistrés dans `PluginRegistry.registerLazy
 ```javascript
 // globals.js — injecté par Rollup replace() au build
 _g.GeoLeaf._version =
-    typeof __GEOLEAF_VERSION__ !== "undefined" ? __GEOLEAF_VERSION__ : "4.0.0-dev";
+    typeof __GEOLEAF_VERSION__ !== "undefined" ? __GEOLEAF_VERSION__ : "1.1.0-dev";
 ```
 
 ### `geoleaf.api.js` — dernier import

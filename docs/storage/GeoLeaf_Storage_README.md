@@ -1,6 +1,6 @@
 # GeoLeaf.Storage â€“ Documentation du module Storage
 
-Product Version: GeoLeaf Platform V1 **Version**: 4.0.0  
+Product Version: GeoLeaf Platform V1 **Version**: 1.1.0  
 **Core (monorepo)** : `packages/core/src/modules/storage/` — **Plugin** : `packages/plugin-storage/`  
 **Dernière mise à jour**: 15 février 2026
 

@@ -1,7 +1,7 @@
 # 📐 GeoLeaf JSON Schema Documentation
 
 Product Version: GeoLeaf Platform V1  
-**Version**: 4.0.0  
+**Version**: 1.1.0  
 **Last Updated**: January 22, 2026
 
 ---
@@ -429,7 +429,7 @@ echo "✅ All styles valid"
 
 ## 📝 Changelog
 
-### v4.0.0 (January 2026)
+### v1.1.0 (January 2026)
 
 - Added integrated label configuration
 - Enhanced font properties validation

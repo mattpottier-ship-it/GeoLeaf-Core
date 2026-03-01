@@ -1,11 +1,11 @@
 # GeoLeaf API Reference
 
 **Product Version:** GeoLeaf Platform V1  
-**Version:** 4.0.0  
+**Version:** 1.1.0  
 **Last Updated:** February 21, 2026  
 **Audience:** Developers integrating GeoLeaf
 
-> Versioning convention: **Platform V1** is the product label; technical package/release SemVer remains **4.x**. See [VERSIONING_POLICY.md](VERSIONING_POLICY.md).
+> Versioning convention: **Platform V1** is the product label; technical package/release SemVer remains **1.1.x**. See [VERSIONING_POLICY.md](VERSIONING_POLICY.md).
 
 ---
 
@@ -38,10 +38,10 @@
 
 ```html
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<link rel="stylesheet" href="https://unpkg.com/geoleaf@4.0.0/dist/geoleaf.min.css" />
+<link rel="stylesheet" href="https://unpkg.com/@geoleaf/core@1.1.0/dist/geoleaf.min.css" />
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/geoleaf@4.0.0/dist/geoleaf.min.js"></script>
+<script src="https://unpkg.com/@geoleaf/core@1.1.0/dist/geoleaf.min.js"></script>
 ```
 
 **Via NPM:**
@@ -1804,4 +1804,4 @@ For API questions or issues:
 ---
 
 **Last Updated:** February 21, 2026  
-**GeoLeaf Version:** 4.0.0
+**GeoLeaf Version:** 1.1.0

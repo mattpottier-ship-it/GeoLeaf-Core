@@ -4,7 +4,7 @@ Product Version: GeoLeaf Platform V1
 
 **Modules** : `GeoLeaf.CacheManager`, `GeoLeaf.StorageDB`, `GeoLeaf.SyncManager`, `GeoLeaf.OfflineDetector`  
 **Modules future-ready** : `GeoLeaf.Storage.Compression`, `GeoLeaf.Storage.CachingStrategy`  
-**Version** : 4.0.0  
+**Version** : 1.1.0  
 **Fichiers source (monorepo)** : `packages/core/src/modules/storage/` (root, cache/, layer-selector/, db/)  
 **Dernière mise à jour** : 15 février 2026
 
@@ -365,7 +365,7 @@ await GeoLeaf.Storage.DB.clearSyncQueue("tourism");
 Sauvegarde des métadonnées.
 
 ```javascript
-await GeoLeaf.Storage.DB.setMetadata("cache_version", "4.0.0");
+await GeoLeaf.Storage.DB.setMetadata("cache_version", "1.1.0");
 await GeoLeaf.Storage.DB.setMetadata("last_sync", Date.now());
 ```
 
@@ -786,7 +786,7 @@ console.log(stats);
 
 Le **Service Worker** intercepte les requêtes réseau pour fournir un cache automatique des assets et un fonctionnement offline transparent.
 
-> ✅ **Implémenté** : Le Service Worker est fonctionnel depuis la version 4.0.0.
+> ✅ **Implémenté** : Le Service Worker est fonctionnel depuis la version 1.1.0.
 
 ### Stratégies de cache (sw.js)
 
@@ -1075,7 +1075,7 @@ if (navigator.storage && navigator.storage.persist) {
 
 ---
 
-**Version** : 4.0.0  
+**Version** : 1.1.0  
 **Dernière mise à jour** : 15 février 2026  
 **Sprint 3** : Documentation complète du système Storage & Cache ✅  
 **Sprint 4** : Service Worker implémenté, layer-selector refactorisé, dead code nettoyé ✅

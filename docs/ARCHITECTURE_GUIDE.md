@@ -1,11 +1,11 @@
 # GeoLeaf – Architecture Technique
 
 > **Product Version**: GeoLeaf Platform V1  
-> **Version**: 4.0.0  
+> **Version**: 1.1.0  
 > **Dernière mise à jour**: 15 février 2026  
 > **Architecture**: Modulaire + Plugin System + Content Builder v1.0.0
 
-> Convention de versioning : **Platform V1** est le label produit ; le SemVer technique des packages/releases reste en **4.x**. Voir [VERSIONING_POLICY.md](VERSIONING_POLICY.md).
+> Convention de versioning : **Platform V1** est le label produit ; le SemVer technique des packages/releases reste en **1.1.x**. Voir [VERSIONING_POLICY.md](VERSIONING_POLICY.md).
 
 ## Table des Matières
 
@@ -358,6 +358,6 @@ Ce document fournit :
 - Le **système offline** (Service Worker, IndexedDB, OfflineDetector).
 - L'**architecture Content Builder v1.0.0** (Sprint 4.5).
 
-Il constitue la référence pour l'architecture v4.0.0.
+Il constitue la référence pour l'architecture v1.1.0.
 
 **Voir aussi** : [Performance Architecture](performance/PERFORMANCE_ARCHITECTURE.md) (Worker GeoJSON, lazy loading, requestIdleCallback, bonnes pratiques taille GeoJSON et nombre de couches).

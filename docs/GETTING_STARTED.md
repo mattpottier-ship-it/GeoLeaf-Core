@@ -6,7 +6,7 @@
 **Level:** Beginner  
 **Prerequisites:** Basic HTML/JavaScript knowledge
 
-> Versioning convention: **Platform V1** is the product label; technical package/release SemVer remains **4.x**. See [VERSIONING_POLICY.md](VERSIONING_POLICY.md).
+> Versioning convention: **Platform V1** is the product label; technical package/release SemVer remains **1.1.x**. See [VERSIONING_POLICY.md](VERSIONING_POLICY.md).
 
 This guide will help you create your first interactive map with GeoLeaf in just 5 minutes.
 

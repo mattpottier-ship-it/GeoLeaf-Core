@@ -1,11 +1,11 @@
 # GeoLeaf Profiles Guide
 
 **Product Version:** GeoLeaf Platform V1  
-**Version:** 4.0.0  
+**Version:** 1.1.0  
 **Last Updated:** January 2026  
 **Audience:** Developers creating custom business profiles
 
-> Versioning convention: **Platform V1** is the product label; technical package/release SemVer remains **4.x**. See [VERSIONING_POLICY.md](VERSIONING_POLICY.md).
+> Versioning convention: **Platform V1** is the product label; technical package/release SemVer remains **1.1.x**. See [VERSIONING_POLICY.md](VERSIONING_POLICY.md).
 
 ---
 
@@ -299,7 +299,7 @@ profiles/tourism/
 **Key Features:**
 
 - **35+ layers** organized by category
-- **46 migrated styles** (v4.0.0 with `label.visibleByDefault`)
+- **46 migrated styles** (v1.1.0 with `label.visibleByDefault`)
 - **Icon sprite** with 50+ tourism symbols
 - **Sample data** for major French cities
 - **4 category groups:** Activités, Culture, Nature, Hébergements
@@ -1317,4 +1317,4 @@ For help with profile creation:
 ---
 
 **Last Updated:** January 23, 2026  
-**GeoLeaf Version:** 4.0.0
+**GeoLeaf Version:** 1.1.0

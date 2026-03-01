@@ -3,10 +3,10 @@
 > **Bienvenue!** Merci de votre intérêt pour contribuer à GeoLeaf.js. Ce guide vous aidera à démarrer.
 
 **Version produit**: GeoLeaf Platform V1  
-**Version**: 4.0.0  
+**Version**: 1.1.0  
 **Dernière mise à jour**: 14 février 2026
 
-> Convention de versioning : **Platform V1** est le label produit ; le SemVer technique des packages/releases reste en **4.x**. Voir [VERSIONING_POLICY.md](VERSIONING_POLICY.md).
+> Convention de versioning : **Platform V1** est le label produit ; le SemVer technique des packages/releases reste en **1.1.x**. Voir [VERSIONING_POLICY.md](VERSIONING_POLICY.md).
 
 ---
 
@@ -644,8 +644,8 @@ GeoLeaf.js suit le **Semantic Versioning 2.0.0**:
 
 ```
 3.0.0 → 3.0.1   # Bug fix
-3.0.1 → 4.0.0   # Nouvelle fonctionnalité
-4.0.0 → 4.0.0   # Breaking change
+1.1.0 → 1.2.0   # Nouvelle fonctionnalité
+1.1.0 → 2.0.0   # Breaking change
 ```
 
 ### Messages de Commit
@@ -818,7 +818,7 @@ You must have **npm publish permissions** on the [geoleaf npm package](https://n
 
     ```json
     {
-        "version": "4.0.0"
+        "version": "1.1.0"
     }
     ```
 
@@ -828,13 +828,13 @@ You must have **npm publish permissions** on the [geoleaf npm package](https://n
 
     ```bash
     git add package.json CHANGELOG.md
-    git commit -m "chore: release v4.0.0"
+    git commit -m "chore: release v1.1.0"
     ```
 
 5. **Create git tag (triggers CI/CD):**
 
     ```bash
-    git tag -a v4.0.0 -m "Release version 4.0.0"
+    git tag -a v1.1.0 -m "Release version 1.1.0"
     git push origin main --tags
     ```
 

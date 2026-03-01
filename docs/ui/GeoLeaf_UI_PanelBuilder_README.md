@@ -3,7 +3,7 @@
 Product Version: GeoLeaf Platform V1  
 Module de construction de panneaux de dÃ©tails POI avec layouts configurables.
 
-**Version**: 4.0.0  
+**Version**: 1.1.0  
 **Fichier (monorepo)** : `packages/core/src/modules/ui/panel-builder.ts` (ou équivalent)  
 **DerniÃ¨re mise Ã  jour**: DÃ©cembre 2, 2025
 

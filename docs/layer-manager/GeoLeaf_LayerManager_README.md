@@ -3,7 +3,7 @@
 Product Version: GeoLeaf Platform V1
 
 **Modules** : `GeoLeaf.LayerManager` (alias `GeoLeaf.Legend`), `GeoLeaf._LayerManagerControl`, `GeoLeaf._LayerManagerRenderer`  
-**Version** : 4.0.0  
+**Version** : 1.1.0  
 **Fichiers source** :
 
 - `src/modules/geoleaf.legend.js` (API publique)
@@ -738,6 +738,6 @@ document.addEventListener("geoleaf:layer:style:changed", (event) => {
 
 ---
 
-**Version** : 4.0.0  
+**Version** : 1.1.0  
 **Dernière mise à jour** : 19 janvier 2026  
 **Sprint 2** : Documentation complète LayerManager vs Legend ✅

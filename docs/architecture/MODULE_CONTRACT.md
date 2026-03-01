@@ -1,4 +1,4 @@
-# GeoLeaf JS — Module Contract (v4.0.0)
+# GeoLeaf JS — Module Contract (v1.1.0)
 
 Product Version: GeoLeaf Platform V1
 
@@ -159,7 +159,7 @@ await GeoLeaf.plugins.load("layerManager"); // → Promise<void>
 
 // Métadonnées d'un plugin
 GeoLeaf.plugins.getInfo("storage");
-// → { name: 'storage', version: '4.0.0', loaded: true, loadedAt: 1708360000000, requires: [], optional: ['addpoi'] }
+// → { name: 'storage', version: '1.1.0', loaded: true, loadedAt: 1708360000000, requires: [], optional: ['addpoi'] }
 ```
 
 ---

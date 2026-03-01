@@ -1,6 +1,6 @@
 # GeoLeaf.Baselayers â€“ Documentation du module Baselayers
 
-Product Version: GeoLeaf Platform V1 **Version**: 4.0.0  
+Product Version: GeoLeaf Platform V1 **Version**: 1.1.0  
 **Fichier (monorepo)** : `packages/core/src/modules/baselayers/`  
 **DerniÃ¨re mise Ã  jour**: 19 janvier 2026
 
@@ -242,7 +242,7 @@ GeoLeaf.Baselayers.init({
 
 ## 12. Basemaps vectorielles (MapLibre GL)
 
-> **Ajouté en v4.0.0-alpha — Scénario B hybride**
+> **Ajouté en v1.1.0-alpha — Scénario B hybride**
 
 GeoLeaf supporte les **basemaps vectorielles rendues en WebGL** via le plugin
 [`@maplibre/maplibre-gl-leaflet`](https://github.com/maplibre/maplibre-gl-leaflet).
