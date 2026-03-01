@@ -4,9 +4,7 @@ Product Version: GeoLeaf Platform V1
 **Version**: 4.0.0  
 **Fichiers**:
 
-- `src/modules/themes/theme-selector.js` (561 lignes)
-- `src/modules/themes/theme-loader.js`
-- `src/modules/themes/theme-applier/` ⭐ (4 sous-modules : core.js, visibility.js, deferred.js, ui-sync.js)  
+- `packages/core/src/modules/themes/` (theme-selector, theme-loader, theme-applier/)  
   **Dernière mise à jour**: 14 février 2026
 
 ---

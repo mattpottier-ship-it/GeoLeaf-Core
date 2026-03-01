@@ -2,7 +2,7 @@
 
 Product Version: GeoLeaf Platform V1  
 **Version**: 4.0.0  
-**Fichiers**: `src/modules/config/geoleaf-config/` (4 sous-modules : config-core.js, config-validation.js, config-loaders.js, config-accessors.js)  
+**Fichiers (monorepo)** : `packages/core/src/modules/config/` (sous-modules config, validation, loaders, accessors)  
 **Dernière mise à jour**: 14 février 2026
 
 ---

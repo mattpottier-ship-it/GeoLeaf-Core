@@ -1,7 +1,7 @@
 # GeoLeaf Versioning Policy
 
 **Product Version:** Platform V1  
-**Technical SemVer Baseline:** Core `geoleaf` `4.x` + Premium plugins `@geoleaf-plugins/*` `4.x`
+**Technical SemVer Baseline:** Core `geoleaf` `1.1.x` + Premium plugins `@geoleaf-plugins/*` `1.1.x`
 
 ---
 
@@ -10,7 +10,7 @@
 This policy separates:
 
 - **Product/marketing version** (what users see): `GeoLeaf Platform V1`
-- **Technical package versions** (SemVer, tooling, CI/CD): `4.x`, `4.0.0`, etc.
+- **Technical package versions** (SemVer, tooling, CI/CD): `1.1.x`, `1.1.0`, etc.
 
 This avoids breaking package history, release pipelines, dependency updates, and compatibility tracking.
 
@@ -18,7 +18,7 @@ This avoids breaking package history, release pipelines, dependency updates, and
 
 ## Official Mapping
 
-- `GeoLeaf Platform V1` = `geoleaf@4.x` + `@geoleaf-plugins/storage@4.x` + `@geoleaf-plugins/addpoi@4.x`
+- `GeoLeaf Platform V1` = `geoleaf@1.1.x` + `@geoleaf-plugins/storage@1.1.x` + `@geoleaf-plugins/addpoi@1.1.x`
 
 ---
 
@@ -42,6 +42,4 @@ Keep **technical SemVer** in:
 
 ## Important
 
-Do **not** mass-replace `4.0.0` to `1.0.0` across the repository.
-
-If a true technical reset to `1.0.0` is required, it must be done with **new package names** and a formal migration path.
+As of V1.1.0, the technical SemVer baseline is **1.1.x**. For future major/minor bumps, update package.json and docs consistently.

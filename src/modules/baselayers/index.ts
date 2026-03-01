@@ -1,0 +1,76 @@
+﻿/*!
+ * GeoLeaf Core – Baselayers / Index (barrel)
+ * © 2026 Mattieu Pottier
+ * Released under the MIT License
+ */
+
+import {
+    ensureMap,
+    setMap,
+    registerDefaultBaseLayers,
+    registerBaseLayer,
+    registerBaseLayers,
+    setBaseLayer,
+    getBaseLayers,
+    getActiveKey,
+    getActiveLayer,
+} from "./registry.js";
+import { createBaseLayerControlsUI, bindUIOnce, refreshUI, destroyUI } from "./ui.js";
+
+export interface BaselayersInitOptions {
+    map?: unknown;
+    baselayers?: Record<string, unknown>;
+    activeKey?: string;
+}
+
+function init(options?: BaselayersInitOptions): {
+    activeKey: string | null;
+    layers: Record<string, unknown>;
+} {
+    options = options || {};
+
+    if (options.map) {
+        setMap(options.map);
+    } else {
+        ensureMap(undefined);
+    }
+
+    registerDefaultBaseLayers();
+
+    if (options.baselayers && typeof options.baselayers === "object") {
+        registerBaseLayers(options.baselayers);
+    }
+
+    if (options.activeKey) {
+        setBaseLayer(options.activeKey, { silent: true });
+    }
+
+    if (!getActiveKey()) {
+        const keys = Object.keys(getBaseLayers());
+        if (keys.length > 0) {
+            setBaseLayer(keys[0], { silent: true });
+        }
+    }
+
+    createBaseLayerControlsUI(options);
+    bindUIOnce();
+    refreshUI();
+
+    return {
+        activeKey: getActiveKey(),
+        layers: getBaseLayers(),
+    };
+}
+
+export const Baselayers = {
+    init,
+    registerBaseLayer,
+    registerBaseLayers,
+    setBaseLayer,
+    setActive: setBaseLayer,
+    getBaseLayers,
+    getActiveKey,
+    getActiveId: getActiveKey,
+    getActiveLayer,
+    destroy: destroyUI,
+};

@@ -1,4 +1,4 @@
-﻿# Configuration POI (poiConfig)
+# Configuration POI (poiConfig)
 
 Product Version: GeoLeaf Platform V1  
 **Date de création**: Décembre 2025  
@@ -12,8 +12,8 @@ Le paramètre `poiConfig` dans le fichier profile.json configure le comportement
 
 ## Localisation dans le code
 
-- **Lecture**: `src/modules/geojson/clustering.js` (lignes 123, 131)
-- **Utilisation**: `src/modules/poi/core.js`, `src/modules/poi/markers.js`, `src/modules/geojson/loader.js`
+- **Lecture**: `packages/core/src/modules/geojson/clustering.ts` (lignes 123, 131)
+- **Utilisation**: `packages/core/src/modules/poi/core.ts`, `packages/core/src/modules/poi/markers.ts`, `packages/core/src/modules/geojson/loader.ts`
 
 ## Structure minimale
 
@@ -176,11 +176,11 @@ Ces paramètres sont également supportés par le module POI:
 
 ## Fichiers concernés
 
-- `src/modules/geojson/clustering.js` - Logique de stratégie de clustering
-- `src/modules/geojson/loader.js` - Chargement et application du clustering
-- `src/modules/poi/core.js` - Initialisation du module POI
-- `src/modules/poi/markers.js` - Création des marqueurs
-- `src/modules/poi/shared.js` - État partagé incluant poiConfig
+- `packages/core/src/modules/geojson/clustering.ts` - Logique de stratégie de clustering
+- `packages/core/src/modules/geojson/loader.ts` - Chargement et application du clustering
+- `packages/core/src/modules/poi/core.ts` - Initialisation du module POI
+- `packages/core/src/modules/poi/markers.ts` - Création des marqueurs
+- `packages/core/src/modules/poi/shared.ts` - État partagé incluant poiConfig
 
 ## Historique
 

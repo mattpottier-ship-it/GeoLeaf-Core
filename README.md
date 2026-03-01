@@ -256,7 +256,7 @@ _(via plugin premium Storage)_
 
 GeoLeaf is optimized for production performance:
 
-- **Bundle Size**: ~128 KB (minified + gzipped)
+- **Bundle Size**: See build output in `packages/core/dist/` (UMD/ESM; size depends on features and tree-shaking)
 - **Tree-Shaking**: 75.7% code reduction in production build
 - **Initialization**: < 100ms on modern devices
 - **Runtime Performance**: Smooth interactions with 1000+ POI markers
@@ -274,28 +274,22 @@ GeoLeaf is optimized for production performance:
 
 ## 🏗️ Architecture
 
-GeoLeaf is built with a **modular architecture** (v4.0.0) consisting of 200+ modules organized into functional domains:
+GeoLeaf is developed in a **Turborepo monorepo** (GeoLeaf-Js). The core library lives in `packages/core/` (TypeScript, 250+ source files); optional plugins are in `packages/plugin-storage` and `packages/plugin-addpoi`.
 
 ```
-geoleaf-js/
-├── src/modules/          # Core modules
-│   ├── core/               # Map initialization
-│   ├── config/             # Profile loading
-│   ├── poi/                # POI management
-│   ├── geojson/            # GeoJSON layers
-│   ├── labels/             # Label system
-│   ├── themes/             # Theme system
-│   ├── ui/                 # UI components
-│   ├── storage/            # Offline storage
-│   ├── filters/            # Filter engine
-│   ├── security/           # XSS protection
-│   └── utils/              # Utilities
-├── profiles/               # Business profiles
-│   └── tourism/            # Tourism profile
-└── docs/                   # Documentation
+GeoLeaf-Js/
+├── packages/
+│   ├── core/                 # @geoleaf/core (MIT) — main library
+│   │   └── src/              # TypeScript: app/, poi/, geojson/, ui/, filters/, route/, table/, ...
+│   ├── plugin-storage/       # Storage / cache plugin (commercial)
+│   └── plugin-addpoi/        # Add/Edit POI plugin (commercial)
+├── apps/demo/                # Demo application
+├── deploy/                   # Deploy variants (deploy-core, deploy-storage, deploy-storage-addpoi) — npm run build:deploy
+├── profiles/                 # Business profiles (e.g. tourism)
+└── docs/                     # Documentation
 ```
 
-See [Developer Guide](docs/DEVELOPER_GUIDE.md) for detailed architecture documentation.
+See [Developer Guide](docs/DEVELOPER_GUIDE.md) and [PROJECT_TREE](docs/PROJECT_TREE.md) for structure and build details.
 
 ---
 
@@ -418,7 +412,7 @@ See [Distribution Guide](docs/guides/DISTRIBUTION_GUIDE_2026.md) for packaging i
 
 ## 🧪 Testing
 
-- **Unit tests:** Jest (150+ tests)
+- **Unit tests:** Jest (4500+ tests in core)
 - **Integration tests:** Jest with mock DOM
 - **E2E tests:** Playwright
 - **Coverage:** 80%+ target
@@ -498,7 +492,7 @@ npm run test:watch
 npm run lint
 
 # Build production bundle
-npm run build:all
+npm run build
 ```
 
 ---
@@ -509,8 +503,10 @@ npm run build:all
 
 GeoLeaf Core is released under the **MIT License** - free for commercial and personal use.
 
+- **Core only:** This repository and its published documentation describe **only** GeoLeaf Core (MIT). They do not cover plugin features or commercial licensing.
+- **Plugins:** Optional packages (`@geoleaf-plugins/storage`, `@geoleaf-plugins/addpoi`) are separately licensed (commercial). See each plugin's package and documentation for their terms.
 - See [LICENCE](LICENCE) for the complete license text
-- See [NOTICE.txt](NOTICE.txt) for third-party attributions
+- See [NOTICE.md](docs/NOTICE.md) for core vs modules and third-party attributions
 - See [LICENSE_HEADERS.md](docs/LICENSE_HEADERS.md) for code header requirements
 
 ### Using GeoLeaf
@@ -559,7 +555,7 @@ See [CHANGELOG.md](CHANGELOG.md) for version history.
 GeoLeaf Core is released under the MIT License.  
 © 2026 Mattieu Pottier
 
-For more information about licensing and the distinction between GeoLeaf Core (open source) and future modules, see [NOTICE.md](docs/NOTICE.md).
+For licensing and the distinction between GeoLeaf Core (MIT) and optional commercial plugins, see [NOTICE.md](docs/NOTICE.md).
 
 ---
 

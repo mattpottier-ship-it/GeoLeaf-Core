@@ -42,12 +42,28 @@ https://geoleaf.org/schemas/style.schema.json
 
 ### 1. Validate Configuration in Code
 
+**CommonJS (Node / legacy):**
+
 ```javascript
-// Using AJV (recommended)
 const Ajv = require("ajv");
 const ajv = new Ajv();
 const schema = require("../schema/style.schema.json");
 
+const validate = ajv.compile(schema);
+const valid = validate(yourStyleConfig);
+
+if (!valid) {
+    console.error("Validation errors:", validate.errors);
+}
+```
+
+**ESM (monorepo / modern):**
+
+```javascript
+import Ajv from "ajv";
+import schema from "../schema/style.schema.json" assert { type: "json" };
+
+const ajv = new Ajv();
 const validate = ajv.compile(schema);
 const valid = validate(yourStyleConfig);
 

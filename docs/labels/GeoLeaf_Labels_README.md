@@ -4,9 +4,7 @@ Product Version: GeoLeaf Platform V1
 **Version**: 4.0.0  
 **Fichiers**:
 
-- `src/modules/labels/labels.js` (365 lignes)
-- `src/modules/labels/label-renderer.js`
-- `src/modules/labels/label-style-loader.js`  
+- `packages/core/src/modules/labels/` (labels, label-renderer, label-style-loader)  
   **Dernière mise à jour**: 19 janvier 2026
 
 ---

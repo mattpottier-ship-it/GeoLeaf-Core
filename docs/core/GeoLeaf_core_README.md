@@ -1,7 +1,7 @@
 # GeoLeaf.Core â€“ Documentation du module Core
 
 Product Version: GeoLeaf Platform V1 **Version**: 4.0.0  
-**Fichier**: `src/modules/geoleaf.core.js`  
+**Fichier (monorepo)** : `packages/core/src/modules/core/` (et point d'entrée bundle)  
 **DerniÃ¨re mise Ã  jour**: 19 janvier 2026
 
 ---

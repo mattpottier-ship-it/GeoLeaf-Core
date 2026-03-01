@@ -2,7 +2,7 @@
 
 Product Version: GeoLeaf Platform V1  
 **Version**: 4.0.0 (Phase 1 XSS hardening)  
-**Fichier**: `src/modules/security/index.js`  
+**Fichier (monorepo)** : `packages/core/src/modules/security/`  
 **Date**: Février 2026
 
 ---
@@ -227,7 +227,33 @@ fetch(userUrl); // ❌ Peut être javascript:, file:, etc.
 
 // NE PAS bypasser la sanitization
 poi.properties.popupContent = unsafeHtml; // ❌ XSS possible !
+
+// NE PAS vider un nœud DOM avec innerHTML = ''
+element.innerHTML = ''; // ❌ Utiliser DOMSecurity.clearElement à la place (voir ci‑dessous)
 ```
+
+---
+
+## 📐 Vidage du DOM (convention unique)
+
+**Règle** : pour vider le contenu d’un élément (supprimer ses enfants), ne pas utiliser `element.innerHTML = ''`. Utiliser à la place **`GeoLeaf.DOMSecurity.clearElement(element)`** ou **`GeoLeaf.DOMSecurity.clearElementFast(element)`**.
+
+| Méthode | Usage |
+| --------| ----- |
+| `DOMSecurity.clearElement(el)` | Vide en supprimant les nœuds un par un (`removeChild`) — préférable quand des listeners ou des refs sont attachés aux enfants. |
+| `DOMSecurity.clearElementFast(el)` | Vide via `el.textContent = ''` — plus rapide, à privilégier quand le contenu est uniquement texte/HTML sans listeners. |
+
+**Exemple** :
+
+```js
+// ✅ Correct
+GeoLeaf.DOMSecurity.clearElementFast(container);
+
+// ❌ À éviter
+container.innerHTML = '';
+```
+
+Cette convention garantit un point unique de vidage du DOM et évite les assignations directes à `innerHTML` dans le code applicatif (core et plugins). Voir aussi `packages/core/src/modules/utils/dom-security.ts` et la roadmap (étape 5).
 
 ---
 

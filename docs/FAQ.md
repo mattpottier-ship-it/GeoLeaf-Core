@@ -117,18 +117,18 @@ const map2 = GeoLeaf.init({
 **R**: Installation:
 
 ```bash
-npm install geoleaf-js leaflet
+npm install geoleaf leaflet
 ```
 
 Utilisation:
 
 ```javascript
 import L from "leaflet";
-import GeoLeaf from "geoleaf-js";
+import GeoLeaf from "geoleaf";
 
 // CSS
 import "leaflet/dist/leaflet.css";
-import "geoleaf-js/dist/geoleaf.min.css";
+import "geoleaf/dist/geoleaf.min.css";
 
 // Initialisation
 GeoLeaf.init({

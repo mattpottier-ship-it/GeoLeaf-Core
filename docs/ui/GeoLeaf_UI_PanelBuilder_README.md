@@ -4,7 +4,7 @@ Product Version: GeoLeaf Platform V1
 Module de construction de panneaux de dÃ©tails POI avec layouts configurables.
 
 **Version**: 4.0.0  
-**Fichier**: `src/modules/ui/panel-builder.js` (485 lignes)  
+**Fichier (monorepo)** : `packages/core/src/modules/ui/panel-builder.ts` (ou équivalent)  
 **DerniÃ¨re mise Ã  jour**: DÃ©cembre 2, 2025
 
 ---
@@ -101,7 +101,7 @@ const value = GeoLeaf.UI.PanelBuilder.resolveField(poi, "attributes.rating");
 
 ## RÃ©fÃ©rences
 
-- **Code source**: `src/modules/ui/panel-builder.js`
+- **Code source** : `packages/core/src/modules/ui/` (panel-builder)
 - **Phase 4 Refactoring**: `SPRINT4_SUMMARY.md`
 - **Module POI**: `docs/poi/GeoLeaf_POI_README.md`
 

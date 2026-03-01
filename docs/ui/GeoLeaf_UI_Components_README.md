@@ -4,7 +4,7 @@ Product Version: GeoLeaf Platform V1
 
 **Modules** : `GeoLeaf._UIComponents`, `GeoLeaf._UIDomUtils`, `GeoLeaf.UI.Notifications`, et composants UI  
 **Version** : 4.0.0  
-**Fichiers source** : `src/modules/ui/*.js` (19 fichiers)  
+**Fichiers source (monorepo)** : `packages/core/src/modules/ui/`  
 **Dernière mise à jour** : 19 janvier 2026
 
 ---

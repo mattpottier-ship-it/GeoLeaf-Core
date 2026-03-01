@@ -21,29 +21,51 @@
 //    4. geoleaf.core.js, geoleaf.ui.js, geoleaf.config.js, etc.
 //    5. geoleaf.api.js (API publique)
 // 🚧 Phase 7 ESM Migration: separate entry files for UMD vs ESM builds
-const INPUT_FILE     = "src/bundle-entry.js";          // UMD only — no named exports
-const INPUT_FILE_ESM = "src/bundle-esm-entry.js";      // ESM only — all named exports
-const STORAGE_PLUGIN = "../GeoLeaf-Plugins/plugin-storage/src/entry.js";
-const ADDPOI_PLUGIN  = "../GeoLeaf-Plugins/plugin-addpoi/src/entry.js";
+const INPUT_FILE      = "src/bundle-entry.ts";           // UMD only — no named exports
+const INPUT_FILE_ESM  = "src/bundle-esm-entry.ts";       // ESM only — all named exports
+const INPUT_FILE_LITE = "src/bundle-core-lite-entry.ts"; // PERF-02 — lite sans table/labels/route
+const STORAGE_PLUGIN  = "../plugin-storage/src/entry.ts";
+const ADDPOI_PLUGIN   = "../plugin-addpoi/src/entry.ts";
 
-import terser from "@rollup/plugin-terser";
+import { minify } from "rollup-plugin-esbuild";
 import { visualizer } from "rollup-plugin-visualizer";
+import typescript from "@rollup/plugin-typescript";
 import resolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
 import replace from "@rollup/plugin-replace";
 import alias  from "@rollup/plugin-alias";
-import filesize from "rollup-plugin-filesize";
 import fs   from "node:fs";
 import path  from "node:path";
 import { fileURLToPath } from "node:url";
+import ts from "typescript";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+/** Pre-compile plugin .ts files so Rollup receives JS (avoids "Expression expected" on interface). */
+function pluginTsLoad(tsconfigPath) {
+  const configPath = path.resolve(__dirname, tsconfigPath);
+  return {
+    name: "plugin-ts-load",
+    load(id) {
+      if (!id.endsWith(".ts") || (!id.includes("plugin-storage") && !id.includes("plugin-addpoi"))) return null;
+      const raw = fs.readFileSync(id, "utf-8");
+      const config = ts.readConfigFile(configPath, (p) => fs.readFileSync(p, "utf-8"));
+      if (config.error) return null;
+      const parsed = ts.parseJsonConfigFileContent(config.config, ts.sys, path.dirname(configPath));
+      const out = ts.transpileModule(raw, {
+        compilerOptions: { ...parsed.options, declaration: false, declarationMap: false },
+        fileName: id,
+      });
+      return { code: out.outputText, map: out.sourceMapText ? JSON.parse(out.sourceMapText) : undefined };
+    },
+  };
+}
 
 /** Alias pour résoudre @storage et @addpoi depuis les configs plugin (Phase 7) */
 const premiumAliases = alias({
     entries: [
-        { find: '@storage', replacement: path.resolve(__dirname, '../GeoLeaf-Plugins/plugin-storage/src') },
-        { find: '@addpoi',  replacement: path.resolve(__dirname, '../GeoLeaf-Plugins/plugin-addpoi/src') },
+        { find: '@storage', replacement: path.resolve(__dirname, '../plugin-storage/src') },
+        { find: '@addpoi',  replacement: path.resolve(__dirname, '../plugin-addpoi/src') },
     ],
 });
 
@@ -66,19 +88,18 @@ const baseConfig = {
         '__SW_DEBUG__': process.env.NODE_ENV !== 'production' ? 'true' : 'false',
       }
     }),
+    // Sprint 5: TypeScript — avant resolve/commonjs pour traiter .ts
+    typescript({ tsconfig: './tsconfig.json' }),
     // Résolution modules Node.js (si nécessaire)
     resolve({
       browser: true,
-      preferBuiltins: false
+      preferBuiltins: false,
+      extensions: ['.ts', '.js']
     }),
     // Support CommonJS (conversion en ESM)
     commonjs(),
-    // Reporter taille fichiers
-    filesize({
-      showMinifiedSize: true,
-      showGzippedSize: true,
-      showBrotliSize: true
-    })
+    // Reporter taille fichiers retiré (rollup-plugin-filesize dépendances vulnérables)
+    // Utiliser dist/stats.html (rollup-plugin-visualizer) pour l'analyse du bundle
   ],
   external: ["leaflet", "leaflet.markercluster", "leaflet.vectorgrid", "maplibre-gl", "@maplibre/maplibre-gl-leaflet"],
 
@@ -119,12 +140,64 @@ const esmConfig = {
     chunkFileNames: "chunks/geoleaf-[name]-[hash].js",
     sourcemap: true,
     exports: "named",
-    // Force Rollup to emit separate chunk files for each lazy/ module.
-    // Without this, Rollup inlines dynamic imports as Promise.resolve() when
-    // the lazy modules share all their dependencies with the static imports.
+    // PERF-01: manualChunks thématiques pour éviter l'explosion combinatoire.
+    // Sans grouping, Rollup crée un chunk par combinaison unique de dépendances
+    // entre les ~12 dynamic imports → 300+ chunks dupliqués.
+    // Avec grouping thématique → ~15 chunks stables réutilisables.
     manualChunks(id) {
-      if (id.includes('/src/lazy/') || id.includes('\\src\\lazy\\')) {
-        return path.basename(id, '.js');
+      const norm = id.replace(/\\/g, '/');
+
+      // 1. Lazy entry points → chunks nommés explicites (même nom que les fichiers)
+      if (norm.includes('/src/lazy/')) {
+        return path.basename(norm, path.extname(norm));
+      }
+
+      // 2. Groupes thématiques — modules partagés entre plusieurs lazy chunks
+      // Légende (legend-generator, legend-renderer, legend-control, geoleaf.legend)
+      if (norm.includes('/modules/legend/') || norm.includes('/modules/geoleaf.legend')) {
+        return 'chunk-legend';
+      }
+      // POI complet (shared, normalizers, markers, core, sidepanel, renderers/*, contracts/poi*)
+      if (norm.includes('/modules/poi/') || norm.includes('/contracts/poi')) {
+        return 'chunk-poi';
+      }
+      // Route (loaders, layer-manager/route, style-resolver, route-types)
+      if (norm.includes('/modules/route/') || norm.includes('/modules/geoleaf.route')) {
+        return 'chunk-route';
+      }
+      // Table
+      if (norm.includes('/modules/table/') || norm.includes('/modules/geoleaf.table')) {
+        return 'chunk-table';
+      }
+      // Labels
+      if (norm.includes('/modules/labels/') || norm.includes('/modules/geoleaf.labels')) {
+        return 'chunk-labels';
+      }
+      // Themes
+      if (norm.includes('/modules/themes/') || norm.includes('/modules/geoleaf.themes')) {
+        return 'chunk-themes';
+      }
+      // Layer manager (basemap-selector, layer-manager control)
+      if (norm.includes('/modules/layer-manager/') || norm.includes('/modules/baselayers/') ||
+          norm.includes('/modules/geoleaf.layer-manager') || norm.includes('/modules/geoleaf.baselayers')) {
+        return 'chunk-layers';
+      }
+      // GeoJSON processing (loader, clustering, style-utils, geojson-types)
+      if (norm.includes('/modules/geojson/') || norm.includes('/modules/geoleaf.geojson')) {
+        return 'chunk-geojson';
+      }
+      // Core shared utilities (log, utils, config, constants, errors, security)
+      // These are referenced by almost everything — put in a single shared chunk
+      // so lazy chunks don't need to re-emit them.
+      if (
+        norm.includes('/modules/log/') ||
+        norm.includes('/modules/utils/') ||
+        norm.includes('/modules/constants/') ||
+        norm.includes('/modules/errors/') ||
+        norm.includes('/modules/config/') ||
+        norm.includes('/modules/security/')
+      ) {
+        return 'chunk-core-utils';
       }
     },
   },
@@ -169,6 +242,7 @@ const umdMinConfig = {
     format: "umd",
     name: "GeoLeaf",
     sourcemap: false,
+    banner: `/* GeoLeaf v${pkg.version} | MIT License | github.com/mattpottier-ship-it/geoleaf-js */`,
     globals: {
       leaflet: "L",
       "leaflet.markercluster": "L",
@@ -182,73 +256,7 @@ const umdMinConfig = {
   },
   plugins: [
     ...(baseConfig.plugins || []),
-
-    // Minification Terser avec options agressives (Sprint 7.1)
-    terser({
-      compress: {
-        // Dead code elimination
-        dead_code: true,
-        drop_console: false,        // Le Logger utilise console.* — on strip via pure_funcs
-        drop_debugger: true,        // Supprimer debugger
-        pure_funcs: ['console.log', 'console.debug', 'Log.debug'],  // Strip verbose logging du bundle de production
-        passes: 3,                  // 3 passes compression pour max optimisation
-
-        // Optimisations avancées
-        booleans_as_integers: true, // Convertir true/false en 1/0
-        keep_fargs: false,          // Supprimer args non utilisés
-        unsafe: false,              // Pas d'optimisations unsafe (sécurité)
-        unsafe_comps: false,
-        unsafe_Function: false,
-        unsafe_math: false,
-        unsafe_methods: false,
-        unsafe_proto: false,
-        unsafe_regexp: false,
-        unsafe_undefined: false,
-
-        // Autres optimisations
-        arrows: true,               // Convertir en arrow functions
-        collapse_vars: true,        // Collapse variables
-        comparisons: true,          // Optimiser comparaisons
-        computed_props: true,       // Optimiser propriétés calculées
-        conditionals: true,         // Simplifier conditionnels
-        evaluate: true,             // Évaluer expressions constantes
-        if_return: true,            // Optimiser if/return
-        inline: 3,                  // Inline agressif
-        join_vars: true,            // Joindre déclarations var
-        loops: true,                // Optimiser loops
-        negate_iife: true,          // Optimiser IIFE
-        properties: true,           // Optimiser propriétés
-        reduce_funcs: true,         // Réduire fonctions inline
-        reduce_vars: true,          // Réduire variables
-        sequences: true,            // Joindre séquences
-        side_effects: true,         // Supprimer side effects
-        switches: true,             // Optimiser switch
-        typeofs: true,              // Optimiser typeof
-        unused: true,               // Supprimer code inutilisé
-      },
-
-      mangle: {
-        // Name mangling agressif
-        toplevel: false,            // Pas de mangle top-level (exports)
-        properties: false,          // Pas de mangle propriétés (breaking)
-        keep_classnames: true,      // Garder noms classes (debug)
-        keep_fnames: false,         // Minifier noms fonctions (sauf exports)
-        reserved: ['GeoLeaf', 'L']  // Réserver noms critiques
-      },
-
-      format: {
-        comments: false,            // Supprimer commentaires
-        preamble: `/* GeoLeaf v${pkg.version} | MIT License | github.com/mattpottier-ship-it/geoleaf-js */`,
-        ascii_only: true,           // ASCII seulement (compatibilité)
-        beautify: false,            // Pas de beautify (minifié)
-        ecma: 2015                  // Target ES6
-      },
-
-      sourceMap: false,             // No source maps in production
-      toplevel: false,              // Pas de mangle exports
-      keep_classnames: true,        // Garder noms classes
-      keep_fnames: false            // Minifier fonctions internes
-    }),
+    minify({ target: "es2015", legalComments: "none" }),
 
     // Visualizer bundle (stats.html) - Sprint 7.1
     visualizer({
@@ -288,7 +296,7 @@ function premiumCoreRedirect() {
     //   stripSegment: if true, consume the segment so relAfterMapping is relative to base
     const pluginMappings = [
         {
-            pluginSrc:   path.resolve(__dirname, '../GeoLeaf-Plugins/plugin-storage/src'),
+            pluginSrc:   path.resolve(__dirname, '../plugin-storage/src'),
             defaultSrc:  path.resolve(__dirname, 'src/modules/storage'),
             dirMappings: {
                 // These subdirs were introduced during Phase 7 copy; original files lived
@@ -300,23 +308,28 @@ function premiumCoreRedirect() {
             },
         },
         {
-            pluginSrc:   path.resolve(__dirname, '../GeoLeaf-Plugins/plugin-addpoi/src'),
+            pluginSrc:   path.resolve(__dirname, '../plugin-addpoi/src'),
             defaultSrc:  path.resolve(__dirname, 'src/modules/poi'),
             dirMappings: {},
         },
     ];
     // Files with completely different original locations (not derivable from plugin path)
     const fileOriginOverrides = {
-        [path.resolve(__dirname, '../GeoLeaf-Plugins/plugin-addpoi/src/lazy-chunk.js')]:
+        [path.resolve(__dirname, '../plugin-addpoi/src/lazy-chunk.ts')]:
             path.resolve(__dirname, 'src/lazy'),
-        // geoleaf.storage.js was a top-level facade at src/modules/ (not inside storage/)
-        [path.resolve(__dirname, '../GeoLeaf-Plugins/plugin-storage/src/core/geoleaf.storage.js')]:
+        [path.resolve(__dirname, '../plugin-addpoi/src/lazy-chunk.js')]:
+            path.resolve(__dirname, 'src/lazy'),
+        // geoleaf.storage.ts was a top-level facade at src/modules/ (not inside storage/)
+        [path.resolve(__dirname, '../plugin-storage/src/core/geoleaf.storage.ts')]:
+            path.resolve(__dirname, 'src/modules'),
+        [path.resolve(__dirname, '../plugin-storage/src/core/geoleaf.storage.js')]:
             path.resolve(__dirname, 'src/modules'),
     };
 
     function tryExtensions(base) {
-        for (const ext of ['', '.js', '/index.js']) {
-            if (fs.existsSync(base + ext)) return base + ext;
+        const baseNoJs = base.endsWith('.js') ? base.slice(0, -3) : base;
+        for (const ext of ['', '.ts', '.js', '/index.ts', '/index.js']) {
+            if (fs.existsSync(baseNoJs + ext)) return baseNoJs + ext;
         }
         return null;
     }
@@ -331,8 +344,8 @@ function premiumCoreRedirect() {
                 for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
                     const full = path.join(dir, entry.name);
                     if (entry.isDirectory()) { walk(full); }
-                    else if (entry.name.endsWith('.js')) {
-                        const key = entry.name.replace(/\.js$/, '');
+                    else if (entry.name.endsWith('.ts') || entry.name.endsWith('.js')) {
+                        const key = entry.name.replace(/\.(ts|js)$/, '');
                         if (!idx.has(key)) idx.set(key, []);
                         idx.get(key).push(full);
                     }
@@ -347,8 +360,9 @@ function premiumCoreRedirect() {
         resolveId(source, importer) {
             if (!importer || !source.startsWith('.')) return null;
 
-            const pluginsRoot = path.resolve(__dirname, '../GeoLeaf-Plugins');
-            if (!importer.startsWith(pluginsRoot)) return null;
+            const pluginsRoot = path.resolve(__dirname, '..');
+            if (!importer.startsWith(path.resolve(__dirname, '../plugin-storage')) &&
+                !importer.startsWith(path.resolve(__dirname, '../plugin-addpoi'))) return null;
 
             // Find matching plugin mapping
             let mapping = null;
@@ -420,9 +434,15 @@ const storagePluginConfigs = fs.existsSync(STORAGE_PLUGIN)
       {
         input: STORAGE_PLUGIN,
         plugins: [
+          pluginTsLoad("../plugin-storage/tsconfig.json"),
           premiumAliases,
           premiumCoreRedirect(),
-          resolve({ browser: true, preferBuiltins: false }),
+          typescript({
+            tsconfig: path.resolve(__dirname, '../plugin-storage/tsconfig.json'),
+            declaration: false,
+            compilerOptions: { outDir: path.resolve(__dirname, 'dist'), declarationDir: undefined },
+          }),
+          resolve({ browser: true, preferBuiltins: false, extensions: ['.ts', '.js'] }),
           commonjs(),
           swVersionPlugin(pkg.version),  // Emit dist/sw.js alongside storage plugin
         ],
@@ -430,10 +450,8 @@ const storagePluginConfigs = fs.existsSync(STORAGE_PLUGIN)
         treeshake: { moduleSideEffects: true },
         output: {
           file: "dist/geoleaf-storage.plugin.js",
-          format: "iife",
-          name: "GeoLeafStoragePlugin",
+          format: "es",
           sourcemap: false,
-          globals: { leaflet: "L", "leaflet.markercluster": "L" },
         },
       },
     ]
@@ -448,15 +466,24 @@ const addPoiPluginConfigs = fs.existsSync(ADDPOI_PLUGIN)
   ? [
       {
         input: ADDPOI_PLUGIN,
-        plugins: [premiumAliases, premiumCoreRedirect(), resolve({ browser: true, preferBuiltins: false }), commonjs()],
+        plugins: [
+          pluginTsLoad("../plugin-addpoi/tsconfig.json"),
+          premiumAliases,
+          premiumCoreRedirect(),
+          typescript({
+            tsconfig: path.resolve(__dirname, '../plugin-addpoi/tsconfig.json'),
+            declaration: false,
+            compilerOptions: { outDir: path.resolve(__dirname, 'dist'), declarationDir: undefined },
+          }),
+          resolve({ browser: true, preferBuiltins: false, extensions: ['.ts', '.js'] }),
+          commonjs(),
+        ],
         external: ["leaflet", "leaflet.markercluster"],
         treeshake: { moduleSideEffects: true },
         output: {
           file: "dist/geoleaf-addpoi.plugin.js",
-          format: "iife",
-          name: "GeoLeafAddPoiPlugin",
+          format: "es",
           sourcemap: false,
-          globals: { leaflet: "L", "leaflet.markercluster": "L" },
         },
       },
     ]
@@ -544,5 +571,125 @@ function geojsonWorkerPlugin(version) {
   };
 }
 
+/**
+ * PERF-TS1 — Build ESM granulaire (preserveModules: true)
+ * Génère un fichier .js par module source dans dist/esm/.
+ * Permet aux consommateurs (Webpack/Vite) de tree-shaker au niveau module.
+ * Ne pas inclure dans le bundle CDN — usage bundler uniquement.
+ */
+const esmGranularConfig = {
+  ...baseConfig,
+  input: INPUT_FILE_ESM,
+  plugins: [
+    replace({
+      preventAssignment: true,
+      values: {
+        '__GEOLEAF_VERSION__': JSON.stringify(pkg.version),
+        '__SW_DEBUG__': 'false',
+      }
+    }),
+    // outDir et declarationDir doivent être sous dist/esm pour satisfaire le plugin TS
+    typescript({
+      tsconfig: './tsconfig.json',
+      compilerOptions: {
+        noEmit: true,
+        declaration: false,
+        declarationDir: undefined,
+        outDir: path.resolve(__dirname, 'dist/esm'),
+      }
+    }),
+    resolve({ browser: true, preferBuiltins: false, extensions: ['.ts', '.js'] }),
+    commonjs(),
+  ],
+  treeshake: {
+    ...baseConfig.treeshake,
+    moduleSideEffects: (id) =>
+      id.includes('globals') ||
+      id.includes('sw-register') ||
+      id.includes('/app/'),
+  },
+  output: {
+    dir: "dist/esm",
+    format: "es",
+    preserveModules: true,
+    preserveModulesRoot: "src",
+    entryFileNames: "[name].js",
+    chunkFileNames: "[name].js",
+    sourcemap: false,
+    exports: "named",
+  },
+};
+
+/**
+ * PERF-02 — Build UMD "Core Lite" (sans table / labels / route / vector-tiles)
+ * Cible : gzip < 130 KB (vs 148 KB full).
+ * Usage : CDN pour projets n'utilisant pas ces modules optionnels.
+ */
+const umdLiteConfig = {
+  ...baseConfig,
+  input: INPUT_FILE_LITE,
+  output: {
+    file: "dist/geoleaf-lite.umd.js",
+    format: "umd",
+    name: "GeoLeaf",
+    sourcemap: false,
+    banner: `/* GeoLeaf Lite v${pkg.version} | MIT | geoleaf.dev */`,
+    globals: {
+      leaflet: "L",
+      "leaflet.markercluster": "L",
+      "leaflet.vectorgrid": "L",
+      "maplibre-gl": "maplibregl",
+      "@maplibre/maplibre-gl-leaflet": "L",
+    },
+    compact: true,
+    exports: "named",
+    inlineDynamicImports: true,
+  },
+  plugins: [
+    ...(baseConfig.plugins || []),
+    minify({ target: "es2015", legalComments: "none" }),
+  ],
+};
+
+/**
+ * PERF-02 — Build ESM granulaire "Core Lite" (preserveModules)
+ */
+const esmLiteGranularConfig = {
+  ...esmGranularConfig,
+  input: INPUT_FILE_LITE,
+  plugins: [
+    replace({
+      preventAssignment: true,
+      values: { '__GEOLEAF_VERSION__': JSON.stringify(pkg.version), '__SW_DEBUG__': 'false' }
+    }),
+    typescript({
+      tsconfig: './tsconfig.json',
+      compilerOptions: {
+        noEmit: true,
+        declaration: false,
+        declarationDir: undefined,
+        outDir: path.resolve(__dirname, 'dist/esm-lite'),
+      }
+    }),
+    resolve({ browser: true, preferBuiltins: false, extensions: ['.ts', '.js'] }),
+    commonjs(),
+  ],
+  output: {
+    ...esmGranularConfig.output,
+    dir: "dist/esm-lite",
+  },
+};
+
 // Phase 7 B13: esmConfig activé — architecture ESM + tree-shaking enabled
-export default [umdConfig, umdMinConfig, esmConfig, ...storagePluginConfigs, ...addPoiPluginConfigs];
+// PERF-TS1: esmGranularConfig — build granulaire module-par-module (preserveModules)
+// PERF-02: umdLiteConfig + esmLiteGranularConfig — builds allégés sans table/labels/route
+export default [
+  umdConfig,
+  umdMinConfig,
+  esmConfig,
+  esmGranularConfig,
+  umdLiteConfig,
+  esmLiteGranularConfig,
+  ...storagePluginConfigs,
+  ...addPoiPluginConfigs,
+];

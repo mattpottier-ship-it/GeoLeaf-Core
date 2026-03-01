@@ -1,7 +1,7 @@
 # GeoLeaf.Log â€“ Documentation du module Logging
 
 Product Version: GeoLeaf Platform V1 **Version**: 4.0.0  
-**Fichier**: `src/modules/geoleaf.log.js`  
+**Fichier (monorepo)** : `packages/core/src/modules/log/`  
 **DerniÃ¨re mise Ã  jour**: 19 janvier 2026
 
 ---

@@ -1193,12 +1193,9 @@ config.forEach((item) => {
 - [Developer Guide](../../DEVELOPER_GUIDE.md) - Guide dÃ©veloppeur GeoLeaf
 - [Architecture](../../ARCHITECTURE_GUIDE.md) - Architecture globale
 
-### Fichiers Source
+### Fichiers Source (monorepo)
 
-- [core.js](../../../src/modules/ui/content-builder/core.js) - Module Core (316 lignes)
-- [templates.js](../../../src/modules/ui/content-builder/templates.js) - Module Templates (351 lignes)
-- [assemblers.js](../../../src/modules/ui/content-builder/assemblers.js) - Module Assemblers (361 lignes)
-- [content-builder.js](../../../src/modules/ui/content-builder.js) - Orchestrateur (653 lignes)
+- `packages/core/src/modules/ui/content-builder/` — Module Core, templates, assemblers, orchestrateur
 
 ### Tests
 

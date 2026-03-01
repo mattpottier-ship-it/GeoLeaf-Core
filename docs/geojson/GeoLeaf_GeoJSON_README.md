@@ -2,7 +2,7 @@
 
 Product Version: GeoLeaf Platform V1  
 **Version**: 4.0.0  
-**Fichiers**: `src/modules/geoleaf.geojson.js` + sous-modules `geojson/` (incl. `layer-manager/` et `loader/`)  
+**Fichiers (monorepo)** : `packages/core/src/modules/geojson/` (incl. layer-manager, loader)  
 **Dernière mise à jour**: 14 février 2026
 
 ---

@@ -1,4 +1,4 @@
-﻿# GeoLeaf UI - Cache Button
+# GeoLeaf UI - Cache Button
 
 Product Version: GeoLeaf Platform V1  
 **Date de création**: Décembre 2025  
@@ -115,7 +115,7 @@ Le cache control est initialisé au premier clic sur le bouton. Les clics suivan
 ## Architecture
 
 ```
-src/modules/ui/cache-button.js          # Module JavaScript
+packages/core/src/modules/ui/            # Module (cache-button, etc.)
 src/css/cache-modal.css                    # Styles du modal
 ```
 
