@@ -1,4 +1,4 @@
-﻿/*!
+/*!
  * GeoLeaf Core
  * © 2026 Mattieu Pottier
  * Released under the MIT License
@@ -13,11 +13,12 @@
  */
 "use strict";
 
-import { Log } from '../log/index.js';
-import { StyleValidator } from '../validators/style-validator.js';
+import { Log } from "../log/index.js";
+import { StyleValidator } from "../validators/style-validator.js";
 
 // Lazy access to Config (not yet ESM — migrated in B4)
-const _gl: any = typeof globalThis !== 'undefined' ? globalThis : (typeof window !== 'undefined' ? window : {});
+const _gl: any =
+    typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : {};
 
 /**
  * Cache en mémoire des styles chargés
@@ -37,10 +38,10 @@ function _getLog() {
 /**
  * Configuration du loader
  */
-let loaderConfig = {
+const loaderConfig = {
     debug: false,
     validateOnLoad: true,
-    throwOnValidationError: true
+    throwOnValidationError: true,
 };
 
 function getProfilesBasePath() {
@@ -65,7 +66,7 @@ function initStyleLoader(config: any = {}) {
 
     if (loaderConfig.debug) {
         const Log = _getLog();
-        if (Log) Log.debug('[StyleLoader] Mode debug activé - cache désactivé');
+        if (Log) Log.debug("[StyleLoader] Mode debug activé - cache désactivé");
     }
 }
 
@@ -79,7 +80,13 @@ function initStyleLoader(config: any = {}) {
  * @returns {Promise<Object>} Style chargé et validé avec labels extraits
  * @throws {Error} Si le fichier est invalide ou introuvable
  */
-async function loadAndValidateStyle(profileId: any, layerId: any, styleId: any, styleFileName: any, layerDirectory: any) {
+async function loadAndValidateStyle(
+    profileId: any,
+    layerId: any,
+    styleId: any,
+    styleFileName: any,
+    layerDirectory: any
+) {
     const cacheKey = `${profileId}:${layerId}:${styleId}`;
 
     // Vérifier le cache (sauf en mode debug)
@@ -99,7 +106,7 @@ async function loadAndValidateStyle(profileId: any, layerId: any, styleId: any, 
         if (!response.ok) {
             throw new Error(
                 `Impossible de charger le fichier de style: ${stylePath}\n` +
-                `HTTP ${response.status}: ${response.statusText}`
+                    `HTTP ${response.status}: ${response.statusText}`
             );
         }
 
@@ -114,22 +121,22 @@ async function loadAndValidateStyle(profileId: any, layerId: any, styleId: any, 
                 styleId,
                 stylePath,
                 httpStatus: response.status,
-                parseError: jsonError.message
+                parseError: jsonError.message,
             };
 
-            console.error('═══════════════════════════════════════════════════════');
-            console.error('❌ ERREUR DE PARSING JSON - FICHIER STYLE MALFORMÉ');
-            console.error('═══════════════════════════════════════════════════════');
+            console.error("═══════════════════════════════════════════════════════");
+            console.error("❌ ERREUR DE PARSING JSON - FICHIER STYLE MALFORMÉ");
+            console.error("═══════════════════════════════════════════════════════");
             console.error(`Fichier: ${stylePath}`);
             console.error(`Erreur: ${jsonError.message}`);
-            console.error('Contexte:', JSON.stringify(errorContext, null, 2));
-            console.error('Stack trace:', jsonError.stack);
-            console.error('═══════════════════════════════════════════════════════');
+            console.error("Contexte:", JSON.stringify(errorContext, null, 2));
+            console.error("Stack trace:", jsonError.stack);
+            console.error("═══════════════════════════════════════════════════════");
 
             throw new Error(
                 `Le fichier de style contient du JSON malformé: ${stylePath}\n` +
-                `Erreur de parsing: ${jsonError.message}\n` +
-                `Veuillez vérifier la syntaxe JSON du fichier.`
+                    `Erreur de parsing: ${jsonError.message}\n` +
+                    `Veuillez vérifier la syntaxe JSON du fichier.`
             );
         }
 
@@ -140,9 +147,9 @@ async function loadAndValidateStyle(profileId: any, layerId: any, styleId: any, 
                 styleData.label.visibleByDefault = false;
                 console.warn(
                     `[StyleLoader] ⚠️ Paramètre "visibleByDefault" manquant dans le style: ${stylePath}\n` +
-                    `Le style a "label.enabled: true" mais pas de "visibleByDefault".\n` +
-                    `Fallback appliqué: visibleByDefault = false\n` +
-                    `Ajoutez explicitement "visibleByDefault": false ou true dans le fichier de style.`
+                        `Le style a "label.enabled: true" mais pas de "visibleByDefault".\n` +
+                        `Fallback appliqué: visibleByDefault = false\n` +
+                        `Ajoutez explicitement "visibleByDefault": false ou true dans le fichier de style.`
                 );
             }
         }
@@ -150,32 +157,38 @@ async function loadAndValidateStyle(profileId: any, layerId: any, styleId: any, 
         // Valider le style contre le schéma
         if (loaderConfig.validateOnLoad) {
             if (!StyleValidator) {
-                console.warn('[StyleLoader] StyleValidator non disponible, validation ignorée');
+                console.warn("[StyleLoader] StyleValidator non disponible, validation ignorée");
             }
 
-            const validationResult = StyleValidator ? StyleValidator.validateStyle(styleData, {
-                profileId,
-                layerId,
-                styleId,
-                stylePath
-            }) : { valid: true, errors: [], warnings: [] };
+            const validationResult = StyleValidator
+                ? StyleValidator.validateStyle(styleData, {
+                      profileId,
+                      layerId,
+                      styleId,
+                      stylePath,
+                  })
+                : { valid: true, errors: [], warnings: [] };
 
             if (!validationResult.valid) {
-                const errorMessage = StyleValidator ? StyleValidator.formatValidationErrors(validationResult, stylePath) : 'Erreurs de validation';
+                const errorMessage = StyleValidator
+                    ? StyleValidator.formatValidationErrors(validationResult, stylePath)
+                    : "Erreurs de validation";
                 console.error(errorMessage);
 
                 if (loaderConfig.throwOnValidationError) {
                     throw new Error(
                         `Le fichier de style ne respecte pas le schéma GeoLeaf: ${stylePath}\n` +
-                        `Consultez la console pour les détails des erreurs.`
+                            `Consultez la console pour les détails des erreurs.`
                     );
                 }
             }
 
             // Afficher les avertissements même si validation OK
             if (validationResult.warnings.length > 0) {
-                console.warn(`[StyleLoader] ${validationResult.warnings.length} avertissement(s) pour ${stylePath}:`);
-                validationResult.warnings.forEach(warning => {
+                console.warn(
+                    `[StyleLoader] ${validationResult.warnings.length} avertissement(s) pour ${stylePath}:`
+                );
+                validationResult.warnings.forEach((warning) => {
                     console.warn(`  - ${warning.field}: ${warning.message}`);
                 });
             }
@@ -194,8 +207,8 @@ async function loadAndValidateStyle(profileId: any, layerId: any, styleId: any, 
                 styleId,
                 stylePath,
                 hasIntegratedLabels: labelConfig !== null,
-                loadedAt: new Date().toISOString()
-            }
+                loadedAt: new Date().toISOString(),
+            },
         };
 
         // Mettre en cache (sauf en mode debug)
@@ -204,10 +217,9 @@ async function loadAndValidateStyle(profileId: any, layerId: any, styleId: any, 
         }
 
         return result;
-
     } catch (error: any) {
         // Re-throw les erreurs avec contexte complet
-        if (error.message.includes('JSON malformé') || error.message.includes('schéma GeoLeaf')) {
+        if (error.message.includes("JSON malformé") || error.message.includes("schéma GeoLeaf")) {
             throw error;
         }
 
@@ -218,15 +230,15 @@ async function loadAndValidateStyle(profileId: any, layerId: any, styleId: any, 
             styleId,
             styleFileName,
             layerDirectory,
-            originalError: error.message
+            originalError: error.message,
         };
 
-        console.error('═══════════════════════════════════════════════════════');
-        console.error('❌ ERREUR DE CHARGEMENT DE STYLE');
-        console.error('═══════════════════════════════════════════════════════');
-        console.error('Contexte:', JSON.stringify(errorContext, null, 2));
-        console.error('Stack trace:', error.stack);
-        console.error('═══════════════════════════════════════════════════════');
+        console.error("═══════════════════════════════════════════════════════");
+        console.error("❌ ERREUR DE CHARGEMENT DE STYLE");
+        console.error("═══════════════════════════════════════════════════════");
+        console.error("Contexte:", JSON.stringify(errorContext, null, 2));
+        console.error("Stack trace:", error.stack);
+        console.error("═══════════════════════════════════════════════════════");
 
         throw error;
     }
@@ -239,17 +251,17 @@ async function loadAndValidateStyle(profileId: any, layerId: any, styleId: any, 
  * @returns {Object|null} Configuration de labels ou null si absents/désactivés
  */
 function extractLabelConfig(styleData: any) {
-    if (!styleData || typeof styleData !== 'object') {
+    if (!styleData || typeof styleData !== "object") {
         return null;
     }
 
     // Vérifier si le champ label est un objet de configuration
-    if (styleData.label && typeof styleData.label === 'object' && styleData.label !== null) {
+    if (styleData.label && typeof styleData.label === "object" && styleData.label !== null) {
         // Vérifier que enabled est true
         if (styleData.label.enabled === true) {
             return {
                 ...styleData.label,
-                isIntegrated: true
+                isIntegrated: true,
             };
         }
     }
@@ -268,12 +280,24 @@ function extractLabelConfig(styleData: any) {
  * @param {string} layerDirectory - Répertoire de la couche
  * @returns {Promise<Object>} Style chargé (peut contenir des erreurs)
  */
-async function loadStyleLenient(profileId: any, layerId: any, styleId: any, styleFileName: any, layerDirectory: any) {
+async function loadStyleLenient(
+    profileId: any,
+    layerId: any,
+    styleId: any,
+    styleFileName: any,
+    layerDirectory: any
+) {
     const previousThrowSetting = loaderConfig.throwOnValidationError;
     loaderConfig.throwOnValidationError = false;
 
     try {
-        return await loadAndValidateStyle(profileId, layerId, styleId, styleFileName, layerDirectory);
+        return await loadAndValidateStyle(
+            profileId,
+            layerId,
+            styleId,
+            styleFileName,
+            layerDirectory
+        );
     } finally {
         loaderConfig.throwOnValidationError = previousThrowSetting;
     }
@@ -295,19 +319,22 @@ async function preloadStyles(styleConfigs: any) {
             config.styleId,
             config.styleFileName,
             config.layerDirectory
-        ).catch(error => ({
+        ).catch((error) => ({
             error: true,
             message: error.message,
-            config
+            config,
         }))
     );
 
     const results = await Promise.all(promises);
 
-    const successCount = results.filter(r => !r.error).length;
-    const errorCount = results.filter(r => r.error).length;
+    const successCount = results.filter((r) => !r.error).length;
+    const errorCount = results.filter((r) => r.error).length;
 
-    if (Log) Log.info(`[StyleLoader] Préchargement terminé: ${successCount} succès, ${errorCount} erreurs`);
+    if (Log)
+        Log.info(
+            `[StyleLoader] Préchargement terminé: ${successCount} succès, ${errorCount} erreurs`
+        );
 
     return results;
 }
@@ -320,7 +347,6 @@ function clearStyleCache(cacheKey = null) {
     if (cacheKey) {
         styleCache.delete(cacheKey);
     } else {
-        const count = styleCache.size;
         styleCache.clear();
     }
 }
@@ -334,7 +360,7 @@ function getCacheStats() {
         size: styleCache.size,
         keys: Array.from(styleCache.keys()),
         debug: loaderConfig.debug,
-        cacheEnabled: !loaderConfig.debug
+        cacheEnabled: !loaderConfig.debug,
     };
 }
 
@@ -369,7 +395,9 @@ async function loadStyleFromLayerConfig(profileId: any, layerConfig: any, styleI
             `═══════════════════════════════════════════════════════`;
 
         console.error(errorMessage);
-        throw new Error(`Configuration obsolète: labels.styleFile détecté dans la couche ${layerId}`);
+        throw new Error(
+            `Configuration obsolète: labels.styleFile détecté dans la couche ${layerId}`
+        );
     }
 
     // Trouver le fichier de style dans styles.available
@@ -377,7 +405,9 @@ async function loadStyleFromLayerConfig(profileId: any, layerConfig: any, styleI
     let styleId = styleIdOrFileName;
 
     if (layerConfig.styles && layerConfig.styles.available) {
-        const styleConfig = layerConfig.styles.available.find((s: any) => s.id === styleIdOrFileName || s.file === styleIdOrFileName);
+        const styleConfig = layerConfig.styles.available.find(
+            (s: any) => s.id === styleIdOrFileName || s.file === styleIdOrFileName
+        );
         if (styleConfig) {
             styleFileName = styleConfig.file;
             styleId = styleConfig.id;
@@ -412,7 +442,7 @@ const StyleLoader = {
     getCacheStats,
     loadStyleFromLayerConfig,
     getStylePath,
-    styleCache // Export pour tests/debugging
+    styleCache, // Export pour tests/debugging
 };
 
 export { StyleLoader };

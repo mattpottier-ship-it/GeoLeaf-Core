@@ -30,6 +30,7 @@ import "./app/boot.js";
 // En mode ESM ces import() produisent des chunks séparés dans dist/chunks/.
 const _gl: any = typeof globalThis !== "undefined" ? globalThis : window;
 _gl.GeoLeaf = _gl.GeoLeaf || {};
+/* eslint-disable complexity -- switch for dynamic module names */
 _gl.GeoLeaf._loadModule = async function (moduleName: any) {
     switch (moduleName) {
         // POI : chargement complet (core → renderers → extras)
@@ -72,6 +73,7 @@ _gl.GeoLeaf._loadModule = async function (moduleName: any) {
             console.warn("[GeoLeaf] Module inconnu:", moduleName);
     }
 };
+/* eslint-enable complexity */
 _gl.GeoLeaf._loadAllSecondaryModules = async function () {
     // POI core en premier (poi-renderers/extras/add-form en dépendent)
     await import("./lazy/poi-core.js");

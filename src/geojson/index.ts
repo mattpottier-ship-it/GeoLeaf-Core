@@ -1,4 +1,4 @@
-﻿/*!
+/*!
  * GeoLeaf Core — © 2026 Mattieu Pottier — MIT License — https://geoleaf.dev
  */
 /**
@@ -46,6 +46,7 @@ function validateFeature(...args: any[]) {
         errors: (r.errors || []).map((e: any) => (typeof e === "string" ? e : e.message)),
     };
 }
+/* eslint-disable complexity -- validation branches */
 function validateFeatureCollection(collection: any, ...rest: any[]) {
     const r = (FeatureValidator.validateFeatureCollection as any)?.(collection, ...rest);
     if (!r) return { valid: false, errors: ["Validator unavailable"], featureCount: 0 };
@@ -73,6 +74,7 @@ function validateFeatureCollection(collection: any, ...rest: any[]) {
         featureCount,
     };
 }
+/* eslint-enable complexity */
 export { validateFeature, validateFeatureCollection };
 
 // Fonctions absentes de l'implémentation actuelle — stubs géométriques

@@ -1,9 +1,7 @@
-﻿/**
+/**
  * Module Renderers/Links pour POI
  * Rendu des liens
  */
-import { Log } from '../../log/index.js';
-
 
 /**
  * Module Links Renderer
@@ -20,21 +18,20 @@ const _POIRendererLinks = {
     renderLink(section: any, url: any) {
         if (!url) return null;
 
-        const container = document.createElement('div');
-        container.className = 'gl-poi-link-container';
+        const container = document.createElement("div");
+        container.className = "gl-poi-link-container";
 
-        const link = document.createElement('a');
-        link.className = 'gl-poi-website-link';
+        const link = document.createElement("a");
+        link.className = "gl-poi-website-link";
         link.href = url;
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
         link.textContent = section.label || url;
 
         container.appendChild(link);
         return container;
-    }
+    },
 };
-
 
 // ── ESM Export ──
 const RendererLinks = _POIRendererLinks;

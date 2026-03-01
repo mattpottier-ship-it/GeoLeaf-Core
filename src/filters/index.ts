@@ -1,4 +1,4 @@
-﻿/*!
+/*!
  * GeoLeaf Core — © 2026 Mattieu Pottier — MIT License — https://geoleaf.dev
  */
 /**
@@ -30,6 +30,7 @@ function _getTags(item: any) {
             .filter(Boolean);
     return [];
 }
+/* eslint-disable complexity, security/detect-object-injection -- rating extraction; reduce accumulators */
 function _extractRating(item: any) {
     const attrs = item?.attributes || {};
     const props = item?.properties || {};
@@ -45,6 +46,7 @@ function _extractRating(item: any) {
     if (typeof props.rating === "number") return props.rating;
     return null;
 }
+/* eslint-enable complexity, security/detect-object-injection */
 
 // ── Utility exports ────────────────────────────────────────────────────────────
 
@@ -63,6 +65,7 @@ export function getUniqueTags(items = []) {
     return [...new Set(items.flatMap(_getTags))].sort();
 }
 
+/* eslint-disable security/detect-object-injection -- reduce accumulator key from _getCatId/_getSubCatId */
 export function countByCategory(items = []) {
     if (!Array.isArray(items)) return {};
     return items.reduce(
@@ -86,6 +89,7 @@ export function countBySubCategory(items = []) {
         {} as Record<string, number>
     );
 }
+/* eslint-enable security/detect-object-injection */
 
 export function getRatingStats(items = []) {
     if (!Array.isArray(items) || items.length === 0) {

@@ -1,4 +1,4 @@
-﻿declare const L: any;
+declare const _L: any;
 /*!
  * GeoLeaf Core
  * © 2026 Mattieu Pottier

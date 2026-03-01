@@ -26,6 +26,7 @@ const _app = (GeoLeaf._app = GeoLeaf._app || {});
 // ============================================================
 // Fonction principale : initialiser l'application
 // ============================================================
+/* eslint-disable complexity, max-lines-per-function -- init orchestration */
 _app.initApp = async function (cfg: any) {
     cfg = cfg || {};
     const AppLog = _app.AppLog;
@@ -531,6 +532,7 @@ _app.initApp = async function (cfg: any) {
     // les couches visibles sont charg�es) avant de r�v�ler.
     // ========================================================
     let _appRevealed = false;
+    /* eslint-disable max-lines-per-function -- loader reveal + fitBounds + events */
     function revealApp(reason: any) {
         if (_appRevealed) return;
         _appRevealed = true;
@@ -606,6 +608,7 @@ _app.initApp = async function (cfg: any) {
             }
         }
     }
+    /* eslint-enable max-lines-per-function */
 
     // Attendre que toutes les couches du th�me soient charg�es
     document.addEventListener(
@@ -623,5 +626,6 @@ _app.initApp = async function (cfg: any) {
 
     AppLog.info("Application initialisée, chargement des couches en arrière-plan.");
 };
+/* eslint-enable complexity, max-lines-per-function */
 
 export { _app };
