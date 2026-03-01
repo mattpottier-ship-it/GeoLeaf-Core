@@ -93,6 +93,7 @@ export function isPolygonGeometry(feature: any) {
     const t = getGeometryType(feature);
     return t === "Polygon" || t === "MultiPolygon";
 }
+/* eslint-disable security/detect-object-injection -- key from config path, ops from STYLE_OPERATORS */
 export function getFeatureProperty(feature: any, key: any) {
     if (feature == null || key == null) return null;
     const parts = String(key).split(".");
@@ -115,10 +116,12 @@ export function evaluateStyleCondition(featureOrLeft: any, conditionOrOp: any, r
     const ops = STYLE_OPERATORS || {};
     return ops[operator] ? ops[operator](prop, value) : prop === value;
 }
+/* eslint-enable security/detect-object-injection */
 // GeoJSON coordinates are [lng, lat]; we return [lat, lng] for API/tests consistency
 function toLatLng(coord: any) {
     return Array.isArray(coord) && coord.length >= 2 ? [coord[1], coord[0]] : null;
 }
+/* eslint-disable complexity -- geometry type branches */
 export function extractCoordinates(feature: any) {
     if (feature == null) return null;
     const geom = feature.geometry;
@@ -142,6 +145,7 @@ export function extractCoordinates(feature: any) {
             return null;
     }
 }
+/* eslint-enable complexity */
 export function calculateBounds(features = []) {
     if (!features || !Array.isArray(features)) return null;
     const coords = features

@@ -31,9 +31,9 @@
  * const coords = Core.formatCoordinates(45.7578, 4.8320);
  * // Retourne: "45.757800, 4.832000"
  */
-import { escapeHtml, validateUrl } from '../../security/index.js';
-import { resolveField, getLog, getActiveProfile } from '../../utils/general-utils.js';
-import { getColorsFromLayerStyle } from '../../helpers/style-resolver.js';
+import { escapeHtml, validateUrl } from "../../security/index.js";
+import { resolveField, getLog, getActiveProfile } from "../../utils/general-utils.js";
+import { getColorsFromLayerStyle } from "../../helpers/style-resolver.js";
 
 // ========================================
 //   DÉPENDANCES & HELPERS
@@ -92,27 +92,15 @@ function getEscapeHtml() {
  * // Retourne: null
  */
 function validateImageUrl(url: any) {
-    if (!url || typeof url !== 'string') return null;
+    if (!url || typeof url !== "string") return null;
 
     // Utiliser le validator de GeoLeaf.Security si disponible
     try {
         return validateUrl(url);
     } catch (e: any) {
-        getLog().warn('[ContentBuilder.Core] URL image invalide:', e.message);
+        getLog().warn("[ContentBuilder.Core] URL image invalide:", e.message);
         return null;
     }
-
-    // Fallback : validation basique
-    const trimmed = url.trim();
-    if (/^https?:\/\//i.test(trimmed) ||
-        /^data:image\//i.test(trimmed) ||
-        trimmed.startsWith('/') ||
-        trimmed.startsWith('./') ||
-        trimmed.startsWith('../')) {
-        return trimmed;
-    }
-
-    return null;
 }
 
 /**
@@ -159,7 +147,7 @@ function validateCoordinates(value: any) {
         lng = parseFloat(value[1]);
     }
     // Format objet {lat, lng}
-    else if (typeof value === 'object' && value.lat !== undefined && value.lng !== undefined) {
+    else if (typeof value === "object" && value.lat !== undefined && value.lng !== undefined) {
         lat = parseFloat(value.lat);
         lng = parseFloat(value.lng);
     }
@@ -205,8 +193,8 @@ function validateCoordinates(value: any) {
  * validateNumber(undefined); // null
  */
 function validateNumber(value: any) {
-    if (value == null || value === '') return null;
-    const num = typeof value === 'number' ? value : parseFloat(value);
+    if (value == null || value === "") return null;
+    const num = typeof value === "number" ? value : parseFloat(value);
     return isNaN(num) ? null : num;
 }
 
@@ -297,18 +285,18 @@ function validateRating(value: any) {
  * );
  * // Retourne: { displayValue: 'unknown', style: '' }
  */
-function resolveBadge(poi: any, field: any, variant: any) {
+function resolveBadge(poi: any, field: any, _variant: any) {
     const resolveField = getResolveField();
     const value = resolveField(poi, field);
 
-    if (value == null || value === '') {
-        return { displayValue: '', style: '' };
+    if (value == null || value === "") {
+        return { displayValue: "", style: "" };
     }
 
     const profile = getActiveProfile();
     const taxonomy = (profile as any)?.taxonomy;
     let displayValue = String(value);
-    let style = '';
+    let style = "";
 
     // Pas de taxonomie : retour simple
     if (!taxonomy || !field) {
@@ -318,13 +306,13 @@ function resolveBadge(poi: any, field: any, variant: any) {
     const attrs = poi.attributes || {};
 
     // Phase 4 dedup: factored taxonomy label resolution
-    if (field.includes('subCategoryId')) {
+    if (field.includes("subCategoryId")) {
         const catId = attrs.categoryId || attrs.category;
         const catData = (taxonomy as any).categories?.[catId];
-        const subCatData = (catData as any)?.subcategories?.[(value as any)];
+        const subCatData = (catData as any)?.subcategories?.[value as any];
         if (subCatData?.label) displayValue = subCatData.label;
-    } else if (field.includes('categoryId')) {
-        const catData = (taxonomy as any).categories?.[(value as any)];
+    } else if (field.includes("categoryId")) {
+        const catData = (taxonomy as any).categories?.[value as any];
         if (catData?.label) displayValue = catData.label;
     }
 
@@ -332,8 +320,8 @@ function resolveBadge(poi: any, field: any, variant: any) {
     if (getColorsFromLayerStyle && poi._layerConfig) {
         const styleColors = getColorsFromLayerStyle(poi, poi._layerConfig.id);
         if (styleColors) {
-            if (styleColors.fillColor) style += 'background-color: ' + styleColors.fillColor + ';';
-            if (styleColors.color) style += 'border-color: ' + styleColors.color + ';';
+            if (styleColors.fillColor) style += "background-color: " + styleColors.fillColor + ";";
+            if (styleColors.color) style += "border-color: " + styleColors.color + ";";
         }
     }
 
@@ -419,7 +407,7 @@ function resolveBadgeTooltip(poi: any, field: any) {
  * // Retourne: '42'
  */
 function formatNumber(num: any) {
-    return num.toLocaleString('fr-FR');
+    return num.toLocaleString("fr-FR");
 }
 
 /**
@@ -450,7 +438,7 @@ function formatNumber(num: any) {
  * // Retourne: '45.76, 4.83'
  */
 function formatCoordinates(lat: any, lng: any, precision = 6) {
-    return lat.toFixed(precision) + ', ' + lng.toFixed(precision);
+    return lat.toFixed(precision) + ", " + lng.toFixed(precision);
 }
 
 /**
@@ -485,7 +473,7 @@ function formatCoordinates(lat: any, lng: any, precision = 6) {
  * // Retourne: '5.0/5'
  */
 function formatRating(rating: any, precision = 1) {
-    return rating.toFixed(precision) + '/5';
+    return rating.toFixed(precision) + "/5";
 }
 
 // ========================================
@@ -512,9 +500,11 @@ const ContentBuilderCore = {
     // Formatters
     formatNumber,
     formatCoordinates,
-    formatRating
+    formatRating,
 };
 
-getLog().info('[GeoLeaf._ContentBuilder.Core] Module Core chargé - Helpers + Validators + Badge resolver');
+getLog().info(
+    "[GeoLeaf._ContentBuilder.Core] Module Core chargé - Helpers + Validators + Badge resolver"
+);
 
 export { ContentBuilderCore };

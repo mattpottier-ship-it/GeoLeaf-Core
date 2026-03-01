@@ -1,20 +1,20 @@
-// @ts-nocheck � migration TS, typage progressif
+// @ts-nocheck � migration TS, typage progressif
 /**
  * API Controller - Sprint 4.3 (Version Robuste)
- * Orchestrateur principal pour les opérations API GeoLeaf
- * Architecture modulaire avec validation renforcée
+ * Orchestrateur principal pour les op�rations API GeoLeaf
+ * Architecture modulaire avec validation renforc�e
  * @module APIController
  */
 "use strict";
 
-import { Log } from '../log/index.js';
-const _g = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : {};
+import { Log } from "../log/index.js";
+const _g =
+    typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : {};
 _g.GeoLeaf = _g.GeoLeaf || {};
 
-
 /**
- * Contrôleur principal pour l'API GeoLeaf
- * Gère l'orchestration des managers spécialisés
+ * Contr�leur principal pour l'API GeoLeaf
+ * G�re l'orchestration des managers sp�cialis�s
  */
 class APIController {
     constructor() {
@@ -22,53 +22,52 @@ class APIController {
         this.managers = {};
         this.moduleAccessFn = null;
 
-        // État de sanité du contrôleur
+        // �tat de sanit� du contr�leur
         this.healthStatus = {
             managers: 0,
             errors: [],
-            lastUpdate: null
+            lastUpdate: null,
         };
     }
 
     /**
-     * Initialise le contrôleur et tous ses managers
-     * @returns {boolean} Succès de l'initialisation
+     * Initialise le contr�leur et tous ses managers
+     * @returns {boolean} Succ�s de l'initialisation
      */
     init() {
         try {
             if (this.isInitialized) {
-                if (Log) Log.debug('[APIController] Already initialized');
+                if (Log) Log.debug("[APIController] Already initialized");
                 return true;
             }
 
-            if (Log) Log.info('[APIController] Initializing API controller (Sprint 4.3 - Robust)');
+            if (Log) Log.info("[APIController] Initializing API controller (Sprint 4.3 - Robust)");
 
             // Initialiser les managers dans l'ordre
             this._initializeManagers();
 
-            // Configurer l'accès aux modules
+            // Configurer l'acc�s aux modules
             const success = this._setupModuleAccess();
             if (!success) {
-                throw new Error('Module access setup failed');
+                throw new Error("Module access setup failed");
             }
 
-            // Valider l'état final
+            // Valider l'�tat final
             this._validateInitialization();
 
             this.isInitialized = true;
             this.healthStatus.lastUpdate = new Date().toISOString();
 
-            if (Log) Log.info('[APIController] API controller initialized successfully');
+            if (Log) Log.info("[APIController] API controller initialized successfully");
             return true;
-
         } catch (error) {
             this.healthStatus.errors.push({
                 message: error.message,
                 timestamp: new Date().toISOString(),
-                stack: error.stack
+                stack: error.stack,
             });
 
-            if (Log) Log.error('[APIController] Initialization failed:', error);
+            if (Log) Log.error("[APIController] Initialization failed:", error);
             return false;
         }
     }
@@ -78,9 +77,10 @@ class APIController {
      * @private
      */
     _initializeManagers() {
-        const managerTypes = ['module', 'initialization', 'factory'];
+        const managerTypes = ["module", "initialization", "factory"];
 
-        managerTypes.forEach(type => {
+        /* eslint-disable security/detect-object-injection -- manager type from config enum */
+        managerTypes.forEach((type) => {
             const ManagerClass = this._getManagerClass(type);
             if (ManagerClass) {
                 try {
@@ -91,11 +91,12 @@ class APIController {
                     if (Log) Log.warn(`[APIController] Failed to load ${type} manager:`, error);
                     this.healthStatus.errors.push({
                         manager: type,
-                        error: error.message
+                        error: error.message,
                     });
                 }
             }
         });
+        /* eslint-enable security/detect-object-injection */
 
         if (Log) Log.info(`[APIController] Loaded ${this.healthStatus.managers} managers`);
     }
@@ -104,48 +105,50 @@ class APIController {
      * Obtient la classe d'un manager
      * @private
      */
+    /* eslint-disable security/detect-object-injection -- type from enum, className from map */
     _getManagerClass(type) {
         const classNames = {
-            module: 'APIModuleManager',
-            initialization: 'APIInitializationManager',
-            factory: 'APIFactoryManager'
+            module: "APIModuleManager",
+            initialization: "APIInitializationManager",
+            factory: "APIFactoryManager",
         };
 
         const className = classNames[type];
         return _g.GeoLeaf.API && _g.GeoLeaf.API[className] ? _g.GeoLeaf.API[className] : null;
     }
+    /* eslint-enable security/detect-object-injection */
 
     /**
-     * Configure l'accès aux modules
+     * Configure l'acc�s aux modules
      * @private
      */
     _setupModuleAccess() {
-        // Le module manager doit être initialisé en premier
+        // Le module manager doit �tre initialis� en premier
         if (!this.managers.module) {
-            if (Log) Log.error('[APIController] Module manager not available');
+            if (Log) Log.error("[APIController] Module manager not available");
             return false;
         }
 
         // Initialiser le module manager avec les modules existants
         const initSuccess = this.managers.module.init ? this.managers.module.init() : true;
         if (!initSuccess) {
-            if (Log) Log.error('[APIController] Module manager initialization failed');
+            if (Log) Log.error("[APIController] Module manager initialization failed");
             return false;
         }
 
-        // Créer la fonction d'accès aux modules avec validation
+        // Cr�er la fonction d'acc�s aux modules avec validation
         this.moduleAccessFn = (name) => {
             try {
-                if (!name || typeof name !== 'string') {
-                    if (Log) Log.warn('[APIController] Invalid module name:', name);
+                if (!name || typeof name !== "string") {
+                    if (Log) Log.warn("[APIController] Invalid module name:", name);
                     return null;
                 }
 
-                if (this.managers.module && typeof this.managers.module.getModule === 'function') {
+                if (this.managers.module && typeof this.managers.module.getModule === "function") {
                     return this.managers.module.getModule(name);
                 }
 
-                // Fallback vers l'accès global
+                // Fallback vers l'acc�s global
                 if (_g.GeoLeaf && _g.GeoLeaf[name]) {
                     return _g.GeoLeaf[name];
                 }
@@ -157,31 +160,31 @@ class APIController {
             }
         };
 
-        if (Log) Log.info('[APIController] Module access configured');
+        if (Log) Log.info("[APIController] Module access configured");
         return true;
     }
 
     /**
-     * Valide l'état de l'initialisation
+     * Valide l'�tat de l'initialisation
      * @private
      */
     _validateInitialization() {
         const checks = [
-            { name: 'moduleAccessFn', value: this.moduleAccessFn, type: 'function' },
-            { name: 'managers', value: this.managers, type: 'object' },
-            { name: 'moduleManager', value: this.managers.module, type: 'object' }
+            { name: "moduleAccessFn", value: this.moduleAccessFn, type: "function" },
+            { name: "managers", value: this.managers, type: "object" },
+            { name: "moduleManager", value: this.managers.module, type: "object" },
         ];
 
-        const failures = checks.filter(check => {
+        const failures = checks.filter((check) => {
             return !check.value || typeof check.value !== check.type;
         });
 
         if (failures.length > 0) {
-            const failureNames = failures.map(f => f.name).join(', ');
+            const failureNames = failures.map((f) => f.name).join(", ");
             throw new Error(`Validation failed for: ${failureNames}`);
         }
 
-        if (Log) Log.debug('[APIController] Validation passed');
+        if (Log) Log.debug("[APIController] Validation passed");
     }
 
     /**
@@ -192,12 +195,12 @@ class APIController {
 
         try {
             if (!this.managers.initialization) {
-                throw new Error('Initialization manager not available');
+                throw new Error("Initialization manager not available");
             }
 
             return this.managers.initialization.init(options, this.moduleAccessFn);
         } catch (error) {
-            if (Log) Log.error('[APIController] geoleafInit failed:', error);
+            if (Log) Log.error("[APIController] geoleafInit failed:", error);
             return null;
         }
     }
@@ -210,78 +213,78 @@ class APIController {
 
         try {
             if (!this.managers.initialization) {
-                throw new Error('Initialization manager not available');
+                throw new Error("Initialization manager not available");
             }
 
             return this.managers.initialization.loadConfig(input, this.moduleAccessFn);
         } catch (error) {
-            if (Log) Log.error('[APIController] geoleafLoadConfig failed:', error);
+            if (Log) Log.error("[APIController] geoleafLoadConfig failed:", error);
             return Promise.resolve(null);
         }
     }
 
     /**
-     * _g.GeoLeaf.setTheme() - Changement de thème
+     * _g.GeoLeaf.setTheme() - Changement de th�me
      */
     geoleafSetTheme(theme) {
         if (!this._ensureInitialized()) return false;
 
         try {
             if (!this.managers.initialization) {
-                throw new Error('Initialization manager not available');
+                throw new Error("Initialization manager not available");
             }
 
             return this.managers.initialization.setTheme(theme, this.moduleAccessFn);
         } catch (error) {
-            if (Log) Log.error('[APIController] geoleafSetTheme failed:', error);
+            if (Log) Log.error("[APIController] geoleafSetTheme failed:", error);
             return false;
         }
     }
 
     /**
-     * _g.GeoLeaf.createMap() - Création multi-cartes
+     * _g.GeoLeaf.createMap() - Cr�ation multi-cartes
      */
     geoleafCreateMap(targetId, options) {
         if (!this._ensureInitialized()) return null;
 
         try {
             if (!this.managers.factory) {
-                throw new Error('Factory manager not available');
+                throw new Error("Factory manager not available");
             }
 
             return this.managers.factory.createMap(targetId, options, this.moduleAccessFn);
         } catch (error) {
-            if (Log) Log.error('[APIController] geoleafCreateMap failed:', error);
+            if (Log) Log.error("[APIController] geoleafCreateMap failed:", error);
             return null;
         }
     }
 
     /**
-     * S'assure que le contrôleur est initialisé
+     * S'assure que le contr�leur est initialis�
      * @private
      */
     _ensureInitialized() {
         if (!this.isInitialized) {
-            if (Log) Log.error('[APIController] Controller not initialized');
+            if (Log) Log.error("[APIController] Controller not initialized");
             return false;
         }
         return true;
     }
 
     /**
-     * Obtient l'état de santé du contrôleur
+     * Obtient l'�tat de sant� du contr�leur
      */
     getHealthStatus() {
         return {
             ...this.healthStatus,
             isInitialized: this.isInitialized,
             managersCount: Object.keys(this.managers).length,
-            hasModuleAccess: !!this.moduleAccessFn
+            hasModuleAccess: !!this.moduleAccessFn,
         };
     }
 
     /**
-     * Réinitialise le contrôleur
+     * R�initialise le contr�leur
      */
     reset() {
         this.isInitialized = false;
@@ -290,33 +293,34 @@ class APIController {
         this.healthStatus = {
             managers: 0,
             errors: [],
-            lastUpdate: null
+            lastUpdate: null,
         };
 
-        if (Log) Log.info('[APIController] Controller reset');
+        if (Log) Log.info("[APIController] Controller reset");
     }
 }
 
-
-// perf 5.9 : Instanciation lazy — création au premier accès via getter
-// (évite init synchrone coûteuse de _initializeManagers à l'import)
+// perf 5.9 : Instanciation lazy � cr�ation au premier acc�s via getter
+// (�vite init synchrone co�teuse de _initializeManagers � l'import)
 let _apiControllerInstance = null;
 
 function _getAPIController() {
     if (!_apiControllerInstance) {
         _apiControllerInstance = new APIController();
-        // Init différée : les managers ne sont résolus qu'une fois le namespace GeoLeaf.API peuplé
+        // Init diff�r�e : les managers ne sont r�solus qu'une fois le namespace GeoLeaf.API peupl�
         _apiControllerInstance.init();
     }
     return _apiControllerInstance;
 }
 
-if (!Object.getOwnPropertyDescriptor(_g.GeoLeaf, '_APIController') ||
-    !Object.getOwnPropertyDescriptor(_g.GeoLeaf, '_APIController').get) {
-    Object.defineProperty(_g.GeoLeaf, '_APIController', {
+if (
+    !Object.getOwnPropertyDescriptor(_g.GeoLeaf, "_APIController") ||
+    !Object.getOwnPropertyDescriptor(_g.GeoLeaf, "_APIController").get
+) {
+    Object.defineProperty(_g.GeoLeaf, "_APIController", {
         get: _getAPIController,
         configurable: true,
-        enumerable: true
+        enumerable: true,
     });
 }
 

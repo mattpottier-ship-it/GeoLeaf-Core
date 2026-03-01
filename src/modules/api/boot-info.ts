@@ -18,6 +18,7 @@
  * @param {object} GeoLeaf - Le namespace global GeoLeaf
  * @returns {string[]} Liste des noms de plugins actifs
  */
+/* eslint-disable complexity -- plugin detection branches */
 function _detectLoadedPlugins(GeoLeaf: any) {
     // Source principale : PluginRegistry (fiable, auto-enregistrement par chaque plugin).
     // Si le registry est disponible, on s'y fie intégralement — même liste vide (Core seul).
@@ -47,6 +48,7 @@ function _detectLoadedPlugins(GeoLeaf: any) {
     }
     return plugins;
 }
+/* eslint-enable complexity */
 
 /**
  * Construit le message du toast de démarrage.
