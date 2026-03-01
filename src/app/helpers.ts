@@ -73,6 +73,7 @@ _app.getProfilesBasePath = function () {
  * et affiche des avertissements dans la console si ce n'est pas le cas.
  * @param {Object} cfg - Configuration du profil actif
  */
+/* eslint-disable complexity -- sequential plugin checks */
 _app.checkPlugins = function (cfg: any) {
     const AppLog = _app.AppLog;
 
@@ -115,6 +116,7 @@ _app.checkPlugins = function (cfg: any) {
         );
     }
 };
+/* eslint-enable complexity */
 
 // ============================================================
 // Helper : afficher une notification
@@ -126,6 +128,7 @@ _app.checkPlugins = function (cfg: any) {
  * @param {number} [duration=3500] - Durée d'affichage en millisecondes
  * @returns {boolean} true si la notification a été affichée
  */
+/* eslint-disable complexity -- fallback notification paths */
 _app.showNotification = function (message: any, duration: any) {
     duration = duration || 3500;
     if (
@@ -153,6 +156,7 @@ _app.showNotification = function (message: any, duration: any) {
     }
     return false;
 };
+/* eslint-enable complexity */
 
 // ============================================================
 // Sprint 6: Lazy module loader helper
@@ -166,11 +170,13 @@ _app.showNotification = function (message: any, duration: any) {
  * @param {string} chunkName  - Identifiant du chunk (ex: 'poi', 'route')
  * @returns {Promise<void>}
  */
+/* eslint-disable security/detect-object-injection -- intentional GeoLeaf[globalName] lookup */
 _app._ensureModule = async function (globalName: any, chunkName: any) {
     if (GeoLeaf[globalName]) return; // déjà chargé (UMD ou déjà importé)
     if (typeof GeoLeaf._loadModule === "function") {
         await GeoLeaf._loadModule(chunkName);
     }
 };
+/* eslint-enable security/detect-object-injection */
 
 export { _app };

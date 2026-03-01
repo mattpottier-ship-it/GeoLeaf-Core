@@ -12,7 +12,7 @@
  */
 "use strict";
 
-import { getLog } from '../utils/general-utils.js';
+import { getLog } from "../utils/general-utils.js";
 
 /** Délai avant terminaison du Worker inactif (ms) */
 const IDLE_TIMEOUT = 30000;
@@ -32,15 +32,23 @@ const WORKER_FILENAME = "geojson-worker.js";
  */
 function _detectScriptBase() {
     // Méthode 1 : document.currentScript (disponible uniquement pendant l'exécution synchrone du script)
-    if (typeof document !== "undefined" && document.currentScript && (document.currentScript as any).src) {
-        return (document.currentScript as any).src.substring(0, (document.currentScript as any).src.lastIndexOf("/") + 1);
+    if (
+        typeof document !== "undefined" &&
+        document.currentScript &&
+        (document.currentScript as any).src
+    ) {
+        return (document.currentScript as any).src.substring(
+            0,
+            (document.currentScript as any).src.lastIndexOf("/") + 1
+        );
     }
 
     // Méthode 2 : scanner les <script> pour trouver geoleaf*.js
     if (typeof document !== "undefined") {
-        var scripts = document.getElementsByTagName("script");
-        for (var i = scripts.length - 1; i >= 0; i--) {
-            var src = scripts[i].src || "";
+        const scripts = document.getElementsByTagName("script");
+        for (let i = scripts.length - 1; i >= 0; i--) {
+            /* eslint-disable-next-line security/detect-object-injection -- index from array length */
+            const src = scripts[i].src || "";
             if (/geoleaf[\w.-]*\.js/i.test(src)) {
                 return src.substring(0, src.lastIndexOf("/") + 1);
             }
@@ -62,7 +70,7 @@ const _state: any = {
     worker: null,
     workerAvailable: true,
     pending: new Map(),
-    idleTimer: null
+    idleTimer: null,
 };
 
 // ─── Helpers ────────────────────────────────────────────────────
@@ -88,7 +96,10 @@ function _createWorker() {
         getLog().debug("[WorkerManager] Web Worker GeoJSON créé :", workerUrl);
         return worker;
     } catch (err: any) {
-        getLog().warn("[WorkerManager] Impossible de créer le Web Worker, fallback main-thread :", err.message);
+        getLog().warn(
+            "[WorkerManager] Impossible de créer le Web Worker, fallback main-thread :",
+            err.message
+        );
         _state.workerAvailable = false;
         return null;
     }
@@ -116,6 +127,7 @@ function _resetIdleTimer() {
  * @param {MessageEvent} event
  * @private
  */
+/* eslint-disable complexity -- message type dispatch */
 function _onMessage(event: any) {
     const msg = event.data;
     if (!msg || !msg.type) return;
@@ -141,7 +153,7 @@ function _onMessage(event: any) {
                 _state.pending.delete(msg.layerId);
                 entry.resolve({
                     type: "FeatureCollection",
-                    features: entry.features
+                    features: entry.features,
                 });
                 _resetIdleTimer();
             }
@@ -151,7 +163,7 @@ function _onMessage(event: any) {
             // Perf 6.3.1: GPX text fetch completed in Worker
             if (entry) {
                 _state.pending.delete(msg.layerId);
-                entry.resolve(msg.text || '');
+                entry.resolve(msg.text || "");
                 _resetIdleTimer();
             }
             break;
@@ -178,7 +190,10 @@ function _onMessage(event: any) {
  * @private
  */
 function _onError(err: any) {
-    var details = err.message || err.filename || "unknown (possible 404 on " + _scriptBase + WORKER_FILENAME + ")";
+    const details =
+        err.message ||
+        err.filename ||
+        "unknown (possible 404 on " + _scriptBase + WORKER_FILENAME + ")";
     getLog().error("[WorkerManager] Erreur Worker :", details);
     // Rejeter toutes les requêtes en cours → fallback main-thread
     _state.pending.forEach(function (entry: any) {
@@ -192,6 +207,7 @@ function _onError(err: any) {
         _state.worker = null;
     }
 }
+/* eslint-enable complexity */
 
 // ─── Fallback main-thread ───────────────────────────────────────
 
@@ -230,7 +246,6 @@ function _mainThreadFetch(url: any, layerId: any) {
 // ─── API publique ───────────────────────────────────────────────
 
 const WorkerManager = {
-
     /**
      * Récupère et parse un GeoJSON via le Web Worker (ou fallback main-thread).
      *
@@ -247,7 +262,7 @@ const WorkerManager = {
         // Resolve relative URLs to absolute before sending to the Worker.
         // The Worker resolves relative paths against its own location (dist/),
         // not the page URL — so we must pass an absolute URL.
-        var absoluteUrl = url;
+        let absoluteUrl = url;
         if (typeof location !== "undefined" && url && !url.includes("://")) {
             try {
                 absoluteUrl = new URL(url, location.href).href;
@@ -256,7 +271,7 @@ const WorkerManager = {
             }
         }
 
-        var worker = _createWorker();
+        const worker = _createWorker();
 
         if (!worker) {
             return _mainThreadFetch(absoluteUrl, layerId);
@@ -267,14 +282,14 @@ const WorkerManager = {
                 resolve: resolve,
                 reject: reject,
                 features: [],
-                onChunk: options.onChunk || null
+                onChunk: options.onChunk || null,
             });
 
             worker.postMessage({
                 type: "fetch",
                 url: absoluteUrl,
                 layerId: layerId,
-                chunkSize: options.chunkSize || DEFAULT_CHUNK_SIZE
+                chunkSize: options.chunkSize || DEFAULT_CHUNK_SIZE,
             });
 
             _resetIdleTimer();
@@ -292,19 +307,22 @@ const WorkerManager = {
      */
     fetchText: function (url: any, layerId: any) {
         // Resolve relative URLs to absolute (same reason as fetchGeoJSON)
-        var absoluteUrl = url;
+        let absoluteUrl = url;
         if (typeof location !== "undefined" && url && !url.includes("://")) {
             try {
                 absoluteUrl = new URL(url, location.href).href;
-            } catch (_) { /* invalid URL, use original */ }
+            } catch (_) {
+                /* invalid URL, use original */
+            }
         }
 
-        var worker = _createWorker();
+        const worker = _createWorker();
 
         if (!worker) {
             // Fallback main-thread
             return fetch(absoluteUrl).then(function (response) {
-                if (!response.ok) throw new Error('HTTP ' + response.status + ' pour ' + absoluteUrl);
+                if (!response.ok)
+                    throw new Error("HTTP " + response.status + " pour " + absoluteUrl);
                 return response.text();
             });
         }
@@ -314,13 +332,13 @@ const WorkerManager = {
                 resolve: resolve,
                 reject: reject,
                 features: [], // unused for text, kept for consistency
-                onChunk: null
+                onChunk: null,
             });
 
             worker.postMessage({
-                type: 'fetch-text',
+                type: "fetch-text",
                 url: absoluteUrl,
-                layerId: layerId
+                layerId: layerId,
             });
 
             _resetIdleTimer();
@@ -350,7 +368,7 @@ const WorkerManager = {
             _state.worker = null;
         }
         getLog().debug("[WorkerManager] Disposed");
-    }
+    },
 };
 
 export { WorkerManager };

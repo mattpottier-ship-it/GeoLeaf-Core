@@ -6,7 +6,7 @@ declare const L: any;
  *
  * @module app/init-feature-modules
  */
-"use strict";
+("use strict");
 
 // Note: L (Leaflet) is a browser global accessed directly.
 
@@ -23,6 +23,7 @@ declare const L: any;
  * Initialize base tile layers from profile cfg.basemaps.
  * @param {InitDeps} deps
  */
+/* eslint-disable complexity, security/detect-object-injection -- keys from config object */
 export function initBasemaps({ GeoLeaf, cfg, map, AppLog }: any) {
     const baseLayersModule = GeoLeaf.BaseLayers || GeoLeaf.Baselayers;
     if (!baseLayersModule || typeof baseLayersModule.init !== "function") {
@@ -70,11 +71,13 @@ export function initBasemaps({ GeoLeaf, cfg, map, AppLog }: any) {
         AppLog.warn("BaseLayers.init a levé une exception :", e);
     }
 }
+/* eslint-enable complexity, security/detect-object-injection */
 
 /**
  * Initialize POI markers from profile cfg.poi.
  * @param {InitDeps} deps
  */
+/* eslint-disable complexity, max-lines-per-function -- init orchestration */
 export function initPOI({ GeoLeaf, cfg, map, AppLog }: any) {
     const poiApi = GeoLeaf.POI;
     if (!poiApi || typeof poiApi.add !== "function") {
@@ -173,6 +176,7 @@ export function initPOI({ GeoLeaf, cfg, map, AppLog }: any) {
         }
     }
 }
+/* eslint-enable complexity, max-lines-per-function */
 
 /**
  * Initialize route display from profile cfg.routes.
@@ -207,6 +211,7 @@ export function initRoute({ GeoLeaf, cfg, map, AppLog }: any) {
  * Initialize GeoJSON layers and theme selector from profile cfg.layers.
  * @param {InitDeps} deps
  */
+/* eslint-disable max-lines-per-function -- init + theme setup */
 export function initGeoJSON({ GeoLeaf, _cfg, map, AppLog, _app }: any) {
     const geoJsonApi = GeoLeaf.GeoJSON;
     if (!geoJsonApi || typeof geoJsonApi.init !== "function") {
@@ -258,6 +263,7 @@ export function initGeoJSON({ GeoLeaf, _cfg, map, AppLog, _app }: any) {
     }
     const loadAllConfigsPromise = buildLoadAllConfigsPromise();
 
+    /* eslint-disable max-lines-per-function -- theme init callback */
     loadAllConfigsPromise.then(function () {
         if (!GeoLeaf.ThemeSelector || typeof GeoLeaf.ThemeSelector.init !== "function") {
             AppLog.warn("ThemeSelector non disponible");
@@ -317,4 +323,6 @@ export function initGeoJSON({ GeoLeaf, _cfg, map, AppLog, _app }: any) {
                 AppLog.warn("Erreur initialisation ThemeSelector:", e);
             });
     });
+    /* eslint-enable max-lines-per-function */
 }
+/* eslint-enable max-lines-per-function */

@@ -22,6 +22,7 @@ const _app = (GeoLeaf._app = GeoLeaf._app || {});
 // ============================================================
 // Fonction startApp : chargement config + lancement initApp
 // ============================================================
+/* eslint-disable complexity, max-lines-per-function -- boot sequence */
 _app.startApp = async function () {
     const AppLog = _app.AppLog;
 
@@ -116,6 +117,7 @@ _app.startApp = async function () {
         _app.initApp(baseCfg);
     }
 };
+/* eslint-enable complexity, max-lines-per-function */
 
 // ============================================================
 // Exposer GeoLeaf.boot() — API publique

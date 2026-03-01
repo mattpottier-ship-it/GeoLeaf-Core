@@ -8,17 +8,17 @@
  */
 "use strict";
 
-import { getLog } from '../utils/general-utils.js';
+import { getLog } from "../utils/general-utils.js";
 
 // ========================================
 //   TYPES DE SOURCES
 // ========================================
 
 const SOURCE_TYPES = {
-    JSON: 'json',
-    GEOJSON: 'geojson',
-    GPX: 'gpx',
-    ROUTE: 'route'
+    JSON: "json",
+    GEOJSON: "geojson",
+    GPX: "gpx",
+    ROUTE: "route",
 };
 
 // ========================================
@@ -32,7 +32,7 @@ const SOURCE_TYPES = {
  * @returns {string}
  */
 function generateUniqueId() {
-    return 'poi_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    return "poi_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
 }
 
 /**
@@ -41,27 +41,27 @@ function generateUniqueId() {
  * @returns {string} 'Point', 'Polygon', 'LineString' ou 'Unknown'
  */
 function detectGeometryType(layer: any) {
-    if (!layer) return 'Unknown';
+    if (!layer) return "Unknown";
 
-    if (typeof layer.getLatLng === 'function') {
-        return 'Point';
+    if (typeof layer.getLatLng === "function") {
+        return "Point";
     }
-    if (typeof layer.getLatLngs === 'function') {
+    if (typeof layer.getLatLngs === "function") {
         const latLngs = layer.getLatLngs();
         // Polygon : tableau de tableaux de points (anneau extérieur + trous éventuels)
         // LineString : tableau de points
         if (Array.isArray(latLngs) && latLngs.length > 0) {
             if (Array.isArray(latLngs[0]) && Array.isArray(latLngs[0][0])) {
-                return 'Polygon';
+                return "Polygon";
             }
             if (Array.isArray(latLngs[0])) {
                 // Peut être Polygon ou LineString selon si fermé
-                return 'Polygon';
+                return "Polygon";
             }
-            return 'LineString';
+            return "LineString";
         }
     }
-    return 'Unknown';
+    return "Unknown";
 }
 
 /**
@@ -69,33 +69,35 @@ function detectGeometryType(layer: any) {
  * @param {Object} layer - Layer Leaflet
  * @returns {Array|null} Coordonnées [lat, lng] ou null
  */
+/* eslint-disable complexity -- layer type branches */
 function extractCoordinates(layer: any) {
     if (!layer) return null;
 
-    if (typeof layer.getLatLng === 'function') {
+    if (typeof layer.getLatLng === "function") {
         const ll = layer.getLatLng();
         return ll ? [ll.lat, ll.lng] : null;
     }
 
-    if (typeof layer.getCenter === 'function') {
+    if (typeof layer.getCenter === "function") {
         const center = layer.getCenter();
         return center ? [center.lat, center.lng] : null;
     }
 
-    if (typeof layer.getBounds === 'function') {
+    if (typeof layer.getBounds === "function") {
         try {
             const bounds = layer.getBounds();
             if (bounds && bounds.isValid()) {
                 const center = bounds.getCenter();
                 return center ? [center.lat, center.lng] : null;
             }
-        } catch (e) {
+        } catch (_e) {
             // Bounds invalides
         }
     }
 
     return null;
 }
+/* eslint-enable complexity */
 
 // ========================================
 //   NORMALISEURS PAR TYPE DE SOURCE
@@ -107,6 +109,7 @@ function extractCoordinates(layer: any) {
  * @param {Object} layerConfig - Configuration du layer
  * @returns {Object} POI normalisé
  */
+/* eslint-disable complexity, security/detect-object-injection -- config-driven field mapping */
 function normalizeFromJSON(data: any, layerConfig: any = {}) {
     if (!data) return null;
 
@@ -114,16 +117,17 @@ function normalizeFromJSON(data: any, layerConfig: any = {}) {
     const dataMapping = layerConfig.dataMapping || {};
 
     // Extraction du titre
-    const titleField = dataMapping.title || 'title';
-    const title = data[titleField] || data.title || data.name || data.label || data.nom || 'Sans titre';
+    const titleField = dataMapping.title || "title";
+    const title =
+        data[titleField] || data.title || data.name || data.label || data.nom || "Sans titre";
 
     // Extraction de la description
-    const descField = dataMapping.description || 'description';
-    const description = data[descField] || data.description || data.shortDescription || '';
+    const descField = dataMapping.description || "description";
+    const description = data[descField] || data.description || data.shortDescription || "";
 
     // Extraction des coordonnées
-    const latField = dataMapping.lat || 'lat';
-    const lngField = dataMapping.lng || 'lng';
+    const latField = dataMapping.lat || "lat";
+    const lngField = dataMapping.lng || "lng";
     let lat = data[latField];
     let lng = data[lngField];
 
@@ -132,8 +136,8 @@ function normalizeFromJSON(data: any, layerConfig: any = {}) {
     if (lng === undefined) lng = data.longitude || data.lng || data.x;
 
     // Extraction catégorie/sous-catégorie
-    const catField = dataMapping.categoryId || 'categoryId';
-    const subCatField = dataMapping.subCategoryId || 'subCategoryId';
+    const catField = dataMapping.categoryId || "categoryId";
+    const subCatField = dataMapping.subCategoryId || "subCategoryId";
     const categoryId = data[catField] || data.categoryId || data.category || null;
     const subCategoryId = data[subCatField] || data.subCategoryId || data.subcategory || null;
 
@@ -143,17 +147,18 @@ function normalizeFromJSON(data: any, layerConfig: any = {}) {
     return {
         id: String(id),
         sourceType: SOURCE_TYPES.JSON,
-        geometryType: 'Point',
+        geometryType: "Point",
         title: String(title),
-        description: String(description || ''),
+        description: String(description || ""),
         lat: lat !== undefined ? parseFloat(lat) : null,
         lng: lng !== undefined ? parseFloat(lng) : null,
         categoryId: categoryId,
         subCategoryId: subCategoryId,
         attributes: attributes,
-        rawData: data
+        rawData: data,
     };
 }
+/* eslint-enable complexity, security/detect-object-injection */
 
 /**
  * Normalise une feature GeoJSON en POI
@@ -162,6 +167,7 @@ function normalizeFromJSON(data: any, layerConfig: any = {}) {
  * @param {Object} layer - Layer Leaflet (optionnel, pour coordonnées)
  * @returns {Object} POI normalisé
  */
+/* eslint-disable complexity, max-lines-per-function, security/detect-object-injection -- GeoJSON field mapping */
 function normalizeFromGeoJSON(feature: any, layerConfig: any = {}, layer: any = null) {
     if (!feature) return null;
 
@@ -173,25 +179,27 @@ function normalizeFromGeoJSON(feature: any, layerConfig: any = {}, layer: any = 
     const id = feature.id || props.id || props.uid || props.guid || generateUniqueId();
 
     // Type de géométrie
-    let geometryType = geometry.type || 'Unknown';
-    if (layer && geometryType === 'Unknown') {
+    let geometryType = geometry.type || "Unknown";
+    if (layer && geometryType === "Unknown") {
         geometryType = detectGeometryType(layer);
     }
 
     // Extraction du titre
-    const titleField = dataMapping.title || 'title';
-    const titlePath = titleField.includes('.') ? titleField.split('.').pop() : titleField;
-    const title = props[titlePath] || props.name || props.nom || props.title || props.label || 'Sans titre';
+    const titleField = dataMapping.title || "title";
+    const titlePath = titleField.includes(".") ? titleField.split(".").pop() : titleField;
+    const title =
+        props[titlePath] || props.name || props.nom || props.title || props.label || "Sans titre";
 
     // Extraction de la description
-    const descField = dataMapping.description || 'description';
-    const descPath = descField.includes('.') ? descField.split('.').pop() : descField;
-    const description = props[descPath] || props.description || props.shortDescription || '';
+    const descField = dataMapping.description || "description";
+    const descPath = descField.includes(".") ? descField.split(".").pop() : descField;
+    const description = props[descPath] || props.description || props.shortDescription || "";
 
     // Coordonnées
-    let lat = null, lng = null;
+    let lat = null,
+        lng = null;
     if (geometry.coordinates) {
-        if (geometryType === 'Point') {
+        if (geometryType === "Point") {
             // GeoJSON : [lng, lat]
             lng = geometry.coordinates[0];
             lat = geometry.coordinates[1];
@@ -205,8 +213,9 @@ function normalizeFromGeoJSON(feature: any, layerConfig: any = {}, layer: any = 
             // Calculer le centre approximatif
             const flatCoords = flattenCoordinates(geometry.coordinates, geometry.type);
             if (flatCoords.length > 0) {
-                let sumLat = 0, sumLng = 0;
-                flatCoords.forEach(c => {
+                let sumLat = 0,
+                    sumLng = 0;
+                flatCoords.forEach((c) => {
                     sumLng += c[0];
                     sumLat += c[1];
                 });
@@ -223,10 +232,10 @@ function normalizeFromGeoJSON(feature: any, layerConfig: any = {}, layer: any = 
     }
 
     // Catégorie/sous-catégorie
-    const catField = dataMapping.categoryId || 'categoryId';
-    const catPath = catField.includes('.') ? catField.split('.').pop() : catField;
-    const subCatField = dataMapping.subCategoryId || 'subCategoryId';
-    const subCatPath = subCatField.includes('.') ? subCatField.split('.').pop() : subCatField;
+    const catField = dataMapping.categoryId || "categoryId";
+    const catPath = catField.includes(".") ? catField.split(".").pop() : catField;
+    const subCatField = dataMapping.subCategoryId || "subCategoryId";
+    const subCatPath = subCatField.includes(".") ? subCatField.split(".").pop() : subCatField;
 
     const categoryId = props[catPath] || props.categoryId || props.category || null;
     const subCategoryId = props[subCatPath] || props.subCategoryId || props.subcategory || null;
@@ -235,7 +244,8 @@ function normalizeFromGeoJSON(feature: any, layerConfig: any = {}, layer: any = 
     // Hoist nested props.attributes.* fields to top level so that config paths like
     // "attributes.reviews.rating" resolve correctly when the GeoJSON stores rich data
     // under properties.attributes (e.g. reviews, gallery, photo, etc.)
-    const nestedAttrs = (props.attributes && typeof props.attributes === 'object') ? props.attributes : {};
+    const nestedAttrs =
+        props.attributes && typeof props.attributes === "object" ? props.attributes : {};
     const attributes = { ...props, ...nestedAttrs };
 
     return {
@@ -243,16 +253,17 @@ function normalizeFromGeoJSON(feature: any, layerConfig: any = {}, layer: any = 
         sourceType: SOURCE_TYPES.GEOJSON,
         geometryType: geometryType,
         title: String(title),
-        description: String(description || ''),
+        description: String(description || ""),
         lat: lat !== null ? parseFloat(lat) : null,
         lng: lng !== null ? parseFloat(lng) : null,
         categoryId: categoryId,
         subCategoryId: subCategoryId,
         attributes: attributes,
         properties: props, // Conserve aussi properties pour compatibilité
-        rawData: feature
+        rawData: feature,
     };
 }
+/* eslint-enable complexity, max-lines-per-function, security/detect-object-injection */
 
 /**
  * Aplatit les coordonnées GeoJSON selon le type de géométrie
@@ -264,22 +275,22 @@ function flattenCoordinates(coords: any, type: any) {
     if (!coords || !Array.isArray(coords)) return [];
 
     switch (type) {
-        case 'Point':
+        case "Point":
             return [coords];
-        case 'MultiPoint':
-        case 'LineString':
+        case "MultiPoint":
+        case "LineString":
             return coords;
-        case 'MultiLineString':
-        case 'Polygon':
+        case "MultiLineString":
+        case "Polygon":
             return coords.flat();
-        case 'MultiPolygon':
+        case "MultiPolygon":
             return coords.flat(2);
-        default:
+        default: {
             // Aplatir récursivement
             const flat: any[] = [];
             const flatten = (arr: any) => {
                 if (!Array.isArray(arr)) return;
-                if (typeof arr[0] === 'number') {
+                if (typeof arr[0] === "number") {
                     flat.push(arr);
                 } else {
                     arr.forEach(flatten);
@@ -287,6 +298,7 @@ function flattenCoordinates(coords: any, type: any) {
             };
             flatten(coords);
             return flat;
+        }
     }
 }
 
@@ -296,20 +308,21 @@ function flattenCoordinates(coords: any, type: any) {
  * @param {Object} layerConfig - Configuration du layer
  * @returns {Object} POI normalisé
  */
-function normalizeFromGPX(waypoint: any, layerConfig: any = {}) {
+/* eslint-disable complexity -- GPX field fallbacks */
+function normalizeFromGPX(waypoint: any, _layerConfig: any = {}) {
     if (!waypoint) return null;
 
-    getLog().info('[Normalizer] GPX normalization - placeholder for future implementation');
+    getLog().info("[Normalizer] GPX normalization - placeholder for future implementation");
 
     // Structure de base pour GPX
     const id = waypoint.name || waypoint.sym || generateUniqueId();
-    const title = waypoint.name || waypoint.cmt || 'Point GPX';
-    const description = waypoint.desc || waypoint.cmt || '';
+    const title = waypoint.name || waypoint.cmt || "Point GPX";
+    const description = waypoint.desc || waypoint.cmt || "";
 
     return {
         id: String(id),
         sourceType: SOURCE_TYPES.GPX,
-        geometryType: 'Point',
+        geometryType: "Point",
         title: String(title),
         description: String(description),
         lat: waypoint.lat !== undefined ? parseFloat(waypoint.lat) : null,
@@ -317,9 +330,10 @@ function normalizeFromGPX(waypoint: any, layerConfig: any = {}) {
         categoryId: waypoint.type || null,
         subCategoryId: null,
         attributes: { ...waypoint },
-        rawData: waypoint
+        rawData: waypoint,
     };
 }
+/* eslint-enable complexity */
 
 /**
  * Normalise un point de route en POI
@@ -327,14 +341,16 @@ function normalizeFromGPX(waypoint: any, layerConfig: any = {}) {
  * @param {Object} routeConfig - Configuration de la route
  * @returns {Object} POI normalisé
  */
-function normalizeFromRoute(routePoint: any, routeConfig: any = {}) {
+/* eslint-disable complexity -- route point field fallbacks */
+function normalizeFromRoute(routePoint: any, _routeConfig: any = {}) {
     if (!routePoint) return null;
 
     const id = routePoint.id || routePoint.placeId || generateUniqueId();
-    const title = routePoint.name || routePoint.title || routePoint.address || 'Point de route';
-    const description = routePoint.description || routePoint.comment || '';
+    const title = routePoint.name || routePoint.title || routePoint.address || "Point de route";
+    const description = routePoint.description || routePoint.comment || "";
 
-    let lat = null, lng = null;
+    let lat = null,
+        lng = null;
     if (routePoint.latLng) {
         lat = routePoint.latLng.lat;
         lng = routePoint.latLng.lng;
@@ -346,19 +362,20 @@ function normalizeFromRoute(routePoint: any, routeConfig: any = {}) {
     return {
         id: String(id),
         sourceType: SOURCE_TYPES.ROUTE,
-        geometryType: 'Point',
+        geometryType: "Point",
         title: String(title),
         description: String(description),
         lat: lat !== null ? parseFloat(lat) : null,
         lng: lng !== null ? parseFloat(lng) : null,
-        categoryId: routePoint.type || 'route-point',
+        categoryId: routePoint.type || "route-point",
         subCategoryId: routePoint.order !== undefined ? `stop-${routePoint.order}` : null,
         order: routePoint.order,
         address: routePoint.address,
         attributes: { ...routePoint },
-        rawData: routePoint
+        rawData: routePoint,
     };
 }
+/* eslint-enable complexity */
 
 // ========================================
 //   FONCTION PRINCIPALE
@@ -374,7 +391,7 @@ function normalizeFromRoute(routePoint: any, routeConfig: any = {}) {
  */
 function normalizeFeature(sourceType: any, data: any, layerConfig: any = {}, options: any = {}) {
     if (!data) {
-        getLog().warn('[Normalizer] Données nulles pour normalisation');
+        getLog().warn("[Normalizer] Données nulles pour normalisation");
         return null;
     }
 
@@ -392,7 +409,7 @@ function normalizeFeature(sourceType: any, data: any, layerConfig: any = {}, opt
             return normalizeFromRoute(data, layerConfig);
 
         default:
-            getLog().warn('[Normalizer] Type de source non reconnu:', sourceType);
+            getLog().warn("[Normalizer] Type de source non reconnu:", sourceType);
             // Tenter une détection automatique
             return autoDetectAndNormalize(data, layerConfig, options);
     }
@@ -407,7 +424,7 @@ function normalizeFeature(sourceType: any, data: any, layerConfig: any = {}, opt
  */
 function autoDetectAndNormalize(data: any, layerConfig: any = {}, options: any = {}) {
     // Détection GeoJSON
-    if (data.type === 'Feature' && data.geometry) {
+    if (data.type === "Feature" && data.geometry) {
         return normalizeFromGeoJSON(data, layerConfig, options.layer);
     }
 
@@ -433,15 +450,20 @@ function autoDetectAndNormalize(data: any, layerConfig: any = {}, options: any =
  * @param {Object} options - Options additionnelles
  * @returns {Array} Tableau de POIs normalisés
  */
-function normalizeCollection(sourceType: any, dataArray: any, layerConfig: any = {}, options: any = {}) {
+function normalizeCollection(
+    sourceType: any,
+    dataArray: any,
+    layerConfig: any = {},
+    options: any = {}
+) {
     if (!Array.isArray(dataArray)) {
-        getLog().warn('[Normalizer] normalizeCollection attend un tableau');
+        getLog().warn("[Normalizer] normalizeCollection attend un tableau");
         return [];
     }
 
     return dataArray
-        .map(data => normalizeFeature(sourceType, data, layerConfig, options))
-        .filter(poi => poi !== null);
+        .map((data) => normalizeFeature(sourceType, data, layerConfig, options))
+        .filter((poi) => poi !== null);
 }
 
 // ========================================
@@ -466,10 +488,10 @@ const DataNormalizer = {
     // Utilitaires
     detectGeometryType,
     extractCoordinates,
-    generateUniqueId
+    generateUniqueId,
 };
 
 // Log de chargement
-getLog().info('[GeoLeaf._Normalizer] Module Normalizer chargé');
+getLog().info("[GeoLeaf._Normalizer] Module Normalizer chargé");
 
 export { DataNormalizer };

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * GeoLeaf GeoJSON Layer Manager - Visibility
  * Show/hide/toggle layers, zoom-based visibility
  *
@@ -6,11 +6,12 @@
  */
 "use strict";
 
-import { GeoJSONShared } from '../shared.js';
-import { getLog } from '../../utils/general-utils.js';
-import { calculateMapScale, isScaleInRange } from '../../utils/scale-utils.js';
+import { GeoJSONShared } from "../shared.js";
+import { getLog } from "../../utils/general-utils.js";
+import { calculateMapScale, isScaleInRange } from "../../utils/scale-utils.js";
 
-const _g: any = typeof globalThis !== 'undefined' ? globalThis : (typeof window !== 'undefined' ? window : {});
+const _g: any =
+    typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : {};
 
 const getState = () => GeoJSONShared.state;
 const ScaleUtils = { calculateMapScale, isScaleInRange };
@@ -22,6 +23,7 @@ const LayerManager: any = {};
  *
  * @param {string} layerId - ID de la couche
  */
+/* eslint-disable complexity -- visibility state branches */
 LayerManager.showLayer = function (layerId: any) {
     const state = getState();
     const Log = getLog();
@@ -73,6 +75,7 @@ LayerManager.showLayer = function (layerId: any) {
         Log.debug("[GeoLeaf.GeoJSON] Couche affichée :", layerId);
     }
 };
+/* eslint-enable complexity */
 
 /**
  * Masque une couche (rend invisible).
@@ -168,15 +171,17 @@ LayerManager.updateLayerVisibilityByZoom = function () {
         return;
     }
 
-    const currentScale = (ScaleUtils && typeof ScaleUtils.calculateMapScale === "function")
-        ? ScaleUtils.calculateMapScale(state.map, { logger: Log })
-        : 0;
+    const currentScale =
+        ScaleUtils && typeof ScaleUtils.calculateMapScale === "function"
+            ? ScaleUtils.calculateMapScale(state.map, { logger: Log })
+            : 0;
 
     const normalizeScaleValue = (value: any) => {
         if (typeof value !== "number") return null;
         return value <= 0 ? null : value;
     };
 
+    /* eslint-disable complexity -- per-layer visibility rules */
     state.layers.forEach((layerData: any, layerId: any) => {
         const config = layerData.config;
         if (!config) return;
@@ -185,16 +190,19 @@ LayerManager.updateLayerVisibilityByZoom = function () {
         const styleScale = hasCurrentStyle ? layerData.currentStyle.layerScale : null;
         if (!styleScale && hasCurrentStyle) {
             if (Log && typeof Log.warn === "function") {
-                Log.warn(`[GeoLeaf.GeoJSON] layerScale manquant pour ${layerId}, couche laissée visible par défaut`);
+                Log.warn(
+                    `[GeoLeaf.GeoJSON] layerScale manquant pour ${layerId}, couche laissée visible par défaut`
+                );
             }
         }
 
         const minScale = normalizeScaleValue(styleScale && styleScale.minScale);
         const maxScale = normalizeScaleValue(styleScale && styleScale.maxScale);
 
-        const shouldBeVisibleByScale = (ScaleUtils && typeof ScaleUtils.isScaleInRange === "function")
-            ? ScaleUtils.isScaleInRange(currentScale, minScale, maxScale, Log)
-            : true;
+        const shouldBeVisibleByScale =
+            ScaleUtils && typeof ScaleUtils.isScaleInRange === "function"
+                ? ScaleUtils.isScaleInRange(currentScale, minScale, maxScale, Log)
+                : true;
 
         // Base visibility: user override > theme intent > config default
         const meta = layerData._visibility;
@@ -221,6 +229,7 @@ LayerManager.updateLayerVisibilityByZoom = function () {
             VisibilityManager.VisibilitySource.ZOOM
         );
     });
+    /* eslint-enable complexity */
 };
 
 /**
@@ -237,9 +246,9 @@ LayerManager._fireLayerVisibilityEvent = function (layerId: any, visible: any) {
     try {
         (state.map as any).fire("geoleaf:geojson:visibility-changed", {
             layerId: layerId,
-            visible: visible
+            visible: visible,
         });
-    } catch (e) {
+    } catch (_e) {
         // Silencieux
     }
 };
