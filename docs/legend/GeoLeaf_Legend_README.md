@@ -1,7 +1,7 @@
 # GeoLeaf.LayerManager â€“ Documentation du module Legend (LÃ©gende)
 
 Product Version: GeoLeaf Platform V1 **Version**: 1.1.0  
-**Fichier (monorepo)** : `packages/core/src/modules/legend/`  
+**Fichier (monorepo)** : `src/modules/legend/`  
 **DerniÃ¨re mise Ã  jour**: 19 janvier 2026
 
 ---

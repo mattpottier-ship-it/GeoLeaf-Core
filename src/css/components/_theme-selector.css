@@ -14,7 +14,7 @@
     top: 10px;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 1000;
+    z-index: 1001;
     pointer-events: none;
 }
 
@@ -26,8 +26,9 @@
     position: absolute;
     top: 10px;
     right: 70px;
-    z-index: 999;
+    z-index: 1000;
     pointer-events: none;
+    transition: right 0.28s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 #gl-theme-secondary-container > * {
@@ -167,6 +168,77 @@
 }
 
 /* ========================================
+   Thèmes principaux – Mode compact (Phase 4)
+   Activé automatiquement si primaryThemes.length > seuil (défaut : 5)
+   ======================================== */
+
+/* Pill parente en mode compact : flex row avec nav + scroll */
+.gl-theme-selector-primary--compact {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.25rem 0.35rem;
+    max-width: min(600px, 80vw);
+}
+
+/* Zone scrollable contenant les boutons */
+.gl-theme-selector-primary__scroll {
+    display: flex;
+    gap: 0.4rem;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    padding: 0.1rem 0.15rem;
+    /* Masquer la scrollbar native tout en gardant le défilement */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    min-width: 0; /* nécessaire pour que flex enfant puisse rétrécir */
+}
+
+.gl-theme-selector-primary__scroll::-webkit-scrollbar {
+    display: none;
+}
+
+/* Boutons de navigation ‹ › */
+.gl-theme-selector-primary__nav {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--gl-color-text-main);
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, transform 0.12s ease;
+}
+
+.gl-theme-selector-primary__nav:hover {
+    background: var(--gl-color-accent-soft);
+    color: var(--gl-color-accent);
+    transform: scale(1.1);
+}
+
+.gl-theme-selector-primary__nav:active {
+    transform: scale(0.95);
+}
+
+.gl-theme-selector-primary__nav:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.gl-theme-selector-primary__nav:focus-visible {
+    outline: 2px solid var(--gl-color-focus-ring);
+    outline-offset: 2px;
+}
+
+/* ========================================
    Responsive Design
    ======================================== */
 
@@ -206,10 +278,35 @@
         height: 1.4rem;
         font-size: 0.7rem;
     }
+
+    .gl-theme-selector-primary--compact {
+        max-width: min(380px, 68vw);
+    }
 }
 
 @media (max-width: 480px) {
     .gl-theme-btn__label {
         display: none;
+    }
+}
+
+/* Tablette (769px – 1024px) : secondaire sous la primaire, centré (comme mobile)      */
+/* Corrige le chevauchement primaire/secondaire lors de viewports étroits non-mobiles  */
+@media (min-width: 769px) and (max-width: 1024px) {
+    #gl-theme-secondary-container {
+        top: 60px;
+        right: auto;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+}
+
+/* Desktop 15" (>=1440px) : secondaire sur la MEME ligne que primaire + toggle */
+@media (min-width: 1440px) {
+    #gl-theme-secondary-container {
+        top: 10px;
+        right: 76px;    /* toggle right:10px + width:3.6rem(~58px) = bord à 68px, gap 8px */
+        left: auto;
+        transform: none;
     }
 }

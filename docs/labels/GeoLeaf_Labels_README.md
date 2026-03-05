@@ -4,7 +4,7 @@ Product Version: GeoLeaf Platform V1
 **Version**: 1.1.0  
 **Fichiers**:
 
-- `packages/core/src/modules/labels/` (labels, label-renderer, label-style-loader)  
+- `src/modules/labels/` (labels, label-renderer, label-style-loader)  
   **Dernière mise à jour**: 19 janvier 2026
 
 ---

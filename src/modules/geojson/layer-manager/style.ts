@@ -181,6 +181,15 @@ LayerManager.setLayerStyle = function (layerId: any, styleConfig: any) {
             if (layer.setStyle && typeof layer.setStyle === "function") {
                 layer.setStyle(style);
 
+                // If this feature is currently filtered out (opacity=0), re-apply the
+                // hidden state so the theme's opacity doesn't un-hide it.
+                if (layer._geoleafFiltered) {
+                    layer.setStyle({ opacity: 0, fillOpacity: 0 });
+                    if (layer._casingLayer && typeof layer._casingLayer.setStyle === "function") {
+                        layer._casingLayer.setStyle({ opacity: 0 });
+                    }
+                }
+
                 // Préserver/restaurer l'état interactive depuis la config de la couche.
                 // setStyle() de Leaflet ne touche pas 'interactive', mais certaines
                 // recréations de path peuvent le perdre.

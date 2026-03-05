@@ -28,6 +28,12 @@ import { events } from "../utils/event-listener-manager.js";
 /**
  * Ã¯Â¿Â½tat du module
  */
+/**
+ * Seuil de thèmes primaires au-delà duquel la barre passe en mode compact.
+ * Configurable via config.primaryThemes.compactThreshold (Phase 4).
+ */
+const PRIMARY_COMPACT_THRESHOLD = 5;
+
 const _state: any = {
     initialized: false,
     profileId: null,
@@ -42,6 +48,10 @@ const _state: any = {
     dropdown: null,
     // Event listener cleanup tracking
     _eventCleanups: [],
+    // Mode compact – références DOM (Phase 4)
+    primaryScrollEl: null,
+    primaryScrollNavPrev: null,
+    primaryScrollNavNext: null,
 };
 
 /**
@@ -153,21 +163,69 @@ const ThemeSelector = {
         // Vider le conteneur
         DOMSecurity.clearElementFast(_state.primaryContainer);
 
-        // Ajouter la classe CSS
+        // Ajouter la classe CSS (retirer d'abord --compact au cas de re-init)
         _state.primaryContainer.classList.add("gl-theme-selector-primary");
+        _state.primaryContainer.classList.remove("gl-theme-selector-primary--compact");
 
-        // CrÃ¯Â¿Â½er un bouton pour chaque thÃ¯Â¿Â½me principal
-        _state.primaryThemes.forEach((theme: any) => {
-            const btn = (globalThis as any).L.DomUtil.create(
+        // Reset références mode compact
+        _state.primaryScrollEl = null;
+        _state.primaryScrollNavPrev = null;
+        _state.primaryScrollNavNext = null;
+
+        // Seuil configurable (Phase 4) : si > seuil → mode compact (nav + scroll horizontal)
+        const threshold: number =
+            _state.config?.primaryThemes?.compactThreshold ?? PRIMARY_COMPACT_THRESHOLD;
+        const isCompact = _state.primaryThemes.length > threshold;
+
+        // Conteneur qui recevra les boutons (direct ou zone scrollable)
+        let btnParent: HTMLElement = _state.primaryContainer;
+
+        if (isCompact) {
+            _state.primaryContainer.classList.add("gl-theme-selector-primary--compact");
+
+            // — Bouton précédent —
+            const navPrev = (globalThis as any).L.DomUtil.create(
                 "button",
-                "gl-theme-btn",
+                "gl-theme-selector-primary__nav gl-theme-selector-primary__nav--prev",
                 _state.primaryContainer
             );
+            navPrev.type = "button";
+            navPrev.setAttribute("aria-label", "Thèmes précédents");
+            navPrev.innerHTML = "&#8249;"; // ‹
+            _state.primaryScrollNavPrev = navPrev;
+            this._attachCompactNavHandler(navPrev, "prev");
+
+            // — Zone scrollable —
+            const scrollEl = (globalThis as any).L.DomUtil.create(
+                "div",
+                "gl-theme-selector-primary__scroll",
+                _state.primaryContainer
+            );
+            _state.primaryScrollEl = scrollEl;
+            btnParent = scrollEl;
+            scrollEl.addEventListener("scroll", () => this._updatePrimaryNavButtons());
+
+            // — Bouton suivant —
+            const navNext = (globalThis as any).L.DomUtil.create(
+                "button",
+                "gl-theme-selector-primary__nav gl-theme-selector-primary__nav--next",
+                _state.primaryContainer
+            );
+            navNext.type = "button";
+            navNext.setAttribute("aria-label", "Thèmes suivants");
+            navNext.innerHTML = "&#8250;"; // ›
+            _state.primaryScrollNavNext = navNext;
+            this._attachCompactNavHandler(navNext, "next");
+        }
+
+        // Créer un bouton pour chaque thème principal
+        _state.primaryThemes.forEach((theme: any) => {
+            const btn = (globalThis as any).L.DomUtil.create("button", "gl-theme-btn", btnParent);
             btn.type = "button";
             btn.dataset.themeId = theme.id;
             btn.title = theme.description || theme.label;
 
-            // Contenu du bouton: icÃ¯Â¿Â½ne + label
+            // Contenu du bouton : icône + label
             const iconSpan = (globalThis as any).L.DomUtil.create(
                 "span",
                 "gl-theme-btn__icon",
@@ -182,7 +240,7 @@ const ThemeSelector = {
             );
             labelSpan.textContent = theme.label;
 
-            // Marquer le thÃ¯Â¿Â½me actif
+            // Marquer le thème actif
             if (theme.id === _state.currentTheme) {
                 btn.classList.add("gl-theme-btn--active");
             }
@@ -191,18 +249,88 @@ const ThemeSelector = {
             this._attachPrimaryButtonHandler(btn, theme);
         });
 
+        if (isCompact) {
+            // Initialiser l'état des boutons nav après rendu (scrollWidth disponible)
+            requestAnimationFrame(() => this._updatePrimaryNavButtons());
+        }
+
         if (Log)
             Log.debug(
-                "[ThemeSelector] UI primaire crÃ¯Â¿Â½Ã¯Â¿Â½e:",
+                "[ThemeSelector] UI primaire créée:",
                 _state.primaryThemes.length,
-                "boutons"
+                "boutons",
+                isCompact ? "(mode compact)" : ""
             );
     },
 
     /**
-     * Attache le gestionnaire de clic sur un bouton de thÃ¯Â¿Â½me principal
+     * Attache le gestionnaire de clic sur un bouton de navigation compact (Phase 4)
+     * @param {HTMLElement} btn - Bouton nav prev/next
+     * @param {"prev"|"next"} direction - Direction de défilement
+     * @private
+     */
+    _attachCompactNavHandler(btn: any, direction: "prev" | "next") {
+        const SCROLL_AMOUNT = 120; // px par clic
+        const onClick = (ev: any) => {
+            if ((globalThis as any).L?.DomEvent) {
+                (globalThis as any).L.DomEvent.stopPropagation(ev);
+            }
+            ev.preventDefault();
+            if (!_state.primaryScrollEl) return;
+            const delta = direction === "next" ? SCROLL_AMOUNT : -SCROLL_AMOUNT;
+            _state.primaryScrollEl.scrollBy({ left: delta, behavior: "smooth" });
+        };
+
+        if ((globalThis as any).L?.DomEvent) {
+            (globalThis as any).L.DomEvent.on(btn, "click", onClick);
+            (globalThis as any).L.DomEvent.disableClickPropagation(btn);
+            _state._eventCleanups.push(() => {
+                if ((globalThis as any).L?.DomEvent) {
+                    (globalThis as any).L.DomEvent.off(btn, "click", onClick);
+                }
+            });
+        } else if (events) {
+            _state._eventCleanups.push(
+                events.on(btn, "click", onClick, false, "ThemeSelector.compactNav")
+            );
+        } else {
+            btn.addEventListener("click", onClick);
+        }
+    },
+
+    /**
+     * Met à jour l'état disabled des boutons de navigation compacts (Phase 4)
+     * @private
+     */
+    _updatePrimaryNavButtons() {
+        const el = _state.primaryScrollEl;
+        if (!el) return;
+        const atStart = el.scrollLeft <= 2;
+        const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 2;
+        if (_state.primaryScrollNavPrev) _state.primaryScrollNavPrev.disabled = atStart;
+        if (_state.primaryScrollNavNext) _state.primaryScrollNavNext.disabled = atEnd;
+    },
+
+    /**
+     * Fait défiler la barre compacte pour rendre le thème actif visible (Phase 4)
+     * @param {string} themeId - ID du thème actif
+     * @private
+     */
+    _ensurePrimaryThemeVisible(themeId: string) {
+        if (!_state.primaryScrollEl) return;
+        const btn = _state.primaryScrollEl.querySelector(
+            `[data-theme-id="${themeId}"]`
+        ) as HTMLElement | null;
+        if (!btn) return;
+        btn.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+        // Recalculer l'état des boutons nav après le défilement
+        setTimeout(() => this._updatePrimaryNavButtons(), 350);
+    },
+
+    /**
+     * Attache le gestionnaire de clic sur un bouton de thème principal
      * @param {HTMLElement} btn - Bouton
-     * @param {Object} theme - Configuration du thÃ¯Â¿Â½me
+     * @param {Object} theme - Configuration du thème
      * @private
      */
     _attachPrimaryButtonHandler(btn: any, theme: any) {
@@ -464,6 +592,10 @@ const ThemeSelector = {
                     btn.classList.remove("gl-theme-btn--active");
                 }
             });
+            // Mode compact : faire défiler vers le thème actif (Phase 4)
+            if (_state.primaryScrollEl) {
+                this._ensurePrimaryThemeVisible(themeId);
+            }
         }
 
         // Mettre Ã¯Â¿Â½ jour le dropdown

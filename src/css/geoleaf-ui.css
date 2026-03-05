@@ -408,6 +408,17 @@ body.gl-theme-dark .gl-theme-toggle {
     background: var( --gl-color-theme-toggle-track);
 }
 
+/* Positionnement fixe en haut à droite sur mobile (indépendant du header) */
+@media (max-width: 768px) {
+    .gl-theme-toggle {
+        position: fixed !important;
+        top: 0.5rem !important;
+        right: 0.5rem !important;
+        left: auto !important;
+        z-index: 1200 !important;
+    }
+}
+
 /* ------------------------------------------------------------
    LEFT PANEL – BASELAYER CONTROLS (TAB BAR STYLE)
    ------------------------------------------------------------ */
@@ -839,6 +850,12 @@ body:has(#gl-filter-panel.is-open) .leaflet-top.leaflet-left {
 
 /* Masquer le bouton toggle externe quand le panneau est ouvert */
 body:has(#gl-filter-panel.is-open) .gl-filter-toggle {
+    display: none;
+}
+
+/* Mode bureau (right panel actif) : les boutons toggle/fermer sont inutiles */
+body.gl-right-panel-open .gl-filter-panel__toggle-btn,
+body.gl-right-panel-open .gl-filter-toggle {
     display: none;
 }
 

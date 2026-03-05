@@ -53,7 +53,13 @@ LayerManager.showLayer = function (layerId: any) {
 
     // Charger la légende si disponible (uniquement si changement effectué)
     if (changed) {
-        LayerManager._loadLayerLegend(layerId, layerData);
+        // _loadLayerLegend est défini dans integration.ts sur un objet LayerManager séparé.
+        // Après Object.assign dans globals.geojson.ts, la méthode existe sur _GeoJSONLayerManager.
+        // On résout via le global plutôt que via l'objet local pour éviter "is not a function".
+        const _unifiedMgr = _g.GeoLeaf?._GeoJSONLayerManager;
+        if (_unifiedMgr && typeof _unifiedMgr._loadLayerLegend === "function") {
+            _unifiedMgr._loadLayerLegend(layerId, layerData);
+        }
 
         // Gérer les labels au moment de l'activation
         if (_g.GeoLeaf && _g.GeoLeaf.Labels && _g.GeoLeaf.Labels.hasLabelConfig(layerId)) {

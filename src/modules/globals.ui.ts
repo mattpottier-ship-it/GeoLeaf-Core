@@ -53,6 +53,8 @@ import { FilterPanelProximity } from "./ui/filter-panel/proximity.js";
 import { FilterPanelLazyLoader } from "./ui/filter-panel/lazy-loader.js";
 import { FilterPanel } from "./ui/filter-panel/core.js";
 import { FilterPanelAggregator } from "./ui/filter-panel.js";
+import { initMobileToolbar } from "./ui/mobile-toolbar.js";
+import { initDesktopPanel, activateDesktopPanel, destroyDesktopPanel } from "./ui/desktop-panel.js";
 
 const _g: any =
     typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : {};
@@ -134,3 +136,7 @@ _g.GeoLeaf._UIFilterPanelProximity = FilterPanelProximity;
 _g.GeoLeaf._UIFilterPanelLazyLoader = FilterPanelLazyLoader;
 _g.GeoLeaf._UIFilterPanel = FilterPanel;
 _g.GeoLeaf.FilterPanel = FilterPanelAggregator;
+_g.GeoLeaf.UI.initMobileToolbar = initMobileToolbar;
+_g.GeoLeaf.UI.initDesktopPanel = initDesktopPanel;
+_g.GeoLeaf.UI.activateDesktopPanel = activateDesktopPanel;
+_g.GeoLeaf.UI.destroyDesktopPanel = destroyDesktopPanel;

@@ -136,6 +136,9 @@ FilterPanelRenderer.buildFilterPanelFromActiveProfile = function (options: any) 
     const bodyFragment = document.createDocumentFragment();
 
     filters.forEach(function (filterDef: any) {
+        // La recherche textuelle est gérée par la barre pill — ne pas injecter dans le panneau de filtre
+        if (filterDef.type === "search") return;
+
         // Passer skipLabel=true pour les filtres avec accordéon (categories et tags) et proximity (qui gère son propre label)
         const skipLabel =
             filterDef.id === "categories" ||
@@ -269,10 +272,10 @@ FilterPanelRenderer.buildFilterPanelFromActiveProfile = function (options: any) 
                 return;
             }
 
-            // Réinitialiser les filtres + réafficher tous les POI
+            // Réinitialiser catégories, tags et note (sans toucher texte ni proximité)
             if (target.classList.contains("gl-filter-panel__btn-reset")) {
                 evt.preventDefault();
-                StateReader.resetControls(container);
+                StateReader.resetCategoryTagControls(container);
                 Applier.applyFiltersNow(container, true); // skipRoutes=true to preserve route styling
                 return;
             }

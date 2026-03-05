@@ -2,7 +2,7 @@
 
 **Product Version:** GeoLeaf Platform V1  
 **Version:** 1.1.0  
-**Last Updated:** February 21, 2026  
+**Last Updated:** March 3, 2026  
 **Target Audience:** Developers integrating GeoLeaf into applications
 
 > Versioning convention: **Platform V1** is the product label; technical package/release SemVer remains **1.1.x**. See [VERSIONING_POLICY.md](VERSIONING_POLICY.md).
@@ -20,6 +20,7 @@ This comprehensive guide covers all features of GeoLeaf JS, from basic usage to 
 5. [Configuration Basics](#5-configuration-basics)
 6. [Working with Maps](#6-working-with-maps)
 7. [UI Components](#7-ui-components)
+    - [7.6 Responsive & Mobile Interface](#76-responsive--mobile-interface)
 8. [Advanced Topics](#8-advanced-topics)
 9. [Troubleshooting](#9-troubleshooting)
 10. [Next Steps](#10-next-steps)
@@ -841,6 +842,87 @@ GeoLeaf.Toast.show("Custom message", {
 ```
 
 See [docs/ui/notifications.md](ui/notifications.md) for complete documentation.
+
+---
+
+### 7.6 Responsive & Mobile Interface
+
+GeoLeaf ships a fully responsive interface that adapts to any screen size — from smartphone to wide desktop — without additional configuration.
+
+#### Breakpoints
+
+| Range          | Devices                 | Behaviour                                                  |
+| -------------- | ----------------------- | ---------------------------------------------------------- |
+| ≤ 768 px       | Smartphone, tablette 6" | **Mobile mode** — pill toolbar (left side), sheets overlay |
+| 769 – 1 024 px | PC 10" / small laptop   | Desktop layout, side panel **360 px**                      |
+| ≥ 1 025 px     | PC 13"+                 | Desktop layout, side panel **420 px**                      |
+
+The threshold values are exposed as CSS variables in `geoleaf-theme.css` (`:root`):
+
+```css
+--gl-bp-sm: 480px; /* smartphone */
+--gl-bp-md: 640px; /* phablet    */
+--gl-bp-lg: 768px; /* tablet 6" / mobile threshold */
+--gl-bp-xl: 1024px; /* PC 10"     */
+```
+
+#### Mobile pill toolbar (≤ 768 px)
+
+On narrow viewports the standard desktop controls (zoom, layer manager, filter panel, theme selector, table) are replaced by a **pill-shaped icon bar** anchored to the left side of the map.
+
+| Icon        | Action                                                                     |
+| ----------- | -------------------------------------------------------------------------- |
+| Fullscreen  | Toggle fullscreen mode                                                     |
+| Legend      | Show / hide the legend overlay                                             |
+| Zoom + / −  | Map zoom                                                                   |
+| My location | Toggle geolocation (with "Localisation en cours…" toast + recenter button) |
+| Search      | Open search sheet                                                          |
+| Proximity   | Activate proximity-search mode (radius bar appears)                        |
+| Filters     | Open filter panel sheet. Shows **Reset** indicator when filters are active |
+| Themes      | Open theme selector sheet                                                  |
+| Layers      | Open layer manager sheet                                                   |
+| Table       | Open data table sheet                                                      |
+
+The bar scrolls vertically when all icons don't fit; chevron arrows appear at the top/bottom.
+
+#### Sheet overlay
+
+Every panel that opens from the pill bar uses a **bottom sheet** overlay (`role="dialog"`, `aria-modal="true"`, `aria-labelledby`). It supports:
+
+- Tap the dimmed backdrop to close
+- **Escape** key to close
+- Full focus trap: Tab / Shift-Tab stay inside the sheet while it is open
+- Focus is returned to the trigger button when the sheet closes
+
+#### POI side panel
+
+| Viewport       | Behaviour                                                         |
+| -------------- | ----------------------------------------------------------------- |
+| ≤ 768 px       | **Full-width overlay** — the map stays visible behind it; no push |
+| 769 – 1 024 px | **360 px panel**, map shifts right by 360 px                      |
+| ≥ 1 025 px     | **420 px panel**, map shifts right by 420 px                      |
+
+#### Fullscreen mode
+
+Only the fullscreen-exit and geolocation icons remain visible in fullscreen. The full pill bar is restored on exit. The CSS custom property `--gl-sidepanel-width` drives all related control offsets so nothing overlaps the side panel in any viewport.
+
+#### Accessibility notes
+
+- Every toolbar button has `aria-label`.
+- Sheet-opener buttons expose `aria-expanded="false"` / `"true"` synchronized with open state.
+- The sheet dialog has `role="dialog"`, `aria-modal="true"`, `aria-labelledby`.
+- All interactive elements meet the **44 px minimum touch target** size.
+- `:focus-visible` outlines use the theme's `--gl-color-focus-ring` variable.
+
+#### Viewport meta tag
+
+Ensure your HTML page includes:
+
+```html
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+```
+
+Do **not** use `user-scalable=no` — it blocks pinch-zoom and harms accessibility.
 
 ---
 

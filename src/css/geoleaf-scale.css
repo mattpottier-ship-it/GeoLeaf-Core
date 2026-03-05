@@ -21,6 +21,13 @@
     pointer-events: none;
 }
 
+/* Marge gauche sur mobile pour que l'échelle ne touche pas le bord */
+@media (max-width: 768px) {
+    .gl-scale-main-wrapper {
+        margin-left: 0.5rem !important;
+    }
+}
+
 /* Échelle graphique Leaflet */
 .gl-scale-graphic-wrapper {
     display: flex !important;
@@ -204,4 +211,45 @@
     margin-left: 8px;
     opacity: 0.4;
     font-weight: normal;
+}
+
+/* ==========================================================================
+   Responsive mobile : pill en 2 lignes
+   Ligne 1 : position GPS (.gl-scale-coordinates)
+   Ligne 2 : échelle graphique + numérique + zoom
+   ========================================================================== */
+@media (max-width: 768px) {
+    .gl-scale-main-wrapper {
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        height: auto !important;
+        border-radius: 8px !important;
+    }
+
+    /* GPS — ligne 1, pleine largeur */
+    .gl-scale-main-wrapper .gl-scale-coordinates {
+        order: 0 !important;
+        width: 100% !important;
+        height: 22px !important;
+        border-bottom: 1px solid var(--gl-color-legend-border) !important;
+        padding: 0 10px !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+
+    /* Séparateur entre GPS et scale : masqué (le border-bottom remplace) */
+    .gl-scale-main-wrapper .gl-scale-separator {
+        display: none !important;
+    }
+
+    /* Éléments d'échelle — ligne 2 */
+    .gl-scale-main-wrapper .gl-scale-graphic-wrapper {
+        order: 1 !important;
+        height: 22px !important;
+    }
+
+    .gl-scale-main-wrapper .gl-scale-control {
+        order: 2 !important;
+        height: 22px !important;
+    }
 }

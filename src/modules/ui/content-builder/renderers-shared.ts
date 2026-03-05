@@ -236,7 +236,7 @@ function renderRating(poi, config, options = {}) {
         starsHtml +=
             '<span class="gl-rating__star' +
             (isFilled ? " gl-rating__star--filled" : "") +
-            '">?</span>';
+            '">\u2605</span>';
     }
     starsHtml += "</span>";
 

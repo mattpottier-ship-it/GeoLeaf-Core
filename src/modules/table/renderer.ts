@@ -196,14 +196,14 @@ function createTableHead(columns: any, sortState: any) {
 
             if (sortState.field === col.field) {
                 if (sortState.direction === "asc") {
-                    sortIcon.textContent = " ?";
+                    sortIcon.textContent = " \u25b2"; // ▲
                     th.classList.add("is-sorted-asc");
                 } else if (sortState.direction === "desc") {
-                    sortIcon.textContent = " ?";
+                    sortIcon.textContent = " \u25bc"; // ▼
                     th.classList.add("is-sorted-desc");
                 }
             } else {
-                sortIcon.textContent = " ?";
+                sortIcon.textContent = " \u2195"; // ↕
             }
 
             th.appendChild(sortIcon);

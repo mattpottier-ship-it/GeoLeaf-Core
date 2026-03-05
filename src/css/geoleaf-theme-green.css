@@ -99,6 +99,13 @@
     --gl-color-accent-alpha: color-mix(in srgb, var(--gl-color-accent) 20%, transparent);
 }
 
+/* PC 10″ (769–1024px) : side panel légèrement réduit pour laisser plus de carte visible */
+@media (min-width: 769px) and (max-width: 1024px) {
+    :root {
+        --gl-sidepanel-width: 360px;
+    }
+}
+
 /* -----------------------------------------------------------------------
    Thème LIGHT – appliqué quand le <body> a la classe .gl-theme-light
    Aussi disponible directement sur .gl-theme-light pour support fullscreen

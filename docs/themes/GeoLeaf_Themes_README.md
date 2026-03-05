@@ -4,7 +4,7 @@ Product Version: GeoLeaf Platform V1
 **Version**: 1.1.0  
 **Fichiers**:
 
-- `packages/core/src/modules/themes/` (theme-selector, theme-loader, theme-applier/)  
+- `src/modules/themes/` (theme-selector, theme-loader, theme-applier/)  
   **Dernière mise à jour**: 14 février 2026
 
 ---

@@ -59,81 +59,68 @@ This installs:
 - **Prettier** - Code formatting
 - **Leaflet** - Peer dependency (development)
 
-### Project Structure (monorepo)
+### Project Structure
 
-GeoLeaf-Js is a **Turborepo monorepo** with npm workspaces. Source code lives in `packages/`; the core library is in `packages/core/` (TypeScript).
+GeoLeaf-Core is organised as a single library. Source code is in `src/`; builds are generated into `dist/`.
 
 ```
-GeoLeaf-Js/
-├── packages/
-│   ├── core/                    # @geoleaf/core (MIT) — main library
-│   │   ├── src/                 # TypeScript source
-│   │   │   ├── app/             # Boot, init, helpers
-│   │   │   ├── modules/         # API façades (geoleaf.*)
-│   │   │   ├── poi/, geojson/, ui/, filters/, route/, table/, ...
-│   │   │   ├── bundle-entry.ts  # Rollup UMD entry
-│   │   │   └── bundle-esm-entry.ts
-│   │   ├── __tests__/           # Jest tests
-│   │   ├── dist/                # Generated bundles (UMD, ESM, CSS)
-│   │   ├── rollup.config.mjs
-│   │   └── package.json
-│   ├── plugin-storage/          # Storage/cache plugin (commercial)
-│   └── plugin-addpoi/            # Add/Edit POI plugin (commercial)
-│
-├── apps/
-│   └── demo/                    # Demo application
-├── deploy/                      # Deploy variants (deploy-core, deploy-storage, deploy-storage-addpoi) — npm run build:deploy
-├── profiles/                    # Business profiles (e.g. tourism)
-├── docs/                        # Documentation (single source)
-├── scripts/                     # Build, deploy, audit scripts
-├── package.json                 # Workspaces + Turborepo
-├── turbo.json
+GeoLeaf-Core/
+├── src/                     # Source code (JavaScript)
+│   ├── app/             # Boot, init, helpers
+│   ├── modules/         # Modules métier et façades API (geoleaf.*)
+│   ├── lazy/            # Modules à chargement différé
+│   ├── css/             # Feuilles de style
+│   ├── contracts/       # Interfaces d'extension
+│   ├── bundle-entry.js  # Point d'entrée Rollup (UMD)
+│   └── bundle-esm-entry.js
+├── __tests__/               # Tests Jest
+├── dist/                    # Bundles générés (UMD, ESM, CSS)
+├── profiles/                # Profils métier (tourism, etc.)
+├── demo/                    # Application de démonstration
+├── docs/                    # Documentation
+├── scripts/                 # Scripts utilitaires
+├── rollup.config.mjs
+├── package.json
 └── ...
 ```
 
-See [PROJECT_TREE.md](PROJECT_TREE.md) for the full tree. **To change the core library**, edit files in `packages/core/src/` (TypeScript). In docs and examples, use `import GeoLeaf from "geoleaf"` and reference source paths as `packages/core/src/modules/…`.
+See [PROJECT_TREE.md](PROJECT_TREE.md) for the detailed tree. **To modify the library**, edit files in `src/modules/`. In docs and examples, reference source paths as `src/modules/…`.
 
 ### First Build
 
 ```bash
-# From repo root — build all packages (Turborepo)
+# Build complet
 npm run build
 
-# Core only
-npm run build:core
-
-# Plugins only
-npm run build:plugins
+# Mode watch
+npm run build:watch
 ```
 
-**Output (core):**
+**Sorties de build :**
 
-- `packages/core/dist/geoleaf.umd.js` — UMD bundle (dev)
-- `packages/core/dist/geoleaf.min.js` — Minified UMD (prod)
-- `packages/core/dist/esm/` — ESM entry and chunks
-- `packages/core/dist/` — CSS and type declarations
+- `dist/geoleaf.umd.js` — Bundle UMD (développement)
+- `dist/geoleaf.min.js` — Bundle UMD minifié (production)
+- `dist/geoleaf.min.css` — Styles minifiés
+- `dist/esm/` — Modules ESM
+- `dist/*.d.ts` — Déclarations TypeScript
 
 ---
 
 ## Development Workflow
 
-### npm Scripts (monorepo root)
+### npm Scripts
 
-| Script                  | Purpose                    | Usage               |
-| ----------------------- | -------------------------- | ------------------- |
-| `npm run build`         | Build all packages (Turbo) | After code changes  |
-| `npm run build:core`    | Build core only            | Core changes        |
-| `npm run build:plugins` | Build plugins only         | Plugin changes      |
-| `npm test`              | Run all tests (Turbo)      | Quick validation    |
-| `npm run test:core`     | Run core tests             | Core validation     |
-| `npm run test:jest`     | Run Jest (core)            | Full test suite     |
-| `npm run test:coverage` | Coverage (core)            | Before PR           |
-| `npm run lint`          | Lint all packages          | Find issues         |
-| `npm run clean`         | Clean build artifacts      | Fresh build         |
-| `npm run smoke-test`    | Smoke test post-build      | Bundle validation   |
-| `npm run benchmark`     | Run benchmarks             | Performance testing |
-
-For watch mode or build:all inside the core package: `npm run build:watch -w packages/core` (or run scripts from `packages/core/`).
+| Script                  | Purpose                   | Usage               |
+| ----------------------- | ------------------------- | ------------------- |
+| `npm run build`         | Build la bibliothèque     | Après modifications |
+| `npm run build:watch`   | Mode watch (rebuild auto) | Développement       |
+| `npm test`              | Lancer les tests Jest     | Validation rapide   |
+| `npm run test:jest`     | Tests Jest complets       | Suite complète      |
+| `npm run test:coverage` | Couverture de tests       | Avant PR            |
+| `npm run lint`          | Analyse statique ESLint   | Détection problèmes |
+| `npm run clean`         | Nettoyage artefacts       | Build propre        |
+| `npm run smoke-test`    | Test de fumée post-build  | Validation bundle   |
+| `npm run benchmark`     | Benchmarks de performance | Tests perf          |
 
 ### Development Server
 
@@ -168,7 +155,7 @@ git checkout -b feature/my-new-feature
 
 **2. Make changes:**
 
-Edit files in `packages/core/src/` (or the relevant plugin package)
+Edit files in `src/` (or the relevant module)
 
 **3. Build and test:**
 
@@ -216,8 +203,8 @@ npm start
 
 **Workflow:**
 
-1. Edit files in `packages/core/src/` (TypeScript)
-2. Rollup auto-rebuilds to `packages/core/dist/`
+1. Edit files in `src/` (JavaScript)
+2. Rollup rebuilds to `dist/`
 3. Refresh browser to see changes
 
 ---
@@ -229,7 +216,7 @@ npm start
 **Architecture:**
 
 ```
-packages/core/src/ (entry: bundle-entry.ts, api)
+src/ (entry: bundle-entry.js, api)
           ↓
      Rollup bundler
           ↓
@@ -239,11 +226,11 @@ packages/core/src/ (entry: bundle-entry.ts, api)
           ↓
    [UMD wrapper, globals]
           ↓
-   Output: packages/core/dist/geoleaf.umd.js
+   Output: dist/geoleaf.umd.js
           ↓
    [Terser minification]
           ↓
-   Output: packages/core/dist/geoleaf.min.js
+   Output: dist/geoleaf.min.js
           ↓
    [Sourcemaps, filesize report]
 ```
@@ -254,7 +241,7 @@ packages/core/src/ (entry: bundle-entry.ts, api)
 
 **Key features:**
 
-1. **Entry point:** `packages/core/src/` (bundle-entry.ts, bundle-esm-entry.ts)
+1. **Entry point:** `src/` (bundle-entry.js, bundle-esm-entry.js)
 2. **External dependencies:** Leaflet, MarkerCluster (peer deps)
 3. **Tree-shaking:** Aggressive dead code elimination
 4. **Output formats:** UMD (browser global)
@@ -415,7 +402,7 @@ coverageThreshold: {
 /**
  * @jest-environment jsdom
  */
-import GeoLeaf from "geoleaf"; // or from package path in monorepo
+import GeoLeaf from "geoleaf";
 
 describe("ModuleName", () => {
     beforeEach(() => {
@@ -591,11 +578,11 @@ const MAX_POI_COUNT = 1000;
 - `PascalCase.test.js` for test files
 
 ```
-packages/core/src/modules/
+src/modules/
   core/
   ui/
 
-packages/core/__tests__/
+__tests__/
   Core.test.js
   ...
 ```

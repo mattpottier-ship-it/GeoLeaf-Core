@@ -1,7 +1,7 @@
 # GeoLeaf.Route â€“ Documentation du module Route (ItinÃ©raires / GPX)
 
 Product Version: GeoLeaf Platform V1 **Version**: 1.1.0  
-**Fichier (monorepo)** : `packages/core/src/modules/route/`  
+**Fichier (monorepo)** : `src/modules/route/`  
 **DerniÃ¨re mise Ã  jour**: 19 janvier 2026
 
 ---

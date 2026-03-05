@@ -32,20 +32,17 @@ GeoLeaf Core is an open-source JavaScript mapping library. It includes:
 
 **Perpetual Status**: The GeoLeaf Core library is and will remain permanently open-source under the MIT License.
 
-### Optional Plugins (Separate Licensing)
+### Optional Extensions (Separate Licensing)
 
-GeoLeaf offers **optional** plugin packages that extend Core functionality. These plugins are **not** covered by the MIT License applied to GeoLeaf Core:
+GeoLeaf offers **optional** commercial extensions that extend Core functionality. These extensions are **not** covered by the MIT License applied to GeoLeaf Core. For available extensions, visit [geoleaf.dev](https://geoleaf.dev).
 
-- **@geoleaf-plugins/storage** — Offline cache, IndexedDB, sync (commercial license)
-- **@geoleaf-plugins/addpoi** — Add/Edit POI form, placement, image upload (commercial license)
-
-Plugin modules:
+Commercial extensions:
 
 - ✅ Are **optional** — Core works fully without them
 - ✅ Are **independently licensed** — see each package and its documentation for terms
 - ✅ Do **not** affect the MIT License of GeoLeaf Core
 
-**Important**: This NOTICE and the MIT License apply only to GeoLeaf Core. For plugin licensing, refer to the respective plugin package and its legal documentation.
+**Important**: This NOTICE and the MIT License apply only to GeoLeaf Core. For commercial extension licensing, refer to each extension’s own documentation and terms.
 
 ---
 

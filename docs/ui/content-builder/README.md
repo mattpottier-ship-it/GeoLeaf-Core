@@ -1195,7 +1195,7 @@ config.forEach((item) => {
 
 ### Fichiers Source (monorepo)
 
-- `packages/core/src/modules/ui/content-builder/` — Module Core, templates, assemblers, orchestrateur
+- `src/modules/ui/content-builder/` — Module Core, templates, assemblers, orchestrateur
 
 ### Tests
 

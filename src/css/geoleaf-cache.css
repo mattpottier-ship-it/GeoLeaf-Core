@@ -26,6 +26,12 @@ body.gl-poi-sidepanel-open .leaflet-top.leaflet-right {
     transition: right 0.28s ease;
 }
 
+@media (max-width: 768px) {
+    body.gl-poi-sidepanel-open .leaflet-top.leaflet-right {
+        right: 10px;
+    }
+}
+
 .gl-cache-control__wrapper {
     display: flex;
     flex-direction: column;

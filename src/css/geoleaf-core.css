@@ -472,47 +472,129 @@ body.gl-theme-dark .leaflet-control-fullscreen a:not(.is-fullscreen),
 }
 
 /* ========================================================================== */
-/* FULLSCREEN MODE SUPPORT                                                    */
+/* FULLSCREEN MODE SUPPORT — Mobile Friendly (Phase 1)                        */
 /* ========================================================================== */
+/* En plein écran : uniquement carte + 2 boutons en haut à gauche
+   (sortie plein écran + géolocalisation). Tous les autres contrôles masqués. */
 
 /* En mode plein écran, .gl-main doit être positionné en relatif pour que
    les panneaux avec position: absolute fonctionnent correctement */
-.gl-main:fullscreen {
-    position: relative;
-}
-
-/* Support pour les préfixes navigateurs */
-.gl-main:-webkit-full-screen {
-    position: relative;
-}
-
-.gl-main:-moz-full-screen {
-    position: relative;
-}
-
+.gl-main:fullscreen,
+.gl-main:-webkit-full-screen,
+.gl-main:-moz-full-screen,
 .gl-main:-ms-fullscreen {
     position: relative;
 }
 
-/* Les panneaux latéraux passent en position absolute en mode plein écran */
+/* — Masquer tous les contrôles sauf sortie plein écran + géoloc (haut à gauche) — */
+.gl-main:fullscreen #gl-theme-primary-container,
+.gl-main:fullscreen #gl-theme-secondary-container,
+.gl-main:fullscreen .gl-theme-toggle,
+.gl-main:fullscreen [data-gl-role="theme-toggle"],
+.gl-main:fullscreen #gl-filter-toggle,
+.gl-main:fullscreen .gl-filter-toggle,
+.gl-main:fullscreen #gl-filter-panel,
+.gl-main:fullscreen .gl-filter-panel,
+.gl-main:fullscreen .gl-layer-manager,
+.gl-main:fullscreen .gl-table-panel,
+.gl-main:fullscreen .gl-table-panel__floating-show-btn,
+.gl-main:fullscreen .gl-map-toolbar,
+.gl-main:fullscreen .leaflet-control-zoom,
+.gl-main:fullscreen .leaflet-control-scale,
+.gl-main:fullscreen .leaflet-control:has(.gl-scale-main-wrapper),
+.gl-main:fullscreen .leaflet-control-poi-add,
+.gl-main:fullscreen .leaflet-control-cache-button,
 .gl-main:fullscreen #gl-filter-panel.gl-filter-panel,
-.gl-main:-webkit-full-screen #gl-filter-panel.gl-filter-panel,
-.gl-main:-moz-full-screen #gl-filter-panel.gl-filter-panel,
-.gl-main:-ms-fullscreen #gl-filter-panel.gl-filter-panel {
-    position: absolute;
-}
-
 .gl-main:fullscreen .gl-poi-sidepanel,
+.gl-main:fullscreen .gl-poi-sidepanel-overlay,
+.gl-main:-webkit-full-screen #gl-theme-primary-container,
+.gl-main:-webkit-full-screen #gl-theme-secondary-container,
+.gl-main:-webkit-full-screen .gl-theme-toggle,
+.gl-main:-webkit-full-screen [data-gl-role="theme-toggle"],
+.gl-main:-webkit-full-screen #gl-filter-toggle,
+.gl-main:-webkit-full-screen .gl-filter-toggle,
+.gl-main:-webkit-full-screen #gl-filter-panel,
+.gl-main:-webkit-full-screen .gl-filter-panel,
+.gl-main:-webkit-full-screen .gl-layer-manager,
+.gl-main:-webkit-full-screen .gl-table-panel,
+.gl-main:-webkit-full-screen .gl-table-panel__floating-show-btn,
+.gl-main:-webkit-full-screen .gl-map-toolbar,
+.gl-main:-webkit-full-screen .leaflet-control-zoom,
+.gl-main:-webkit-full-screen .leaflet-control-scale,
+.gl-main:-webkit-full-screen .leaflet-control:has(.gl-scale-main-wrapper),
+.gl-main:-webkit-full-screen .leaflet-control-poi-add,
+.gl-main:-webkit-full-screen .leaflet-control-cache-button,
+.gl-main:-webkit-full-screen #gl-filter-panel.gl-filter-panel,
 .gl-main:-webkit-full-screen .gl-poi-sidepanel,
+.gl-main:-webkit-full-screen .gl-poi-sidepanel-overlay,
+.gl-main:-moz-full-screen #gl-theme-primary-container,
+.gl-main:-moz-full-screen #gl-theme-secondary-container,
+.gl-main:-moz-full-screen .gl-theme-toggle,
+.gl-main:-moz-full-screen [data-gl-role="theme-toggle"],
+.gl-main:-moz-full-screen #gl-filter-toggle,
+.gl-main:-moz-full-screen .gl-filter-toggle,
+.gl-main:-moz-full-screen #gl-filter-panel,
+.gl-main:-moz-full-screen .gl-filter-panel,
+.gl-main:-moz-full-screen .gl-layer-manager,
+.gl-main:-moz-full-screen .gl-table-panel,
+.gl-main:-moz-full-screen .gl-table-panel__floating-show-btn,
+.gl-main:-moz-full-screen .gl-map-toolbar,
+.gl-main:-moz-full-screen .leaflet-control-zoom,
+.gl-main:-moz-full-screen .leaflet-control-scale,
+.gl-main:-moz-full-screen .leaflet-control:has(.gl-scale-main-wrapper),
+.gl-main:-moz-full-screen .leaflet-control-poi-add,
+.gl-main:-moz-full-screen .leaflet-control-cache-button,
+.gl-main:-moz-full-screen #gl-filter-panel.gl-filter-panel,
 .gl-main:-moz-full-screen .gl-poi-sidepanel,
-.gl-main:-ms-fullscreen .gl-poi-sidepanel {
-    position: absolute;
+.gl-main:-moz-full-screen .gl-poi-sidepanel-overlay,
+.gl-main:-ms-fullscreen #gl-theme-primary-container,
+.gl-main:-ms-fullscreen #gl-theme-secondary-container,
+.gl-main:-ms-fullscreen .gl-theme-toggle,
+.gl-main:-ms-fullscreen [data-gl-role="theme-toggle"],
+.gl-main:-ms-fullscreen #gl-filter-toggle,
+.gl-main:-ms-fullscreen .gl-filter-toggle,
+.gl-main:-ms-fullscreen #gl-filter-panel,
+.gl-main:-ms-fullscreen .gl-filter-panel,
+.gl-main:-ms-fullscreen .gl-layer-manager,
+.gl-main:-ms-fullscreen .gl-table-panel,
+.gl-main:-ms-fullscreen .gl-table-panel__floating-show-btn,
+.gl-main:-ms-fullscreen .gl-map-toolbar,
+.gl-main:-ms-fullscreen .leaflet-control-zoom,
+.gl-main:-ms-fullscreen .leaflet-control-scale,
+.gl-main:-ms-fullscreen .leaflet-control:has(.gl-scale-main-wrapper),
+.gl-main:-ms-fullscreen .leaflet-control-poi-add,
+.gl-main:-ms-fullscreen .leaflet-control-cache-button,
+.gl-main:-ms-fullscreen #gl-filter-panel.gl-filter-panel,
+.gl-main:-ms-fullscreen .gl-poi-sidepanel,
+.gl-main:-ms-fullscreen .gl-poi-sidepanel-overlay {
+    display: none !important;
 }
 
-.gl-main:fullscreen .gl-poi-sidepanel-overlay,
-.gl-main:-webkit-full-screen .gl-poi-sidepanel-overlay,
-.gl-main:-moz-full-screen .gl-poi-sidepanel-overlay,
-.gl-main:-ms-fullscreen .gl-poi-sidepanel-overlay {
-    position: absolute;
+/* Re-afficher le contrôle géolocalisation en fullscreen
+   (masqué globalement par geoleaf-mobile-toolbar.css, mais doit rester
+   visible en plein écran pour rester accessible, spec § 3.8 / 3.9) */
+.gl-main:fullscreen .leaflet-control-geolocation,
+.gl-main:-webkit-full-screen .leaflet-control-geolocation,
+.gl-main:-moz-full-screen .leaflet-control-geolocation,
+.gl-main:-ms-fullscreen .leaflet-control-geolocation {
+    display: block !important;
+}
+
+/* Zone tactile ≥ 44px en plein écran (reco. accessibilité mobile) */
+.gl-main:fullscreen .leaflet-control-fullscreen a,
+.gl-main:fullscreen .leaflet-control-geolocation a,
+.gl-main:-webkit-full-screen .leaflet-control-fullscreen a,
+.gl-main:-webkit-full-screen .leaflet-control-geolocation a,
+.gl-main:-moz-full-screen .leaflet-control-fullscreen a,
+.gl-main:-moz-full-screen .leaflet-control-geolocation a,
+.gl-main:-ms-fullscreen .leaflet-control-fullscreen a,
+.gl-main:-ms-fullscreen .leaflet-control-geolocation a {
+    min-width: 44px;
+    min-height: 44px;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 

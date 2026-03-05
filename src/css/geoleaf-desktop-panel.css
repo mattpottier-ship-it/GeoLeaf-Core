@@ -1,0 +1,371 @@
+﻿/* ============================================================================
+   GeoLeaf - Panneau lateral droit avec onglets verticaux (desktop >= 1440px)
+   Structure : [contenu repliable 0->320px] + [bande onglets 34px toujours visible]
+   z-index 950 - sous la barre pill (1000) et le panneau POI (1100)
+   ============================================================================ */
+
+/* --------------------------------------------------------------------------
+   Conteneur principal : flex-row colle au bord droit
+   pointer-events:none sur le conteneur pour laisser la carte cliquable
+   -------------------------------------------------------------------------- */
+#gl-right-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 950;
+    display: none;
+    flex-direction: row;
+    align-items: stretch;
+    pointer-events: none;
+}
+
+@media (min-width: 1440px) {
+    #gl-right-panel {
+        display: flex;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   Panneau de contenu - glisse de la droite (max-width 0 -> 320px)
+   -------------------------------------------------------------------------- */
+.gl-rp-content {
+    overflow: hidden;
+    max-width: 0;
+    display: flex;
+    flex-direction: column;
+    transition: max-width 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    background: var(--gl-color-bg-surface);
+    border-left: 1px solid var(--gl-color-border-soft);
+    box-shadow: -3px 0 18px rgba(0, 0, 0, 0.1);
+    pointer-events: auto;
+}
+
+#gl-right-panel.has-active .gl-rp-content {
+    max-width: 320px;
+}
+
+/* --------------------------------------------------------------------------
+   Panneaux individuels (filters / layers / legend)
+   Un seul visible a la fois
+   -------------------------------------------------------------------------- */
+.gl-rp-pane {
+    display: none;
+    flex-direction: column;
+    min-width: 320px;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: var(--gl-color-border-soft) transparent;
+}
+
+.gl-rp-pane.is-active {
+    display: flex;
+}
+
+.gl-rp-pane::-webkit-scrollbar {
+    width: 5px;
+}
+
+.gl-rp-pane::-webkit-scrollbar-thumb {
+    background: var(--gl-color-border-soft);
+    border-radius: 3px;
+}
+
+.gl-rp-pane::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* --------------------------------------------------------------------------
+   Bande d'onglets verticale - toujours visible
+   -------------------------------------------------------------------------- */
+.gl-rp-tabs {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--gl-color-bg-surface);
+    border-left: 1px solid var(--gl-color-border-soft);
+    box-shadow: -2px 0 8px rgba(0, 0, 0, 0.06);
+    width: 34px;
+    padding: 0;
+    gap: 4px;
+    flex-shrink: 0;
+    pointer-events: auto;
+}
+
+/* --------------------------------------------------------------------------
+   Bouton d'onglet - ecriture verticale
+   -------------------------------------------------------------------------- */
+.gl-rp-tab {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    padding: 18px 4px;
+    border: none;
+    background: transparent;
+    color: var(--gl-color-text-muted);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 6px;
+    transition:
+        background 0.15s ease,
+        color 0.15s ease,
+        box-shadow 0.15s ease,
+        transform 0.12s ease;
+    white-space: nowrap;
+    line-height: 1;
+    font-family: inherit;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.gl-rp-tab:hover {
+    background: color-mix(in srgb, var(--gl-color-accent) 15%, transparent);
+    color: var(--gl-color-accent);
+    box-shadow: inset -2px 0 0 var(--gl-color-accent);
+    transform: scaleY(1.04);
+}
+
+.gl-rp-tab:active {
+    transform: scale(0.92);
+}
+
+.gl-rp-tab.is-active {
+    background: var(--gl-color-accent);
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+}
+
+.gl-rp-tab:focus-visible {
+    outline: 2px solid var(--gl-color-accent);
+    outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   Override - Panneau filtres dans le right panel
+   Le gl-filter-panel est en position:fixed par defaut - on remet en static
+   -------------------------------------------------------------------------- */
+#gl-right-panel #gl-filter-panel,
+#gl-right-panel #gl-filter-panel.gl-filter-panel {
+    position: static !important;
+    opacity: 1 !important;
+    transform: none !important;
+    visibility: visible !important;
+    width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    z-index: auto !important;
+    transition: none !important;
+    pointer-events: auto !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+}
+
+/* Force visible meme sans .is-open */
+#gl-right-panel #gl-filter-panel:not(.is-open),
+#gl-right-panel #gl-filter-panel.is-open {
+    opacity: 1 !important;
+    transform: none !important;
+    visibility: visible !important;
+}
+
+/* Masquer l overlay filtre quand dans le right-panel */
+body:has(#gl-right-panel #gl-filter-panel) .gl-filter-panel__overlay {
+    display: none !important;
+}
+
+/* Annuler le decalage leaflet quand le filtre est dans le right panel */
+@media (min-width: 1440px) {
+    body:has(#gl-filter-panel.is-open) .leaflet-top.leaflet-left {
+        margin-left: 0 !important;
+        transition: none !important;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   Override - Gestionnaire de couches dans le right panel
+   -------------------------------------------------------------------------- */
+#gl-right-panel .gl-layer-manager {
+    display: block !important;
+    position: static !important;
+    font-size: 0.8rem;
+}
+
+#gl-right-panel .gl-layer-manager__main-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    max-height: none !important;
+    overflow: visible !important;
+}
+
+#gl-right-panel .gl-layer-manager .gl-layer-manager__toggle,
+#gl-right-panel .gl-layer-manager [data-gl-action="layer-manager-toggle"] {
+    display: none !important;
+}
+
+#gl-right-panel .gl-layer-manager .gl-layer-manager__main-wrapper {
+    display: flex !important;
+}
+
+#gl-right-panel .gl-layer-manager__body-wrapper {
+    overflow-y: auto !important;
+    max-height: none !important;
+    display: flex !important;
+}
+
+/* Force ouvert meme si collapsedByDefault:true */
+#gl-right-panel .gl-layer-manager--collapsed .gl-layer-manager__body-wrapper {
+    display: flex !important;
+}
+
+#gl-right-panel .gl-layer-manager--collapsed .gl-layer-manager__main-wrapper {
+    display: flex !important;
+}
+
+/* --------------------------------------------------------------------------
+   Override - Legende dans le right panel
+   -------------------------------------------------------------------------- */
+#gl-right-panel .gl-map-legend {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-shadow: none !important;
+    pointer-events: auto !important;
+    border-radius: 0 !important;
+}
+
+/* Force ouverte meme si collapsedByDefault:true */
+#gl-right-panel .gl-map-legend--collapsed .gl-map-legend__body {
+    display: block !important;
+}
+
+#gl-right-panel .gl-map-legend__toggle {
+    display: none !important;
+}
+
+#gl-right-panel .gl-map-legend .gl-map-legend__wrapper {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    border: none !important;
+    max-height: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   Tableau bottom-drawer sur desktop
+   Glisse de droite à gauche à l'ouverture (CSS transition, pas @keyframes).
+   La transition inverse se fait automatiquement à la fermeture.
+   Hauteur initiale 30%, draggable via poignée haute, max 60%.
+   right: 34px = largeur de .gl-rp-tabs → pas de recouvrement de la barre d'onglets.
+   -------------------------------------------------------------------------- */
+@media (min-width: 1440px) {
+    .gl-table-panel {
+        right: 34px !important;
+        transform: translateX(100%) !important;
+        transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        height: 30%;
+        min-height: 30%;
+        max-height: 60%;
+    }
+    .gl-table-panel.is-visible {
+        transform: translateX(0) !important;
+        z-index: 1100 !important;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   Override - Tableau dans le right panel
+   -------------------------------------------------------------------------- */
+#gl-right-panel .gl-table-panel {
+    display: flex !important;
+    position: static !important;
+    transform: none !important;
+    transition: none !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 220px !important;
+    bottom: auto !important;
+    left: auto !important;
+    right: auto !important;
+    top: auto !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    z-index: auto !important;
+    flex-direction: column;
+    flex: 1;
+}
+
+#gl-rp-pane-table {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+#gl-right-panel .gl-table-panel__floating-show-btn {
+    display: none !important;
+}
+
+#gl-right-panel .gl-table-panel__resize-handle {
+    display: none !important;
+}
+
+#gl-right-panel .gl-table-panel__wrapper {
+    flex: 1;
+    overflow: auto;
+}
+
+/* --------------------------------------------------------------------------
+   Decalage toggle + gestion theme secondaire quand side panel ouvert
+   Strip onglets = 34px, contenu = 320px
+   -------------------------------------------------------------------------- */
+@media (min-width: 1440px) {
+    /* Strip visible (aucun onglet ouvert) : toggle décale de 34px (right:44px) */
+    body.gl-right-panel-open .gl-theme-toggle--map {
+        right: calc(10px + 34px);
+    }
+
+    /* Strip visible : secondaire décalée aussi — toggle bord gauche a right:102px (44+58), gap 8px */
+    body.gl-right-panel-open #gl-theme-secondary-container {
+        right: 110px;
+    }
+
+    /* Onglet ouvert : toggle pousse en dehors du panneau (strip+contenu) */
+    body.gl-right-panel-open:has(#gl-right-panel.has-active) .gl-theme-toggle--map {
+        right: calc(10px + 34px + 320px);
+    }
+
+    /* Onglet ouvert : la secondaire ne peut plus tenir sur la meme ligne */
+    /* Elle descend sous la primaire, centree (comme mode tablette) */
+    body.gl-right-panel-open:has(#gl-right-panel.has-active) #gl-theme-secondary-container {
+        top: 58px;
+        right: auto;
+        left: 50%;
+        transform: translateX(-50%);
+        transition: none;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   Compatibilite panneau POI
+   .gl-poi-sidepanel => z-index 1100  => passe par dessus (950)  OK
+   .gl-poi-sidepanel-overlay => z-index 1099  OK
+   -------------------------------------------------------------------------- */

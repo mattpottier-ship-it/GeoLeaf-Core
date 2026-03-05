@@ -119,6 +119,36 @@ body:has(#gl-filter-panel.is-open) .leaflet-bottom.leaflet-left {
     .branding-content {
         padding: 3px 6px;
     }
+
+    /* Layout mobile : échelle (GPS + scale) en row 1, branding en row 2 */
+    .leaflet-bottom.leaflet-left {
+        grid-template-columns: auto !important;
+        grid-template-rows: auto auto !important;
+        gap: 2px !important;
+        margin-left: 0 !important;
+        padding: 0 0 4px 0 !important;
+    }
+
+    /* Annuler le décalage du panneau filtre sur mobile */
+    body:has(#gl-filter-panel.is-open) .leaflet-bottom.leaflet-left {
+        margin-left: 0 !important;
+    }
+
+    .leaflet-bottom.leaflet-left > .leaflet-control:has(.gl-scale-main-wrapper) {
+        grid-column: 1 !important;
+        grid-row: 1 !important;
+    }
+
+    .leaflet-bottom.leaflet-left > .geoleaf-branding {
+        grid-column: 1 !important;
+        grid-row: 2 !important;
+    }
+
+    /* Légende (si visible) occupe la rangée au-dessus */
+    .leaflet-bottom.leaflet-left > .gl-map-legend {
+        grid-column: 1 !important;
+        grid-row: 1 !important;
+    }
 }
 
 /* =======================================================================

@@ -63,5 +63,39 @@ body.gl-theme-dark .gl-theme-toggle--map {
 
 /* Décaler le bouton quand le panneau de détail est ouvert */
 body.gl-poi-sidepanel-open .gl-theme-toggle--map {
-    right: calc(420px + 10px);
+    right: calc(var(--gl-sidepanel-width) + 10px);
+}
+
+@media (max-width: 768px) {
+    body.gl-poi-sidepanel-open .gl-theme-toggle--map {
+        right: 10px;
+    }
+}
+
+/* Tablette (769px–1024px) : remonter le toggle au-dessus des barres de thèmes */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .gl-theme-toggle--map {
+        top: 10px;
+        right: 10px;
+    }
+}
+
+/* Desktop 15" (>=1440px) : toggle aligné sur la barre de thèmes primaire (2.3rem × 3.6rem) */
+@media (min-width: 1440px) {
+    .gl-theme-toggle--map {
+        top: 10px;
+        right: 10px;
+        width: 3.6rem;
+        height: 2.3rem;
+        border-radius: 1.15rem;
+    }
+    /* Recentrer la bulle/icône dans le format agrandi */
+    .gl-theme-toggle--map::after {
+        top: calc((2.3rem - 20px) / 2);
+        left: calc((2.3rem - 20px) / 2);
+        font-size: 1.05rem;
+    }
+    body.gl-theme-dark .gl-theme-toggle--map::after {
+        left: calc(3.6rem - 20px - (2.3rem - 20px) / 2);
+    }
 }

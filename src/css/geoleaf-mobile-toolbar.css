@@ -1,0 +1,985 @@
+/*!
+ * GeoLeaf – Barre pill d'utilitaires mobile + composant sheet (Phase 2 Mobile Friendly)
+ * ------------------------------------------------------------------------------------
+ * - Barre d'icônes (Zoom, Géoloc, Recherche, Proximité, Filtre, Thèmes, Couches, Tableau)
+ *   visible uniquement en viewport ≤ 768px.
+ * - Overlay + bottom sheet réutilisable pour le contenu des panneaux.
+ * - Masquage des contrôles desktop en mobile.
+ */
+
+/* ========================================================================== */
+/* Barre pill d'utilitaires (.gl-map-toolbar)                                 */
+/* ========================================================================== */
+
+/* Wrapper de positionnement — contient la pill + les boutons nav externes */
+.gl-map-toolbar-wrapper {
+    position: absolute;
+    top: 8px;
+    bottom: 80px;   /* dégage la zone scale + branding + marge de confort */
+    left: 0.5rem;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    pointer-events: none; /* ne bloque pas les clics carte */
+    max-height: calc(100% - 96px); /* évite le débordement vertical sur petits écrans */
+}
+
+.gl-map-toolbar-wrapper > * {
+    pointer-events: auto;
+}
+
+.gl-map-toolbar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+
+    max-height: 100%;   /* contraint par le wrapper top/bottom */
+    padding: 0;
+    border-radius: 9999px;
+    background: var(--gl-color-bg-surface);
+    border: 1px solid var(--gl-color-border-soft);
+    box-shadow: var(--gl-shadow-medium);
+
+    overflow: hidden;
+}
+
+/* Barre toujours visible (desktop + mobile), remplace les boutons actuels. */
+/* Décommenter pour forcer l’affichage de la barre à toutes largeurs (test Live Server) :
+*/
+
+/* Boutons de navigation — ronds, flottants en dehors de la pill, masqués par défaut */
+.gl-map-toolbar__nav {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    border-radius: 50%;
+    background: var(--gl-color-bg-surface);
+    border: 1px solid var(--gl-color-border-soft);
+    box-shadow: var(--gl-shadow-medium);
+    color: var(--gl-color-text-main);
+    cursor: pointer;
+    touch-action: manipulation;
+    /* Toujours en display:flex, visibilité gérée par opacity + visibility */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+        opacity 0.25s ease,
+        visibility 0.25s ease,
+        background 0.15s ease,
+        transform 0.12s ease,
+        box-shadow 0.15s ease;
+}
+
+/* Visible uniquement quand le JS détecte un overflow */
+.gl-map-toolbar__nav.is-visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.gl-map-toolbar__nav:hover {
+    background: var(--gl-color-bg-surface-muted);
+    box-shadow: var(--gl-shadow-strong, 0 4px 16px rgba(0,0,0,0.28));
+    transform: scale(1.08);
+}
+
+.gl-map-toolbar__nav:active {
+    background: var(--gl-color-accent-soft);
+    color: var(--gl-color-accent);
+    transform: scale(0.92);
+}
+
+.gl-map-toolbar__nav svg {
+    width: 20px;
+    height: 20px;
+    pointer-events: none;
+}
+
+/* Zone scrollable des icônes — scrollbar invisible, défilement via flèches uniquement */
+.gl-map-toolbar__scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    /* Masquer la scrollbar sur tous les navigateurs */
+    scrollbar-width: none;        /* Firefox */
+    -ms-overflow-style: none;    /* IE/Edge legacy */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.35rem 2px;
+}
+
+.gl-map-toolbar__scroll::-webkit-scrollbar {
+    display: none; /* Chrome / Safari / WebKit */
+}
+
+/* Groupe optionnel (ex. filtre + réinitialiser) */
+.gl-map-toolbar__group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+}
+
+/* Chaque bouton icône : zone tactile ≥ 44px */
+.gl-map-toolbar__btn {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--gl-color-text-main);
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease;
+}
+
+.gl-map-toolbar__btn:hover {
+    background: var(--gl-color-bg-surface-muted);
+    transform: scale(1.12);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    color: var(--gl-color-accent, #2563eb);
+}
+
+.gl-map-toolbar__btn:focus-visible {
+    outline: 2px solid var(--gl-color-focus-ring);
+    outline-offset: 2px;
+}
+
+.gl-map-toolbar__btn[aria-expanded="true"] {
+    background: var(--gl-color-accent-soft);
+    color: var(--gl-color-accent);
+}
+
+/* État actif (ex. filtre avec filtres appliqués) */
+.gl-map-toolbar__btn--active {
+    background: var(--gl-color-accent-soft);
+    color: var(--gl-color-accent);
+}
+
+.gl-map-toolbar__btn--active:hover {
+    background: var(--gl-color-accent-soft);
+    color: var(--gl-color-accent);
+    transform: scale(1.12);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+}
+
+/* État actif atténué — recherche appliquée mais barre fermée */
+.gl-map-toolbar__btn--active-muted {
+    background: transparent;
+    color: var(--gl-color-accent, #2563eb);
+    opacity: 0.55;
+}
+
+.gl-map-toolbar__btn--active-muted:hover {
+    background: var(--gl-color-accent-soft);
+    color: var(--gl-color-accent);
+    opacity: 1;
+    transform: scale(1.12);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+}
+
+.gl-map-toolbar__btn svg {
+    width: 22px;
+    height: 22px;
+}
+
+/* ========================================================================== */
+/* Mode plein écran : seuls le bouton sortie et la géoloc restent visibles     */
+/* ========================================================================== */
+
+/* Masquer tous les boutons sauf fullscreen-exit et geoloc */
+.gl-map-toolbar--fullscreen .gl-map-toolbar__btn:not([data-gl-toolbar-action="fullscreen"]):not([data-gl-sheet="geoloc"]) {
+    display: none !important;
+}
+
+/* Masquer le groupe filtre en entier */
+.gl-map-toolbar--fullscreen .gl-map-toolbar__group {
+    display: none !important;
+}
+
+/* Les boutons nav n'ont pas d'utilité en plein écran (2 icônes = pas d'overflow) */
+.gl-map-toolbar--fullscreen ~ .gl-map-toolbar__nav,
+.gl-map-toolbar-wrapper:has(.gl-map-toolbar--fullscreen) .gl-map-toolbar__nav {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
+
+.gl-map-toolbar__reset {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--gl-color-text-muted);
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease;
+}
+
+.gl-map-toolbar__group.has-active-filters .gl-map-toolbar__reset {
+    display: flex;
+}
+
+.gl-map-toolbar__reset:hover {
+    background: var(--gl-color-bg-surface-muted);
+    color: var(--gl-color-accent, #2563eb);
+    transform: scale(1.12);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.14);
+}
+
+.gl-map-toolbar__reset svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* ========================================================================== */
+/* Overlay + Bottom sheet réutilisable                                        */
+/* ========================================================================== */
+
+.gl-sheet-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    background: rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.gl-sheet-overlay.open {
+    opacity: 1;
+    visibility: visible;
+}
+
+.gl-sheet-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-height: 85vh;
+    z-index: 2001;
+    background: var(--gl-color-bg-surface);
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.2);
+    transform: translateY(100%);
+    transition: transform 0.3s ease-out;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.gl-sheet-overlay.open .gl-sheet-panel {
+    transform: translateY(0);
+}
+
+.gl-sheet-panel__header {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--gl-color-border-soft);
+    background: var(--gl-color-bg-surface);
+}
+
+.gl-sheet-panel__title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--gl-color-text-main);
+}
+
+.gl-sheet-panel__close {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--gl-color-text-main);
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.gl-sheet-panel__close:hover {
+    background: var(--gl-color-bg-surface-muted);
+}
+
+.gl-sheet-panel__close:focus-visible {
+    outline: 2px solid var(--gl-color-focus-ring);
+    outline-offset: 2px;
+}
+
+.gl-sheet-panel__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 1rem 1.25rem;
+}
+
+/* Phase 3 : contenu des sheets (thèmes, filtres, couches, tableau) */
+.gl-sheet-panel__body #gl-theme-primary-container,
+.gl-sheet-panel__body #gl-theme-secondary-container {
+    display: block !important;
+    position: static !important;
+    transform: none !important;
+    margin: 0 0 1rem 0 !important;
+    pointer-events: auto !important;
+}
+
+.gl-sheet-panel__body #gl-filter-panel.gl-sheet-content {
+    display: flex !important;
+    flex-direction: column !important;
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 200px !important;
+    max-height: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+    transform: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Masquer le header du panneau filtre (dupliqué avec l'en-tête du sheet) */
+.gl-sheet-panel__body #gl-filter-panel.gl-sheet-content .gl-filter-panel__header {
+    display: none !important;
+}
+
+/* Body : fond transparent, layout continu */
+.gl-sheet-panel__body #gl-filter-panel.gl-sheet-content .gl-filter-panel__body {
+    overflow-y: visible !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    flex: 1 1 auto !important;
+}
+
+/* Footer des filtres : bien intégré */
+.gl-sheet-panel__body #gl-filter-panel.gl-sheet-content .gl-filter-panel__footer {
+    border-top: 1px solid var(--gl-color-border-soft) !important;
+    background: transparent !important;
+    margin-top: 0.75rem !important;
+    padding-top: 0.75rem !important;
+    box-shadow: none !important;
+}
+
+.gl-sheet-panel__body .gl-layer-manager {
+    display: flex !important;
+    flex-direction: column !important;
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: transparent !important;
+    margin: 0 !important;
+    min-width: 0 !important;
+}
+
+/* Masquer le bouton collapse du gestionnaire de couches (inutile dans le sheet) */
+.gl-sheet-panel__body .gl-layer-manager .gl-layer-manager__toggle,
+.gl-sheet-panel__body .gl-layer-manager [data-gl-action="layer-manager-toggle"] {
+    display: none !important;
+}
+
+/* Wrapper interne : hauteur auto, pas de max-height bloquant */
+.gl-sheet-panel__body .gl-layer-manager .gl-layer-manager__main-wrapper {
+    max-height: none !important;
+    overflow-y: visible !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    width: 100% !important;
+    min-width: 0 !important;
+}
+
+.gl-sheet-panel__body .gl-table-panel.gl-sheet-content {
+    display: flex !important;
+    flex-direction: column !important;
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 50vh !important;
+    min-height: 200px !important;
+    max-height: 70vh !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Wrapper du tableau : activer le scroll horizontal sur mobile */
+.gl-sheet-panel__body .gl-table-panel.gl-sheet-content .gl-table-panel__wrapper {
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+}
+
+/* Pas de padding quand la table occupe le body — sinon la scrollbar horizontale est décalée */
+.gl-sheet-panel__body:has(.gl-table-panel.gl-sheet-content) {
+    padding: 0;
+    overflow: hidden;
+}
+
+/* Table : laisser les colonnes prendre leur largeur naturelle pour permettre le scroll horizontal */
+.gl-sheet-panel__body .gl-table-panel.gl-sheet-content .gl-table-panel__table {
+    table-layout: auto !important;
+    width: max-content !important;
+    min-width: 100% !important;
+}
+
+/* Toolbar du tableau : fond transparent */
+.gl-sheet-panel__body .gl-table-panel.gl-sheet-content .gl-table-panel__toolbar {
+    background: transparent !important;
+    border-bottom: 1px solid var(--gl-color-border-soft) !important;
+    box-shadow: none !important;
+    border-top: none !important;
+}
+
+/* ========================================================================== */
+/* Masquer les contrôles remplacés par la barre (tous viewports)              */
+/* Le toggle clair/sombre (.gl-theme-toggle) reste visible, pas dans la barre */
+/* ========================================================================== */
+
+.leaflet-control-zoom,
+.leaflet-control-geolocation,
+.leaflet-control-fullscreen {
+    display: none !important;
+}
+
+/* Légende : masquée sur mobile, affichée via le sheet (icône barre) */
+.gl-map-legend {
+    display: none !important;
+}
+
+/* Quand la légende est injectée dans le sheet body, elle devient visible */
+.gl-sheet-panel__body .gl-map-legend {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-shadow: none !important;
+    pointer-events: auto !important;
+    border-radius: 0 !important;
+}
+
+.gl-sheet-panel__body .gl-map-legend .gl-map-legend__wrapper {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    box-shadow: none !important;
+    border-radius: 0.5rem !important;
+    border: 1px solid var(--gl-color-border-soft) !important;
+}
+
+/* Proximité dans le panneau filtre : masquée sur mobile (gérée par l'icône toolbar) */
+.gl-filter-panel__proximity {
+    display: none !important;
+}
+
+/* Groupe de recherche textuelle : masqué dans le sheet filtres (la barre loupe le remplace) */
+.gl-sheet-panel__body .gl-filter-group--search {
+    display: none !important;
+}
+
+/* Sur desktop (>=769px) : containers gérés nativement par _theme-selector.css */
+/* Sur mobile (<=768px)  : primaire visible comme barre horizontale, secondaire via toggle */
+
+/* Mobile uniquement — primaire toujours visible en haut de la carte (icônes seules) */
+@media (max-width: 768px) {
+    #gl-theme-primary-container {
+        display: block !important;
+        position: absolute !important;
+        top: calc(0.65rem + var(--gl-search-bar-height, 0px) + var(--gl-search-bar-gap, 0px) + var(--gl-proximity-bar-height, 0px) + var(--gl-proximity-bar-gap, 0px)) !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        z-index: 1490 !important;
+        max-width: calc(100% - 70px) !important; /* marge pour la barre pill gauche */
+        overflow-x: auto !important;
+        scrollbar-width: none !important;
+        transition: top 0.2s ease !important;
+    }
+
+    #gl-theme-primary-container::-webkit-scrollbar {
+        display: none;
+    }
+
+    #gl-theme-primary-container > * {
+        pointer-events: auto !important;
+    }
+
+    /* Masquer les labels : icônes seules sur mobile */
+    #gl-theme-primary-container .gl-theme-btn__label,
+    #gl-theme-primary-container .gl-theme-selector-primary__nav {
+        display: none !important;
+    }
+
+    /* Boutons compacts */
+    #gl-theme-primary-container .gl-theme-btn {
+        min-width: 36px !important;
+        height: 36px !important;
+        padding: 0.25rem !important;
+    }
+
+    /* Secondaire masqué par défaut, togglé via l'icône thèmes */
+    #gl-theme-secondary-container {
+        display: none !important;
+    }
+
+    /* Secondaire visible au toggle */
+    #gl-theme-secondary-container.gl-mobile-secondary-visible {
+        display: block !important;
+        position: absolute !important;
+        top: calc(0.65rem + var(--gl-search-bar-height, 0px) + var(--gl-search-bar-gap, 0px) + var(--gl-proximity-bar-height, 0px) + var(--gl-proximity-bar-gap, 0px) + 44px + 0.4rem) !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        z-index: 1489 !important;
+        pointer-events: none !important;
+        max-width: calc(100% - 70px) !important;
+        transition: top 0.2s ease !important;
+    }
+
+    #gl-theme-secondary-container.gl-mobile-secondary-visible > * {
+        pointer-events: auto !important;
+    }
+}
+
+.gl-filter-toggle,
+#gl-filter-toggle {
+    display: none !important;
+}
+
+.gl-layer-manager {
+    display: none !important;
+}
+
+.gl-table-panel,
+.gl-table-panel__floating-show-btn {
+    display: none !important;
+}
+
+/* ========================================================================== */
+/* Tablette (769px–1024px) — masquer l'icône thèmes si la barre secondaire   */
+/* est affichée (container non vide)                                          */
+/* ========================================================================== */
+@media (min-width: 769px) and (max-width: 1024px) {
+    body:has(#gl-theme-secondary-container:not(:empty)) .gl-map-toolbar__btn[data-gl-toolbar-action="themes"] {
+        display: none !important;
+    }
+}
+
+/* ========================================================================== */
+/* Desktop 15" (≥ 1440px) — ajustements spécifiques PC grand écran           */
+/* ========================================================================== */
+@media (min-width: 1440px) {
+    /* Barre de recherche : toujours visible, haut gauche, alignée sur la barre primaire (2.3rem) */
+    .gl-search-bar {
+        display: flex !important;
+        opacity: 1 !important;
+        top: 10px !important;
+        left: 3.75rem !important;
+        right: auto !important;
+        transform: none !important;
+        width: min(240px, 17vw) !important;
+        padding: 0.35rem 0.45rem 0.35rem 0.85rem !important;
+    }
+    .gl-search-bar__submit {
+        height: 1.6rem !important;
+        width: 1.6rem !important;
+    }
+    .gl-search-bar__submit svg {
+        width: 14px !important;
+        height: 14px !important;
+    }
+    .gl-search-bar__clear {
+        height: 1.4rem !important;
+        width: 1.4rem !important;
+    }
+    /* Masquer l'icône loupe dans la pill (barre toujours ouverte) */
+    .gl-map-toolbar__btn[data-gl-toolbar-action="search"] {
+        display: none !important;
+    }
+    /* Masquer l'icône thèmes dans la pill (barre secondaire visible en permanence) */
+    .gl-map-toolbar__btn[data-gl-toolbar-action="themes"] {
+        display: none !important;
+    }
+
+    /* Tableau : integre dans le panneau lateral droit — reste masque ici */
+    /* Masquer l'icône tableau dans la pill */
+    .gl-map-toolbar__btn[data-gl-sheet="table"] {
+        display: none !important;
+    }
+
+    /* Légende, Couches, Filtres : affichés dans le panneau droit — icônes masquées */
+    .gl-map-toolbar__btn[data-gl-sheet="legend"],
+    .gl-map-toolbar__btn[data-gl-sheet="layers"],
+    .gl-map-toolbar__btn[data-gl-sheet="filters"],
+    .gl-map-toolbar__btn[data-gl-toolbar-action="reset-filters"] {
+        display: none !important;
+    }
+    /* Barre proximité : positionnée juste sous la barre de recherche textuelle,
+       alignée à gauche (même left que .gl-search-bar desktop) — évite le
+       chevauchement avec la barre de thèmes principale sur grand écran.
+       La search bar desktop est à top:10px, hauteur ~2.2rem + gap 0.4rem. */
+    .gl-proximity-bar {
+        top: calc(10px + 2.2rem + 0.4rem) !important;
+        left: 3.75rem !important;
+        transform: scale(0.96) !important;
+        width: min(360px, 26vw) !important;
+    }
+    .gl-proximity-bar.is-visible {
+        transform: scale(1) !important;
+    }
+}
+
+/* Phase 3 : les panels sont ouverts dans le sheet (plus d’overlay body) */
+/* ==========================================================================
+   Bandeau de configuration de la recherche par proximité (mobile)
+   Apparaît en haut de la carte quand le mode proximité est actif
+   ========================================================================== */
+
+.gl-proximity-bar {
+    position: absolute;
+    top: calc(0.65rem + var(--gl-search-bar-height, 0px) + var(--gl-search-bar-gap, 0px));
+    left: 50%;
+    transform: translateX(-50%) scale(0.96);
+    z-index: 1499; /* juste sous .gl-search-bar (1500) */
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.45rem 0.35rem 0.75rem;
+    border-radius: 9999px;
+    background: var(--gl-color-bg-surface);
+    border: 1px solid var(--gl-color-border-soft);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+    width: min(92%, 440px);
+    opacity: 0;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: auto;
+}
+
+.gl-proximity-bar.is-visible {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+}
+
+/* Texte de statut court */
+.gl-proximity-bar__instruction {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--gl-color-text-muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.gl-proximity-bar__instruction.point-placed {
+    color: var(--gl-color-accent, #2563eb);
+}
+
+/* Slider flex:1 pour remplir l'espace disponible */
+.gl-proximity-bar__slider {
+    flex: 1;
+    min-width: 0;
+    accent-color: var(--gl-color-accent, #2563eb);
+    height: 4px;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+/* Label km compact */
+.gl-proximity-bar__radius-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--gl-color-text-main);
+    white-space: nowrap;
+    min-width: 3rem;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+/* Bouton valider — rond accent, comme .gl-search-bar__submit */
+.gl-proximity-bar__validate {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 9999px;
+    border: none;
+    background: var(--gl-color-accent, #2563eb);
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.15s ease, opacity 0.15s ease, transform 0.1s ease;
+    touch-action: manipulation;
+}
+
+.gl-proximity-bar__validate:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.gl-proximity-bar__validate:not(:disabled):hover {
+    filter: brightness(1.1);
+}
+
+.gl-proximity-bar__validate:not(:disabled):active {
+    transform: scale(0.92);
+}
+
+/* Bouton annuler — croix discrète, transparent par défaut */
+.gl-proximity-bar__cancel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 9999px;
+    border: none;
+    background: transparent;
+    color: var(--gl-color-text-muted);
+    cursor: pointer;
+    transition: color 0.15s ease, background 0.15s ease, transform 0.1s ease;
+    touch-action: manipulation;
+    padding: 0;
+}
+
+.gl-proximity-bar__cancel:hover {
+    background: var(--gl-color-bg-surface-muted, #f1f5f9);
+    color: var(--gl-color-text-main);
+}
+
+.gl-proximity-bar__cancel:active {
+    transform: scale(0.9);
+}
+
+/* ============================================================
+   Bouton de recentrage GPS (#gl-recenter-btn)
+   Injecté dans .leaflet-container par controls.ts
+   Apparaît quand l'utilisateur s'éloigne de sa position GPS
+   ============================================================ */
+#gl-recenter-btn {
+    position: absolute;
+    bottom: 72px;
+    right: 8px;
+    z-index: 1000;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: #ffffff;
+    color: var(--gl-color-accent, #2563eb);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(0, 0, 0, 0.06);
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(0.8);
+    transition: opacity 0.22s ease, visibility 0.22s ease, transform 0.22s ease;
+    pointer-events: none;
+}
+
+#gl-recenter-btn.is-visible {
+    opacity: 1;
+    visibility: visible;
+    transform: scale(1);
+    pointer-events: auto;
+}
+
+#gl-recenter-btn:hover {
+    background: #f0f4ff;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+#gl-recenter-btn:active {
+    transform: scale(0.92);
+    transition-duration: 0.08s;
+}
+
+#gl-recenter-btn svg {
+    width: 20px;
+    height: 20px;
+    pointer-events: none;
+}
+
+/* ========================================================================== */
+/* Tooltip flottant (div JS dans glMain, hors de la pill)                    */
+/* Les ::after ne fonctionnent pas : .gl-map-toolbar a overflow:hidden        */
+/* ========================================================================== */
+
+.gl-toolbar-tooltip {
+    position: absolute;
+    z-index: 9999;
+    background: rgba(0, 0, 0, 0.78);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    pointer-events: none;
+    white-space: nowrap;
+    line-height: 1.4;
+    transform: translateY(-50%);
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    /* display togglé via JS */
+}
+
+.gl-toolbar-tooltip.is-visible {
+    opacity: 1;
+}
+
+/* ========================================================================== */
+/* Barre de recherche inline (pill en haut de la carte)                       */
+/* ========================================================================== */
+
+.gl-search-bar {
+    position: absolute;
+    top: 0.65rem;
+    left: 50%;
+    transform: translateX(-50%) scale(0.96);
+    z-index: 1500;
+    display: none; /* toggleé via JS */
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.45rem 0.35rem 1rem;
+    border-radius: 9999px;
+    background: var(--gl-color-bg-surface);
+    border: 1px solid var(--gl-color-border-soft);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+    width: min(90%, 400px);
+    opacity: 0;
+    transition:
+        opacity 0.2s ease,
+        transform 0.2s ease;
+    pointer-events: auto;
+}
+
+.gl-search-bar.is-visible {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+}
+
+.gl-search-bar__input {
+    flex: 1 1 auto;
+    min-width: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--gl-color-text-main);
+    font-size: 0.9rem;
+    line-height: 1.4;
+    padding: 0.2rem 0;
+}
+
+.gl-search-bar__input::placeholder {
+    color: var(--gl-color-text-muted);
+    opacity: 0.7;
+}
+
+.gl-search-bar__submit {
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 50%;
+    background: var(--gl-color-accent, #2563eb);
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+    touch-action: manipulation;
+    padding: 0;
+}
+
+.gl-search-bar__submit:hover {
+    filter: brightness(1.1);
+}
+
+.gl-search-bar__submit:active {
+    transform: scale(0.9);
+}
+
+.gl-search-bar__submit svg {
+    width: 18px;
+    height: 18px;
+    pointer-events: none;
+}
+
+/* Bouton effacer — croix discrète, entre l'input et le bouton valider */
+.gl-search-bar__clear {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--gl-color-text-muted, #94a3b8);
+    cursor: pointer;
+    transition: color 0.15s ease, background 0.15s ease, transform 0.1s ease;
+    touch-action: manipulation;
+    padding: 0;
+}
+
+.gl-search-bar__clear:hover {
+    background: var(--gl-color-bg-surface-muted, #f1f5f9);
+    color: var(--gl-color-text-main, #1e293b);
+}
+
+.gl-search-bar__clear:active {
+    transform: scale(0.9);
+}
+
+.gl-search-bar__clear svg {
+    width: 16px;
+    height: 16px;
+    pointer-events: none;
+}

@@ -125,7 +125,7 @@ const TableModule: any = {
                 defaultHeight: "40%",
                 minHeight: "20%",
                 maxHeight: "60%",
-                resizable: false,
+                resizable: true,
             },
             globalConfig,
             options.config

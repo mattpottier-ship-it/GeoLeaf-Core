@@ -1,4 +1,4 @@
-// @ts-nocheck � migration TS, typage progressif
+// @ts-nocheck � migration TS, typage progressif
 /*!
  * GeoLeaf Core
  * Â© 2026 Mattieu Pottier
@@ -26,7 +26,7 @@ import { POIAddFormContract } from "../../contracts/poi-addform.contract.js";
 /**
  * Gestion du plein Ã©cran pour la carte
  * @param {L.Map} map - Instance de la carte Leaflet
- * @param {HTMLElement} mapContainer - Le conteneur de la carte Ã�  mettre en plein Ã©cran
+ * @param {HTMLElement} mapContainer - Le conteneur de la carte Ã�  mettre en plein Ã©cran
  */
 function initFullscreenControl(map, mapContainer) {
     if (!map || !mapContainer) {
@@ -99,7 +99,7 @@ function initFullscreenControl(map, mapContainer) {
                 ? debounce(() => map.invalidateSize(), 200)
                 : () => map.invalidateSize();
 
-            // Fonction pour mettre Ã�  jour l'icÃ´ne
+            // Fonction pour mettre Ã�  jour l'icÃ´ne
             const updateIcon = (isFullscreen) => {
                 if (isFullscreen) {
                     svgEnter.style.display = "none";
@@ -193,7 +193,7 @@ function initFullscreenControl(map, mapContainer) {
     });
 
     new L.Control.Fullscreen().addTo(map);
-    if (Log) Log.info("[UI.Controls] ContrÃ´le plein Ã©cran ajoutÃ© Ã�  la carte");
+    if (Log) Log.info("[UI.Controls] ContrÃ´le plein Ã©cran ajoutÃ© Ã�  la carte");
 }
 
 // ========================================
@@ -213,8 +213,7 @@ function initGeolocationControl(map, config) {
 
     // VÃ©rifier si la gÃ©olocalisation est activÃ©e dans la config
     if (!config?.ui?.enableGeolocation) {
-        if (Log)
-            Log.info("[UI.Controls] GÃ©olocalisation dÃ©sactivÃ©e dans la configuration");
+        if (Log) Log.info("[UI.Controls] GÃ©olocalisation dÃ©sactivÃ©e dans la configuration");
         return;
     }
 
@@ -227,15 +226,27 @@ function initGeolocationControl(map, config) {
     // VÃ©rifier que l'API de gÃ©olocalisation est disponible
     if (!navigator.geolocation) {
         if (Log)
-            Log.warn(
-                "[UI.Controls] La gÃ©olocalisation n'est pas supportÃ©e par ce navigateur"
-            );
+            Log.warn("[UI.Controls] La gÃ©olocalisation n'est pas supportÃ©e par ce navigateur");
         return;
     }
 
-    // Marqueur de position utilisateur (stockÃ© pour pouvoir le supprimer/mettre Ã�  jour)
+    // Marqueur de position utilisateur (stockÃ© pour pouvoir le supprimer/mettre Ã�  jour)
     let userMarker = null;
     let accuracyCircle = null;
+    /** Toast "Localisation en cours…" à dismiss au premier fix. */
+    let _pendingGeolocToast: HTMLElement | null = null;
+    /** Bouton flottant "revenir à ma position", injecté dans map.getContainer(). */
+    let _recenterBtn: HTMLButtonElement | null = null;
+    /** Vérifie si la carte s'est éloignée et affiche/masque le bouton recentrage. */
+    const _checkRecenterVisibility = () => {
+        if (!_recenterBtn || !GeoLocationState.userPosition) return;
+        const mapCenter = map.getCenter();
+        const userLatLng = (globalThis.L as any).latLng(
+            GeoLocationState.userPosition.lat,
+            GeoLocationState.userPosition.lng
+        );
+        _recenterBtn.classList.toggle("is-visible", mapCenter.distanceTo(userLatLng) > 50);
+    };
 
     // ContrÃ´le Leaflet personnalisÃ©
     L.Control.Geolocation = L.Control.extend({
@@ -276,9 +287,9 @@ function initGeolocationControl(map, config) {
             const toggleGeolocation = (e) => {
                 L.DomEvent.preventDefault(e);
 
-                // Si d�j� actif, d�sactiver
+                // Si d�j� actif, d�sactiver
                 if (GeoLocationState.active) {
-                    // D�sactiver le tracking
+                    // D�sactiver le tracking
                     if (GeoLocationState.watchId !== null) {
                         navigator.geolocation.clearWatch(GeoLocationState.watchId);
                         GeoLocationState.watchId = null;
@@ -294,33 +305,90 @@ function initGeolocationControl(map, config) {
                         accuracyCircle = null;
                     }
 
-                    // R�initialiser l'�tat
+                    // R�initialiser l'�tat
                     GeoLocationState.active = false;
                     GeoLocationState.userPosition = null;
 
                     link.classList.remove("is-active");
                     link.classList.remove("is-locating");
 
-                    if (Log) Log.info("[UI.Controls] GÃ©olocalisation dÃ©sactivÃ©e");
+                    /* Fermer le toast "Localisation en cours…" si encore visible */
+                    if (_pendingGeolocToast && _UINotifications?.dismiss) {
+                        _UINotifications.dismiss(_pendingGeolocToast);
+                        _pendingGeolocToast = null;
+                    }
+                    /* Retirer le bouton de recentrage et son écouteur moveend */
+                    if (_recenterBtn) {
+                        map.off("moveend", _checkRecenterVisibility);
+                        if (_recenterBtn.parentNode) _recenterBtn.remove();
+                        _recenterBtn = null;
+                    }
+                    /* Notifier la barre mobile */
+                    map.getContainer().dispatchEvent(
+                        new CustomEvent("gl:geoloc:statechange", {
+                            detail: { active: false },
+                            bubbles: true,
+                        })
+                    );
+
+                    if (Log) Log.info("[UI.Controls] Géolocalisation désactivée");
                     return;
                 }
 
-                // Activer le mode gÃ©olocalisation
+                // Activer le mode géolocalisation
                 link.classList.add("is-locating");
+
+                /* Toast persistant "Localisation en cours…" — dismissé au premier fix */
+                if (_UINotifications?.info) {
+                    _pendingGeolocToast = _UINotifications.info("Localisation en cours\u2026", {
+                        persistent: true,
+                        dismissible: false,
+                    });
+                }
+
+                /* Créer le bouton de recentrage GPS (caché par défaut) */
+                if (!_recenterBtn) {
+                    const btn = document.createElement("button") as HTMLButtonElement;
+                    btn.id = "gl-recenter-btn";
+                    btn.type = "button";
+                    btn.setAttribute("aria-label", "Revenir à ma position");
+                    btn.title = "Revenir à ma position";
+                    const svg = DOMSecurity.createSVGIcon(
+                        20,
+                        20,
+                        "M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z",
+                        { stroke: "none", fill: "currentColor" }
+                    );
+                    btn.appendChild(svg);
+                    btn.addEventListener("click", () => {
+                        if (GeoLocationState.userPosition) {
+                            map.setView(
+                                [
+                                    GeoLocationState.userPosition.lat,
+                                    GeoLocationState.userPosition.lng,
+                                ],
+                                map.getZoom(),
+                                { animate: true, duration: 0.4 }
+                            );
+                        }
+                    });
+                    map.getContainer().appendChild(btn);
+                    _recenterBtn = btn;
+                }
 
                 // Utiliser watchPosition pour un tracking continu
                 GeoLocationState.watchId = navigator.geolocation.watchPosition(
                     (position) => {
                         const { latitude, longitude, accuracy } = position.coords;
 
-                        // Premi�re activation : centrer la carte
+                        // Premi�re activation : centrer la carte
                         if (!GeoLocationState.active) {
                             map.setView([latitude, longitude], 16, {
                                 animate: true,
                                 duration: 0.5,
                             });
                         } else {
-                            // Mise Ã�  jour continue : dÃ©placer le marqueur sans recentrer
+                            // Mise Ã�  jour continue : dÃ©placer le marqueur sans recentrer
                             // (sauf si on veut un mode "suivi" permanent)
                         }
 
@@ -360,12 +428,15 @@ function initGeolocationControl(map, config) {
                             }).addTo(map);
                         }
 
-                        // Mettre � jour l'�tat
+                        /* Mémoriser si c'est le premier fix */
+                        const _isFirstFix = !GeoLocationState.active;
+
+                        // Mettre à jour l'état
                         GeoLocationState.active = true;
                         link.classList.remove("is-locating");
                         link.classList.add("is-active");
 
-                        // Stocker la position GPS pour utilisation par d'autres fonctionnalit�s (ex: recherche par proximit�)
+                        // Stocker la position GPS
                         GeoLocationState.userPosition = {
                             lat: latitude,
                             lng: longitude,
@@ -373,9 +444,32 @@ function initGeolocationControl(map, config) {
                             timestamp: Date.now(),
                         };
 
+                        if (_isFirstFix) {
+                            /* Fermer le toast "en cours" et afficher la confirmation */
+                            if (_pendingGeolocToast && _UINotifications?.dismiss) {
+                                _UINotifications.dismiss(_pendingGeolocToast);
+                                _pendingGeolocToast = null;
+                            }
+                            if (_UINotifications?.success) {
+                                _UINotifications.success("Position trouvée", 2500);
+                            }
+                            /* Activer la détection d'éloignement pour le bouton recentrage */
+                            map.on("moveend", _checkRecenterVisibility);
+                            /* Notifier la barre mobile */
+                            map.getContainer().dispatchEvent(
+                                new CustomEvent("gl:geoloc:statechange", {
+                                    detail: { active: true },
+                                    bubbles: true,
+                                })
+                            );
+                        } else {
+                            /* Fixes suivants : recalculer la visibilité du bouton recentrage */
+                            _checkRecenterVisibility();
+                        }
+
                         if (Log)
                             Log.debug(
-                                "[UI.Controls] Position GPS mise Ã�  jour:",
+                                "[UI.Controls] Position GPS mise à jour:",
                                 latitude,
                                 longitude
                             );
@@ -384,6 +478,12 @@ function initGeolocationControl(map, config) {
                         link.classList.remove("is-locating");
                         link.classList.remove("is-active");
                         GeoLocationState.active = false;
+
+                        /* Fermer le toast "en cours" en cas d'erreur */
+                        if (_pendingGeolocToast && _UINotifications?.dismiss) {
+                            _UINotifications.dismiss(_pendingGeolocToast);
+                            _pendingGeolocToast = null;
+                        }
 
                         let errorMessage = "Impossible d'obtenir votre position";
                         switch (error.code) {
@@ -400,7 +500,7 @@ function initGeolocationControl(map, config) {
 
                         if (Log) Log.error("[UI.Controls] Erreur de gÃ©olocalisation:", error);
 
-                        // Afficher un message Ã�  l'utilisateur via le systÃ¨me de notifications
+                        // Afficher un message Ã�  l'utilisateur via le systÃ¨me de notifications
                         if (_UINotifications && typeof _UINotifications.error === "function") {
                             _UINotifications.error(errorMessage);
                         } else {
@@ -443,7 +543,7 @@ function initGeolocationControl(map, config) {
     });
 
     new L.Control.Geolocation().addTo(map);
-    if (Log) Log.info("[UI.Controls] ContrÃ´le de gÃ©olocalisation ajoutÃ© Ã�  la carte");
+    if (Log) Log.info("[UI.Controls] ContrÃ´le de gÃ©olocalisation ajoutÃ© Ã�  la carte");
 }
 
 // ========================================
@@ -585,7 +685,7 @@ function initPoiAddControl(map, config) {
     });
 
     new L.Control.PoiAdd().addTo(map);
-    if (Log) Log.info("[UI.Controls] ContrÃ´le POI Add ajoutÃ© Ã�  la carte");
+    if (Log) Log.info("[UI.Controls] ContrÃ´le POI Add ajoutÃ© Ã�  la carte");
 }
 
 // ========================================

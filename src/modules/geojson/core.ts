@@ -364,8 +364,16 @@ const GeoJSONModule = {
             const layerData = state.layers.get(layerId);
             if (!layerData || !layerData.layer) return;
 
-            // Si search.enabled === false, la couche n'est pas concernée par le filtrage
-            const bypassFilter = layerData.config?.search?.enabled === false;
+            // Si search.enabled === false, la couche n'est pas concernée par le filtrage.
+            // Les couches line/polyline (routes, axes, limites) sont aussi exclues par défaut :
+            // ce sont des couches géographiques de fond, pas du contenu indexable par texte.
+            // Pour les inclure dans la recherche, ajouter "search": {"enabled": true} dans la config.
+            const isLineLayer = ["line", "linestring", "polyline"].includes(
+                (layerData.geometryType || "").toLowerCase()
+            );
+            const bypassFilter =
+                layerData.config?.search?.enabled === false ||
+                (isLineLayer && layerData.config?.search?.enabled !== true);
 
             // Initialiser le Set des layers filtrées si pas encore fait
             if (!layerData._filteredOutLayers) {
@@ -407,13 +415,49 @@ const GeoJSONModule = {
                     if (leafletLayer.getElement) {
                         const layerElement = leafletLayer.getElement();
                         if (layerElement) layerElement.style.display = "none";
+                        // Also hide the associated casing layer (black outline polyline).
+                        // _casingLayer has no .feature so it is skipped by eachLayer iteration;
+                        // if left visible while the main line is hidden it renders as a plain
+                        // black line — the longstanding "routes go black" bug.
+                        if (leafletLayer._casingLayer) {
+                            const casingEl = leafletLayer._casingLayer.getElement?.();
+                            if (casingEl) {
+                                casingEl.style.display = "none";
+                            } else if (typeof leafletLayer._casingLayer.setStyle === "function") {
+                                // _path not yet in DOM (timing gap or canvas renderer).
+                                // Fall back to opacity so the casing is hidden regardless.
+                                if (
+                                    leafletLayer._casingLayer.options._originalCasingOpacity ===
+                                    undefined
+                                ) {
+                                    leafletLayer._casingLayer.options._originalCasingOpacity =
+                                        leafletLayer._casingLayer.options.opacity;
+                                }
+                                leafletLayer._casingLayer.setStyle({ opacity: 0 });
+                            }
+                        }
                     } else if (leafletLayer.setStyle) {
                         if (leafletLayer.options._originalOpacity === undefined) {
                             leafletLayer.options._originalOpacity = leafletLayer.options.opacity;
                             leafletLayer.options._originalFillOpacity =
                                 leafletLayer.options.fillOpacity;
+                            // Save full stroke style to allow complete restoration (prevents black-line bug)
+                            leafletLayer.options._originalColor = leafletLayer.options.color;
+                            leafletLayer.options._originalWeight = leafletLayer.options.weight;
+                            leafletLayer.options._originalDashArray =
+                                leafletLayer.options.dashArray;
                         }
                         leafletLayer.setStyle({ opacity: 0, fillOpacity: 0 });
+                        if (leafletLayer._casingLayer) {
+                            if (
+                                leafletLayer._casingLayer.options._originalCasingOpacity ===
+                                undefined
+                            ) {
+                                leafletLayer._casingLayer.options._originalCasingOpacity =
+                                    leafletLayer._casingLayer.options.opacity;
+                            }
+                            leafletLayer._casingLayer.setStyle({ opacity: 0 });
+                        }
                     }
                 }
             });
@@ -430,17 +474,49 @@ const GeoJSONModule = {
                     if (leafletLayer.getElement) {
                         const layerElement = leafletLayer.getElement();
                         if (layerElement) layerElement.style.display = "";
-                    } else if (leafletLayer.setStyle) {
+                        // Restore casing layer visibility alongside the main line.
+                        if (leafletLayer._casingLayer) {
+                            const casingEl = leafletLayer._casingLayer.getElement?.();
+                            if (casingEl) {
+                                casingEl.style.display = "";
+                            } else if (typeof leafletLayer._casingLayer.setStyle === "function") {
+                                // Restore opacity saved during hide (or fall back to original).
+                                const origCasingOpacity =
+                                    leafletLayer._casingLayer.options._originalCasingOpacity;
+                                if (origCasingOpacity !== undefined) {
+                                    leafletLayer._casingLayer.setStyle({
+                                        opacity: origCasingOpacity,
+                                    });
+                                } else {
+                                    leafletLayer._casingLayer.setStyle({ opacity: 1 });
+                                }
+                            }
+                        }
+                    } else if (
+                        leafletLayer.setStyle &&
+                        leafletLayer.options._originalOpacity !== undefined
+                    ) {
+                        // Only restore if this layer was previously hidden (state was saved).
+                        // This prevents overwriting opacity of never-hidden layers and
+                        // fully restores color/weight/dashArray (fixes persistent black-line bug).
                         leafletLayer.setStyle({
-                            opacity:
-                                leafletLayer.options._originalOpacity !== undefined
-                                    ? leafletLayer.options._originalOpacity
-                                    : 1,
-                            fillOpacity:
-                                leafletLayer.options._originalFillOpacity !== undefined
-                                    ? leafletLayer.options._originalFillOpacity
-                                    : 0.4,
+                            opacity: leafletLayer.options._originalOpacity,
+                            fillOpacity: leafletLayer.options._originalFillOpacity ?? 0,
+                            color:
+                                leafletLayer.options._originalColor ?? leafletLayer.options.color,
+                            weight:
+                                leafletLayer.options._originalWeight ?? leafletLayer.options.weight,
+                            dashArray:
+                                leafletLayer.options._originalDashArray ??
+                                leafletLayer.options.dashArray,
                         });
+                        if (leafletLayer._casingLayer) {
+                            const origCasingOpacity =
+                                leafletLayer._casingLayer.options._originalCasingOpacity;
+                            leafletLayer._casingLayer.setStyle({
+                                opacity: origCasingOpacity !== undefined ? origCasingOpacity : 1,
+                            });
+                        }
                     }
                 }
             });

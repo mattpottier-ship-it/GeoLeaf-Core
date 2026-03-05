@@ -2,7 +2,7 @@
 
 Product Version: GeoLeaf Platform V1  
 **Version**: 1.1.0 (Phase 1 XSS hardening)  
-**Fichier (monorepo)** : `packages/core/src/modules/security/`  
+**Fichier (monorepo)** : `src/modules/security/`  
 **Date**: Février 2026
 
 ---
@@ -253,7 +253,7 @@ GeoLeaf.DOMSecurity.clearElementFast(container);
 container.innerHTML = "";
 ```
 
-Cette convention garantit un point unique de vidage du DOM et évite les assignations directes à `innerHTML` dans le code applicatif (core et plugins). Voir aussi `packages/core/src/modules/utils/dom-security.ts` et la roadmap (étape 5).
+Cette convention garantit un point unique de vidage du DOM et évite les assignations directes à `innerHTML` dans le code applicatif (core et plugins). Voir aussi `src/modules/utils/dom-security.ts` et la roadmap (étape 5).
 
 ---
 

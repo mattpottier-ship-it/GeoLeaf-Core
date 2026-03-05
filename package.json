@@ -37,7 +37,7 @@
         "**/*.css"
     ],
     "scripts": {
-        "build": "rollup -c && tsc --emitDeclarationOnly",
+        "build": "rollup -c && tsc --emitDeclarationOnly && npm run build:css",
         "build:watch": "rollup -c -w",
         "clean": "rimraf dist",
         "test": "node ../../scripts/smoke-test.cjs",

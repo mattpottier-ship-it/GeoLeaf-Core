@@ -262,6 +262,32 @@ VisibilityManager._applyVisibilityChange = function (layerId: any, layerData: an
             // Cas 3 : Pas de cluster - ajouter directement � la map pour respecter le pane
             else {
                 state.map.addLayer(layerData.layer);
+                // Re-apply filter state: map.addLayer calls onAdd on every child layer which
+                // recreates all SVG <path> elements, destroying any display:none previously
+                // set by filterFeatures. Walk children and re-hide filtered ones.
+                if (layerData.layer && typeof layerData.layer.eachLayer === "function") {
+                    layerData.layer.eachLayer(function (child: any) {
+                        if (!child._geoleafFiltered) return;
+                        const el = child.getElement?.();
+                        if (el) {
+                            el.style.display = "none";
+                        } else if (
+                            typeof child.setStyle === "function" &&
+                            child.options._originalOpacity !== undefined
+                        ) {
+                            child.setStyle({ opacity: 0, fillOpacity: 0 });
+                        }
+                        // Re-hide casing layer too
+                        if (child._casingLayer) {
+                            const casingEl = child._casingLayer.getElement?.();
+                            if (casingEl) {
+                                casingEl.style.display = "none";
+                            } else if (typeof child._casingLayer.setStyle === "function") {
+                                child._casingLayer.setStyle({ opacity: 0 });
+                            }
+                        }
+                    });
+                }
             }
         } else {
             // Cas 1 : Cluster partag� avec POI

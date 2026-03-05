@@ -8,7 +8,7 @@ Court document sur les choix techniques liés à la **performance** dans GeoLeaf
 
 Le chargement des couches GeoJSON peut faire du **fetch + parse** dans un **Web Worker** pour ne pas bloquer le thread principal. Si le Worker est indisponible ou si les données viennent du cache, le parse peut toutefois s’effectuer sur le main thread (gros fichiers = risque de freeze).
 
-- **Fichiers concernés** : `packages/core/src/modules/geojson/` (loader, worker).
+- **Fichiers concernés** : `src/modules/geojson/` (loader, worker).
 - **Bonnes pratiques** : pour les très gros GeoJSON, privilégier la découpe en plusieurs couches, le lazy loading par vue, ou les vector tiles si le profil le permet.
 
 ---

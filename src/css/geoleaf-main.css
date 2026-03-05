@@ -6,6 +6,7 @@
 @import url("./geoleaf-core.css");
 @import url("./geoleaf-controls.css");
 @import url("./geoleaf-ui.css");
+@import url("./geoleaf-mobile-toolbar.css");
 @import url("./geoleaf-baselayers.css");
 @import url("./geoleaf-layer-manager.css");
 @import url("./geoleaf-legend.css");
@@ -21,6 +22,7 @@
 @import url("./notifications.css");
 @import url("./components/_labels.css");
 @import url("./components/_theme-selector.css");
+@import url("./geoleaf-desktop-panel.css");
 @import url("./geoleaf-loader.css");
 
 /* Vous pouvez ajouter ici des styles globaux spécifiques au bundle,

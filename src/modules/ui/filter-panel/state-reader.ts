@@ -62,15 +62,29 @@ FilterPanelStateReader.readFiltersFromPanel = function (panelEl: any) {
         state.hasSearchText = true;
     }
 
-    // Proximité
-    const proximityContainer = panelEl.querySelector("[data-gl-filter-id='proximity']");
-    if (proximityContainer) {
-        const isActive = proximityContainer.getAttribute("data-proximity-active") === "true";
-        const lat = parseFloat(proximityContainer.getAttribute("data-proximity-lat"));
-        const lng = parseFloat(proximityContainer.getAttribute("data-proximity-lng"));
-        const radius = parseFloat(proximityContainer.getAttribute("data-proximity-radius"));
+    // Proximité — vérifier data-proximity-active="true" sur chaque source indépendamment.
+    // ?? seul ne suffit pas : querySelector retourne un élément inactif (non null) s'il existe dans
+    // le panneau, court-circuitant le fallback vers le wrapper global de la toolbar mobile.
+    const panelProximityEl: Element | null = panelEl.querySelector(
+        "[data-gl-filter-id='proximity']"
+    );
+    const toolbarProximityEl: Element | null = document.getElementById(
+        "gl-proximity-toolbar-wrapper"
+    );
+    const proximityContainer: Element | null =
+        (panelProximityEl?.getAttribute("data-proximity-active") === "true"
+            ? panelProximityEl
+            : null) ??
+        (toolbarProximityEl?.getAttribute("data-proximity-active") === "true"
+            ? toolbarProximityEl
+            : null);
 
-        if (isActive && !isNaN(lat) && !isNaN(lng) && !isNaN(radius)) {
+    if (proximityContainer) {
+        const lat = parseFloat(proximityContainer.getAttribute("data-proximity-lat") ?? "");
+        const lng = parseFloat(proximityContainer.getAttribute("data-proximity-lng") ?? "");
+        const radius = parseFloat(proximityContainer.getAttribute("data-proximity-radius") ?? "");
+
+        if (!isNaN(lat) && !isNaN(lng) && !isNaN(radius)) {
             state.proximity.active = true;
             state.proximity.center = { lat: lat, lng: lng };
             state.proximity.radius = radius;
@@ -191,6 +205,55 @@ FilterPanelStateReader.resetControls = function (panelEl: any) {
     // Tags - désélectionner tous les badges
     const tagBadges = panelEl.querySelectorAll(".gl-filter-panel__tag-badge.is-selected");
     tagBadges.forEach(function (badge: any) {
+        badge.classList.remove("is-selected");
+    });
+
+    // Select classiques
+    panelEl.querySelectorAll("select.gl-filter-panel__control--select").forEach(function (
+        sel: any
+    ) {
+        if (sel.multiple) {
+            Array.from(sel.options).forEach(function (opt: any) {
+                opt.selected = false;
+            });
+        } else {
+            sel.value = "";
+        }
+    });
+
+    // Slider note
+    const ratingInput = panelEl.querySelector(
+        "[data-gl-filter-id='minRating'] input[type='range']"
+    );
+    const ratingLabel = panelEl.querySelector(
+        "[data-gl-filter-id='minRating'] .gl-filter-panel__range-value"
+    );
+    if (ratingInput) {
+        const min = ratingInput.min !== "" ? ratingInput.min : "0";
+        ratingInput.value = min;
+        if (ratingLabel) {
+            ratingLabel.textContent = String(min).replace(".", ",");
+        }
+    }
+};
+
+/**
+ * Réinitialise uniquement les catégories, sous-catégories, tags et note.
+ * Ne touche PAS à la recherche textuelle ni à la proximité.
+ * @param {HTMLElement} panelEl - Élément du panneau de filtres
+ */
+FilterPanelStateReader.resetCategoryTagControls = function (panelEl: any) {
+    if (!panelEl) return;
+
+    // Checkboxes tree-view catégories & sous-catégories
+    panelEl.querySelectorAll(".gl-filter-tree__checkbox").forEach(function (input: any) {
+        input.checked = false;
+    });
+
+    // Tags
+    panelEl.querySelectorAll(".gl-filter-panel__tag-badge.is-selected").forEach(function (
+        badge: any
+    ) {
         badge.classList.remove("is-selected");
     });
 

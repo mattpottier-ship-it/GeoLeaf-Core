@@ -1,7 +1,7 @@
 # GeoLeaf Versioning Policy
 
 **Product Version:** Platform V1  
-**Technical SemVer Baseline:** Core `geoleaf` `1.1.x` + Premium plugins `@geoleaf-plugins/*` `1.1.x`
+**Technical SemVer Baseline:** Core `geoleaf` `1.1.x`
 
 ---
 
@@ -18,7 +18,7 @@ This avoids breaking package history, release pipelines, dependency updates, and
 
 ## Official Mapping
 
-- `GeoLeaf Platform V1` = `geoleaf@1.1.x` + `@geoleaf-plugins/storage@1.1.x` + `@geoleaf-plugins/addpoi@1.1.x`
+- `GeoLeaf Platform V1` = `geoleaf@1.1.x`
 
 ---
 

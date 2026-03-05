@@ -4,7 +4,7 @@ Product Version: GeoLeaf Platform V1
 
 This guide explains how license headers are used in GeoLeaf and how to add them to new files.
 
-**Monorepo:** Core sources are under `packages/core/src/` (TypeScript). Paths below are logical; prefix with `packages/core/src/` to locate files in the repo.
+Core sources are under `src/` (JavaScript). Paths below are relative to the repository root.
 
 ---
 
@@ -34,7 +34,7 @@ All JavaScript files in GeoLeaf Core should include the following header at the 
 
 ### Step 1: Verify File Type
 
-- ✅ Add headers to all `.ts` / `.js` files in `packages/core/src/`
+- ✅ Add headers to all `.js` files in `src/`
 - ❌ Do NOT add headers to:
     - Minified files (`.min.js`)
     - Configuration files (`.json`, `.config.js` used only for bundling)
@@ -75,16 +75,16 @@ const myVar = 1;
 
 These files are essential to GeoLeaf's core functionality:
 
-- `packages/core/src/bundle-entry.ts` - UMD bundle entry point
-- `packages/core/src/app/` - Application bootstrap
-- `packages/core/src/modules/core/` - Map initialization
-- `packages/core/src/modules/config/` - Configuration system
-- `packages/core/src/modules/log/` - Logging
-- `packages/core/src/modules/security/` - Security framework
-- `packages/core/src/modules/utils/` - Core utilities
-- `packages/core/src/modules/constants/` - Global constants
-- `packages/core/src/modules/errors/` - Error definitions
-- `packages/core/src/modules/validators/` - Validation system
+- `src/bundle-entry.ts` - UMD bundle entry point
+- `src/app/` - Application bootstrap
+- `src/modules/core/` - Map initialization
+- `src/modules/config/` - Configuration system
+- `src/modules/log/` - Logging
+- `src/modules/security/` - Security framework
+- `src/modules/utils/` - Core utilities
+- `src/modules/constants/` - Global constants
+- `src/modules/errors/` - Error definitions
+- `src/modules/validators/` - Validation system
 
 **Action**: Add headers immediately and verify in all releases.
 
@@ -92,16 +92,16 @@ These files are essential to GeoLeaf's core functionality:
 
 These files implement major GeoLeaf features:
 
-- `packages/core/src/modules/ui/` - UI system
-- `packages/core/src/modules/poi/` - Points of Interest
-- `packages/core/src/modules/baselayers/` - Basemap switching
-- `packages/core/src/modules/geojson/` - GeoJSON support
-- `packages/core/src/modules/route/` - Routing
-- `packages/core/src/modules/storage/` - Offline caching
-- `packages/core/src/modules/layer-manager/` - Layer management
-- `packages/core/src/modules/legend/` - Legend system
-- `packages/core/src/modules/table/` - Data table
-- `packages/core/src/modules/filters/` - Filtering system
+- `src/modules/ui/` - UI system
+- `src/modules/poi/` - Points of Interest
+- `src/modules/baselayers/` - Basemap switching
+- `src/modules/geojson/` - GeoJSON support
+- `src/modules/route/` - Routing
+- `src/modules/storage/` - Offline caching
+- `src/modules/layer-manager/` - Layer management
+- `src/modules/legend/` - Legend system
+- `src/modules/table/` - Data table
+- `src/modules/filters/` - Filtering system
 
 **Action**: Add headers in first pass after core files.
 
@@ -109,11 +109,11 @@ These files implement major GeoLeaf features:
 
 These are subdirectory modules that support features:
 
-- `packages/core/src/modules/ui/` - Content builder, panels
-- `packages/core/src/modules/storage/` - Cache management
-- `packages/core/src/modules/poi/` - POI subsystem
-- `packages/core/src/modules/config/` - Configuration
-- `packages/core/src/modules/loaders/` - Resource loaders
+- `src/modules/ui/` - Content builder, panels
+- `src/modules/storage/` - Cache management
+- `src/modules/poi/` - POI subsystem
+- `src/modules/config/` - Configuration
+- `src/modules/loaders/` - Resource loaders
 
 **Action**: Add headers in second pass after Category 1 and 2.
 
@@ -121,10 +121,10 @@ These are subdirectory modules that support features:
 
 General utility files that support the framework:
 
-- `packages/core/src/modules/utils/` - General utilities
-- `packages/core/src/modules/helpers/` - Helper modules
-- `packages/core/src/modules/validators/` - Validation rules
-- `packages/core/src/modules/security/` - Security utilities
+- `src/modules/utils/` - General utilities
+- `src/modules/helpers/` - Helper modules
+- `src/modules/validators/` - Validation rules
+- `src/modules/security/` - Security utilities
 
 **Action**: Add headers when refactoring or on request; not blocking.
 
@@ -156,7 +156,7 @@ Example future module header:
 
 When contributing new files to GeoLeaf Core:
 
-1. ✅ Add the standard MIT license header to all new `.ts` and `.js` files in `packages/core/src/`
+1. ✅ Add the standard MIT license header to all new `.ts` and `.js` files in `src/`
 2. ✅ Ensure header is at the very top, before all other content
 3. ✅ Do not modify or remove existing headers
 4. ✅ For non-Core modules, coordinate with maintainers about appropriate headers
@@ -169,10 +169,10 @@ To verify headers are correctly applied:
 
 ```bash
 # Check if a file has a license header
-grep -l "GeoLeaf Core" packages/core/src/modules/log/*.ts
+grep -l "GeoLeaf Core" src/modules/log/*.js
 
 # Find all TS/JS files without headers (in core)
-find packages/core/src -name "*.ts" -o -name "*.js" | xargs -I {} sh -c 'grep -L "GeoLeaf Core" "{}" 2>/dev/null'
+find src -name "*.js" | xargs -I {} sh -c 'grep -L "GeoLeaf Core" "{}" 2>/dev/null'
 ```
 
 ---

@@ -115,7 +115,7 @@ Le cache control est initialisé au premier clic sur le bouton. Les clics suivan
 ## Architecture
 
 ```
-packages/core/src/modules/ui/            # Module (cache-button, etc.)
+src/modules/ui/            # Module (cache-button, etc.)
 src/css/cache-modal.css                    # Styles du modal
 ```
 

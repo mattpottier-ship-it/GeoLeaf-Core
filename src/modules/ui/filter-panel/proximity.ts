@@ -1,4 +1,4 @@
-// @ts-nocheck � migration TS, typage progressif
+// @ts-nocheck � migration TS, typage progressif
 /**
  * GeoLeaf UI Filter Panel - Proximity
  * Gestion des filtres de proximité (GPS, manuel, cercle)
@@ -19,6 +19,7 @@ let _proximityCircle = null;
 let _proximityMarker = null;
 let _proximityMap = null;
 let _proximityClickHandler = null;
+let _pendingRadius = null; // rayon pré-sélectionné avant que le marqueur soit posé
 
 const FilterPanelProximity = {};
 FilterPanelProximity._eventCleanups = [];
@@ -397,13 +398,30 @@ FilterPanelProximity.deactivateProximityMode = function (btn, container, map) {
         _proximityMarker = null;
     }
 
+    // Réinitialiser le slider à sa valeur par défaut
+    const radiusInput = container.querySelector(
+        "[data-filter-proximity-radius]"
+    ) as HTMLInputElement | null;
+    if (radiusInput) {
+        const defaultVal =
+            radiusInput.getAttribute("data-proximity-radius-default") || radiusInput.min || "10";
+        radiusInput.value = defaultVal;
+        const rangeValueSpan = radiusInput
+            .closest(".gl-filter-panel__range-wrapper")
+            ?.querySelector(".gl-filter-panel__range-value") as HTMLElement | null;
+        if (rangeValueSpan) rangeValueSpan.textContent = defaultVal;
+    }
+
     // Retirer les attributs du wrapper
     const wrapper = container.closest("[data-gl-filter-id='proximity']");
     if (wrapper) {
         wrapper.removeAttribute("data-proximity-active");
         wrapper.removeAttribute("data-proximity-lat");
         wrapper.removeAttribute("data-proximity-lng");
+        wrapper.removeAttribute("data-proximity-radius");
     }
+
+    _pendingRadius = null;
 
     Log.info("[GeoLeaf.UI.FilterPanel] Mode proximité désactivé");
 };
@@ -438,6 +456,172 @@ FilterPanelProximity.resetProximity = function () {
     }
 
     _proximityMode = false;
+};
+
+/**
+ * Active/désactive la recherche par proximité depuis la barre mobile,
+ * sans dépendance au DOM du panneau de filtres.
+ * Utilise un wrapper DOM virtuel pour compatibilité avec le moteur de filtres.
+ *
+ * @param {L.Map} map - Instance de carte Leaflet
+ * @param {number} [defaultRadius=10] - Rayon par défaut en km
+ * @returns {boolean} Nouvel état actif
+ */
+FilterPanelProximity.toggleProximityToolbar = function (
+    map,
+    defaultRadius,
+    options?: { onPointPlaced?: () => void }
+) {
+    const Log = getLog();
+    defaultRadius = defaultRadius || 10;
+    _proximityMode = !_proximityMode;
+    /* Utiliser le rayon pré-sélectionné via le slider si disponible */
+    const effectiveRadius = _pendingRadius ?? defaultRadius;
+    const radiusMeters = effectiveRadius * 1000;
+    const interactiveShapes = Config.get("ui.interactiveShapes", false);
+
+    // Wrapper virtuel compatible avec le moteur de filtres
+    let wrapper = document.getElementById("gl-proximity-toolbar-wrapper");
+    if (!wrapper) {
+        wrapper = document.createElement("div");
+        wrapper.id = "gl-proximity-toolbar-wrapper";
+        wrapper.setAttribute("data-gl-filter-id", "proximity");
+        wrapper.style.display = "none";
+        document.body.appendChild(wrapper);
+    }
+    wrapper.setAttribute("data-proximity-radius", String(effectiveRadius));
+
+    if (_proximityMode) {
+        const hasRecentGPS =
+            GeoLocationState.userPosition &&
+            Date.now() - GeoLocationState.userPosition.timestamp < 300000;
+
+        if (hasRecentGPS) {
+            if (_proximityCircle) map.removeLayer(_proximityCircle);
+            if (_proximityMarker) map.removeLayer(_proximityMarker);
+
+            const gpsLatLng = globalThis.L.latLng(
+                GeoLocationState.userPosition.lat,
+                GeoLocationState.userPosition.lng
+            );
+            _proximityCircle = globalThis.L.circle(gpsLatLng, {
+                radius: radiusMeters,
+                color: "#c2410c",
+                fillColor: "#c2410c",
+                fillOpacity: 0.2,
+                weight: 2,
+                interactive: interactiveShapes,
+            }).addTo(map);
+
+            if (!GeoLocationState.active) {
+                _proximityMarker = globalThis.L.marker(gpsLatLng, {
+                    draggable: true,
+                    icon: globalThis.L.divIcon({
+                        className: "gl-proximity-gps-marker",
+                        html: '<div style="width:20px;height:20px;background:#2563eb;border:3px solid white;border-radius:50%;box-shadow:0 2px 4px rgba(0,0,0,0.3);"></div>',
+                        iconSize: [20, 20],
+                        iconAnchor: [10, 10],
+                    }),
+                }).addTo(map);
+                _proximityMarker.on("dragend", function () {
+                    const ll = _proximityMarker.getLatLng();
+                    if (_proximityCircle) _proximityCircle.setLatLng(ll);
+                    wrapper.setAttribute("data-proximity-lat", ll.lat);
+                    wrapper.setAttribute("data-proximity-lng", ll.lng);
+                });
+            }
+            wrapper.setAttribute("data-proximity-lat", String(gpsLatLng.lat));
+            wrapper.setAttribute("data-proximity-lng", String(gpsLatLng.lng));
+            wrapper.setAttribute("data-proximity-active", "true");
+            map.setView(gpsLatLng, Math.max(map.getZoom(), 14), { animate: true, duration: 0.5 });
+            Log.info("[GeoLeaf.Toolbar] Proximité GPS activée", {
+                lat: gpsLatLng.lat,
+                lng: gpsLatLng.lng,
+            });
+            /* Notifier que le point est placé (mode GPS = immédiat) */
+            if (options?.onPointPlaced) options.onPointPlaced();
+        } else {
+            // Mode manuel : clic sur la carte
+            map.getContainer().style.cursor = "crosshair";
+            _proximityClickHandler = function (e) {
+                if (_proximityCircle) map.removeLayer(_proximityCircle);
+                if (_proximityMarker) map.removeLayer(_proximityMarker);
+
+                /* Lire le rayon au moment du clic, pas à l'activation — sinon
+                   la valeur capturée dans la closure est celle d'avant que
+                   openProximityBar() ait remis le slider à sa valeur par défaut. */
+                const clickRadius = _pendingRadius ?? defaultRadius;
+                const clickRadiusMeters = clickRadius * 1000;
+
+                _proximityCircle = globalThis.L.circle(e.latlng, {
+                    radius: clickRadiusMeters,
+                    color: "#c2410c",
+                    fillColor: "#c2410c",
+                    fillOpacity: 0.2,
+                    weight: 2,
+                    interactive: interactiveShapes,
+                }).addTo(map);
+                _proximityMarker = globalThis.L.marker(e.latlng, { draggable: true }).addTo(map);
+                _proximityMarker.on("dragend", function () {
+                    const ll = _proximityMarker.getLatLng();
+                    if (_proximityCircle) _proximityCircle.setLatLng(ll);
+                    wrapper.setAttribute("data-proximity-lat", ll.lat);
+                    wrapper.setAttribute("data-proximity-lng", ll.lng);
+                });
+                wrapper.setAttribute("data-proximity-lat", String(e.latlng.lat));
+                wrapper.setAttribute("data-proximity-lng", String(e.latlng.lng));
+                wrapper.setAttribute("data-proximity-radius", String(clickRadius));
+                wrapper.setAttribute("data-proximity-active", "true");
+                map.getContainer().style.cursor = "";
+                map.off("click", _proximityClickHandler);
+                _proximityClickHandler = null;
+                Log.info("[GeoLeaf.Toolbar] Point de proximité manuel défini", e.latlng);
+                /* Notifier que le point est placé (mode manuel = après clic) */
+                if (options?.onPointPlaced) options.onPointPlaced();
+            };
+            map.on("click", _proximityClickHandler);
+            Log.info("[GeoLeaf.Toolbar] Mode proximité manuel : cliquez sur la carte");
+        }
+    } else {
+        // Désactivation
+        _pendingRadius = null;
+        map.getContainer().style.cursor = "";
+        if (_proximityClickHandler) {
+            map.off("click", _proximityClickHandler);
+            _proximityClickHandler = null;
+        }
+        if (_proximityCircle) {
+            map.removeLayer(_proximityCircle);
+            _proximityCircle = null;
+        }
+        if (_proximityMarker) {
+            map.removeLayer(_proximityMarker);
+            _proximityMarker = null;
+        }
+        const existingWrapper = document.getElementById("gl-proximity-toolbar-wrapper");
+        if (existingWrapper) {
+            existingWrapper.removeAttribute("data-proximity-active");
+            existingWrapper.removeAttribute("data-proximity-lat");
+            existingWrapper.removeAttribute("data-proximity-lng");
+        }
+        Log.info("[GeoLeaf.Toolbar] Proximité désactivée");
+    }
+
+    return _proximityMode;
+};
+
+/**
+ * Met à jour le rayon du cercle de proximité actif sans recréer de cercle.
+ * Utilisé par le slider du bandeau mobile.
+ * @param {number} radiusKm - Nouveau rayon en kilomètres
+ */
+FilterPanelProximity.setProximityRadius = function (radiusKm: number): void {
+    /* Mémoriser le rayon même si le cercle n'existe pas encore (marqueur non posé) */
+    _pendingRadius = radiusKm;
+    const wrapper = document.getElementById("gl-proximity-toolbar-wrapper");
+    if (wrapper) wrapper.setAttribute("data-proximity-radius", String(radiusKm));
+    if (!_proximityMode || !_proximityCircle) return;
+    _proximityCircle.setRadius(radiusKm * 1000);
 };
 
 export { FilterPanelProximity };

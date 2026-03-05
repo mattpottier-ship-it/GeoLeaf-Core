@@ -555,13 +555,22 @@ function swCoreVersionPlugin(version) {
  * Attached to the core build so it’s always available.
  */
 function geojsonWorkerPlugin(version) {
-  const WORKER_SOURCE = "src/modules/geojson/geojson-worker.js";
+  const WORKER_TS = path.resolve(__dirname, "src/modules/geojson/geojson-worker.ts");
+  const WORKER_JS = path.resolve(__dirname, "src/modules/geojson/geojson-worker.js");
   return {
     name: "geojson-worker-emit",
     generateBundle() {
-      if (!fs.existsSync(WORKER_SOURCE)) return;
-      const content = fs.readFileSync(WORKER_SOURCE, "utf-8")
-        .replaceAll("__GEOLEAF_VERSION__", version);
+      const workerPath = fs.existsSync(WORKER_TS) ? WORKER_TS : fs.existsSync(WORKER_JS) ? WORKER_JS : null;
+      if (!workerPath) return;
+      let content = fs.readFileSync(workerPath, "utf-8");
+      if (workerPath.endsWith(".ts")) {
+        const out = ts.transpileModule(content, {
+          compilerOptions: { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.ESNext, strict: true },
+          fileName: "geojson-worker.ts",
+        });
+        content = out.outputText;
+      }
+      content = content.replaceAll("__GEOLEAF_VERSION__", version);
       this.emitFile({
         type: "asset",
         fileName: "geojson-worker.js",

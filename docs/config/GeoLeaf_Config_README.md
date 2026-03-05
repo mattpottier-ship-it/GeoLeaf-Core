@@ -2,7 +2,7 @@
 
 Product Version: GeoLeaf Platform V1  
 **Version**: 1.1.0  
-**Fichiers (monorepo)** : `packages/core/src/modules/config/` (sous-modules config, validation, loaders, accessors)  
+**Fichiers (monorepo)** : `src/modules/config/` (sous-modules config, validation, loaders, accessors)  
 **Dernière mise à jour**: 14 février 2026
 
 ---

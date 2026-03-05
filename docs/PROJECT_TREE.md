@@ -1,227 +1,189 @@
-# GeoLeaf-Js — Arborescence du projet (monorepo)
+# GeoLeaf-Core � Arborescence du projet
 
-**Product Version:** GeoLeaf Platform V1  
-**Version:** 1.1.0  
-**Date:** février 2026  
-**Architecture:** Monorepo (Turborepo, npm workspaces) — Core MIT + plugins (commercial)
+**Product Version:** GeoLeaf Platform V1
+**Version:** 1.1.0
+**Date:** mars 2026
 
-> Ce document décrit la structure du dépôt GeoLeaf-Js telle qu’elle existe réellement.
->
-> **Périmètre :**
->
-> - **packages/core** : bibliothèque principale (MIT), sources dans `packages/core/src/` (TypeScript)
-> - **packages/plugin-\*** : plugins optionnels (licence commerciale)
-> - **docs/** : documentation complète monorepo (racine)
-> - **deploy/** : variantes de déploiement (deploy-core, deploy-storage, deploy-storage-addpoi), générées par `npm run build:deploy`
+> Ce document d�crit la structure du projet **GeoLeaf-Core** (biblioth�que principale, licence MIT).
 
 ---
 
-## Table des matières
+## Table des mati�res
 
 1. [Racine du projet](#1-racine-du-projet)
-2. [packages/](#2-packages)
-3. [packages/core](#3-packagescore)
-4. [packages/core/src (modules)](#4-packagescoresrc-modules)
-5. [apps/](#5-apps)
-6. [deploy/ (variantes)](#6-deploy-variantes)
-7. [profiles/](#7-profiles)
-8. [docs/](#8-docs)
-9. [scripts/](#9-scripts)
-10. [Sorties de build](#10-sorties-de-build)
-11. [Commandes principales](#11-commandes-principales)
+2. [src/ � Code source](#2-src--code-source)
+3. [src/modules/ � Modules m�tier](#3-srcmodules--modules-m�tier)
+4. [dist/ � Sorties de build](#4-dist--sorties-de-build)
+5. [profiles/](#5-profiles)
+6. [docs/](#6-docs)
+7. [scripts/](#7-scripts)
+8. [Commandes principales](#8-commandes-principales)
 
 ---
 
 ## 1. Racine du projet
 
 ```
-GeoLeaf-Js/                           # racine du dépôt (monorepo)
-├── .github/                          # CI GitHub Actions
-├── .husky/                           # hooks Git (pre-commit, etc.)
-├── apps/                             # applications (ex. demo)
-├── docs/                             # documentation (source unique)
-├── packages/                         # packages npm (core + plugins)
-├── profiles/                         # profils métier (tourism, etc.)
-├── scripts/                          # scripts build, déploiement, audit
-├── deploy/                           # déploiements (deploy-core, deploy-storage, deploy-storage-addpoi)
-├── __mocks__/                        # mocks Jest globaux
-├── __tests__/                        # tests unitaires (racine, si présents)
-├── CHANGELOG.md
-├── LICENCE
-├── package.json                      # workspaces + Turborepo
-├── turbo.json                        # tâches Turborepo
-├── README.md
-└── ...
+GeoLeaf-Core/
++-- src/                    # Code source (JavaScript)
++-- dist/                   # (g�n�r�) Bundles et types
++-- profiles/               # Profils m�tier (tourism, etc.)
++-- docs/                   # Documentation
++-- scripts/                # Scripts utilitaires
++-- __tests__/              # Tests unitaires et d'int�gration
++-- __mocks__/              # Mocks Jest globaux
++-- demo/                   # Application de d�monstration
++-- CHANGELOG.md
++-- LICENCE
++-- package.json
++-- rollup.config.mjs
++-- jest.config.cjs
++-- README.md
 ```
 
 ---
 
-## 2. packages/
-
-| Package                     | Rôle                              | Licence     | Publication     |
-| --------------------------- | --------------------------------- | ----------- | --------------- |
-| **packages/core**           | Bibliothèque GeoLeaf (core)       | MIT         | npm (public)    |
-| **packages/plugin-storage** | Plugin stockage / cache / offline | Commerciale | GitHub Packages |
-| **packages/plugin-addpoi**  | Plugin ajout / édition POI        | Commerciale | GitHub Packages |
-
-Les sources du core sont en **TypeScript** dans `packages/core/src/`. Les plugins ont leur propre `src/` et dépendent du core.
-
----
-
-## 3. packages/core
+## 2. src/ � Code source
 
 ```
-packages/core/
-├── src/                    # Code source TypeScript
-│   ├── app/                # Boot, init, helpers
-│   ├── bundle-entry.ts     # Point d’entrée Rollup (UMD)
-│   ├── bundle-esm-entry.ts # Point d’entrée ESM
-│   ├── modules/            # Modules métier (voir ci-dessous)
-│   ├── lazy/               # Chargement différé (chunks)
-│   ├── css/                # Styles
-│   └── ...
-├── __tests__/              # Tests Jest du core
-├── dist/                   # (généré) Bundles et types
-├── docs/                    # Doc API TypeDoc + sous-ensemble “core only”
-├── package.json
-├── rollup.config.mjs
-├── jest.config.cjs
-└── tsconfig.json
+src/
++-- app/                    # Boot, initialisation, helpers applicatifs
++-- bundle-entry.js         # Point d'entr�e Rollup (UMD)
++-- bundle-esm-entry.js     # Point d'entr�e ESM
++-- modules/                # Modules m�tier (voir �3)
++-- lazy/                   # Chargement diff�r� (code splitting)
++-- css/                    # Feuilles de style (22+ fichiers)
++-- contracts/              # Contrats / interfaces d'extension
++-- assets/                 # Ressources statiques
 ```
 
 ---
 
-## 4. packages/core/src (modules)
-
-Organisation des modules métier du core :
+## 3. src/modules/ � Modules m�tier
 
 ```
-packages/core/src/
-├── app/                    # Initialisation application
-├── assets/                  # Ressources statiques
-├── baselayers/              # Couches de base
-├── contracts/               # Contrats / types partagés
-├── core/                    # Cœur (init, log, config globale)
-├── css/                     # Feuilles de style
-├── filters/                 # Moteur de filtres
-├── geojson/                 # Couches GeoJSON
-├── helpers/                 # Utilitaires
-├── layers/                  # Gestion des couches
-├── legend/                  # Légende
-├── markers/                 # Marqueurs
-├── modules/                 # Façades et globaux (geoleaf.*)
-├── poi/                     # POI (points d’intérêt)
-├── route/                   # Itinéraires
-├── storage/                 # Stockage / cache (core)
-├── table/                   # Table des données
-├── themes/                  # Thèmes
-├── ui/                      # Composants UI
-└── validators/              # Validateurs
+src/modules/
++-- api/                    # APIController, APIFactoryManager, PluginRegistry
++-- baselayers/             # Couches de fond cartographiques
++-- config/                 # Configuration centralis�e
++-- constants/              # Constantes globales
++-- core/                   # C�ur (init, log, config globale)
++-- data/                   # Normalisation des donn�es
++-- filters/                # Moteur de filtres
++-- geojson/                # Couches GeoJSON, worker, layer-manager
++-- helpers/                # Fonctions utilitaires transversales
++-- labels/                 # �tiquettes cartographiques
++-- layer-manager/          # Gestion des couches
++-- legend/                 # L�gende interactive
++-- log/                    # Journalisation
++-- loaders/                # Chargeurs (style-loader, etc.)
++-- map/                    # Contr�les carte (scale-control)
++-- markers/                # Marqueurs personnalis�s
++-- performance/            # M�triques de performance
++-- poi/                    # Points d'int�r�t (core)
++-- renderers/              # Renderers g�n�riques
++-- route/                  # Itin�raires
++-- schema/                 # Validation de sch�mas JSON
++-- security/               # XSS, sanitisation
++-- shared/                 # Singletons d'�tat partag�
++-- storage/                # D�tection hors-ligne (offline-detector)
++-- table/                  # Table des donn�es attributaires
++-- themes/                 # Gestion des th�mes visuels
++-- ui/                     # Composants UI (filter-panel, modals, etc.)
++-- utils/                  # Utilitaires (file-validator, scale-utils�)
++-- validators/             # Validateurs de donn�es
+�
++-- geoleaf.*.js            # Barrels API (17 fichiers � composition de l'API finale)
++-- globals*.js             # Namespaces UMD globaux (8 fichiers � window.GeoLeaf.*)
 ```
 
-Les sorties de build (UMD, ESM, CSS) sont dans `packages/core/dist/`.
+---
+
+## 4. dist/ � Sorties de build
+
+| Fichier / Dossier      | Description                   |
+| ---------------------- | ----------------------------- |
+| `dist/geoleaf.umd.js`  | Bundle UMD d�veloppement      |
+| `dist/geoleaf.min.js`  | Bundle UMD minifi� production |
+| `dist/geoleaf.min.css` | Styles minifi�s               |
+| `dist/esm/`            | Modules ESM (entry + chunks)  |
+| `dist/*.d.ts`          | D�clarations TypeScript       |
 
 ---
 
-## 5. apps/
+## 5. profiles/
 
-| Dossier       | Rôle                                         |
-| ------------- | -------------------------------------------- |
-| **apps/demo** | Application de démonstration / développement |
-
----
-
-## 6. deploy/ (variantes)
-
-Variantes de déploiement générées par **`npm run build:deploy`** (script `scripts/build-deploy.cjs`) :
-
-| Dossier                          | Contenu typique              |
-| -------------------------------- | ---------------------------- |
-| **deploy/deploy-core**           | Core seul (minifié + profil) |
-| **deploy/deploy-storage**        | Core + plugin Storage        |
-| **deploy/deploy-storage-addpoi** | Core + Storage + AddPOI      |
-
-Utilisées pour tests manuels, E2E Playwright et copie sur serveur. Servir avec `npx serve deploy -p 8765` ou `node scripts/serve-test.cjs`.
-
----
-
-## 7. profiles/
-
-Profils métier (configuration couches, taxonomie, UI) :
+Profils m�tier (configuration couches, taxonomie, UI) :
 
 ```
 profiles/
-└── tourism/                # Profil tourisme
-    ├── profile.json
-    ├── LICENSE-DATA.md
-    └── ...
++-- tourism/                # Profil tourisme
+    +-- profile.json
+    +-- LICENSE-DATA.md
+    +-- ...
 ```
-
-Le core et les apps peuvent référencer `profiles/` à la racine ou une copie dans le package.
 
 ---
 
-## 8. docs/
+## 6. docs/
 
-Documentation **complète** du monorepo (guides, spec, legal, audits). Ne pas confondre avec `packages/core/docs/` qui est le sous-ensemble destiné au dépôt public (core MIT).
+Documentation publique de GeoLeaf-Core :
 
 ```
 docs/
-├── INDEX.md
-├── DEVELOPER_GUIDE.md
-├── PROJECT_TREE.md         # ce document
-├── MONOREPO_WORKFLOW.md
-├── guides/                 # Guides (config, distribution, licence…)
-├── legal/                  # Juridique (à créer/déplacer)
-├── spec/                   # Spécifications (à créer/déplacer)
-├── audits/                 # Audits (à créer/déplacer)
-└── ...
++-- INDEX_CORE.md           # Index principal
++-- API_REFERENCE.md        # R�f�rence API compl�te
++-- ARCHITECTURE_GUIDE.md   # Guide architecture
++-- GETTING_STARTED.md      # D�marrage rapide
++-- USER_GUIDE.md           # Guide utilisateur
++-- DEVELOPER_GUIDE.md      # Guide d�veloppeur
++-- CONFIGURATION_GUIDE.md  # Configuration
++-- PROFILE_JSON_REFERENCE.md
++-- architecture/           # Guides architecture d�taill�s
++-- baselayers/             # Doc module baselayers
++-- config/                 # Doc module config
++-- core/                   # Doc module core
++-- geojson/                # Doc module geojson
++-- labels/                 # Doc module labels
++-- legend/                 # Doc module legend
++-- poi/                    # Doc module poi
++-- route/                  # Doc module route
++-- security/               # Doc module security
++-- storage/                # Doc module storage (offline-detector uniquement)
++-- themes/                 # Doc module themes
++-- ui/                     # Doc modules UI
++-- utils/                  # Doc module utils
 ```
 
 ---
 
-## 9. scripts/
+## 7. scripts/
 
-Scripts utilitaires (build, déploiement, audit, benchmark) :
+Scripts utilitaires :
 
 ```
 scripts/
-├── build-deploy.cjs        # Produit deploy/deploy-core, deploy-storage, deploy-storage-addpoi
-├── smoke-test.cjs          # Test de fumée post-build
-├── benchmark.cjs           # Benchmarks
-├── audit-innerhtml.cjs     # Audit sécurité innerHTML
-└── ...
++-- smoke-test.cjs              # Test de fum�e post-build
++-- benchmark.cjs               # Benchmarks de performance
++-- audit-innerhtml.cjs         # Audit s�curit� innerHTML
++-- core-docs-whitelist.json    # Liste blanche docs publi�es
++-- verify-no-premium-in-core.cjs  # V�rification int�grit� build
 ```
 
 ---
 
-## 10. Sorties de build
+## 8. Commandes principales
 
-| Cible            | Emplacement                                                     | Description                              |
-| ---------------- | --------------------------------------------------------------- | ---------------------------------------- |
-| Core UMD/ESM     | `packages/core/dist/`                                           | geoleaf.umd.js, geoleaf.min.js, ESM, CSS |
-| Plugin Storage   | `packages/plugin-storage/dist/`                                 | Bundle plugin storage                    |
-| Plugin AddPOI    | `packages/plugin-addpoi/dist/`                                  | Bundle plugin addpoi                     |
-| Deploy variantes | `deploy/deploy-core`, `deploy-storage`, `deploy-storage-addpoi` | Fichiers prêts à servir                  |
-
----
-
-## 11. Commandes principales
-
-| Commande                | Description                         |
-| ----------------------- | ----------------------------------- |
-| `npm run build`         | Build tous les packages (Turborepo) |
-| `npm run build:core`    | Build du core uniquement            |
-| `npm run build:plugins` | Build des plugins uniquement        |
-| `npm test`              | Tests (Turborepo)                   |
-| `npm run test:core`     | Tests du core                       |
-| `npm run test:coverage` | Couverture (core)                   |
-| `npm run lint`          | Lint (Turborepo)                    |
-| `npm run clean`         | Nettoyage des artefacts             |
-| `npm run smoke-test`    | Test de fumée post-build            |
-
-Voir [MONOREPO_WORKFLOW.md](MONOREPO_WORKFLOW.md) et [guides/DISTRIBUTION_GUIDE_2026.md](guides/DISTRIBUTION_GUIDE_2026.md) pour le détail.
+| Commande                | Description                       |
+| ----------------------- | --------------------------------- |
+| `npm run build`         | Build de la biblioth�que (Rollup) |
+| `npm test`              | Tests Jest                        |
+| `npm run test:coverage` | Couverture de tests               |
+| `npm run lint`          | Analyse statique ESLint           |
+| `npm run clean`         | Nettoyage des artefacts           |
+| `npm run smoke-test`    | Test de fum�e post-build          |
+| `npm run benchmark`     | Benchmarks de performance         |
 
 ---
 
-_Dernière mise à jour : février 2026 — v1.1.0 (monorepo)_
+_Derni�re mise � jour : mars 2026 � v1.1.0_

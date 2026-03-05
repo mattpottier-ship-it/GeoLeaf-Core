@@ -413,19 +413,46 @@ function createToggleButton() {
     button.title = "Masquer le tableau";
     button.setAttribute("aria-label", "Masquer tableau");
 
-    // Créer l'icône SVG (flèche vers le bas)
+    // Créer l'icône SVG (flèche vers la droite)
     const icon = document.createElement("span");
     icon.className = "gl-table-panel__toggle-btn__icon";
     // SAFE: SVG statique hardcodé, pas de données utilisateur
-    const downSvg = DOMSecurity.createSVGIcon(16, 16, "M6 9l6 6 6-6", {
+    const rightSvg = DOMSecurity.createSVGIcon(16, 16, "M9 6l6 6-6 6", {
         stroke: "currentColor",
         strokeWidth: "6",
         fill: "none",
     });
-    icon.appendChild(downSvg);
+    icon.appendChild(rightSvg);
     button.appendChild(icon);
 
     const clickHandler = () => {
+        const tp = document.querySelector<HTMLElement>(".gl-table-panel");
+        if (tp && tp.getAttribute("data-gl-open") === "true") {
+            tp.setAttribute("data-gl-open", "false");
+            tp.classList.remove("is-visible");
+            tp.style.removeProperty("position");
+            tp.style.removeProperty("top");
+            tp.style.removeProperty("bottom");
+            tp.style.removeProperty("right");
+            tp.style.removeProperty("left");
+            tp.style.removeProperty("width");
+            tp.style.removeProperty("height");
+            tp.style.removeProperty("transform");
+            tp.style.removeProperty("display");
+            tp.style.removeProperty("visibility");
+            tp.style.removeProperty("opacity");
+            tp.style.removeProperty("z-index");
+            /* Désactiver l'onglet desktop */
+            const desktopPanel = document.getElementById("gl-right-panel");
+            if (desktopPanel) {
+                desktopPanel
+                    .querySelector<HTMLElement>("[data-gl-rp-tab='table']")
+                    ?.classList.remove("is-active");
+                desktopPanel
+                    .querySelector<HTMLElement>("[data-gl-rp-tab='table']")
+                    ?.setAttribute("aria-selected", "false");
+            }
+        }
         TableContract.toggle();
     };
 

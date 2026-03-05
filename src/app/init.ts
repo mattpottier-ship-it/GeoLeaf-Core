@@ -376,6 +376,60 @@ _app.initApp = async function (cfg: any) {
         }
     }
 
+    // Barre pill d'utilitaires mobile + sheet (Phase 2 Mobile Friendly)
+    if (GeoLeaf.UI && typeof GeoLeaf.UI.initMobileToolbar === "function") {
+        try {
+            const glMain = document.querySelector(".gl-main") as HTMLElement | null;
+            if (glMain) {
+                GeoLeaf.UI.initMobileToolbar({
+                    glMain,
+                    map,
+                    sheetTitles: {
+                        ...(cfg.search?.title ? { filters: cfg.search.title } : {}),
+                        ...(cfg.layerManagerConfig?.title
+                            ? { layers: cfg.layerManagerConfig.title }
+                            : {}),
+                        ...(cfg.legendConfig?.title ? { legend: cfg.legendConfig.title } : {}),
+                        ...(cfg.tableConfig?.title ? { table: cfg.tableConfig.title } : {}),
+                    },
+                    getFilterActiveState: () =>
+                        (GeoLeaf as any)._UIFilterStateManager?.hasActiveFilters?.() ?? false,
+                    onResetFilters: () => {
+                        const panel = document.getElementById("gl-filter-panel");
+                        const StateReader = (GeoLeaf as any)._UIFilterPanelStateReader;
+                        const Applier = (GeoLeaf as any)._UIFilterPanelApplier;
+                        if (panel && StateReader?.resetControls && Applier?.applyFiltersNow) {
+                            StateReader.resetControls(panel);
+                            Applier.applyFiltersNow(panel, true);
+                        }
+                    },
+                });
+                AppLog.log("Barre pill mobile et sheet initialisés.");
+            }
+        } catch (e) {
+            AppLog.warn("Erreur init barre pill mobile :", e);
+        }
+    }
+
+    // Panneau lateral droit persistant desktop (>= 1440px) (Phase 9 Mobile Friendly)
+    if (GeoLeaf.UI && typeof GeoLeaf.UI.initDesktopPanel === "function") {
+        try {
+            const glMainDesktop = document.querySelector(".gl-main") as HTMLElement | null;
+            if (glMainDesktop) {
+                GeoLeaf.UI.initDesktopPanel({
+                    glMain: glMainDesktop,
+                    titleFilters: cfg.search?.title,
+                    titleLayers: cfg.layerManagerConfig?.title,
+                    titleLegend: cfg.legendConfig?.title,
+                    titleTable: cfg.tableConfig?.title,
+                });
+                AppLog.log("Panneau lateral droit desktop initialisé.");
+            }
+        } catch (e) {
+            AppLog.warn("Erreur init panneau droit desktop :", e);
+        }
+    }
+
     // ========================================================
     // Sprint 6: Chargement des modules secondaires (code splitting)
     // En mode ESM ? charge les chunks r�seau en parall�le.
@@ -484,7 +538,15 @@ _app.initApp = async function (cfg: any) {
             AppLog.warn("GeoLeaf.LayerManager.init() a lev� une erreur :", e);
         }
     }
-
+    // Activer le panneau lateral droit desktop (apres Legend + LayerManager + Table)
+    if (GeoLeaf.UI && typeof GeoLeaf.UI.activateDesktopPanel === "function") {
+        try {
+            GeoLeaf.UI.activateDesktopPanel();
+            AppLog.log("Panneau lateral droit desktop activ\u00e9.");
+        } catch (e) {
+            AppLog.warn("Erreur activation panneau droit desktop :", e);
+        }
+    }
     // ========================================================
     // Contr�le d'�chelle
     // ========================================================

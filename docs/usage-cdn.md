@@ -193,8 +193,7 @@ docs/
 
 ---
 
-## 10. Plugins premium (Storage / AddPOI)
+## 10. Extensions commerciales
 
-- Les plugins premium ne sont pas publiés sur CDN public.
-- Leur distribution passe par un registre privé et un token d'accès lié à une licence commerciale.
-- Voir le guide détaillé : [GUIDE_LICENCE_PREMIUM](guides/GUIDE_LICENCE_PREMIUM.md).
+Des extensions commerciales optionnelles sont disponibles pour GeoLeaf (stockage hors-ligne, formulaires POI, etc.).  
+Pour plus d'informations : [geoleaf.dev](https://geoleaf.dev).

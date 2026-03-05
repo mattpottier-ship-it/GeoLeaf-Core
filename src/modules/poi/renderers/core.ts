@@ -138,11 +138,11 @@ async function populateSidePanel(poi: any, customLayout: any) {
 
             if (element) {
                 body.appendChild(element);
-                if (Log) Log.info("[POI] Ã¢Å“â€œ Section ajoutée:", section.label || section.type);
+                if (Log) Log.info("[POI] ✓ Section ajoutée:", section.label || section.type);
             } else {
                 if (Log)
                     Log.warn(
-                        "[POI] Ã¢Å“â€” Section ignorée (element null):",
+                        "[POI] ✗ Section ignorée (element null):",
                         section.label || section.type,
                         "- field:",
                         section.field

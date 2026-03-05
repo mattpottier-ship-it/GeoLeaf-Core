@@ -46,9 +46,8 @@ GeoLeaf est structuré en modules indépendants, chargés en cascade :
     - **GeoLeaf.API** : API interne haut‑niveau.
     - **GeoLeaf.Log** : logging unifié (debug/info/warn/error).
 
-- **Plugins optionnels** (chargés séparément)
-    - **GeoLeaf.Storage** : IndexedDB, cache offline, sync, Service Worker.
-    - **GeoLeaf.POI.AddForm** : formulaire d’ajout/édition/suppression de POI.
+- **Extensions optionnelles** (chargées séparément via `<script>`)  
+  GeoLeaf dispose d'un système de plugins permettant d'étendre ses fonctionnalités. Des extensions commerciales sont disponibles sur [geoleaf.dev](https://geoleaf.dev).
 
 ### Diagramme modulaire
 
@@ -72,20 +71,7 @@ GeoLeaf (namespace global)
 ├── API              (API haut-niveau)
 ├── Log              (logging)
 │
-├── 🔌 Storage (plugin)   ← geoleaf-storage.plugin.js
-│   ├── StorageDB        (IndexedDB, 5 object stores)
-│   ├── IDBHelper        (wrapper promise)
-│   ├── CacheManager     (cache offline profils)
-│   ├── SyncManager      (synchronisation)
-│   ├── OfflineDetector  (détection online/offline)
-│   ├── SWRegister       (Service Worker)
-│   └── Telemetry        (métriques)
-│
-└── 🔌 AddPOI (plugin)   ← geoleaf-addpoi.plugin.js
-    ├── AddForm          (formulaire POI)
-    ├── SyncHandler      (pont vers Storage)
-    ├── PlacementMode    (sélection coordonnées)
-    └── ImageUpload      (upload images)
+└── 🔌 Extensions commerciales  (chargées séparément, voir geoleaf.dev)
 ```
 
 ---
@@ -323,17 +309,7 @@ GeoLeaf (namespace global)
 ├── API
 ├── Log
 │
-├── 🔌 Storage (plugin optionnel)
-│   ├── StorageDB + IDBHelper
-│   ├── CacheManager + Downloader
-│   ├── SyncManager + OfflineDetector
-│   ├── SWRegister + sw.js
-│   └── Telemetry + CacheControl
-│
-└── 🔌 AddPOI (plugin optionnel)
-    ├── AddForm (orchestrator + renderers)
-    ├── SyncHandler + PlacementMode
-    └── ImageUpload
+└── 🔌 Extensions commerciales  (chargées séparément, voir geoleaf.dev)
 ```
 
 ### Documentation Détaillée
@@ -351,11 +327,10 @@ GeoLeaf (namespace global)
 
 Ce document fournit :
 
-- Le **diagramme modulaire complet** de GeoLeaf (core + plugins).
+- Le **diagramme modulaire complet** de GeoLeaf (core).
 - L'**architecture plugin** et le chargement en 3 étapes.
 - Le **boot system** (`src/app/`) et son flow détaillé.
-- Le **workflow de chargement officiel** (Scripts → Boot → Config → Core → Storage → Modules → Reveal).
-- Le **système offline** (Service Worker, IndexedDB, OfflineDetector).
+- Le **workflow de chargement officiel** (Scripts → Boot → Config → Core → Modules → Reveal).
 - L'**architecture Content Builder v1.0.0** (Sprint 4.5).
 
 Il constitue la référence pour l'architecture v1.1.0.
