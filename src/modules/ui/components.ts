@@ -85,14 +85,24 @@ function _buildLineSvgEl(config, width, color, dashArray, outlineColor, outlineW
     return svg;
 }
 
+function _resolveHatchStyle(hatchCfg: any): { color: string; opacity: any; widthPx: number } {
+    const stroke = hatchCfg.stroke || {};
+    return {
+        color: stroke.color || "#000000",
+        opacity: stroke.opacity !== undefined ? stroke.opacity : 1,
+        widthPx: stroke.widthPx || 1,
+    };
+}
+
 function _buildLegendHatchDefs(svg, config) {
     const hatchCfg = config.hatch;
     const type = hatchCfg.type || "diagonal";
     const spacing = hatchCfg.spacingPx || 10;
-    const hatchColor = (hatchCfg.stroke && hatchCfg.stroke.color) || "#000000";
-    const hatchOpacity =
-        (hatchCfg.stroke && hatchCfg.stroke.opacity) !== undefined ? hatchCfg.stroke.opacity : 1;
-    const hatchWidth = (hatchCfg.stroke && hatchCfg.stroke.widthPx) || 1;
+    const {
+        color: hatchColor,
+        opacity: hatchOpacity,
+        widthPx: hatchWidth,
+    } = _resolveHatchStyle(hatchCfg);
     const patternId = "hatch-legend-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
     const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
     const pattern = document.createElementNS("http://www.w3.org/2000/svg", "pattern");
@@ -131,6 +141,98 @@ function _buildLegendHatchDefs(svg, config) {
     defs.appendChild(pattern);
     svg.appendChild(defs);
     return patternId;
+}
+
+function _applyCircleIcon(circleEl: any, config: any, size: number): void {
+    const iconId = config.icon.startsWith("#") ? config.icon.substring(1) : config.icon;
+    if (!/^[a-zA-Z0-9_-]+$/.test(iconId)) {
+        if (Log)
+            Log.error(
+                "[UIComponents] ID d'ic\u00f4ne invalide (caract\u00e8res non autoris\u00e9s):",
+                config.icon
+            );
+        return;
+    }
+    _appendCircleIconSvg(circleEl, iconId, size, config.iconColor);
+}
+
+function _needsLineSvg(
+    dashArray: any,
+    width: number,
+    outlineColor: any,
+    outlineWidth: any
+): boolean {
+    return !!(dashArray || width > 5 || (outlineColor && outlineWidth));
+}
+
+function _applyLineDivStyle(lineEl: any, color: string, style: string): void {
+    if (style === "dashed") {
+        lineEl.style.backgroundImage = `linear-gradient(to right, ${color} 50%, transparent 50%)`;
+        lineEl.style.backgroundSize = "8px 100%";
+    } else if (style === "dotted") {
+        lineEl.style.backgroundImage = `linear-gradient(to right, ${color} 30%, transparent 30%)`;
+        lineEl.style.backgroundSize = "4px 100%";
+    }
+}
+
+function _resolvePolygonColors(config: any): { color: string; borderColor: string } {
+    return {
+        color: config.fillColor || config.color || "#3388ff",
+        borderColor: config.borderColor || config.color || "#333",
+    };
+}
+
+function _resolveFillOpacity(config: any): number {
+    if (config.fillOpacity !== undefined) return config.fillOpacity;
+    if (config.opacity !== undefined) return config.opacity;
+    return 1;
+}
+
+function _buildPolygonSvgEl(
+    config: any,
+    borderColor: string,
+    borderWidth: number,
+    fillOpacity: number,
+    hasHatch: boolean
+): SVGElement {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", "0 0 32 24");
+    svg.style.width = "32px";
+    svg.style.height = "24px";
+    const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    rect.setAttribute("x", "1");
+    rect.setAttribute("y", "1");
+    rect.setAttribute("width", "30");
+    rect.setAttribute("height", "22");
+    rect.setAttribute("stroke", borderColor);
+    rect.setAttribute("stroke-width", String(borderWidth));
+    if (hasHatch) {
+        const patternId = _buildLegendHatchDefs(svg, config);
+        rect.setAttribute("fill", `url(#${patternId})`);
+        if (fillOpacity !== 1) rect.setAttribute("fill-opacity", String(fillOpacity));
+    } else {
+        rect.setAttribute("fill", "none");
+        if (config.dashArray) rect.setAttribute("stroke-dasharray", config.dashArray);
+    }
+    svg.appendChild(rect);
+    return svg;
+}
+
+function _renderIconSymbol(
+    container: any,
+    symbolConfig: any,
+    renderCircleFn: (c: any, cfg: any) => any
+): any {
+    if (symbolConfig.iconUrl) {
+        const imgEl = globalThis.L.DomUtil.create("img", "gl-legend__icon-img", container);
+        imgEl.src = symbolConfig.iconUrl;
+        if (symbolConfig.size) {
+            imgEl.style.width = symbolConfig.size + "px";
+            imgEl.style.height = symbolConfig.size + "px";
+        }
+        return imgEl;
+    }
+    return renderCircleFn(container, symbolConfig);
 }
 
 const _UIComponents = {
@@ -232,18 +334,7 @@ const _UIComponents = {
         circleEl.style.alignItems = "center";
         circleEl.style.justifyContent = "center";
         if (config.fillOpacity !== undefined) circleEl.style.opacity = config.fillOpacity;
-        if (config.icon) {
-            const iconId = config.icon.startsWith("#") ? config.icon.substring(1) : config.icon;
-            if (!/^[a-zA-Z0-9_-]+$/.test(iconId)) {
-                if (Log)
-                    Log.error(
-                        "[UIComponents] ID d'ic\u00f4ne invalide (caract\u00e8res non autoris\u00e9s):",
-                        config.icon
-                    );
-                return circleEl;
-            }
-            _appendCircleIconSvg(circleEl, iconId, size, config.iconColor);
-        }
+        if (config.icon) _applyCircleIcon(circleEl, config, size);
         return circleEl;
     },
 
@@ -260,7 +351,7 @@ const _UIComponents = {
         const dashArray = config.dashArray || null;
         const outlineColor = config.outlineColor || null;
         const outlineWidth = config.outlineWidth || null;
-        if (dashArray || width > 5 || (outlineColor && outlineWidth)) {
+        if (_needsLineSvg(dashArray, width, outlineColor, outlineWidth)) {
             const svg = _buildLineSvgEl(
                 config,
                 width,
@@ -276,13 +367,7 @@ const _UIComponents = {
         lineEl.style.width = "30px";
         lineEl.style.height = width + "px";
         lineEl.style.backgroundColor = color;
-        if (style === "dashed") {
-            lineEl.style.backgroundImage = `linear-gradient(to right, ${color} 50%, transparent 50%)`;
-            lineEl.style.backgroundSize = "8px 100%";
-        } else if (style === "dotted") {
-            lineEl.style.backgroundImage = `linear-gradient(to right, ${color} 30%, transparent 30%)`;
-            lineEl.style.backgroundSize = "4px 100%";
-        }
+        _applyLineDivStyle(lineEl, color, style);
         if (config.opacity !== undefined) lineEl.style.opacity = config.opacity;
         return lineEl;
     },
@@ -294,38 +379,13 @@ const _UIComponents = {
      * @returns {HTMLElement} - Created element
      */
     renderPolygonSymbol(container, config) {
-        const color = config.fillColor || config.color || "#3388ff";
-        const borderColor = config.borderColor || config.color || "#333";
+        const { color, borderColor } = _resolvePolygonColors(config);
         const borderWidth = config.weight || 1;
         const hasHatch = config.hatch && config.hatch.enabled;
-        let fillOpacity =
-            config.fillOpacity !== undefined
-                ? config.fillOpacity
-                : config.opacity !== undefined
-                  ? config.opacity
-                  : 1;
+        let fillOpacity = _resolveFillOpacity(config);
         if (hasHatch && config.hatch.renderMode === "pattern_only") fillOpacity = 1.0;
         if (hasHatch || fillOpacity === 0) {
-            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-            svg.setAttribute("viewBox", "0 0 32 24");
-            svg.style.width = "32px";
-            svg.style.height = "24px";
-            const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-            rect.setAttribute("x", "1");
-            rect.setAttribute("y", "1");
-            rect.setAttribute("width", "30");
-            rect.setAttribute("height", "22");
-            rect.setAttribute("stroke", borderColor);
-            rect.setAttribute("stroke-width", borderWidth);
-            if (hasHatch) {
-                const patternId = _buildLegendHatchDefs(svg, config);
-                rect.setAttribute("fill", `url(#${patternId})`);
-                if (fillOpacity !== 1) rect.setAttribute("fill-opacity", fillOpacity);
-            } else {
-                rect.setAttribute("fill", "none");
-                if (config.dashArray) rect.setAttribute("stroke-dasharray", config.dashArray);
-            }
-            svg.appendChild(rect);
+            const svg = _buildPolygonSvgEl(config, borderColor, borderWidth, fillOpacity, hasHatch);
             container.appendChild(svg);
             return svg;
         }
@@ -371,47 +431,20 @@ const _UIComponents = {
         // Support de la structure avec config.symbol ou directly config
         const symbolConfig = config.symbol || config;
         const symbolType = symbolConfig.type || config.type || "circle";
-
-        switch (symbolType) {
-            case "marker":
-            case "circle":
-                return this.renderCircleSymbol(container, symbolConfig);
-
-            case "line":
-                return this.renderLineSymbol(container, symbolConfig);
-
-            case "polygon":
-            case "fill":
-                return this.renderPolygonSymbol(container, symbolConfig);
-
-            case "star":
-                return this.renderStarSymbol(container, symbolConfig);
-
-            case "icon":
-                // Icon avec URL d'image
-                if (symbolConfig.iconUrl) {
-                    const imgEl = globalThis.L.DomUtil.create(
-                        "img",
-                        "gl-legend__icon-img",
-                        container
-                    );
-                    imgEl.src = symbolConfig.iconUrl;
-                    if (symbolConfig.size) {
-                        imgEl.style.width = symbolConfig.size + "px";
-                        imgEl.style.height = symbolConfig.size + "px";
-                    }
-                    return imgEl;
-                }
-                // Icon with SVG sprite - use renderCircleSymbol which already handles sprites
-                if (symbolConfig.icon) {
-                    return this.renderCircleSymbol(container, symbolConfig);
-                }
-                // Fallback vers circle
-                return this.renderCircleSymbol(container, symbolConfig);
-
-            default:
-                return this.renderCircleSymbol(container, symbolConfig);
-        }
+        const circleFn = (c, cfg) => this.renderCircleSymbol(c, cfg);
+        const renderers: Record<string, () => any> = {
+            marker: () => this.renderCircleSymbol(container, symbolConfig),
+            circle: () => this.renderCircleSymbol(container, symbolConfig),
+            line: () => this.renderLineSymbol(container, symbolConfig),
+            polygon: () => this.renderPolygonSymbol(container, symbolConfig),
+            fill: () => this.renderPolygonSymbol(container, symbolConfig),
+            star: () => this.renderStarSymbol(container, symbolConfig),
+            icon: () => _renderIconSymbol(container, symbolConfig, circleFn),
+        };
+        // eslint-disable-next-line security/detect-object-injection
+        return (
+            renderers[symbolType] ?? (() => this.renderCircleSymbol(container, symbolConfig))
+        )();
     },
 
     /**

@@ -373,6 +373,14 @@ function _applyPolygonDecorations(
     if (style.hatch) symbol.hatch = style.hatch;
 }
 
+function _isSubCategoryField(field: string | undefined): boolean {
+    return field === "properties.subCategoryId" || field === "attributes.subCategoryId";
+}
+
+function _isCategoryIdField(field: string | undefined): boolean {
+    return field === "properties.categoryId" || field === "attributes.categoryId";
+}
+
 function getIconFromTaxonomy(
     rule: StyleRule,
     taxonomyData: TaxonomyData | null | undefined,
@@ -392,9 +400,8 @@ function getIconFromTaxonomy(
     const categories = taxonomyData.categories;
     Log?.debug(`[LegendGenerator] Looking for icon for ${field}=${value}`);
 
-    const isSubCategory =
-        field === "properties.subCategoryId" || field === "attributes.subCategoryId";
-    const isCategoryId = field === "properties.categoryId" || field === "attributes.categoryId";
+    const isSubCategory = _isSubCategoryField(field);
+    const isCategoryId = _isCategoryIdField(field);
 
     if (isSubCategory) {
         const iconId = _findSubcategoryIcon(categories, value, symbolPrefix);

@@ -213,6 +213,43 @@ function _buildCacheActionsHtml(): string {
                 </div>`;
 }
 
+function _notifyDownloadSuccess(
+    result: unknown,
+    progressText: Element | null,
+    progressEl: Element | null
+): void {
+    if (progressText) {
+        progressText.textContent = getLabel(
+            "ui.cache.progress_done",
+            String((result as { resourcesCount: number }).resourcesCount)
+        );
+    }
+    _UINotifications.success(
+        getLabel(
+            "toast.cache.download_success",
+            ((result as { totalSize: number }).totalSize / 1024 / 1024).toFixed(2)
+        ),
+        4000
+    );
+    setTimeout(() => {
+        if (progressEl) (progressEl as HTMLElement).style.display = "none";
+    }, 2000);
+}
+
+function _notifyDownloadError(
+    error: Error,
+    progressText: Element | null,
+    progressEl: Element | null
+): void {
+    if (progressText) {
+        progressText.textContent = getLabel("ui.cache.progress_error", error.message);
+    }
+    _UINotifications.error(getLabel("toast.cache.download_error", error.message), 5000);
+    setTimeout(() => {
+        if (progressEl) (progressEl as HTMLElement).style.display = "none";
+    }, 3000);
+}
+
 const CacheSection = {
     generateSection(this: {
         _generateContent: () => string;
@@ -296,72 +333,28 @@ const CacheSection = {
     async _handleDownload(): Promise<void> {
         if (!StorageContract.isAvailable()) {
             _UINotifications.error(getLabel("toast.cache.storage_unavailable"), 5000);
-
             return;
         }
-
         const profileId = (
             Config as unknown as { get: (path: string, defaultVal?: string) => string }
         ).get("data.activeProfile", "");
-
         if (!profileId) {
             _UINotifications.error(getLabel("toast.cache.no_active_profile"), 3000);
-
             return;
         }
-
         const progressEl = document.getElementById("gl-cache-progress");
-
         const progressText = document.getElementById("gl-cache-progress-text");
-
         try {
             _setButtonState("gl-cache-download", true, getLabel("ui.cache.btn_downloading"));
-
             if (progressEl) progressEl.style.display = "block";
-
             if (progressText) progressText.textContent = getLabel("ui.cache.progress_preparing");
-
             Log.info(`[CacheSection] Starting download for profile: ${profileId}`);
-
             const result = await StorageContract.downloadProfileForOffline(profileId);
-
-            if (progressText) {
-                progressText.textContent = getLabel(
-                    "ui.cache.progress_done",
-                    String((result as { resourcesCount: number }).resourcesCount)
-                );
-            }
-
-            _UINotifications.success(
-                getLabel(
-                    "toast.cache.download_success",
-                    ((result as { totalSize: number }).totalSize / 1024 / 1024).toFixed(2)
-                ),
-                4000
-            );
-
-            setTimeout(() => {
-                if (progressEl) progressEl.style.display = "none";
-            }, 2000);
-
+            _notifyDownloadSuccess(result, progressText, progressEl);
             await this._updateStatus();
         } catch (error) {
             Log.error(`[CacheSection] Download failed: ${(error as Error).message}`);
-
-            if (progressText)
-                progressText.textContent = getLabel(
-                    "ui.cache.progress_error",
-                    (error as Error).message
-                );
-
-            _UINotifications.error(
-                getLabel("toast.cache.download_error", (error as Error).message),
-                5000
-            );
-
-            setTimeout(() => {
-                if (progressEl) progressEl.style.display = "none";
-            }, 3000);
+            _notifyDownloadError(error as Error, progressText, progressEl);
         } finally {
             _setButtonState("gl-cache-download", false, getLabel("ui.cache.btn_download"));
         }

@@ -41,6 +41,14 @@ interface EnrichedProfileParams {
     layersConfigs: LayerConfigResult[];
 }
 
+function _extractRawLayers(layersFileData: Record<string, unknown> | null): unknown[] | null {
+    if (!layersFileData) return null;
+    if (Array.isArray((layersFileData as { layers?: unknown[] }).layers)) {
+        return (layersFileData as { layers: unknown[] }).layers;
+    }
+    return Array.isArray(layersFileData) ? (layersFileData as unknown[]) : null;
+}
+
 const ProfileLoader = {
     async loadModularProfile(
         profile: ProfileWithFiles,
@@ -49,8 +57,7 @@ const ProfileLoader = {
         timestamp: number = Date.now(),
         fetchOptions: LoadUrlOptions = {}
     ): Promise<Record<string, unknown>> {
-        const Loader = ConfigLoader;
-        if (!Loader) throw new Error("GeoLeaf._ConfigLoader not available");
+        if (!ConfigLoader) throw new Error("GeoLeaf._ConfigLoader not available");
         Log.info(`[ProfileLoader] ${profileId}`);
         try {
             const [taxonomyData, themesData, layersFileData] = await Promise.all([
@@ -58,15 +65,7 @@ const ProfileLoader = {
                 this._loadThemes(profile, baseUrl, timestamp, fetchOptions),
                 this._loadLayersFile(profile, baseUrl, timestamp, fetchOptions),
             ]);
-            const rawLayers =
-                layersFileData &&
-                typeof layersFileData === "object" &&
-                Array.isArray((layersFileData as { layers?: unknown[] }).layers)
-                    ? (layersFileData as { layers: unknown[] }).layers
-                    : Array.isArray(layersFileData)
-                      ? layersFileData
-                      : null;
-            const layersSource = rawLayers || profile.layers || [];
+            const layersSource = _extractRawLayers(layersFileData) || profile.layers || [];
             const layersConfigs = await this._loadLayerConfigs(
                 layersSource as LayerRef[],
                 baseUrl,

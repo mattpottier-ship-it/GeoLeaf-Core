@@ -274,6 +274,7 @@ function deepClone<T>(obj: T, seen: WeakMap<object, unknown> = new WeakMap()): T
     if (obj === null || typeof obj !== "object") return obj;
     if (seen.has(obj as object)) return seen.get(obj as object) as T;
     if (obj instanceof Date) return new Date(obj.getTime()) as unknown as T;
+    // eslint-disable-next-line security/detect-non-literal-regexp
     if (obj instanceof RegExp) return new RegExp(obj.source, obj.flags) as unknown as T;
     if (Array.isArray(obj)) {
         const cloned: unknown[] = [];

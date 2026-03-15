@@ -1,6 +1,6 @@
 /*!
  * GeoLeaf Core — Filters / POI Filter
- * ┬® 2026 Mattieu Pottier
+ * © 2026 Mattieu Pottier
  * Released under the MIT License
  */
 
@@ -25,38 +25,41 @@ function _haversine(lat1: any, lng1: any, lat2: any, lng2: any) {
             Math.sin(dLng / 2) ** 2;
     return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
+
 /**
- * Extrait la note moyenne d'an object (POI ou route).
+ * Extracts rating from a reviews object or array.
+ */
+function _extractRatingFromReviews(reviewsObj: any): { avg: number; hasRating: boolean } | null {
+    if (!Array.isArray(reviewsObj) && typeof reviewsObj === "object") {
+        if (typeof reviewsObj.rating === "number")
+            return { avg: reviewsObj.rating, hasRating: true };
+        return null;
+    }
+    if (Array.isArray(reviewsObj) && reviewsObj.length > 0) {
+        const sum = reviewsObj.reduce((acc: number, r: any) => acc + (Number(r.rating) || 0), 0);
+        const avg = sum / reviewsObj.length;
+        return { avg, hasRating: avg > 0 };
+    }
+    return null;
+}
+
+/**
+ * Extrait la note moyenne d'un object (POI ou route).
  * @param {object} attrs - attributes
  * @param {object} item  - object root
  * @param {object} props - properties
  * @returns {{ avg: number, hasRating: boolean }}
  */
-function _extractRating(attrs: any, item: any, props: any) {
-    let avg = 0;
-    let hasRating = false;
-
+function _extractRating(attrs: any, item: any, props: any): { avg: number; hasRating: boolean } {
     const reviewsObj = attrs.reviews || item.reviews || props.reviews;
-    if (reviewsObj && typeof reviewsObj === "object" && !Array.isArray(reviewsObj)) {
-        if (typeof reviewsObj.rating === "number") {
-            avg = reviewsObj.rating;
-            hasRating = true;
-        }
-    } else if (Array.isArray(reviewsObj) && reviewsObj.length > 0) {
-        const sum = reviewsObj.reduce((acc, r) => acc + (Number(r.rating) || 0), 0);
-        avg = sum / reviewsObj.length;
-        hasRating = avg > 0;
-    } else if (typeof attrs.rating === "number") {
-        avg = attrs.rating;
-        hasRating = true;
-    } else if (typeof item.rating === "number") {
-        avg = item.rating;
-        hasRating = true;
-    } else if (typeof props.rating === "number") {
-        avg = props.rating;
-        hasRating = true;
+    if (reviewsObj) {
+        const result = _extractRatingFromReviews(reviewsObj);
+        if (result) return result;
     }
-    return { avg, hasRating };
+    if (typeof attrs.rating === "number") return { avg: attrs.rating, hasRating: true };
+    if (typeof item.rating === "number") return { avg: item.rating, hasRating: true };
+    if (typeof props.rating === "number") return { avg: props.rating, hasRating: true };
+    return { avg: 0, hasRating: false };
 }
 
 /**
@@ -64,7 +67,7 @@ function _extractRating(attrs: any, item: any, props: any) {
  * @param {*} rawTags
  * @returns {string[]}
  */
-function _normalizeTags(rawTags: any) {
+function _normalizeTags(rawTags: any): string[] {
     if (Array.isArray(rawTags)) return rawTags.map((t) => String(t).trim()).filter(Boolean);
     if (typeof rawTags === "string")
         return rawTags
@@ -74,34 +77,37 @@ function _normalizeTags(rawTags: any) {
     return [];
 }
 
-/**
- * Filtre a list de POI based on thes criteria fournis.
- * @param {Array} basePois
- * @param {object} filterState
- * @returns {Array}
- */
-function _resolvePoiCoords(poi: any) {
+/** Resolves the latitude coordinate from multiple possible source fields. */
+function _resolveLat(poi: any, attrs: any, props: any): number | undefined {
+    return (
+        poi.lat ??
+        poi.latitude ??
+        attrs.latitude ??
+        props.latitude ??
+        poi.coordinates?.[1] ??
+        poi.geometry?.coordinates?.[1]
+    );
+}
+
+/** Resolves the longitude coordinate from multiple possible source fields. */
+function _resolveLng(poi: any, attrs: any, props: any): number | undefined {
+    return (
+        poi.lng ??
+        poi.longitude ??
+        attrs.longitude ??
+        props.longitude ??
+        poi.coordinates?.[0] ??
+        poi.geometry?.coordinates?.[0]
+    );
+}
+
+function _resolvePoiCoords(poi: any): { lat: any; lng: any } {
     const attrs = poi.attributes || {};
     const props = poi.properties || {};
     if (poi.latlng && Array.isArray(poi.latlng) && poi.latlng.length === 2) {
         return { lat: poi.latlng[0], lng: poi.latlng[1] };
     }
-    return {
-        lat:
-            poi.lat ??
-            poi.latitude ??
-            attrs.latitude ??
-            props.latitude ??
-            poi.coordinates?.[1] ??
-            poi.geometry?.coordinates?.[1],
-        lng:
-            poi.lng ??
-            poi.longitude ??
-            attrs.longitude ??
-            props.longitude ??
-            poi.coordinates?.[0] ??
-            poi.geometry?.coordinates?.[0],
-    };
+    return { lat: _resolveLat(poi, attrs, props), lng: _resolveLng(poi, attrs, props) };
 }
 
 function _passesTypeFilter(poi: any, attrs: any, props: any, dataTypes: any): boolean {
@@ -138,8 +144,9 @@ function _passesProximityFilter(poi: any, proximity: any, getDistance: any): boo
     return getDistance(proximity.center.lat, proximity.center.lng, lat, lng) <= proximity.radius;
 }
 
-function _resolveCatIds(poi: any, attrs: any, props: any) {
-    const catId = String(
+/** Resolves the category ID string from multiple possible source fields. */
+function _resolveCatId(poi: any, attrs: any, props: any): string {
+    return String(
         attrs.categoryId ??
             poi.categoryId ??
             poi.category ??
@@ -147,7 +154,11 @@ function _resolveCatIds(poi: any, attrs: any, props: any) {
             props.category ??
             ""
     );
-    const subId = String(
+}
+
+/** Resolves the sub-category ID string from multiple possible source fields. */
+function _resolveSubId(poi: any, attrs: any, props: any): string {
+    return String(
         attrs.subCategoryId ??
             poi.subCategoryId ??
             poi.subCategory ??
@@ -156,7 +167,47 @@ function _resolveCatIds(poi: any, attrs: any, props: any) {
             props.sub_category ??
             ""
     );
-    return { catId, subId };
+}
+
+function _resolveCatIds(poi: any, attrs: any, props: any): { catId: string; subId: string } {
+    return { catId: _resolveCatId(poi, attrs, props), subId: _resolveSubId(poi, attrs, props) };
+}
+
+function _passesCatSubFilter(
+    hasCats: boolean,
+    hasSubs: boolean,
+    catId: string,
+    subId: string,
+    catsSel: string[],
+    subsSel: string[]
+): boolean {
+    if (!hasCats && !hasSubs) return true;
+    if (hasSubs) return !!subId && subsSel.includes(subId);
+    return !!catId && catsSel.includes(catId);
+}
+
+function _passesRatingFilter(
+    hasMinRating: boolean,
+    attrs: any,
+    poi: any,
+    props: any,
+    minRating: number
+): boolean {
+    if (!hasMinRating) return true;
+    const { avg, hasRating } = _extractRating(attrs, poi, props);
+    return hasRating && avg >= minRating;
+}
+
+function _passesTagFilter(
+    hasTags: boolean,
+    attrs: any,
+    poi: any,
+    props: any,
+    selectedTags: string[]
+): boolean {
+    if (!hasTags) return true;
+    const poiTags = _normalizeTags(attrs.tags ?? poi.tags ?? props.tags);
+    return selectedTags.some((tag: any) => poiTags.includes(tag));
 }
 
 function _matchesSinglePoi(poi: any, ctx: any): boolean {
@@ -184,72 +235,48 @@ function _matchesSinglePoi(poi: any, ctx: any): boolean {
     if (!_passesProximityFilter(poi, proximity, getDistance)) return false;
 
     const { catId, subId } = _resolveCatIds(poi, attrs, props);
-
-    if (hasCats || hasSubs) {
-        if (hasSubs) {
-            if (!subId || !subsSel.includes(subId)) return false;
-        } else if (hasCats) {
-            if (!catId || !catsSel.includes(catId)) return false;
-        }
-    }
-
-    if (hasMinRating) {
-        const { avg, hasRating } = _extractRating(attrs, poi, props);
-        if (!hasRating || avg < minRating) return false;
-    }
-
-    if (hasTags) {
-        const poiTags = _normalizeTags(attrs.tags ?? poi.tags ?? props.tags);
-        if (!selectedTags.some((tag: any) => poiTags.includes(tag))) return false;
-    }
+    if (!_passesCatSubFilter(hasCats, hasSubs, catId, subId, catsSel, subsSel)) return false;
+    if (!_passesRatingFilter(hasMinRating, attrs, poi, props, minRating)) return false;
+    if (!_passesTagFilter(hasTags, attrs, poi, props, selectedTags)) return false;
 
     return true;
 }
 
-export function filterPoiList(basePois: any, filterState: any) {
+function _buildFilterContext(filterState: any): Record<string, any> {
     const catsSel = filterState.categoriesTree || [];
     const subsSel = filterState.subCategoriesTree || [];
-    const hasCats = catsSel.length > 0;
-    const hasSubs = subsSel.length > 0;
-    const hasMinRating = !!filterState.hasMinRating;
-    const minRating = filterState.minRating;
-    const selectedTags = filterState.selectedTags || [];
-    const hasTags = filterState.hasTags;
-    const dataTypes = filterState.dataTypes || { poi: true, routes: true };
-    const searchText = (filterState.searchText || "").toLowerCase();
-    const hasSearchText = filterState.hasSearchText || false;
-    const proximity = filterState.proximity || { active: false };
+    return {
+        catsSel,
+        subsSel,
+        hasCats: catsSel.length > 0,
+        hasSubs: subsSel.length > 0,
+        hasMinRating: !!filterState.hasMinRating,
+        minRating: filterState.minRating,
+        selectedTags: filterState.selectedTags || [],
+        hasTags: filterState.hasTags,
+        dataTypes: filterState.dataTypes || { poi: true, routes: true },
+        searchText: (filterState.searchText || "").toLowerCase(),
+        hasSearchText: filterState.hasSearchText || false,
+        proximity: filterState.proximity || { active: false },
+        filterState,
+    };
+}
 
+export function filterPoiList(basePois: any, filterState: any): any[] {
     if (!Array.isArray(basePois) || basePois.length === 0) {
         Log.debug("[Filters] No POI to filter");
         return [];
     }
 
+    const ctx = _buildFilterContext(filterState);
     Log.debug("[Filters] POI filtering start:", {
         totalPOI: basePois.length,
-        hasCats,
-        hasSubs,
-        hasSearchText,
-        proximityActive: proximity.active,
+        hasCats: ctx.hasCats,
+        hasSubs: ctx.hasSubs,
+        hasSearchText: ctx.hasSearchText,
+        proximityActive: ctx.proximity.active,
     });
 
     const getDistance = _g.GeoLeaf?.Utils?.getDistance ?? _haversine;
-    const ctx = {
-        hasCats,
-        hasSubs,
-        hasMinRating,
-        minRating,
-        selectedTags,
-        hasTags,
-        dataTypes,
-        searchText,
-        hasSearchText,
-        proximity,
-        catsSel,
-        subsSel,
-        getDistance,
-        filterState,
-    };
-
-    return basePois.filter((poi) => _matchesSinglePoi(poi, ctx));
+    return basePois.filter((poi) => _matchesSinglePoi(poi, { ...ctx, getDistance }));
 }
