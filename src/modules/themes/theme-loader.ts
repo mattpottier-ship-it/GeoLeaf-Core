@@ -1,9 +1,9 @@
-﻿/**
+/**
  * Module Theme Loader
- * Charge et met en cache le fichier themes.json
+ * Loads et met en cache le file themes.json
  *
- * DÉPENDANCES:
- * - GeoLeaf.Log (optionnel)
+ * DEPENDENCIES:
+ * - GeoLeaf.Log (optional)
  * - GeoLeaf.Core.getActiveProfile()
  *
  * EXPOSE:
@@ -14,210 +14,207 @@
  */
 "use strict";
 
-import { Log } from '../log/index.js';
-import { FetchHelper } from '../utils/fetch-helper.js';
-
+import { Log } from "../log/index.js";
+import { getLabel } from "../i18n/i18n.js";
+import { FetchHelper } from "../utils/fetch-helper.js";
 
 /**
- * Cache pour les configurations de thèmes
+ * Cache for thes configurations de themes
  * @type {Map<string, Object>}
  */
 const _cache = new Map();
 
 /**
- * Promises en cours de chargement
+ * Promises en cours de loading
  * @type {Map<string, Promise>}
  */
 const _loadingPromises = new Map();
+
+function _normalizeTheme(theme: any): any {
+    if (!theme.id) {
+        Log?.warn("[ThemeLoader] Theme without ID ignored");
+        return null;
+    }
+    return {
+        id: theme.id,
+        label: theme.label || theme.id,
+        type: theme.type || "secondary",
+        description: theme.description || "",
+        icon: theme.icon || "",
+        layers: Array.isArray(theme.layers) ? theme.layers : [],
+    };
+}
+
+function _resolveDefaultTheme(validatedConfig: any): void {
+    if (!validatedConfig.defaultTheme) {
+        validatedConfig.defaultTheme = validatedConfig.themes[0].id;
+        return;
+    }
+    const defaultExists = validatedConfig.themes.some(
+        (t: any) => t.id === validatedConfig.defaultTheme
+    );
+    if (!defaultExists) {
+        Log?.warn("[ThemeLoader] defaultTheme not found, using first theme");
+        validatedConfig.defaultTheme = validatedConfig.themes[0].id;
+    }
+}
 
 /**
  * Module Theme Loader
  * @namespace _ThemeLoader
  * @private
  */
-const _ThemeLoader = {
-    /**
-     * Charge le fichier themes.json pour un profil
-     * @param {string} profileId - ID du profil
-     * @returns {Promise<Object>} Configuration des thèmes
-     */
-    loadThemesConfig(profileId: any) {
-        if (Log) Log.debug("[ThemeLoader] loadThemesConfig appelé pour:", profileId);
-
-        // Vérifier le cache
-        if (_cache.has(profileId)) {
-            if (Log) Log.debug("[ThemeLoader] Config en cache pour:", profileId);
-            return Promise.resolve(_cache.get(profileId));
-        }
-
-        // Vérifier si déjà en cours de chargement
-        if (_loadingPromises.has(profileId)) {
-            if (Log) Log.debug("[ThemeLoader] Chargement déjà en cours pour:", profileId);
-            return _loadingPromises.get(profileId);
-        }
-
-        // Construire le chemin du fichier
-        // Utiliser un chemin relatif depuis la racine du projet
-        // Si on est dans /demo/, on remonte avec ../
-        const isInDemo = window.location.pathname.includes('/demo/');
-        const basePath = isInDemo ? '../' : '';
-        const themesPath = `${basePath}profiles/${profileId}/themes.json`;
-
-        // Sprint 3.3: Unified fetch using FetchHelper with timeout and retry
-        // FetchHelper: imported from utils/fetch-helper.js
-        let loadPromise;
-
-        if (FetchHelper) {
-            // Use enhanced FetchHelper with timeout and retry
-            loadPromise = FetchHelper.get(themesPath, {
-                timeout: 8000,
-                retries: 1,
-                parseResponse: true
-            })
-            .then((data) => {
-                if (Log) Log.debug("[ThemeLoader] Fichier chargé:", themesPath);
-
-                // Valider la structure
-                const validated = this._validateConfig(data);
-
-                // Mettre en cache
+function _doFetchThemesConfig(
+    themesPath: string,
+    validateFn: (d: any) => any,
+    profileId: string,
+    Log: any,
+    _cache: any,
+    _loadingPromises: any
+): Promise<any> {
+    if (FetchHelper) {
+        return FetchHelper.get(themesPath, { timeout: 8000, retries: 1, parseResponse: true })
+            .then((data: any) => {
+                if (Log) Log.debug("[ThemeLoader] File loaded:", themesPath);
+                const validated = validateFn(data);
                 _cache.set(profileId, validated);
                 _loadingPromises.delete(profileId);
-
                 return validated;
             })
-            .catch((err) => {
-                if (Log) Log.warn("[ThemeLoader] Erreur chargement themes.json:", err.message);
+            .catch((err: any) => {
+                if (Log) Log.warn("[ThemeLoader] Error loading themes.json:", err.message);
                 _loadingPromises.delete(profileId);
                 throw err;
             });
-        } else {
-            // Fallback to raw fetch if FetchHelper not available
-            loadPromise = fetch(themesPath)
-                .then((response) => {
-                    if (!response.ok) {
-                        throw new Error(`Erreur HTTP ${response.status} lors du chargement de ${themesPath}`);
-                    }
-                    return response.json();
-                })
-                .then((data) => {
-                    if (Log) Log.debug("[ThemeLoader] Fichier chargé:", themesPath);
+    } else {
+        return fetch(themesPath)
+            .then((response) => {
+                if (!response.ok)
+                    throw new Error(`HTTP Error ${response.status} while loading ${themesPath}`);
+                return response.json();
+            })
+            .then((data: any) => {
+                if (Log) Log.debug("[ThemeLoader] File loaded:", themesPath);
+                const validated = validateFn(data);
+                _cache.set(profileId, validated);
+                _loadingPromises.delete(profileId);
+                return validated;
+            })
+            .catch((err: any) => {
+                if (Log) Log.warn("[ThemeLoader] Error loading themes.json:", err.message);
+                _loadingPromises.delete(profileId);
+                throw err;
+            });
+    }
+}
 
-                    // Valider la structure
-                    const validated = this._validateConfig(data);
+const _ThemeLoader = {
+    /**
+     * Loads the file themes.json pour a profile
+     * @param {string} profileId - ID of the profile
+     * @returns {Promise<Object>} Configuration des themes
+     */
+    loadThemesConfig(profileId: any) {
+        if (Log) Log.debug("[ThemeLoader] loadThemesConfig called for:", profileId);
 
-                    // Mettre en cache
-                    _cache.set(profileId, validated);
-                    _loadingPromises.delete(profileId);
-
-                    return validated;
-                })
-                .catch((err) => {
-                    if (Log) Log.warn("[ThemeLoader] Erreur chargement themes.json:", err.message);
-                    _loadingPromises.delete(profileId);
-                    throw err;
-                });
+        if (_cache.has(profileId)) {
+            if (Log) Log.debug("[ThemeLoader] Config cached for:", profileId);
+            return Promise.resolve(_cache.get(profileId));
         }
 
-        // Stocker la promesse en cours
-        _loadingPromises.set(profileId, loadPromise);
+        if (_loadingPromises.has(profileId)) {
+            if (Log) Log.debug("[ThemeLoader] Loading already in progress for:", profileId);
+            return _loadingPromises.get(profileId);
+        }
 
+        const isInDemo = window.location.pathname.includes("/demo/");
+        const basePath = isInDemo ? "../" : "";
+        const themesPath = `${basePath}profiles/${profileId}/themes.json`;
+
+        const loadPromise = _doFetchThemesConfig(
+            themesPath,
+            (d) => this._validateConfig(d),
+            profileId,
+            Log,
+            _cache,
+            _loadingPromises
+        );
+        _loadingPromises.set(profileId, loadPromise);
         return loadPromise;
     },
 
     /**
-     * Valide et normalise la configuration des thèmes
+     * Valide et normalise la configuration des themes
      * @param {Object} config - Configuration brute
-     * @returns {Object} Configuration validée
+     * @returns {Object} Configuration validated
      * @private
      */
     _validateConfig(config: any) {
-        if (!config || typeof config !== 'object') {
-            throw new Error("Configuration de thèmes invalide");
+        if (!config || typeof config !== "object") {
+            throw new Error("Invalid theme configuration");
         }
 
-        // Valeurs par défaut pour config
+        // Values by default pour config
         const validatedConfig = {
             config: {
                 primaryThemes: {
                     enabled: true,
                     position: "top-map",
-                    ...(config.config?.primaryThemes || {})
+                    ...(config.config?.primaryThemes || {}),
                 },
                 secondaryThemes: {
                     enabled: true,
-                    placeholder: "Sélectionner un thème...",
+                    placeholder: getLabel("ui.theme.select_placeholder"),
                     showNavigationButtons: true,
                     position: "top-layermanager",
-                    ...(config.config?.secondaryThemes || {})
-                }
+                    ...(config.config?.secondaryThemes || {}),
+                },
             },
             themes: [] as any[],
-            defaultTheme: config.defaultTheme || null
+            defaultTheme: config.defaultTheme || null,
         };
 
-        // Valider les thèmes
+        // Valider the themes
         if (!Array.isArray(config.themes)) {
-            if (Log) Log.warn("[ThemeLoader] Aucun thème défini dans la configuration");
+            Log?.warn("[ThemeLoader] No theme defined in configuration");
             return validatedConfig;
         }
 
-        // Normaliser chaque thème
-        validatedConfig.themes = config.themes.map((theme: any) => {
-            if (!theme.id) {
-                if (Log) Log.warn("[ThemeLoader] Thème sans ID ignoré");
-                return null;
-            }
+        // Normaliser chaque theme
+        validatedConfig.themes = config.themes.map(_normalizeTheme).filter(Boolean);
 
-            return {
-                id: theme.id,
-                label: theme.label || theme.id,
-                type: theme.type || "secondary", // Par défaut: secondary
-                description: theme.description || "",
-                icon: theme.icon || "",
-                layers: Array.isArray(theme.layers) ? theme.layers : []
-            };
-        }).filter(Boolean); // Supprimer les thèmes invalides
-
-        // Vérifier qu'il y a au moins un thème
+        // Check qu'il y a au moins a theme
         if (validatedConfig.themes.length === 0) {
-            throw new Error("Aucun thème valide trouvé dans la configuration");
+            throw new Error("Aucun theme valide found dans la configuration");
         }
 
-        // Vérifier que le defaultTheme existe
-        if (validatedConfig.defaultTheme) {
-            const defaultExists = validatedConfig.themes.some(
-                (t) => t.id === validatedConfig.defaultTheme
-            );
-            if (!defaultExists) {
-                if (Log) Log.warn("[ThemeLoader] defaultTheme introuvable, utilisation du premier thème");
-                validatedConfig.defaultTheme = validatedConfig.themes[0].id;
-            }
-        } else {
-            // Pas de defaultTheme défini, utiliser le premier
-            validatedConfig.defaultTheme = validatedConfig.themes[0].id;
-        }
+        // Check que le defaultTheme existe
+        _resolveDefaultTheme(validatedConfig);
 
-        if (Log) Log.debug("[ThemeLoader] Configuration validée:", validatedConfig.themes.length, "thèmes");
+        Log?.debug(
+            "[ThemeLoader] Configuration validated:",
+            validatedConfig.themes.length,
+            "themes"
+        );
 
         return validatedConfig;
     },
 
     /**
-     * Vide le cache (pour tests ou rechargement)
-     * @param {string} [profileId] - ID du profil (optionnel, vide tout si non spécifié)
+     * Empty le cache (pour tests ou reloading)
+     * @param {string} [profileId] - Profile ID (optional, empties all if not specified)
      */
     clearCache(profileId: any) {
         if (profileId) {
             _cache.delete(profileId);
             _loadingPromises.delete(profileId);
-            if (Log) Log.debug("[ThemeLoader] Cache vidé pour:", profileId);
+            if (Log) Log.debug("[ThemeLoader] Cache cleared for:", profileId);
         } else {
             _cache.clear();
             _loadingPromises.clear();
-            if (Log) Log.debug("[ThemeLoader] Cache complet vidé");
+            if (Log) Log.debug("[ThemeLoader] Full cache cleared");
         }
-    }
+    },
 };
 
 export { _ThemeLoader as ThemeLoader };

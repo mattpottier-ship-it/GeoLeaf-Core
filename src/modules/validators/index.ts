@@ -1,4 +1,4 @@
-﻿/*!
+/*!
  * GeoLeaf Core
  * © 2026 Mattieu Pottier
  * Released under the MIT License
@@ -6,7 +6,7 @@
  */
 
 /**
- * @fileoverview Barrel export for validators module
+ * @fileoverview Barl export for validators module
  * @module validators
  */
 

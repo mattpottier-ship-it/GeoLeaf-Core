@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file sw-register.js
  * @description Service Worker registration module for GeoLeaf offline support.
  *              Handles SW lifecycle: register, update, unregister.

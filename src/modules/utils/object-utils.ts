@@ -1,17 +1,18 @@
+/* eslint-disable security/detect-object-injection */
 /**
  * @module GeoLeaf.Utils.ObjectUtils
- * @description Utilitaires pour manipulation d'objets et accès aux propriétés imbriquées
+ * @description Utilitaires pour manipulation d'objects et access to properties nestedes
  * @version 2.1.0
  * @since 2.1.0
  */
 
 /**
- * Récupère une valeur imbriquée dans un objet via un chemin de propriétés.
- * Gère les valeurs null/undefined de manière sécurisée.
+ * Retrieves a value nestede dans an object via un path de properties.
+ * Manages null/undefined values safely.
  *
- * @param obj - Objet source
- * @param path - Chemin vers la propriété avec notation point (ex: 'user.address.city')
- * @returns Valeur trouvée ou null si le chemin n'existe pas
+ * @param obj - Object source
+ * @param path - Path to the property avec notation point (ex: 'user.address.city')
+ * @returns Value found ou null si le path n'existe pas
  */
 export function getNestedValue<T = unknown>(
     obj: object | null | undefined,
@@ -39,11 +40,11 @@ export function getNestedValue<T = unknown>(
 }
 
 /**
- * Vérifie si un chemin de propriété existe dans un objet.
+ * Checks if un path de property existe dans an object.
  *
- * @param obj - Objet source
- * @param path - Chemin vers la propriété
- * @returns True si le chemin existe, false sinon
+ * @param obj - Object source
+ * @param path - Path to the property
+ * @returns True si le path existe, false sinon
  */
 export function hasNestedPath(obj: object | null | undefined, path: string): boolean {
     if (!obj || typeof obj !== "object" || !path) {
@@ -64,13 +65,13 @@ export function hasNestedPath(obj: object | null | undefined, path: string): boo
 }
 
 /**
- * Définit une valeur dans un objet via un chemin de propriétés.
- * Crée les objets intermédiaires si nécessaire.
+ * Sets ae value dans an object via un path de properties.
+ * Creates intermediate objects if needed.
  *
- * @param obj - Objet cible
- * @param path - Chemin vers la propriété
- * @param value - Valeur à définir
- * @returns L'objet modifié
+ * @param obj - Object cible
+ * @param path - Path to the property
+ * @param value - Value to define
+ * @returns The object modified
  */
 export function setNestedValue<T extends Record<string, unknown>>(
     obj: T,

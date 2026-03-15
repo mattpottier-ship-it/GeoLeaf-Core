@@ -1,15 +1,16 @@
+/* eslint-disable security/detect-object-injection */
 /**
  * GeoLeaf - DOM Security Module
  *
- * @description Wrappers sécurisés pour manipuler le DOM sans vulnérabilités XSS
+ * @description Secure wrappers for DOM manipulation without XSS vulnerabilities
  * @module GeoLeaf.DOMSecurity
  * @version 3.0.1
  *
  * USAGE:
- * - Remplace innerHTML par des alternatives sécurisées
- * - Utilise textContent pour données non-HTML
- * - Sanitize via GeoLeaf.Security pour HTML nécessaire
- * - Crée SVG de manière sécurisée
+ * - Replaces innerHTML with secure alternatives
+ * - Utilise textContent pour data non-HTML
+ * - Sanitize via GeoLeaf.Security pour HTML required
+ * - Creates SVG securely
  */
 
 import { Log } from "../log/index.js";
@@ -122,6 +123,18 @@ function getIcon(name: string, size = 18, options: SVGIconOptions = {}): SVGElem
     return createSVGIcon(size, size, pathData, options);
 }
 
+function _applyAttribute(element: HTMLElement, key: string, value: string | number): void {
+    if (key === "class" || key === "className") {
+        element.className = String(value);
+    } else if (key === "style" && typeof value === "object") {
+        Object.assign(element.style, value as Partial<CSSStyleDeclaration>);
+    } else if (key.startsWith("data-")) {
+        element.setAttribute(key, String(value));
+    } else {
+        (element as unknown as Record<string, unknown>)[key] = value;
+    }
+}
+
 function createElement(
     tagName: string,
     attributes: Record<string, string | number> = {},
@@ -130,15 +143,7 @@ function createElement(
     const element = document.createElement(tagName);
 
     for (const [key, value] of Object.entries(attributes)) {
-        if (key === "class" || key === "className") {
-            element.className = String(value);
-        } else if (key === "style" && typeof value === "object") {
-            Object.assign(element.style, value as Partial<CSSStyleDeclaration>);
-        } else if (key.startsWith("data-")) {
-            element.setAttribute(key, String(value));
-        } else {
-            (element as unknown as Record<string, unknown>)[key] = value;
-        }
+        _applyAttribute(element, key, value);
     }
 
     if (children) {

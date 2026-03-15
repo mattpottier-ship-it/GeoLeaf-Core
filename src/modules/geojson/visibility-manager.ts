@@ -1,17 +1,17 @@
 /**
  * GeoLeaf GeoJSON Module - Visibility Manager
- * Gestionnaire centralis� de visibilit� des couches avec gestion des priorit�s
+ * Centralised visibility manager for layers with priority management
  *
- * G�re trois sources de modification de visibilit� :
- * - 'user': Action manuelle de l'utilisateur (toggle, show/hide explicite)
- * - 'theme': Modification par application d'un th�me
- * - 'zoom': Modification automatique selon le niveau de zoom
+ * Manages three sources of visibility change:
+ * - 'user': Manual user action (toggle, explicit show/hide)
+ * - 'theme': Change via theme application
+ * - 'zoom': Automatic change based on the zoom level
  *
- * R�gles de priorit� :
- * 1. user > theme > zoom (l'utilisateur a toujours le dernier mot)
- * 2. Une action 'user' annule les flags 'theme' et 'zoom'
- * 3. Une action 'theme' peut override 'zoom' mais pas 'user'
- * 4. Une action 'zoom' ne change jamais l'�tat si 'user' ou 'theme' est actif
+ * Priority rules:
+ * 1. user > theme > zoom (the user always has the final say)
+ * 2. A 'user' action cancels 'theme' and 'zoom' flags
+ * 3. A 'theme' action can override 'zoom' but not 'user'
+ * 4. A 'zoom' action never changes the state if 'user' or 'theme' is active
  *
  * @module geojson/visibility-manager
  */
@@ -23,7 +23,7 @@ import { getLog } from "../utils/general-utils.js";
 const _g: any =
     typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : {};
 
-// D�pendances lazy � fallback pour tests o� shared peut �tre r�solu diff�remment
+// Lazy dependencies — fallback for tests where shared may be resolved differently
 const _defaultState = {
     map: null as any,
     layers: new Map<string, any>(),
@@ -33,42 +33,42 @@ const getState = () => (GeoJSONShared && GeoJSONShared.state ? GeoJSONShared.sta
 const VisibilityManager: any = {};
 
 /**
- * �tats de visibilit� possibles
+ * Possible visibility states
  * @private
  */
 const VisibilitySource = {
     USER: "user",
     THEME: "theme",
     ZOOM: "zoom",
-    SYSTEM: "system", // Chargement initial, etc.
+    SYSTEM: "system", // Initial load, etc.
 };
 
 /**
- * Initialise les m�tadonn�es de visibilit� pour une couche
- * @param {Object} layerData - Donn�es de la couche
+ * Initialises visibility metadata for a layer
+ * @param {Object} layerData - Layer data
  * @private
  */
 function initVisibilityMetadata(layerData: any) {
     if (!layerData._visibility) {
         layerData._visibility = {
-            current: false, // �tat actuel physique sur la carte (true/false)
-            logicalState: false, // �tat logique (bouton ON/OFF, ind�pendant du zoom)
-            source: VisibilitySource.SYSTEM, // Derni�re source de modification
-            userOverride: false, // L'utilisateur a forc� un �tat
-            themeOverride: false, // Un th�me a forc� un �tat
-            themeDesired: null, // Visibilit� voulue par le th�me (true/false)
-            zoomConstrained: false, // La couche est limit�e par le zoom
+            current: false, // current physical state on the map (true/false)
+            logicalState: false, // logical state (button ON/OFF, independent of zoom)
+            source: VisibilitySource.SYSTEM, // Last modification source
+            userOverride: false, // User has forced a state
+            themeOverride: false, // A theme has forced a state
+            themeDesired: null, // Visibility desired by the theme (true/false)
+            zoomConstrained: false, // Layer is constrained by zoom
         };
     }
 }
 
 /**
- * D�finit la visibilit� d'une couche avec gestion de priorit�
+ * Sets the visibility of a layer with priority management
  *
- * @param {string} layerId - ID de la couche
- * @param {boolean} visible - �tat de visibilit� souhait�
- * @param {string} source - Source de la modification ('user' | 'theme' | 'zoom' | 'system')
- * @returns {boolean} - true si la visibilit� a �t� modifi�e, false sinon
+ * @param {string} layerId - Layer ID
+ * @param {boolean} visible - Desired visibility state
+ * @param {string} source - Source of the change ('user' | 'theme' | 'zoom' | 'system')
+ * @returns {boolean} - true if visibility was changed, false otherwise
  */
 VisibilityManager.setVisibility = function (layerId: any, visible: any, source: any) {
     const state = getState();
@@ -76,32 +76,32 @@ VisibilityManager.setVisibility = function (layerId: any, visible: any, source: 
     const layerData = state.layers.get(layerId);
 
     if (!layerData) {
-        Log.warn("[VisibilityManager] Couche introuvable:", layerId);
+        Log.warn("[VisibilityManager] Layer not found:", layerId);
         return false;
     }
 
-    // Initialiser les m�tadonn�es si n�cessaire
+    // Initialise metadata if needed
     initVisibilityMetadata(layerData);
 
     const meta = layerData._visibility;
     const oldVisible = meta.current;
     const oldSource = meta.source;
 
-    // Appliquer les r�gles de priorit�
+    // Apply priority rules
     const canChange = this._canChangeVisibility(meta, source, visible);
 
     if (!canChange) {
         Log.debug(
-            `[VisibilityManager] Changement refus� pour ${layerId}: ` +
+            `[VisibilityManager] Changement refusé pour ${layerId}: ` +
                 `source=${source}, userOverride=${meta.userOverride}, themeOverride=${meta.themeOverride}`
         );
         return false;
     }
 
-    // Mettre � jour les flags selon la source
+    // Update flags based on the source
     this._updateVisibilityFlags(meta, source, visible);
 
-    // Appliquer le changement effectif
+    // Apply the effective change
     const changed = this._applyVisibilityChange(layerId, layerData, visible);
 
     if (changed) {
@@ -113,15 +113,15 @@ VisibilityManager.setVisibility = function (layerId: any, visible: any, source: 
                 `(source: ${oldSource} ? ${source})`
         );
 
-        // Mettre � jour les anciens flags pour compatibilit�
+        // Update legacy flags for compatibility
         layerData.visible = visible;
         layerData.userDisabled = meta.userOverride && !visible;
         layerData.themeHidden = meta.themeOverride && !visible;
 
-        // Notifier la l�gende
+        // Notify the legend
         this._notifyLegend(layerId, visible);
 
-        // �mettre l'�v�nement
+        // Emit the event
         this._fireVisibilityEvent(layerId, visible, source);
     }
 
@@ -129,31 +129,31 @@ VisibilityManager.setVisibility = function (layerId: any, visible: any, source: 
 };
 
 /**
- * V�rifie si la visibilit� peut �tre modifi�e selon les r�gles de priorit�
- * @param {Object} meta - M�tadonn�es de visibilit�
- * @param {string} source - Source de la modification
+ * Checks whether visibility can be changed based on priority rules
+ * @param {Object} meta - Visibility metadata
+ * @param {string} source - Source of the change
  * @returns {boolean}
  * @private
  */
 VisibilityManager._canChangeVisibility = function (meta: any, source: any, desiredVisible: any) {
-    // L'utilisateur peut toujours modifier
+    // User can always change
     if (source === VisibilitySource.USER) {
         return true;
     }
 
-    // IMPORTANT: Le zoom DOIT TOUJOURS pouvoir modifier l'affichage physique (current)
-    // m�me si userOverride est true. Cela permet d'afficher/masquer selon les seuils de zoom
-    // tout en gardant logicalState ind�pendant.
+    // IMPORTANT: Zoom MUST ALWAYS be able to modify the physical display (current)
+    // even if userOverride is true. This allows show/hide based on zoom thresholds
+    // while keeping logicalState independent.
     if (source === VisibilitySource.ZOOM) {
         return true;
     }
 
-    // Si l'utilisateur a d�fini un override, seul l'utilisateur peut changer l'�tat logique
+    // If user has set an override, only the user can change the logical state
     if (meta.userOverride) {
         return false;
     }
 
-    // Ne jamais r�activer ce qu'un th�me a explicitement masqu�
+    // Never re-enable what a theme has explicitly hidden
     if (
         source === VisibilitySource.ZOOM &&
         meta.themeOverride &&
@@ -163,20 +163,20 @@ VisibilityManager._canChangeVisibility = function (meta: any, source: any, desir
         return false;
     }
 
-    // Les th�mes peuvent override le zoom mais pas l'utilisateur
+    // Themes can override zoom but not the user
     if (source === VisibilitySource.THEME) {
         return true;
     }
 
-    // Par d�faut, autoriser (pour 'system' et autres)
+    // Default: allow (for 'system' and others)
     return true;
 };
 
 /**
- * Met � jour les flags de visibilit� selon la source
- * @param {Object} meta - M�tadonn�es de visibilit�
- * @param {string} source - Source de la modification
- * @param {boolean} visible - �tat de visibilit�
+ * Updates visibility flags based on the source
+ * @param {Object} meta - Visibility metadata
+ * @param {string} source - Source of the change
+ * @param {boolean} visible - Visibility state
  * @private
  */
 VisibilityManager._updateVisibilityFlags = function (meta: any, source: any, visible: any) {
@@ -185,199 +185,172 @@ VisibilityManager._updateVisibilityFlags = function (meta: any, source: any, vis
             meta.userOverride = true;
             meta.themeOverride = false; // Reset theme override
             meta.zoomConstrained = false;
-            meta.logicalState = visible; // Mettre � jour l'�tat logique
+            meta.logicalState = visible; // Update the logical state
             break;
 
         case VisibilitySource.THEME:
-            // Ne pas override userOverride si d�j� pr�sent
+            // Do not override userOverride if already set
             if (!meta.userOverride) {
                 meta.themeOverride = true;
                 meta.themeDesired = visible;
                 meta.zoomConstrained = false;
-                meta.logicalState = visible; // Mettre � jour l'�tat logique
+                meta.logicalState = visible; // Update the logical state
             }
             break;
 
         case VisibilitySource.ZOOM:
-            // Marquer la contrainte zoom (sauf override utilisateur)
-            // NE PAS modifier logicalState - le zoom n'affecte pas l'�tat logique
+            // Mark zoom constraint (except user override)
+            // DO NOT modify logicalState — zoom does not affect logical state
             if (!meta.userOverride) {
                 meta.zoomConstrained = true;
             }
             break;
 
         case VisibilitySource.SYSTEM:
-            // Reset tous les overrides pour un chargement propre
+            // Reset all overrides for a clean load
             meta.userOverride = false;
             meta.themeOverride = false;
             meta.themeDesired = null;
             meta.zoomConstrained = false;
-            meta.logicalState = visible; // Initialiser l'�tat logique
+            meta.logicalState = visible; // Initialise the logical state
             break;
     }
 };
 
+function _reFilterChildLayers(layer: any): void {
+    if (!layer || typeof layer.eachLayer !== "function") return;
+    layer.eachLayer(function (child: any) {
+        if (!child._geoleafFiltered) return;
+        const el = child.getElement?.();
+        if (el) {
+            el.style.display = "none";
+            return;
+        }
+        if (typeof child.setStyle === "function" && child.options._originalOpacity !== undefined) {
+            child.setStyle({ opacity: 0, fillOpacity: 0 });
+        }
+        if (!child._casingLayer) return;
+        const casingEl = child._casingLayer.getElement?.();
+        if (casingEl) {
+            casingEl.style.display = "none";
+            return;
+        }
+        if (typeof child._casingLayer.setStyle === "function")
+            child._casingLayer.setStyle({ opacity: 0 });
+    });
+}
+
+function _addLayerWithCluster(layerData: any, state: any): void {
+    if (layerData.useSharedCluster && layerData.clusterGroup) {
+        layerData.clusterGroup.addLayer(layerData.layer);
+        return;
+    }
+    if (layerData.clusterGroup) {
+        state.map.addLayer(layerData.clusterGroup);
+        if (layerData.clusterGroup.refreshClusters) layerData.clusterGroup.refreshClusters();
+        return;
+    }
+    state.map.addLayer(layerData.layer);
+    _reFilterChildLayers(layerData.layer);
+}
+
+function _removeLayerWithCluster(layerData: any, state: any): void {
+    if (layerData.useSharedCluster && layerData.clusterGroup) {
+        layerData.clusterGroup.removeLayer(layerData.layer);
+        return;
+    }
+    if (layerData.clusterGroup) {
+        state.map.removeLayer(layerData.clusterGroup);
+        return;
+    }
+    state.map.removeLayer(layerData.layer);
+}
+
+function _syncVisibilityUI(layerId: any): void {
+    const GeoLeaf = _g.GeoLeaf;
+    if (!GeoLeaf) return;
+    if (GeoLeaf.LayerManager && typeof GeoLeaf.LayerManager.refresh === "function") {
+        GeoLeaf.LayerManager.refresh();
+    }
+    if (
+        GeoLeaf._LabelButtonManager &&
+        typeof GeoLeaf._LabelButtonManager.syncImmediate === "function"
+    ) {
+        GeoLeaf._LabelButtonManager.syncImmediate(layerId);
+    }
+}
+
 /**
- * Applique physiquement le changement de visibilit� (add/remove layer)
- * @param {string} layerId - ID de la couche
- * @param {Object} layerData - Donn�es de la couche
- * @param {boolean} visible - �tat de visibilit� souhait�
- * @returns {boolean} - true si un changement a �t� effectu�
+ * Physically applies the visibility change (add/remove layer)
+ * @param {string} layerId - Layer ID
+ * @param {Object} layerData - Layer data
+ * @param {boolean} visible - Desired visibility state
+ * @returns {boolean} - true if a change was made
  * @private
  */
 VisibilityManager._applyVisibilityChange = function (layerId: any, layerData: any, visible: any) {
     const state = getState();
     const Log = getLog();
-
     if (!layerData.layer) {
-        Log.warn("[VisibilityManager] Layer Leaflet manquant pour:", layerId);
+        Log.warn("[VisibilityManager] Leaflet layer missing for:", layerId);
         return false;
     }
-
-    // D�terminer quelle couche g�rer (cluster ou layer)
     const layerToManage = layerData.clusterGroup || layerData.layer;
     const isCurrentlyOnMap = state.map && state.map.hasLayer(layerToManage);
-
-    // Si d�j� dans l'�tat souhait�, ne rien faire
-    if (visible && isCurrentlyOnMap) {
-        return false;
-    }
-    if (!visible && !isCurrentlyOnMap) {
-        return false;
-    }
-
+    if (visible && isCurrentlyOnMap) return false;
+    if (!visible && !isCurrentlyOnMap) return false;
     try {
         if (visible) {
-            // Cas 1 : Cluster partag� avec POI
-            if (layerData.useSharedCluster && layerData.clusterGroup) {
-                layerData.clusterGroup.addLayer(layerData.layer);
-            }
-            // Cas 2 : Cluster ind�pendant
-            else if (layerData.clusterGroup) {
-                state.map.addLayer(layerData.clusterGroup);
-                if (layerData.clusterGroup.refreshClusters) {
-                    layerData.clusterGroup.refreshClusters();
-                }
-            }
-            // Cas 3 : Pas de cluster - ajouter directement � la map pour respecter le pane
-            else {
-                state.map.addLayer(layerData.layer);
-                // Re-apply filter state: map.addLayer calls onAdd on every child layer which
-                // recreates all SVG <path> elements, destroying any display:none previously
-                // set by filterFeatures. Walk children and re-hide filtered ones.
-                if (layerData.layer && typeof layerData.layer.eachLayer === "function") {
-                    layerData.layer.eachLayer(function (child: any) {
-                        if (!child._geoleafFiltered) return;
-                        const el = child.getElement?.();
-                        if (el) {
-                            el.style.display = "none";
-                        } else if (
-                            typeof child.setStyle === "function" &&
-                            child.options._originalOpacity !== undefined
-                        ) {
-                            child.setStyle({ opacity: 0, fillOpacity: 0 });
-                        }
-                        // Re-hide casing layer too
-                        if (child._casingLayer) {
-                            const casingEl = child._casingLayer.getElement?.();
-                            if (casingEl) {
-                                casingEl.style.display = "none";
-                            } else if (typeof child._casingLayer.setStyle === "function") {
-                                child._casingLayer.setStyle({ opacity: 0 });
-                            }
-                        }
-                    });
-                }
-            }
+            _addLayerWithCluster(layerData, state);
         } else {
-            // Cas 1 : Cluster partag� avec POI
-            if (layerData.useSharedCluster && layerData.clusterGroup) {
-                layerData.clusterGroup.removeLayer(layerData.layer);
-            }
-            // Cas 2 : Cluster ind�pendant
-            else if (layerData.clusterGroup) {
-                state.map.removeLayer(layerData.clusterGroup);
-            }
-            // Cas 3 : Pas de cluster - retirer directement de la map
-            else {
-                state.map.removeLayer(layerData.layer);
-            }
+            _removeLayerWithCluster(layerData, state);
         }
-
-        // Synchroniser l'UI du Layer Manager et le bouton labels apr�s changement r�ussi
-        // Utilise le refresh debounced pour grouper les changements multiples (ex: zoom)
-        if (
-            _g.GeoLeaf &&
-            _g.GeoLeaf.LayerManager &&
-            typeof _g.GeoLeaf.LayerManager.refresh === "function"
-        ) {
-            _g.GeoLeaf.LayerManager.refresh(); // Debounced par d�faut (100ms)
-        }
-
-        if (
-            _g.GeoLeaf &&
-            _g.GeoLeaf._LabelButtonManager &&
-            typeof _g.GeoLeaf._LabelButtonManager.syncImmediate === "function"
-        ) {
-            _g.GeoLeaf._LabelButtonManager.syncImmediate(layerId);
-        }
-
+        _syncVisibilityUI(layerId);
         return true;
     } catch (err) {
-        Log.error(
-            `[VisibilityManager] Erreur lors du changement de visibilit� de ${layerId}:`,
-            err
-        );
+        Log.error("[VisibilityManager] Visibility change error for " + layerId + ":", err);
         return false;
     }
 };
 
+function _notifyLabelsModule(layerId: any, visible: any): void {
+    const Labels = _g.GeoLeaf && _g.GeoLeaf.Labels;
+    if (!Labels) return;
+    if (visible && typeof Labels.refreshLabels === "function") {
+        Labels.refreshLabels(layerId);
+        return;
+    }
+    if (!visible && typeof Labels._hideLabelsForLayer === "function") {
+        Labels._hideLabelsForLayer(layerId);
+    }
+}
+
 /**
- * Notifie le module Legend d'un changement de visibilit�
- * @param {string} layerId - ID de la couche
- * @param {boolean} visible - �tat de visibilit�
+ * Notifies the Legend module of a visibility change
+ * @param {string} layerId - Layer ID
+ * @param {boolean} visible - Visibility state
  * @private
  */
 VisibilityManager._notifyLegend = function (layerId: any, visible: any) {
-    if (
-        _g.GeoLeaf &&
-        _g.GeoLeaf.Legend &&
-        typeof _g.GeoLeaf.Legend.setLayerVisibility === "function"
-    ) {
-        _g.GeoLeaf.Legend.setLayerVisibility(layerId, visible);
+    const GeoLeaf = _g.GeoLeaf;
+    if (!GeoLeaf) return;
+    if (GeoLeaf.Legend && typeof GeoLeaf.Legend.setLayerVisibility === "function") {
+        GeoLeaf.Legend.setLayerVisibility(layerId, visible);
     }
-
-    // Notifier aussi le module Labels pour masquer/afficher les �tiquettes
-    if (_g.GeoLeaf && _g.GeoLeaf.Labels) {
-        if (visible) {
-            // Si la couche devient visible, v�rifier si les labels doivent �tre affich�s
-            // refreshLabels ne fait rien si les labels ne sont pas enabled
-            if (typeof _g.GeoLeaf.Labels.refreshLabels === "function") {
-                _g.GeoLeaf.Labels.refreshLabels(layerId);
-            }
-        } else {
-            // Si la couche devient invisible, masquer les labels (sans changer enabled)
-            if (typeof _g.GeoLeaf.Labels._hideLabelsForLayer === "function") {
-                _g.GeoLeaf.Labels._hideLabelsForLayer(layerId);
-            }
-        }
-    }
-
-    // Synchroniser le bouton de label pour refl�ter la visibilit� de la couche
+    _notifyLabelsModule(layerId, visible);
     if (
-        _g.GeoLeaf &&
-        _g.GeoLeaf._LabelButtonManager &&
-        typeof _g.GeoLeaf._LabelButtonManager.syncImmediate === "function"
+        GeoLeaf._LabelButtonManager &&
+        typeof GeoLeaf._LabelButtonManager.syncImmediate === "function"
     ) {
-        _g.GeoLeaf._LabelButtonManager.syncImmediate(layerId);
+        GeoLeaf._LabelButtonManager.syncImmediate(layerId);
     }
 };
 
 /**
- * �met un �v�nement de changement de visibilit�
- * @param {string} layerId - ID de la couche
- * @param {boolean} visible - �tat de visibilit�
- * @param {string} source - Source du changement
+ * Emits a visibility change event
+ * @param {string} layerId - Layer ID
+ * @param {boolean} visible - Visibility state
+ * @param {string} source - Source of the change
  * @private
  */
 VisibilityManager._fireVisibilityEvent = function (layerId: any, visible: any, source: any) {
@@ -391,15 +364,15 @@ VisibilityManager._fireVisibilityEvent = function (layerId: any, visible: any, s
             source: source,
         });
     } catch (_e) {
-        // Silencieux
+        // Silent
     }
 };
 
 /**
- * R�initialise les overrides utilisateur pour une couche
- * Utilis� par les th�mes pour reprendre le contr�le
+ * Resets user overrides for a layer
+ * Used by themes to regain control
  *
- * @param {string} layerId - ID de la couche
+ * @param {string} layerId - Layer ID
  */
 VisibilityManager.resetUserOverride = function (layerId: any) {
     const state = getState();
@@ -407,13 +380,13 @@ VisibilityManager.resetUserOverride = function (layerId: any) {
 
     if (layerData && layerData._visibility) {
         layerData._visibility.userOverride = false;
-        getLog().debug(`[VisibilityManager] User override r�initialis� pour ${layerId}`);
+        getLog().debug(`[VisibilityManager] User override reset for ${layerId}`);
     }
 };
 
 /**
- * R�initialise tous les overrides utilisateur
- * Utilis� par les th�mes lors d'un changement complet de th�me
+ * Resets all user overrides
+ * Used by themes during a complete theme change
  */
 VisibilityManager.resetAllUserOverrides = function () {
     const state = getState();
@@ -427,14 +400,14 @@ VisibilityManager.resetAllUserOverrides = function () {
     });
 
     if (count > 0) {
-        getLog().debug(`[VisibilityManager] ${count} user override(s) r�initialis�(s)`);
+        getLog().debug(`[VisibilityManager] ${count} user override(s) reset`);
     }
 };
 
 /**
- * Obtient l'�tat de visibilit� complet d'une couche
- * @param {string} layerId - ID de la couche
- * @returns {Object|null} - M�tadonn�es de visibilit� ou null
+ * Gets the complete visibility state of a layer
+ * @param {string} layerId - Layer ID
+ * @returns {Object|null} - Visibility metadata or null
  */
 VisibilityManager.getVisibilityState = function (layerId: any) {
     const state = getState();
@@ -456,12 +429,12 @@ VisibilityManager.getVisibilityState = function (layerId: any) {
 };
 
 /**
- * Exporte les constantes pour utilisation externe
+ * Exports constants for external use
  */
 VisibilityManager.VisibilitySource = VisibilitySource;
-/** Expos� pour les tests lorsque GeoJSONShared n'est pas inject� (r�solution de module diff�rente) */
+/** Exposed for tests where GeoJSONShared is not injected (different module resolution) */
 VisibilityManager._getTestState = () => _defaultState;
 
-getLog().info("[GeoLeaf._LayerVisibilityManager] Module charg�");
+getLog().info("[GeoLeaf._LayerVisibilityManager] Module loaded");
 
 export { VisibilityManager };

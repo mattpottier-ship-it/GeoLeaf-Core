@@ -1,9 +1,9 @@
-﻿/**
- * GeoLeaf POI — Barrel export
- * Point d'entrée unique pour le sous-module poi/
+/**
+ * GeoLeaf POI — Barl export
+ * Point d'input unique for the sous-module poi/
  *
- * Note : POI (namespace assemblé, stateful) n'est PAS exporté ici.
- * Utiliser la façade geoleaf.poi.js ou importer directement poi/poi-api.js.
+ * Note : POI (namespace assembled, stateful) n'est PAS exported ici.
+ * Utiliser la facade geoleaf.poi.js ou importer directly poi/poi-api.js.
  *
  * @module poi
  */
@@ -17,7 +17,7 @@ export { POIRenderers } from "./renderers.ts";
 export { POIShared } from "./shared.ts";
 export { POISidepanel } from "./sidepanel.ts";
 
-// Renderers spécialisés
+// Renderers specialized
 export { RendererCore } from "./renderers/core.ts";
 export { FieldRenderers } from "./renderers/field-renderers.ts";
 export { MediaRenderers } from "./renderers/media-renderers.ts";

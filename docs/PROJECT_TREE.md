@@ -1,7 +1,7 @@
-# GeoLeaf-Core � Arborescence du projet
+﻿# GeoLeaf-Core � Arborescence du projet
 
 **Product Version:** GeoLeaf Platform V1
-**Version:** 1.1.0
+**Version:** 1.1.1
 **Date:** mars 2026
 
 > Ce document d�crit la structure du projet **GeoLeaf-Core** (biblioth�que principale, licence MIT).

@@ -1,4 +1,5 @@
-﻿/*!
+/* eslint-disable security/detect-object-injection */
+/*!
  * GeoLeaf Core
  * © 2026 Mattieu Pottier
  * Released under the MIT License
@@ -7,7 +8,7 @@
 
 /**
  * GeoLeaf UI DOM Utilities Module
- * Utilitaires DOM réutilisables pour l'interface utilisateur
+ * Reusable DOM utilities for the user interface
  */
 
 import { Log } from "../log/index.js";
@@ -21,9 +22,9 @@ const _UIDomUtils: any = {};
 _UIDomUtils.resolveField = resolveField;
 
 /**
- * Attache le comportement d'accordéon (toggle open/close) à un conteneur.
- * Évite les attachements multiples avec un flag.
- * @param {HTMLElement} container - Conteneur parent avec des éléments .gl-accordion
+ * Attache le behavior d'accordion (toggle open/close) to a conteneur.
+ * Prevents multiple attachments using a flag.
+ * @param {HTMLElement} container - Conteneur parent avec des elements .gl-accordion
  */
 _UIDomUtils.attachAccordionBehavior = function (container: any) {
     if (!container || container._glAccordionBound) return;
@@ -42,30 +43,36 @@ _UIDomUtils.attachAccordionBehavior = function (container: any) {
 };
 
 /**
- * Récupère le profil actif depuis GeoLeaf.Config.
- * @returns {Object|null} Objet profil ou null si indisponible
+ * Retrieves the profile active from GeoLeaf.Config.
+ * @returns {Object|null} Object profile ou null si inavailable
  */
 _UIDomUtils.getActiveProfileConfig = function () {
     if (!Config || typeof (Config as any).getActiveProfile !== "function") {
         Log.warn(
-            "[UIDomUtils] GeoLeaf.(Config as any).getActiveProfile() indisponible. Impossible de récupérer le profil actif."
+            "[UIDomUtils] GeoLeaf.(Config as any).getActiveProfile() unavailable. Cannot retrieve active profile."
         );
         return null;
     }
     const profile = (Config as any).getActiveProfile();
     if (!profile) {
-        Log.warn("[UIDomUtils] Aucun profil actif retourné par GeoLeaf.(Config as any).getActiveProfile().");
+        Log.warn(
+            "[UIDomUtils] No active profile returned by GeoLeaf.(Config as any).getActiveProfile()."
+        );
     }
     return profile || null;
 };
 
 /**
- * Construit les <option> d'un select à partir de la taxonomie et d'un chemin optionsFrom.
- * @param {HTMLSelectElement} selectEl - Élément <select> à peupler
- * @param {Object} profile - Objet profil contenant la taxonomie
- * @param {string} optionsFrom - Chemin vers les options (ex: "taxonomy.categories")
+ * Builds thes <option> of a select from la taxonomy et of a path optionsFrom.
+ * @param {HTMLSelectElement} selectEl - Element <select> to peupler
+ * @param {Object} profile - Object profile contenant la taxonomy
+ * @param {string} optionsFrom - Path to thes options (ex: "taxonomy.categories")
  */
-_UIDomUtils.populateSelectOptionsFromTaxonomy = function (selectEl: any, profile: any, optionsFrom: any) {
+_UIDomUtils.populateSelectOptionsFromTaxonomy = function (
+    selectEl: any,
+    profile: any,
+    optionsFrom: any
+) {
     if (!selectEl || !profile || !profile.taxonomy) return;
 
     const taxonomy = profile.taxonomy;

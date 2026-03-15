@@ -1,6 +1,6 @@
 /**
  * GeoLeaf UI Module - Event Delegation
- * Centralisation de la gestion des événements UI avec patterns de délégation efficaces
+ * Centralisation de la gestion des events UI avec patterns de delegation efficaces
  *
  * @module ui/event-delegation
  * @author Assistant
@@ -9,48 +9,47 @@
 import { Log } from "../log/index.js";
 
 // ========================================
-//   CONSTANTES & ÉTAT
+//   CONSTANTES & STATE
 // ========================================
 
 /**
- * Map des listeners actifs pour cleanup
+ * Map des listners actives pour cleanup
  * @type {Map<string, {element: HTMLElement, event: string, handler: Function}>}
  */
 const _activeListeners = new Map();
 
 /**
- * Compteur pour identifiants uniques des listeners
+ * Compteur pour identifiers uniques des listners
  * @type {number}
  */
 let _listenerIdCounter = 0;
 
 // ========================================
-//   UTILITAIRES DE DÉLÉGATION
+//   UTILITAIRES DE DELEGATION
 // ========================================
 
 /**
- * Attache un event listener avec tracking automatique pour cleanup
- * @param {HTMLElement} element - Élément DOM
- * @param {string} event - Type d'événement
- * @param {Function} handler - Handler de l'événement
- * @param {Object} options - Options pour addEventListener
- * @returns {string} ID unique du listener pour cleanup
+ * Attache un event listner avec tracking automatic pour cleanup
+ * @param {HTMLElement} element - Element DOM
+ * @param {string} event - Type d'event
+ * @param {Function} handler - Handler of the event
+ * @param {Object} options - Options pour addEventListner
+ * @returns {string} ID unique du listner pour cleanup
  */
 function attachTrackedListener(element: any, event: string, handler: any, options: any = {}) {
     if (!element || typeof handler !== "function") {
-        if (Log)
-            Log.warn("[UI.EventDelegation] attachTrackedListener: élement ou handler manquant");
+        if (Log) Log.warn("[UI.EventDelegation] attachTrackedListener: element or handler missing");
         return null;
     }
 
     const listenerId = `listener_${++_listenerIdCounter}`;
 
-    // Wrapper pour tracking automatique des erreurs
+    // Wrapper pour tracking automatic des errors
     const wrappedHandler = function (this: any, e: any) {
         try {
             return handler.call(this, e);
         } catch (error) {
-            if (Log) Log.error("[UI.EventDelegation] Erreur dans handler:", error);
+            if (Log) Log.error("[UI.EventDelegation] Error in handler:", error);
         }
     };
 
@@ -67,9 +66,9 @@ function attachTrackedListener(element: any, event: string, handler: any, option
 }
 
 /**
- * Détache un listener trackée
- * @param {string} listenerId - ID retourné par attachTrackedListener
- * @returns {boolean} True si succès
+ * Detaches a tracked listener
+ * @param {string} listnerId - ID returned by attachTrackedListner
+ * @returns {boolean} True si success
  */
 function detachTrackedListener(listenerId: any) {
     if (!listenerId || !_activeListeners.has(listenerId)) {
@@ -83,8 +82,8 @@ function detachTrackedListener(listenerId: any) {
 }
 
 /**
- * Nettoie tous les listeners trackées
- * @returns {number} Nombre de listeners nettoyées
+ * Cleans up all tracked listeners
+ * @returns {number} Nombre de listners cleaned
  */
 function cleanupAllListeners() {
     let cleaned = 0;
@@ -94,32 +93,32 @@ function cleanupAllListeners() {
     }
     _activeListeners.clear();
     if (Log && cleaned > 0) {
-        Log.info(`[UI.EventDelegation] ${cleaned} listeners nettoyées`);
+        Log.info(`[UI.EventDelegation] ${cleaned} listeners cleaned`);
     }
     return cleaned;
 }
 
 // ========================================
-//   DÉLÉGATION PAR TYPES UI SPÉCIFIQUES
+//   DELEGATION BY SPECIFIC UI TYPES
 // ========================================
 
 /**
- * Gère les événements des inputs de filtre avec debouncing
- * @param {HTMLElement} filterContainer - Conteneur des filtres
- * @param {Function} onFilterChange - Callback appelé lors des changements
- * @param {number} debounceMs - Délai de debounce (défaut: 300ms)
- * @returns {string[]} IDs des listeners créés
+ * Manages thes events des inputs de filters avec debouncing
+ * @param {HTMLElement} filterContainer - Conteneur des filters
+ * @param {Function} onFilterChange - Callback called whens changements
+ * @param {number} debounceMs - Debounce delay (default: 300ms)
+ * @returns {string[]} IDs des listners created
  */
 function attachFilterInputEvents(filterContainer: any, onFilterChange: any, debounceMs = 300) {
     if (!filterContainer || typeof onFilterChange !== "function") {
-        if (Log) Log.warn("[UI.EventDelegation] attachFilterInputEvents: paramètres manquants");
+        if (Log) Log.warn("[UI.EventDelegation] attachFilterInputEvents: missing parameters");
         return [];
     }
 
     const listenerIds = [];
     let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
-    // Fonction debounce pour les inputs
+    // Fonction debounce for thes inputs
     const debouncedHandler = function () {
         if (debounceTimer) clearTimeout(debounceTimer);
         debounceTimer = setTimeout(() => {
@@ -127,21 +126,21 @@ function attachFilterInputEvents(filterContainer: any, onFilterChange: any, debo
         }, debounceMs);
     };
 
-    // Délégation pour tous les inputs de type text/range
+    // Delegation pour tous les inputs de type text/range
     const textInputHandler = function (e: any) {
         if (e.target.matches('input[type="text"], input[type="range"]')) {
             debouncedHandler();
         }
     };
 
-    // Délégation pour les checkboxes (pas de debounce)
+    // Delegation for thes checkboxes (pas de debounce)
     const checkboxHandler = function (e: any) {
         if (e.target.matches('input[type="checkbox"]')) {
             onFilterChange();
         }
     };
 
-    // Délégation pour les selects
+    // Delegation for thes selects
     const selectHandler = function (e: any) {
         if (e.target.matches("select")) {
             onFilterChange();
@@ -156,9 +155,9 @@ function attachFilterInputEvents(filterContainer: any, onFilterChange: any, debo
 }
 
 /**
- * Gère les événements d'accordéon avec délégation
- * @param {HTMLElement} container - Conteneur des accordéons
- * @returns {string} ID du listener créé
+ * Manages thes events d'accordion avec delegation
+ * @param {HTMLElement} container - Conteneur des accordions
+ * @returns {string} ID du listner created
  */
 function attachAccordionEvents(container: any) {
     if (!container) {
@@ -167,27 +166,27 @@ function attachAccordionEvents(container: any) {
     }
 
     const accordionHandler = function (e: any) {
-        // Cherche le bouton d'accordéon dans la hiérarchie
+        // Cherche le button d'accordion in the hierarchy
         const accordionButton = e.target.closest(".gl-accordion-toggle, .accordion-arrow");
         if (!accordionButton) return;
 
         e.preventDefault();
         e.stopPropagation();
 
-        // Trouve le panel associé
+        // Finds the associated panel
         const panel = accordionButton
             .closest(".gl-accordion")
             ?.querySelector(".gl-accordion-content");
         if (!panel) return;
 
-        // Toggle accordéon
+        // Toggle accordion
         const isExpanded = panel.style.display !== "none";
         panel.style.display = isExpanded ? "none" : "block";
 
-        // Met à jour l'aria-expanded
+        // Updates the aria-expanded
         accordionButton.setAttribute("aria-expanded", !isExpanded);
 
-        // Met à jour l'icône si présente
+        // Updates the icon si presents
         const icon = accordionButton.querySelector(".accordion-icon, .accordion-arrow");
         if (icon) {
             icon.classList.toggle("expanded", !isExpanded);
@@ -198,14 +197,14 @@ function attachAccordionEvents(container: any) {
 }
 
 /**
- * Gère les événements des contrôles de carte (delegation pour les boutons)
- * @param {HTMLElement} mapContainer - Conteneur de la carte
+ * Manages thes events des controles de carte (delegation for thes buttons)
+ * @param {HTMLElement} mapContainer - Conteneur de the map
  * @param {Object} handlers - Map des handlers { selectorPattern: handlerFunction }
- * @returns {string[]} IDs des listeners créés
+ * @returns {string[]} IDs des listners created
  */
 function attachMapControlEvents(mapContainer: any, handlers: any) {
     if (!mapContainer || !handlers || typeof handlers !== "object") {
-        if (Log) Log.warn("[UI.EventDelegation] attachMapControlEvents: paramètres manquants");
+        if (Log) Log.warn("[UI.EventDelegation] attachMapControlEvents: missing parameters");
         return [];
     }
 
@@ -234,17 +233,17 @@ function attachMapControlEvents(mapContainer: any, handlers: any) {
 // ========================================
 
 /**
- * Obtient le nombre de listeners actifs enregistrés
- * Utile pour le debugging et le monitoring des fuites mémoire
- * @returns {number} Nombre de listeners actifs
+ * Obtient le nombre de listners actives registered
+ * Utile for the debugging et le monitoring des fuites memory
+ * @returns {number} Nombre de listners actives
  */
 function getActiveListenersCount() {
     return _activeListeners.size;
 }
 
 /**
- * Récupère la liste complète des listeners actifs avec leurs métadonnées
- * @returns {string[]} Liste des IDs de listeners actifs
+ * Retrieves the list complete des listners actives with theurs metadata
+ * @returns {string[]} List des IDs de listners actives
  */
 function getActiveListeners() {
     return Array.from(_activeListeners.keys());

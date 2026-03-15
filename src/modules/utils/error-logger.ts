@@ -53,7 +53,7 @@ export const ErrorLogger = {
         if (Log && typeof Log.debug === "function") {
             Log.debug(fullMessage);
         } else {
-            console.debug(fullMessage);
+            console.debug(fullMessage); // eslint-disable-line no-console
         }
     },
 

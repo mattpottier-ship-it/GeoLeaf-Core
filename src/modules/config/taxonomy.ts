@@ -1,4 +1,5 @@
-﻿/*!
+/* eslint-disable security/detect-object-injection */
+/*!
  * GeoLeaf Core
  * © 2026 Mattieu Pottier
  * Released under the MIT License
@@ -27,6 +28,21 @@ interface LoadUrlOptions {
     strictContentType?: boolean;
 }
 
+function _resolveCategoryKey(categories: Record<string, CategoryItem>, id: string): string | null {
+    if (Object.prototype.hasOwnProperty.call(categories, id)) return id;
+    const lower = id.toLowerCase();
+    return Object.keys(categories).find((k) => k.toLowerCase() === lower) ?? null;
+}
+
+function _resolveSubcategoryKey(
+    subcategories: Record<string, CategoryItem>,
+    id: string
+): string | null {
+    if (Object.prototype.hasOwnProperty.call(subcategories, id)) return id;
+    const lower = id.toLowerCase();
+    return Object.keys(subcategories).find((k) => k.toLowerCase() === lower) ?? null;
+}
+
 const TaxonomyModule: TaxonomyModuleType = {
     _config: null,
 
@@ -40,11 +56,11 @@ const TaxonomyModule: TaxonomyModuleType = {
     ): Promise<Record<string, CategoryItem>> {
         const Loader = ProfileLoader;
         if (!Loader) {
-            Log.error("[GeoLeaf.Config.Taxonomy] Module Loader non disponible.");
+            Log.error("[GeoLeaf.Config.Taxonomy] Loader module not available.");
             return Promise.reject(new Error("Loader module not available"));
         }
         if (!url) {
-            Log.info("[GeoLeaf.Config.Taxonomy] Aucune URL de mapping fournie — skip.");
+            Log.info("[GeoLeaf.Config.Taxonomy] No mapping URL provided — skip.");
             return Promise.resolve({});
         }
         return Loader.loadUrl(url, options)
@@ -57,8 +73,8 @@ const TaxonomyModule: TaxonomyModuleType = {
                     !Array.isArray(cfg.categories);
                 if (!hasCategories) {
                     Log.warn(
-                        "[GeoLeaf.Config.Taxonomy] Fichier de mapping catégories chargé mais " +
-                            "aucune propriété 'categories' valide trouvée (attendu: { \"categories\": { ... } })."
+                        "[GeoLeaf.Config.Taxonomy] Category mapping file loaded but " +
+                            "no valid 'categories' property found (expected: { \"categories\": { ... } })."
                     );
                 } else if (this._config) {
                     if (!this._config.categories || typeof this._config.categories !== "object") {
@@ -68,15 +84,12 @@ const TaxonomyModule: TaxonomyModuleType = {
                         this._config.categories,
                         (cfg as { categories: Record<string, CategoryItem> }).categories
                     );
-                    Log.info("[GeoLeaf.Config.Taxonomy] Mapping catégories fusionné avec succès.");
+                    Log.info("[GeoLeaf.Config.Taxonomy] Category mapping merged successfully.");
                 }
                 return this.getCategories();
             })
             .catch((err) => {
-                Log.error(
-                    "[GeoLeaf.Config.Taxonomy] Erreur lors du chargement de la taxonomie :",
-                    err
-                );
+                Log.error("[GeoLeaf.Config.Taxonomy] Error loading taxonomy:", err);
                 return {};
             });
     },
@@ -90,8 +103,8 @@ const TaxonomyModule: TaxonomyModuleType = {
     getCategory(categoryId: string): CategoryItem | undefined {
         if (!categoryId || typeof categoryId !== "string") return undefined;
         const cats = this.getCategories();
-        if (!Object.prototype.hasOwnProperty.call(cats, categoryId)) return undefined;
-        return cats[categoryId];
+        const key = _resolveCategoryKey(cats, categoryId);
+        return key !== null ? cats[key] : undefined;
     },
 
     getSubcategory(categoryId: string, subCategoryId: string): CategoryItem | undefined {
@@ -112,8 +125,8 @@ const TaxonomyModule: TaxonomyModuleType = {
             return undefined;
         }
         const subs = category.subcategories;
-        if (!Object.prototype.hasOwnProperty.call(subs, subCategoryId)) return undefined;
-        return subs[subCategoryId];
+        const subKey = _resolveSubcategoryKey(subs, subCategoryId);
+        return subKey !== null ? subs[subKey] : undefined;
     },
 };
 

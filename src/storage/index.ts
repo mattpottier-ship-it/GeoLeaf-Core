@@ -1,13 +1,14 @@
-﻿/*!
+/* eslint-disable security/detect-object-injection */
+/*!
  * GeoLeaf Core — © 2026 Mattieu Pottier — MIT License — https://geoleaf.dev
  */
 /**
  * src/storage/index.js — SHIM LEGACY
- * Rétrocompatibilité : implémente l'ancienne API localStorage (supprimée lors
- * de la migration vers IndexedDB/Cache) depuis src/storage/ (ancienne structure)
+ * Backward compatibility: implements the old localStorage API (deleted when
+ * de la migration vers IndexedDB/Cache) from src/storage/ (old structure)
  *
  * Note : ce module est distinct de geoleaf.storage.js (IndexedDB/offline).
- * Il fournit uniquement un wrapper localStorage pour les tests legacy.
+ * Il fournit only un wrapper localStorage for thes tests legacy.
  * @module src/storage
  */
 

@@ -7,7 +7,7 @@
 
 /**
  * @module GeoLeaf.UI.ScaleControl
- * @description Contrôle d'échelle pour la carte (graphique ou numérique)
+ * @description Controle d'scale pour the map (graphical ou numeric)
  * @version 1.0.0
  */
 
@@ -17,8 +17,8 @@ const Config: any = _Config;
 declare const L: any;
 
 /**
- * Module de contrôle d'échelle
- * Affiche l'échelle de la carte en mode graphique (Leaflet) ou numérique (1:25000)
+ * Module de controle d'scale
+ * Displays l'scale de the map in mode graphical (Leaflet) ou numeric (1:25000)
  */
 const ScaleControl: any = {
     _map: null,
@@ -33,15 +33,15 @@ const ScaleControl: any = {
     },
 
     /**
-     * Initialise le contrôle d'échelle
+     * Initializes the control d'scale
      *
-     * @param {L.Map} map - Instance de la carte Leaflet
+     * @param {L.Map} map - Instance de the map Leaflet
      * @param {Object} [options={}] - Options de configuration
-     * @param {string} [options.position='bottomleft'] - Position du contrôle
-     * @param {string} [options.scaleType='graphic'] - Type d'échelle ('graphic' ou 'numeric')
-     * @param {boolean} [options.metric=true] - Afficher échelle métrique
-     * @param {boolean} [options.imperial=false] - Afficher échelle impériale
-     * @param {number} [options.maxWidth=150] - Largeur max de l'échelle graphique
+     * @param {string} [options.position='bottomleft'] - Position du controle
+     * @param {string} [options.scaleType='graphic'] - Type d'scale ('graphic' ou 'numeric')
+     * @param {boolean} [options.metric=true] - Displaysr scale metric
+     * @param {boolean} [options.imperial=false] - Display imperial scale
+     * @param {number} [options.maxWidth=150] - Width max of the scale graphical
      *
      * @example
      * GeoLeaf.UI.ScaleControl.init(map, {
@@ -53,18 +53,18 @@ const ScaleControl: any = {
         const context = "[GeoLeaf.UI.ScaleControl]";
         try {
             if (!map) {
-                throw new Error("Une instance de carte Leaflet est requise.");
+                throw new Error("Une instance de carte Leaflet est requirede.");
             }
             this._map = map;
             this._options = { ...this._options, ...options };
 
             const showScale = Config?.get("ui.showScale");
             if (showScale === false) {
-                Log.info(`${context} Affichage de l'échelle désactivé dans la configuration.`);
+                Log.info(`${context} Scale display disabled in configuration.`);
                 return;
             }
 
-            // Récupérer le type d'échelle depuis la config
+            // Retrieve the type d'scale from the config
             const scaleType = Config?.get("ui.scaleType");
             if (scaleType) {
                 this._options.scaleType = scaleType;
@@ -72,10 +72,10 @@ const ScaleControl: any = {
 
             this._createControl();
             Log.info(
-                `${context} Module initialisé avec succès (type: ${this._options.scaleType}).`
+                `${context} Module initialized successfully (type: ${this._options.scaleType}).`
             );
         } catch (err: any) {
-            Log.error(`${context} Erreur lors de l'initialisation :`, err.message);
+            Log.error(`${context} Error during initialization:`, err.message);
         }
     },
 
@@ -83,10 +83,10 @@ const ScaleControl: any = {
         const context = "[GeoLeaf.UI.ScaleControl]";
         try {
             if (this._options.scaleType === "numeric") {
-                // Créer un contrôle personnalisé pour l'échelle numérique
+                // Createsr un controle custom pour l'scale numeric
                 this._createNumericScale();
             } else {
-                // Utiliser le contrôle Leaflet par défaut (graphique)
+                // Utiliser the control Leaflet by default (graphical)
                 this._control = L.control.scale({
                     position: this._options.position,
                     metric: this._options.metric,
@@ -95,9 +95,9 @@ const ScaleControl: any = {
                 });
                 this._control.addTo(this._map);
             }
-            Log.info(`${context} Contrôle d'échelle créé et ajouté à la carte.`);
+            Log.info(`${context} Scale control created and added to the map.`);
         } catch (err: any) {
-            Log.error(`${context} Erreur lors de la création du contrôle :`, err.message);
+            Log.error(`${context} Error creating scale control:`, err.message);
         }
     },
 
@@ -113,11 +113,11 @@ const ScaleControl: any = {
                 L.DomEvent.disableClickPropagation(container);
                 L.DomEvent.disableScrollPropagation(container);
 
-                // Créer un conteneur flex pour aligner échelle et zoom
+                // Createsr un conteneur flex pour aliner scale et zoom
                 const flexContainer = L.DomUtil.create("div", "scale-flex-container", container);
                 flexContainer.style.cssText = "display: flex; align-items: center; gap: 8px;";
 
-                // Élément pour l'échelle numérique (suit le thème)
+                // Element pour l'scale numeric (suit the theme)
                 this._scaleElement = L.DomUtil.create(
                     "div",
                     "scale-content gl-scale-numeric",
@@ -125,7 +125,7 @@ const ScaleControl: any = {
                 );
                 this._scaleElement.textContent = "1:0";
 
-                // Élément pour le niveau de zoom (suit le thème)
+                // Element for the zoom level (suit the theme)
                 this._zoomElement = L.DomUtil.create(
                     "div",
                     "zoom-level gl-zoom-badge",
@@ -150,7 +150,7 @@ const ScaleControl: any = {
                 // instead of creating new bind() which would not match
                 if (this._boundUpdateNumericScale) {
                     _map.off("zoomend", this._boundUpdateNumericScale);
-                    // Perf 6.2.1: matches 'moveend' listener registered in onAdd
+                    // Perf 6.2.1: matches 'moveend' listner registered in onAdd
                     _map.off("moveend", this._boundUpdateNumericScale);
                     this._boundUpdateNumericScale = null; // Clean up reference
                 }
@@ -164,26 +164,26 @@ const ScaleControl: any = {
     _updateNumericScale() {
         if (!this._scaleElement || !this._map) return;
 
-        // Obtenir le centre de la carte
+        // Obtenir le centre de the map
         const center = this._map.getCenter();
         const zoom = this._map.getZoom();
 
-        // Mettre à jour le niveau de zoom
+        // Mettre up to date le zoom level
         if (this._zoomElement) {
             this._zoomElement.textContent = `Z${Number(zoom).toFixed(2)}`;
         }
 
-        // Calculer la résolution en mètres par pixel au centre de la carte
-        // Formule : résolution = (40075016.686 * Math.abs(Math.cos(center.lat * Math.PI / 180))) / Math.pow(2, zoom + 8)
+        // Calculatesr la resolution en meters par pixel au centre de the map
+        // Formule : resolution = (40075016.686 * Math.abs(Math.cos(center.lat * Math.PI / 180))) / Math.pow(2, zoom + 8)
         const metersPerPixel =
             (156543.03392 * Math.cos((center.lat * Math.PI) / 180)) / Math.pow(2, zoom);
 
-        // Calculer l'échelle (1 pixel écran = X mètres réels)
-        // Échelle = distance réelle / distance carte
-        // Supposons 96 DPI (standard), donc 1 pouce = 96 pixels = 0.0254 mètres
+        // Calculates the scale (1 screen pixel = X real meters)
+        // Scale = distance real / distance carte
+        // Supposons 96 DPI (standard), donc 1 pouce = 96 pixels = 0.0254 meters
         const scale = Math.round((metersPerPixel * 96) / 0.0254);
 
-        // Formater l'échelle de manière lisible
+        // Formats the scale readably
         let scaleText;
         if (scale >= 1000000) {
             scaleText = `1:${(scale / 1000000).toFixed(1)}M`;
@@ -197,7 +197,7 @@ const ScaleControl: any = {
     },
 
     /**
-     * Détruit le contrôle d'échelle et libère les ressources
+     * Destroys the scale control and frees resources
      *
      * @example
      * GeoLeaf.UI.ScaleControl.destroy();
@@ -212,12 +212,12 @@ const ScaleControl: any = {
             this._scaleElement = null;
             this._map = null;
         } catch (err: any) {
-            Log.error(`${context} Erreur lors de la destruction :`, err.message);
+            Log.error(`${context} Error during destruction:`, err.message);
         }
     },
 
     /**
-     * Affiche le contrôle d'échelle (le crée s'il n'existe pas)
+     * Displays the scale control (creates it if it doesn't exist)
      *
      * @example
      * GeoLeaf.UI.ScaleControl.show();
@@ -229,7 +229,7 @@ const ScaleControl: any = {
     },
 
     /**
-     * Masque le contrôle d'échelle
+     * Masque the control d'scale
      *
      * @example
      * GeoLeaf.UI.ScaleControl.hide();

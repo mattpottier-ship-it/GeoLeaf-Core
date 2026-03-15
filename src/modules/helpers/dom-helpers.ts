@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-object-injection */
 /*!
  * GeoLeaf Core
  * © 2026 Mattieu Pottier

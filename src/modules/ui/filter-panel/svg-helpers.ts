@@ -1,6 +1,6 @@
 /**
  * GeoLeaf UI Filter Panel - SVG Helpers
- * Fonctions SVG pour les icônes du panneau de filtres
+ * Fonctions SVG for thes icons du filter panels
  *
  * @module ui/filter-panel/svg-helpers
  */
@@ -9,11 +9,11 @@
 import { DOMSecurity } from "../../utils/dom-security.js";
 
 /**
- * Met à jour une icône de toggle pour l'état "panneau ouvert" (flèche gauche)
- * @param {HTMLElement} icon - L'élément icône à mettre à jour
+ * Updates une icon de toggle pour the state "panel open" (arrow gauche)
+ * @param {HTMLElement} icon - L'element icon to update
  */
 export function setToggleIconOpen(icon: HTMLElement) {
-    // SAFE: SVG statique hardcodé
+    // SAFE: SVG static hardcoded
     DOMSecurity.clearElementFast(icon);
     const svg = DOMSecurity.createSVGIcon(16, 16, "M15 18l-6-6 6-6", {
         stroke: "currentColor",
@@ -24,11 +24,11 @@ export function setToggleIconOpen(icon: HTMLElement) {
 }
 
 /**
- * Met à jour une icône de toggle pour l'état "panneau fermé" (flèche droite)
- * @param {HTMLElement} icon - L'élément icône à mettre à jour
+ * Updates une icon de toggle pour the state "panel closed" (arrow droite)
+ * @param {HTMLElement} icon - L'element icon to update
  */
 export function setToggleIconClosed(icon: HTMLElement) {
-    // SAFE: SVG statique hardcodé
+    // SAFE: SVG static hardcoded
     DOMSecurity.clearElementFast(icon);
     const svg = DOMSecurity.createSVGIcon(16, 16, "M9 6l6 6-6 6", {
         stroke: "currentColor",

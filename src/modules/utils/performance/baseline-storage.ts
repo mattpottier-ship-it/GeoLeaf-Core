@@ -1,4 +1,4 @@
-﻿/**
+/**
  * GeoLeaf Performance Profiler – Baseline Storage
  * Pure storage helpers extracted from performance-profiler.js (Phase 8.2.5)
  *
@@ -6,39 +6,39 @@
  */
 "use strict";
 
-const STORAGE_KEY = 'geoleaf_performance_baseline';
+const STORAGE_KEY = "geoleaf_performance_baseline";
 
 /**
- * Charge le profil de baseline depuis le storage navigateur.
- * Retourne la baseline ou null si absente / invalide.
+ * Loads the profile de baseline from the storage browser.
+ * Returns the baseline ou null si absente / invalid.
  *
  * @param {'localStorage'|'sessionStorage'} storageType
  * @returns {Object|null}
  */
 export function loadBaselineFromStorage(storageType: any) {
     try {
-        const storage = storageType === 'localStorage' ? localStorage : sessionStorage;
+        const storage = storageType === "localStorage" ? localStorage : sessionStorage;
         const saved = storage.getItem(STORAGE_KEY);
         if (saved) {
             return JSON.parse(saved);
         }
     } catch (_) {
-        // Storage non disponible ou données corrompues
+        // Storage non available ou data corrompues
     }
     return null;
 }
 
 /**
- * Sauvegarde le profil de baseline dans le storage navigateur.
+ * Sauvegarde the profile de baseline in the storage browser.
  *
- * @param {Object} baseline     - Objet baseline à sauvegarder
+ * @param {Object} baseline     - Object baseline to sauvegarder
  * @param {'localStorage'|'sessionStorage'} storageType
  */
 export function saveBaselineToStorage(baseline: any, storageType: any) {
     try {
-        const storage = storageType === 'localStorage' ? localStorage : sessionStorage;
+        const storage = storageType === "localStorage" ? localStorage : sessionStorage;
         storage.setItem(STORAGE_KEY, JSON.stringify(baseline));
     } catch (_) {
-        // Storage non disponible
+        // Storage non available
     }
 }

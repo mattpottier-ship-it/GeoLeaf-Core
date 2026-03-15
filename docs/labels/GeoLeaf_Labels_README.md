@@ -1,7 +1,7 @@
-# GeoLeaf.Labels – Documentation du module Labels
+﻿# GeoLeaf.Labels – Documentation du module Labels
 
 Product Version: GeoLeaf Platform V1  
-**Version**: 1.1.0  
+**Version**: 1.1.1  
 **Fichiers**:
 
 - `src/modules/labels/` (labels, label-renderer, label-style-loader)  
@@ -502,4 +502,4 @@ document.getElementById("toggle-labels").addEventListener("click", () => {
 ---
 
 **Dernière mise à jour** : 19 janvier 2026  
-**Version GeoLeaf** : 1.1.0
+**Version GeoLeaf** : 1.1.1

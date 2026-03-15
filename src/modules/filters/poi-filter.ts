@@ -1,6 +1,6 @@
 /*!
- * GeoLeaf Core – Filters / POI Filter
- * © 2026 Mattieu Pottier
+ * GeoLeaf Core — Filters / POI Filter
+ * ┬® 2026 Mattieu Pottier
  * Released under the MIT License
  */
 
@@ -26,9 +26,9 @@ function _haversine(lat1: any, lng1: any, lat2: any, lng2: any) {
     return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 /**
- * Extrait la note moyenne d'un objet (POI ou route).
+ * Extrait la note moyenne d'an object (POI ou route).
  * @param {object} attrs - attributes
- * @param {object} item  - objet racine
+ * @param {object} item  - object root
  * @param {object} props - properties
  * @returns {{ avg: number, hasRating: boolean }}
  */
@@ -60,7 +60,7 @@ function _extractRating(attrs: any, item: any, props: any) {
 }
 
 /**
- * Normalise un tableau de tags (string CSV, tableau ou autre).
+ * Normalise un array de tags (string CSV, array ou autre).
  * @param {*} rawTags
  * @returns {string[]}
  */
@@ -75,11 +75,137 @@ function _normalizeTags(rawTags: any) {
 }
 
 /**
- * Filtre une liste de POI selon les critères fournis.
+ * Filtre a list de POI based on thes criteria fournis.
  * @param {Array} basePois
  * @param {object} filterState
  * @returns {Array}
  */
+function _resolvePoiCoords(poi: any) {
+    const attrs = poi.attributes || {};
+    const props = poi.properties || {};
+    if (poi.latlng && Array.isArray(poi.latlng) && poi.latlng.length === 2) {
+        return { lat: poi.latlng[0], lng: poi.latlng[1] };
+    }
+    return {
+        lat:
+            poi.lat ??
+            poi.latitude ??
+            attrs.latitude ??
+            props.latitude ??
+            poi.coordinates?.[1] ??
+            poi.geometry?.coordinates?.[1],
+        lng:
+            poi.lng ??
+            poi.longitude ??
+            attrs.longitude ??
+            props.longitude ??
+            poi.coordinates?.[0] ??
+            poi.geometry?.coordinates?.[0],
+    };
+}
+
+function _passesTypeFilter(poi: any, attrs: any, props: any, dataTypes: any): boolean {
+    const poiType = poi.type || attrs.type || props.type || "poi";
+    if (poiType === "route" || poiType === "routes") {
+        return !!dataTypes.routes;
+    }
+    return !!dataTypes.poi;
+}
+
+function _passesSearchFilter(
+    poi: any,
+    hasSearchText: boolean,
+    searchText: string,
+    filterState: any
+): boolean {
+    if (!hasSearchText) return true;
+    const searchFields =
+        filterState.searchFields?.length > 0
+            ? filterState.searchFields
+            : getSearchFieldsFromProfile();
+    return searchFields.some((fieldPath: any) => {
+        const value = getNestedValue(poi, fieldPath);
+        if (Array.isArray(value))
+            return value.some((v) => String(v).toLowerCase().includes(searchText));
+        return value && String(value).toLowerCase().includes(searchText);
+    });
+}
+
+function _passesProximityFilter(poi: any, proximity: any, getDistance: any): boolean {
+    if (!proximity.active || !proximity.center) return true;
+    const { lat, lng } = _resolvePoiCoords(poi);
+    if (!lat || !lng) return false;
+    return getDistance(proximity.center.lat, proximity.center.lng, lat, lng) <= proximity.radius;
+}
+
+function _resolveCatIds(poi: any, attrs: any, props: any) {
+    const catId = String(
+        attrs.categoryId ??
+            poi.categoryId ??
+            poi.category ??
+            props.categoryId ??
+            props.category ??
+            ""
+    );
+    const subId = String(
+        attrs.subCategoryId ??
+            poi.subCategoryId ??
+            poi.subCategory ??
+            poi.sub_category ??
+            props.subCategoryId ??
+            props.sub_category ??
+            ""
+    );
+    return { catId, subId };
+}
+
+function _matchesSinglePoi(poi: any, ctx: any): boolean {
+    const {
+        hasCats,
+        hasSubs,
+        hasMinRating,
+        minRating,
+        selectedTags,
+        hasTags,
+        dataTypes,
+        searchText,
+        hasSearchText,
+        proximity,
+        catsSel,
+        subsSel,
+        getDistance,
+        filterState,
+    } = ctx;
+    const attrs = poi.attributes || {};
+    const props = poi.properties || {};
+
+    if (!_passesTypeFilter(poi, attrs, props, dataTypes)) return false;
+    if (!_passesSearchFilter(poi, hasSearchText, searchText, filterState)) return false;
+    if (!_passesProximityFilter(poi, proximity, getDistance)) return false;
+
+    const { catId, subId } = _resolveCatIds(poi, attrs, props);
+
+    if (hasCats || hasSubs) {
+        if (hasSubs) {
+            if (!subId || !subsSel.includes(subId)) return false;
+        } else if (hasCats) {
+            if (!catId || !catsSel.includes(catId)) return false;
+        }
+    }
+
+    if (hasMinRating) {
+        const { avg, hasRating } = _extractRating(attrs, poi, props);
+        if (!hasRating || avg < minRating) return false;
+    }
+
+    if (hasTags) {
+        const poiTags = _normalizeTags(attrs.tags ?? poi.tags ?? props.tags);
+        if (!selectedTags.some((tag: any) => poiTags.includes(tag))) return false;
+    }
+
+    return true;
+}
+
 export function filterPoiList(basePois: any, filterState: any) {
     const catsSel = filterState.categoriesTree || [];
     const subsSel = filterState.subCategoriesTree || [];
@@ -95,11 +221,11 @@ export function filterPoiList(basePois: any, filterState: any) {
     const proximity = filterState.proximity || { active: false };
 
     if (!Array.isArray(basePois) || basePois.length === 0) {
-        Log.debug("[Filters] Aucun POI à filtrer");
+        Log.debug("[Filters] No POI to filter");
         return [];
     }
 
-    Log.debug("[Filters] Début filtrage POI:", {
+    Log.debug("[Filters] POI filtering start:", {
         totalPOI: basePois.length,
         hasCats,
         hasSubs,
@@ -108,106 +234,22 @@ export function filterPoiList(basePois: any, filterState: any) {
     });
 
     const getDistance = _g.GeoLeaf?.Utils?.getDistance ?? _haversine;
+    const ctx = {
+        hasCats,
+        hasSubs,
+        hasMinRating,
+        minRating,
+        selectedTags,
+        hasTags,
+        dataTypes,
+        searchText,
+        hasSearchText,
+        proximity,
+        catsSel,
+        subsSel,
+        getDistance,
+        filterState,
+    };
 
-    return basePois.filter((poi) => {
-        const attrs = poi.attributes || {};
-        const props = poi.properties || {};
-
-        // Filtre type de données
-        const poiType = poi.type || attrs.type || props.type || "poi";
-        if (poiType === "route" || poiType === "routes") {
-            if (!dataTypes.routes) return false;
-        } else {
-            if (!dataTypes.poi) return false;
-        }
-
-        // Filtre recherche textuelle
-        if (hasSearchText) {
-            const searchFields =
-                filterState.searchFields?.length > 0
-                    ? filterState.searchFields
-                    : getSearchFieldsFromProfile();
-            const matchFound = searchFields.some((fieldPath: any) => {
-                const value = getNestedValue(poi, fieldPath);
-                if (Array.isArray(value)) {
-                    return value.some((v) => String(v).toLowerCase().includes(searchText));
-                }
-                return value && String(value).toLowerCase().includes(searchText);
-            });
-            if (!matchFound) return false;
-        }
-
-        // Filtre proximité
-        if (proximity.active && proximity.center) {
-            let lat, lng;
-            if (poi.latlng && Array.isArray(poi.latlng) && poi.latlng.length === 2) {
-                [lat, lng] = poi.latlng;
-            } else {
-                lat =
-                    poi.lat ??
-                    poi.latitude ??
-                    attrs.latitude ??
-                    props.latitude ??
-                    poi.coordinates?.[1] ??
-                    poi.geometry?.coordinates?.[1];
-                lng =
-                    poi.lng ??
-                    poi.longitude ??
-                    attrs.longitude ??
-                    props.longitude ??
-                    poi.coordinates?.[0] ??
-                    poi.geometry?.coordinates?.[0];
-            }
-            if (lat && lng) {
-                if (
-                    getDistance(proximity.center.lat, proximity.center.lng, lat, lng) >
-                    proximity.radius
-                )
-                    return false;
-            } else {
-                return false;
-            }
-        }
-
-        // Résolution catégorie / sous-catégorie
-        const catId = String(
-            attrs.categoryId ??
-                poi.categoryId ??
-                poi.category ??
-                props.categoryId ??
-                props.category ??
-                ""
-        );
-        const subId = String(
-            attrs.subCategoryId ??
-                poi.subCategoryId ??
-                poi.subCategory ??
-                poi.sub_category ??
-                props.subCategoryId ??
-                props.sub_category ??
-                ""
-        );
-
-        if (hasCats || hasSubs) {
-            if (hasSubs) {
-                if (!subId || !subsSel.includes(subId)) return false;
-            } else if (hasCats) {
-                if (!catId || !catsSel.includes(catId)) return false;
-            }
-        }
-
-        // Filtre note minimale
-        if (hasMinRating) {
-            const { avg, hasRating } = _extractRating(attrs, poi, props);
-            if (!hasRating || avg < minRating) return false;
-        }
-
-        // Filtre tags
-        if (hasTags) {
-            const poiTags = _normalizeTags(attrs.tags ?? poi.tags ?? props.tags);
-            if (!selectedTags.some((tag: any) => poiTags.includes(tag))) return false;
-        }
-
-        return true;
-    });
+    return basePois.filter((poi) => _matchesSinglePoi(poi, ctx));
 }

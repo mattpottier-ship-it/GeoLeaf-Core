@@ -1,8 +1,8 @@
-# GeoLeaf — Offline Detector
+﻿# GeoLeaf — Offline Detector
 
 Product Version: GeoLeaf Platform V1
 
-> **Version** : 1.1.0 — **Date** : 15 février 2026
+> **Version** : 1.1.1 — **Date** : 15 février 2026
 > **Plugin** : Storage (`geoleaf-storage.plugin.js`)
 
 ---

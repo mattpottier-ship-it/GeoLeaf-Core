@@ -1,6 +1,7 @@
+/* eslint-disable security/detect-object-injection */
 /**
  * GeoLeaf Table - Panel Module
- * Construction du bottom-sheet drawer pour le tableau
+ * Building du bottom-sheet drawer pour the table
  */
 "use strict";
 
@@ -10,76 +11,64 @@ import { LayerVisibilityManager } from "../shared/layer-visibility-state.js";
 import { GeoJSONShared } from "../geojson/shared.js";
 import { events as _events } from "../utils/event-listener-manager.js";
 import { TableContract } from "../../contracts/table.contract.js";
+import { getLabel } from "../i18n/i18n.js";
 
 const _TablePanel: any = {};
 _TablePanel._eventCleanups = [];
 
 /**
- * Crée le conteneur principal du tableau (bottom-sheet)
- * @param {L.Map} map - Instance de la carte Leaflet
- * @param {Object} config - Configuration du tableau
- * @returns {HTMLElement} Conteneur du tableau
+ * Creates the container main du array (bottom-sheet)
+ * @param {L.Map} map - Instance de the map Leaflet
+ * @param {Object} config - Configuration du array
+ * @returns {HTMLElement} Conteneur du array
  */
 _TablePanel.create = function (map: any, config: any) {
-    // Vérifier si le conteneur existe déjà
+    // Check si le conteneur existe already
     let container = document.querySelector(".gl-table-panel") as HTMLElement | null;
     if (container) {
         return container;
     }
 
-    // Créer le conteneur principal
+    // Createsr le conteneur main
     container = document.createElement("div");
     container.className = "gl-table-panel";
+    container.id = "gl-rp-pane-table"; // B1: aria-controls target for desktop panel table tab
     (container as HTMLElement).style.height = config.defaultHeight || "40%";
 
-    // Ajouter la barre de redimensionnement si resizable
+    // Addsr la bar de redimensionnement si resizable
     if (config.resizable) {
         const resizeHandle = createResizeHandle(container, config);
         container.appendChild(resizeHandle);
     }
 
-    // Créer la barre d'outils (header)
+    // Createsr la bar d'outils (header)
     const toolbar = createToolbar(map, config);
     container.appendChild(toolbar);
 
-    // Créer le wrapper du tableau avec scroll
+    // Createsr le wrapper du array avec scroll
     const tableWrapper = document.createElement("div");
     tableWrapper.className = "gl-table-panel__wrapper";
     container.appendChild(tableWrapper);
 
-    // Créer le tableau vide (sera rempli par le renderer)
+    // Createsr the table empty (sera rempli par le renderer)
     const table = document.createElement("table");
     table.className = "gl-table-panel__table";
     tableWrapper.appendChild(table);
 
-    // Ajouter au body
+    // Addsr au body
     document.body.appendChild(container);
 
-    // Créer le bouton flottant pour afficher le tableau (quand masqué)
+    // Createsr le button flottant pour display the table (quand hidden)
     createFloatingShowButton();
 
-    Log.info("[TablePanel] Panneau créé avec succès");
+    Log.info("[TablePanel] Panel created successfully");
     return container;
 };
 
-/**
- * Crée la barre de redimensionnement
- * @param {HTMLElement} container - Conteneur du tableau
- * @param {Object} config - Configuration
- * @returns {HTMLElement}
- * @private
- */
-function createResizeHandle(container: any, config: any) {
-    const handle = document.createElement("div");
-    handle.className = "gl-table-panel__resize-handle";
-    const resizeBar = document.createElement("div");
-    resizeBar.className = "gl-table-panel__resize-bar";
-    handle.appendChild(resizeBar);
-
+function _attachResizeEvents(handle: any, container: any, config: any): void {
     let isResizing = false;
     let startY = 0;
     let startHeight = 0;
-
     const events = _events;
     const mouseDownHandler = (e: any) => {
         isResizing = true;
@@ -89,7 +78,6 @@ function createResizeHandle(container: any, config: any) {
         document.body.style.userSelect = "none";
         e.preventDefault();
     };
-
     const mouseMoveHandler = (e: any) => {
         if (!isResizing) return;
         const delta = startY - e.clientY;
@@ -100,7 +88,6 @@ function createResizeHandle(container: any, config: any) {
         newHeight = Math.max(minHeightPx, Math.min(maxHeightPx, newHeight));
         (container as HTMLElement).style.height = newHeight + "px";
     };
-
     const mouseUpHandler = () => {
         if (isResizing) {
             isResizing = false;
@@ -108,7 +95,6 @@ function createResizeHandle(container: any, config: any) {
             document.body.style.userSelect = "";
         }
     };
-
     if (events) {
         _TablePanel._eventCleanups.push(
             events.on(handle, "mousedown", mouseDownHandler, false, "TablePanel.resizeMouseDown")
@@ -124,15 +110,30 @@ function createResizeHandle(container: any, config: any) {
         document.addEventListener("mousemove", mouseMoveHandler);
         document.addEventListener("mouseup", mouseUpHandler);
     }
+}
 
+/**
+ * Creates la bar de redimensionnement
+ * @param {HTMLElement} container - Conteneur du array
+ * @param {Object} config - Configuration
+ * @returns {HTMLElement}
+ * @private
+ */
+function createResizeHandle(container: any, config: any) {
+    const handle = document.createElement("div");
+    handle.className = "gl-table-panel__resize-handle";
+    const resizeBar = document.createElement("div");
+    resizeBar.className = "gl-table-panel__resize-bar";
+    handle.appendChild(resizeBar);
+    _attachResizeEvents(handle, container, config);
     return handle;
 }
 
 /**
- * Parse une valeur de hauteur (%, px, vh) en pixels
- * @param {string} value - Valeur �?  parser ("40%", "300px", "50vh")
- * @param {number} referenceHeight - Hauteur de référence pour les %
- * @returns {number} Hauteur en pixels
+ * Parse a value de height (%, px, vh) en pixels
+ * @param {string} value - Value à parser ("40%", "300px", "50vh")
+ * @param {number} referenceHeight - Height de reference for thes %
+ * @returns {number} Height en pixels
  * @private
  */
 function parseHeight(value: any, referenceHeight: any) {
@@ -148,12 +149,12 @@ function parseHeight(value: any, referenceHeight: any) {
         const vh = parseFloat(value);
         return (window.innerHeight * vh) / 100;
     }
-    return 300; // Défaut
+    return 300; // Default
 }
 
 /**
- * Crée la barre d'outils du tableau
- * @param {L.Map} map - Instance de la carte
+ * Creates la bar d'outils du array
+ * @param {L.Map} map - Instance de the map
  * @param {Object} config - Configuration
  * @returns {HTMLElement}
  * @private
@@ -162,7 +163,7 @@ function createToolbar(map: any, config: any) {
     const toolbar = document.createElement("div");
     toolbar.className = "gl-table-panel__toolbar";
 
-    // Sélecteur de couche
+    // Selector de layer
     const layerSelect = createLayerSelector();
     toolbar.appendChild(layerSelect);
 
@@ -170,15 +171,15 @@ function createToolbar(map: any, config: any) {
     const searchInput = createSearchInput();
     toolbar.appendChild(searchInput);
 
-    // Bouton Zoom sur la sélection
-    const zoomButton = createButton("Zoom sur sélection", "zoom", () => {
+    // Button Zoom sur the selection
+    const zoomButton = createButton("Zoom sur selection", "zoom", () => {
         TableContract.zoomToSelection();
     });
     zoomButton.disabled = true;
     zoomButton.setAttribute("data-table-btn", "zoom");
     toolbar.appendChild(zoomButton);
 
-    // Bouton Surbrillance
+    // Button Surbrillance
     const highlightButton = createButton("Surbrillance", "highlight", () => {
         const isActive = highlightButton.classList.toggle("is-active");
         TableContract.highlightSelection(isActive);
@@ -187,7 +188,7 @@ function createToolbar(map: any, config: any) {
     highlightButton.setAttribute("data-table-btn", "highlight");
     toolbar.appendChild(highlightButton);
 
-    // Bouton Export (si activé)
+    // Button Export (si activated)
     if (config.enableExportButton) {
         const exportButton = createButton("Exporter", "export", () => {
             TableContract.exportSelection();
@@ -197,12 +198,12 @@ function createToolbar(map: any, config: any) {
         toolbar.appendChild(exportButton);
     }
 
-    // Spacer pour pousser le bouton toggle �?  droite
+    // Spacer pour pousser le button toggle à droite
     const spacer = document.createElement("div");
     spacer.style.flex = "1";
     toolbar.appendChild(spacer);
 
-    // Bouton toggle (masquer/afficher le tableau)
+    // Button toggle (hide/display the table)
     const toggleBtn = createToggleButton();
     toolbar.appendChild(toggleBtn);
 
@@ -210,7 +211,7 @@ function createToolbar(map: any, config: any) {
 }
 
 /**
- * Crée le sélecteur de couche
+ * Creates the selector de layer
  * @returns {HTMLElement}
  * @private
  */
@@ -224,17 +225,17 @@ function createLayerSelector() {
     select.className = "gl-table-panel__select";
     select.setAttribute("data-table-layer-select", "");
 
-    // Option par défaut
+    // Option by default
     const defaultOption = document.createElement("option");
     defaultOption.value = "";
-    defaultOption.textContent = "Sélectionner une couche...";
+    defaultOption.textContent = getLabel("ui.table.layer_placeholder");
     select.appendChild(defaultOption);
 
-    // Population différée : les couches GeoJSON ne sont pas encore disponibles à la création du panel.
-    // refreshLayerSelector() est appelé via l'événement geoleaf:geojson:layers-loaded une fois
-    // le chargement asynchrone terminé.
+    // Population deferrede : les GeoJSON layers ne sont pas encore availables to the creation du panel.
+    // refreshLayerSelector() est called via l'event geoleaf:geojson:layers-loaded une fois
+    // async loading completed.
 
-    // Événement de changement - avec cleanup tracking
+    // Event de changement - avec cleanup tracking
     const changeHandler = (e: any) => {
         const layerId = (e.target as HTMLSelectElement)?.value ?? "";
         TableContract.setLayer(layerId);
@@ -253,21 +254,34 @@ function createLayerSelector() {
     return wrapper;
 }
 
+function _isLayerVisible(layerId: string, layerData: any, VisibilityManager: any): boolean {
+    if (VisibilityManager && typeof VisibilityManager.getVisibilityState === "function") {
+        const visState = VisibilityManager.getVisibilityState(layerId);
+        return visState?.current === true;
+    }
+    if (layerData._visibility) return layerData._visibility.current === true;
+    return true;
+}
+
+function _isTableLayer(layerData: any): boolean {
+    return !!layerData?.config?.table?.enabled;
+}
+
 /**
- * Peuple le sélecteur avec les couches disponibles
- * @param {HTMLSelectElement} select - Élément select
+ * Peuple le selector avec the layers availables
+ * @param {HTMLSelectElement} select - Element select
  * @private
  */
 function populateLayerSelector(select: HTMLSelectElement) {
     const allLayersMap = GeoJSONShared.getLayers();
     if (!allLayersMap || allLayersMap.size === 0) {
-        Log.warn("[TablePanel] Module GeoJSON non disponible ou aucune couche");
+        Log.warn("[TablePanel] Module GeoJSON non disponible ou aucune layer");
         return;
     }
 
     const VisibilityManager = LayerVisibilityManager;
 
-    // Vérifier les options existantes pour éviter les doublons
+    // Check les options existings pour avoid les doublons
     const existingValues = new Set<string>();
     for (let i = 1; i < select.options.length; i++) {
         existingValues.add(select.options[i].value);
@@ -275,43 +289,24 @@ function populateLayerSelector(select: HTMLSelectElement) {
 
     let addedCount = 0;
     allLayersMap.forEach((layerData: any, layerId: string) => {
-        if (
-            layerData &&
-            layerData.config &&
-            layerData.config.table &&
-            layerData.config.table.enabled
-        ) {
-            // Vérifier que la couche est visible sur la carte
-            let isVisible = true;
-            if (VisibilityManager && typeof VisibilityManager.getVisibilityState === "function") {
-                const visState = VisibilityManager.getVisibilityState(layerId);
-                isVisible = visState && visState.current === true;
-            } else if (layerData._visibility) {
-                isVisible = layerData._visibility.current === true;
-            }
+        if (!_isTableLayer(layerData)) return;
+        if (!_isLayerVisible(layerId, layerData, VisibilityManager)) return;
+        if (existingValues.has(layerId)) return;
 
-            if (!isVisible) {
-                return;
-            }
-
-            // N'ajouter que si pas déj�?  présent
-            if (!existingValues.has(layerId)) {
-                const option = document.createElement("option");
-                option.value = layerId;
-                option.textContent = layerData.label || layerData.config?.title || layerId;
-                select.appendChild(option);
-                addedCount++;
-            }
-        }
+        const option = document.createElement("option");
+        option.value = layerId;
+        option.textContent = layerData.label || layerData.config?.title || layerId;
+        select.appendChild(option);
+        addedCount++;
     });
 
     if (addedCount > 0) {
-        Log.info("[TablePanel] Sélecteur de couche peuplé:", addedCount, "couches ajoutées");
+        Log.info("[TablePanel] Layer selector populated:", addedCount, "layers added");
     }
 }
 
 /**
- * Crée le champ de recherche
+ * Creates the field de recherche
  * @returns {HTMLElement}
  * @private
  */
@@ -323,11 +318,11 @@ function createSearchInput() {
     input.type = "text";
     input.id = "geoleaf-table-search-input";
     input.name = "geoleaf-table-search-input";
-    input.placeholder = "Rechercher...";
+    input.placeholder = getLabel("placeholder.search.input");
     input.className = "gl-table-panel__search-input";
     input.setAttribute("data-table-search", "");
 
-    // Debounce la recherche pour éviter les appels trop fréquents
+    // Debounce la recherche pour avoid les appels trop frequent
     let timeout: ReturnType<typeof setTimeout> | undefined;
     input.addEventListener("input", (e: any) => {
         clearTimeout(timeout);
@@ -342,8 +337,8 @@ function createSearchInput() {
 }
 
 /**
- * Filtre les lignes du tableau selon le texte de recherche
- * @param {string} searchText - Texte �?  rechercher
+ * Filtre les lines du tableat the bottomed on the text de recherche
+ * @param {string} searchText - Text à rechercher
  * @private
  */
 function filterTableRows(searchText: any) {
@@ -373,10 +368,10 @@ function filterTableRows(searchText: any) {
 }
 
 /**
- * Crée un bouton générique
- * @param {string} label - Libellé du bouton
- * @param {string} icon - Classe d'icône (optionnel)
- * @param {Function} onClick - Callback au clic
+ * Creates a button generic
+ * @param {string} label - Label du button
+ * @param {string} icon - Classe d'icon (optional)
+ * @param {Function} onClickk - Callback au click
  * @returns {HTMLElement}
  * @private
  */
@@ -402,21 +397,46 @@ function createButton(label: any, icon: any, onClick: any) {
     return button;
 }
 
+function _resetPanelStyles(tp: HTMLElement): void {
+    tp.setAttribute("data-gl-open", "false");
+    tp.classList.remove("is-visible");
+    tp.style.removeProperty("position");
+    tp.style.removeProperty("top");
+    tp.style.removeProperty("bottom");
+    tp.style.removeProperty("right");
+    tp.style.removeProperty("left");
+    tp.style.removeProperty("width");
+    tp.style.removeProperty("height");
+    tp.style.removeProperty("transform");
+    tp.style.removeProperty("display");
+    tp.style.removeProperty("visibility");
+    tp.style.removeProperty("opacity");
+    tp.style.removeProperty("z-index");
+    /* Disable desktop tab */
+    const desktopPanel = document.getElementById("gl-right-panel");
+    if (desktopPanel) {
+        desktopPanel
+            .querySelector<HTMLElement>("[data-gl-rp-tab='table']")
+            ?.classList.remove("is-active");
+        desktopPanel
+            .querySelector<HTMLElement>("[data-gl-rp-tab='table']")
+            ?.setAttribute("aria-selected", "false");
+    }
+}
+
 /**
- * Cr?e le bouton toggle pour masquer le tableau (int?gr? dans le toolbar)
+ * Creates the button toggle pour hide the table (integrated in the toolbar)
  * @returns {HTMLElement}
  * @private
  */
 function createToggleButton() {
     const button = document.createElement("button");
     button.className = "gl-table-panel__toggle-btn";
-    button.title = "Masquer le tableau";
-    button.setAttribute("aria-label", "Masquer tableau");
-
-    // Créer l'icône SVG (flèche vers la droite)
+    button.title = getLabel("aria.table.hide");
+    button.setAttribute("aria-label", getLabel("aria.table.hide"));
     const icon = document.createElement("span");
     icon.className = "gl-table-panel__toggle-btn__icon";
-    // SAFE: SVG statique hardcodé, pas de données utilisateur
+    // SAFE: SVG static hardcoded, pas de data user
     const rightSvg = DOMSecurity.createSVGIcon(16, 16, "M9 6l6 6-6 6", {
         stroke: "currentColor",
         strokeWidth: "6",
@@ -424,38 +444,13 @@ function createToggleButton() {
     });
     icon.appendChild(rightSvg);
     button.appendChild(icon);
-
     const clickHandler = () => {
         const tp = document.querySelector<HTMLElement>(".gl-table-panel");
         if (tp && tp.getAttribute("data-gl-open") === "true") {
-            tp.setAttribute("data-gl-open", "false");
-            tp.classList.remove("is-visible");
-            tp.style.removeProperty("position");
-            tp.style.removeProperty("top");
-            tp.style.removeProperty("bottom");
-            tp.style.removeProperty("right");
-            tp.style.removeProperty("left");
-            tp.style.removeProperty("width");
-            tp.style.removeProperty("height");
-            tp.style.removeProperty("transform");
-            tp.style.removeProperty("display");
-            tp.style.removeProperty("visibility");
-            tp.style.removeProperty("opacity");
-            tp.style.removeProperty("z-index");
-            /* Désactiver l'onglet desktop */
-            const desktopPanel = document.getElementById("gl-right-panel");
-            if (desktopPanel) {
-                desktopPanel
-                    .querySelector<HTMLElement>("[data-gl-rp-tab='table']")
-                    ?.classList.remove("is-active");
-                desktopPanel
-                    .querySelector<HTMLElement>("[data-gl-rp-tab='table']")
-                    ?.setAttribute("aria-selected", "false");
-            }
+            _resetPanelStyles(tp);
         }
         TableContract.toggle();
     };
-
     const events = _events;
     if (events) {
         _TablePanel._eventCleanups.push(
@@ -464,24 +459,23 @@ function createToggleButton() {
     } else {
         button.addEventListener("click", clickHandler);
     }
-
     return button;
 }
 
 /**
- * Crée le bouton flottant pour afficher le tableau (visible quand tableau masqué)
+ * Creates the button flottant pour display the table (visible quand array hidden)
  * @private
  */
 function createFloatingShowButton() {
     const button = document.createElement("button");
     button.className = "gl-table-panel__floating-show-btn";
-    button.title = "Afficher le tableau";
-    button.setAttribute("aria-label", "Afficher tableau");
+    button.title = getLabel("aria.table.show");
+    button.setAttribute("aria-label", getLabel("aria.table.show"));
 
-    // Créer l'icône SVG (flèche vers le haut)
+    // Createsr l'icon SVG (arrow to the haut)
     const icon = document.createElement("span");
     icon.className = "gl-table-panel__toggle-btn__icon";
-    // SAFE: SVG statique hardcodé, pas de données utilisateur
+    // SAFE: SVG static hardcoded, pas de data user
     const upSvg = DOMSecurity.createSVGIcon(16, 16, "M18 15l-6-6-6 6", {
         stroke: "currentColor",
         strokeWidth: "6",
@@ -507,8 +501,8 @@ function createFloatingShowButton() {
 }
 
 /**
- * Met �?  jour l'état des boutons de la toolbar selon la sélection
- * @param {number} selectedCount - Nombre d'entités sélectionnées
+ * Met à jour the state des buttons de la toolbar selon the selection
+ * @param {number} selectedCount - Nombre d'entities selected
  */
 _TablePanel.updateToolbarButtons = function (selectedCount: any) {
     const hasSelection = selectedCount > 0;
@@ -524,7 +518,7 @@ _TablePanel.updateToolbarButtons = function (selectedCount: any) {
     if (zoomBtn) zoomBtn.disabled = !hasSelection;
     if (highlightBtn) {
         highlightBtn.disabled = !hasSelection;
-        // Si plus aucune sélection, désactiver la surbrillance
+        // Si plus aucune selection, disable la surbrillance
         if (!hasSelection && highlightBtn.classList.contains("is-active")) {
             highlightBtn.classList.remove("is-active");
             TableContract.highlightSelection(false);
@@ -534,16 +528,16 @@ _TablePanel.updateToolbarButtons = function (selectedCount: any) {
 };
 
 /**
- * Rafraîchit le sélecteur de couche (utile après chargement de nouvelles couches)
+ * Refreshes le selector de layer (utile after loading de nouvelthe layers)
  */
 _TablePanel.refreshLayerSelector = function () {
     const select = document.querySelector("[data-table-layer-select]") as HTMLSelectElement | null;
     if (!select) return;
 
-    // Sauvegarder la valeur actuelle
+    // Sauvegarder the value currentle
     const currentValue = select.value;
 
-    // Vider les options (sauf la première)
+    // Empty options (except the first)
     while (select.options.length > 1) {
         select.options[1].remove();
     }
@@ -551,38 +545,38 @@ _TablePanel.refreshLayerSelector = function () {
     // Re-peupler
     populateLayerSelector(select);
 
-    // Vérifier si la valeur actuelle est toujours disponible
+    // Check si the value currentle est always available
     const optionValues = Array.from(select.options).map((o: HTMLOptionElement) => o.value);
     if (currentValue && optionValues.includes(currentValue)) {
         select.value = currentValue;
     } else if (currentValue && !optionValues.includes(currentValue)) {
-        // La couche active a été retirée (masquée) : basculer sur la première disponible
+        // The active layer has been removed (hidden): switch to the first available
         if (select.options.length > 1) {
             select.value = select.options[1].value;
             TableContract.setLayer(select.options[1].value);
         } else {
-            // Aucune couche visible : vider le tableau
+            // Auca layer visible : emptyr the table
             select.value = "";
             TableContract.setLayer("");
         }
     }
 
-    // Mettre à jour le placeholder si aucune couche visible
+    // Mettre up to date le placeholder si auca layer visible
     const defaultOption = select.options[0];
     if (defaultOption) {
         defaultOption.textContent =
-            select.options.length > 1 ? "Sélectionner une couche..." : "Aucune couche visible";
+            select.options.length > 1 ? "Select a layer..." : "No visible layer";
     }
 
     Log.info(
-        "[TablePanel] Sélecteur de couche rafraîchi,",
+        "[TablePanel] Layer selector refreshed,",
         select.options.length - 1,
-        "couches disponibles"
+        "layers disponibles"
     );
 };
 
 /**
- * Cleanup all event listeners
+ * Cleanup all event listners
  */
 _TablePanel.destroy = function () {
     if (_TablePanel._eventCleanups && _TablePanel._eventCleanups.length > 0) {

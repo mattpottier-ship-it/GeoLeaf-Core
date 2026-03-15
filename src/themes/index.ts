@@ -1,4 +1,4 @@
-﻿/**
+/**
  * src/themes/index.js — Shim: exposes Themes module methods as named exports
  * Tests expect: Themes, setTheme, getCurrentTheme, toggleTheme, loadTheme, clearCache
  * @see src/modules/geoleaf.themes.js

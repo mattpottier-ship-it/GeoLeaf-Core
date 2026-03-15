@@ -1,7 +1,7 @@
 /**
  * GeoLeaf Contract — Route (lazy-chunk boundary)
  *
- * Interface ESM pure pour accéder au module Route depuis les modules core.
+ * Interface ESM pure pour access au module Route depuis the modules core.
  *
  * Phase 10-D — Pattern C : contrat de chunk Route.
  *
@@ -16,12 +16,12 @@
 import { Route } from "../modules/geoleaf.route.js";
 
 /**
- * Contrat d'interface pour le module Route.
+ * Contrat d'interface pour the module Route.
  * @namespace RouteContract
  */
 const RouteContract = {
     /**
-     * Retourne true si Route est initialisé.
+     * Returns true si Route est initialized.
      * @returns {boolean}
      */
     isAvailable() {
@@ -29,8 +29,8 @@ const RouteContract = {
     },
 
     /**
-     * Retourne le LayerGroup contenant les itinéraires.
-     * Note : la méthode dans geoleaf.route.js est `getLayer()`.
+     * Returns the LayerGroup contenant les routes.
+     * Note : the method dans geoleaf.route.js est `getLayer()`.
      * Ce contrat uniformise l'API sous `getLayerGroup()`.
      * @returns {L.LayerGroup|null}
      */

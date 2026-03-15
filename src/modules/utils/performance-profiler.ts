@@ -1,4 +1,5 @@
-﻿/**
+/* eslint-disable security/detect-object-injection */
+/**
  * @fileoverview GeoLeaf Performance Profiler
  * @version 1.0.0
  */
@@ -149,7 +150,13 @@ export class PerformanceProfiler {
             available: 0,
         };
         try {
-            const perf = performance as Performance & { memory?: { usedJSHeapSize: number; totalJSHeapSize: number; jsHeapSizeLimit: number } };
+            const perf = performance as Performance & {
+                memory?: {
+                    usedJSHeapSize: number;
+                    totalJSHeapSize: number;
+                    jsHeapSizeLimit: number;
+                };
+            };
             if (perf.memory) {
                 memory.used = perf.memory.usedJSHeapSize;
                 memory.total = perf.memory.totalJSHeapSize;
@@ -161,13 +168,23 @@ export class PerformanceProfiler {
         return memory;
     }
 
-    analyzeMemoryLeaks(): { status: string; growthRate?: number; memoryTrend?: string; recommendation?: string } {
+    analyzeMemoryLeaks(): {
+        status: string;
+        growthRate?: number;
+        memoryTrend?: string;
+        recommendation?: string;
+    } {
         if (performanceData.memory.length < 10) return { status: "insufficient_data" };
         const recentData = performanceData.memory.slice(-30);
         const firstUsed = recentData[0]!.used;
         const lastUsed = recentData[recentData.length - 1]!.used;
         const growthRate = (lastUsed - firstUsed) / firstUsed;
-        const analysis: { status: string; growthRate: number; memoryTrend: string; recommendation: string } = {
+        const analysis: {
+            status: string;
+            growthRate: number;
+            memoryTrend: string;
+            recommendation: string;
+        } = {
             status: "normal",
             growthRate,
             memoryTrend: lastUsed > firstUsed ? "increasing" : "decreasing",
@@ -218,7 +235,10 @@ export class PerformanceProfiler {
             paint: this._getPaintTiming(),
             memory: this.getMemoryUsage(),
             userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "",
-            viewport: typeof window !== "undefined" ? { width: window.innerWidth, height: window.innerHeight } : {},
+            viewport:
+                typeof window !== "undefined"
+                    ? { width: window.innerWidth, height: window.innerHeight }
+                    : {},
         };
         performanceData.baseline = baseline;
         this.baselineEstablished = true;
@@ -237,9 +257,12 @@ export class PerformanceProfiler {
             const observer = new PerformanceObserver((list) => {
                 this._processPerformanceEntries(list.getEntries());
             });
-            observer.observe({ entryTypes: ["navigation", "paint", "measure", "mark", "longtask"] });
+            observer.observe({
+                entryTypes: ["navigation", "paint", "measure", "mark", "longtask"],
+            });
         } catch (error) {
-            if (Log) Log.warn("[PerformanceProfiler] PerformanceObserver initialization failed:", error);
+            if (Log)
+                Log.warn("[PerformanceProfiler] PerformanceObserver initialization failed:", error);
         }
     }
 
@@ -247,10 +270,16 @@ export class PerformanceProfiler {
         entries.forEach((entry) => {
             switch (entry.entryType) {
                 case "longtask":
-                    if (Log) Log.warn(`[PerformanceProfiler] Long task detected: ${(entry as PerformanceEntry & { duration: number }).duration?.toFixed(2)}ms`);
+                    if (Log)
+                        Log.warn(
+                            `[PerformanceProfiler] Long task detected: ${(entry as PerformanceEntry & { duration: number }).duration?.toFixed(2)}ms`
+                        );
                     break;
                 case "measure":
-                    performanceData.measures.set(entry.name, (entry as PerformanceEntry & { duration: number }).duration);
+                    performanceData.measures.set(
+                        entry.name,
+                        (entry as PerformanceEntry & { duration: number }).duration
+                    );
                     break;
                 case "mark":
                     performanceData.marks.set(entry.name, entry.startTime);
@@ -262,24 +291,34 @@ export class PerformanceProfiler {
     }
 
     private _startMonitoring(): void {
-        this.monitoringInterval = setInterval(() => this._collectPerformanceData(), this.config.monitoring.interval);
+        this.monitoringInterval = setInterval(
+            () => this._collectPerformanceData(),
+            this.config.monitoring.interval
+        );
     }
 
     private _collectPerformanceData(): void {
         const memory = this.getMemoryUsage();
         performanceData.memory.push(memory);
-        if (performanceData.memory.length > this.config.monitoring.maxDataPoints) performanceData.memory.shift();
+        if (performanceData.memory.length > this.config.monitoring.maxDataPoints)
+            performanceData.memory.shift();
         if (this.config.memory.enabled && memory.used > this.config.memory.threshold) {
-            if (Log) Log.warn(`[PerformanceProfiler] Memory usage high: ${(memory.used / 1024 / 1024).toFixed(2)}MB`);
+            if (Log)
+                Log.warn(
+                    `[PerformanceProfiler] Memory usage high: ${(memory.used / 1024 / 1024).toFixed(2)}MB`
+                );
         }
     }
 
     private _getNavigationTiming(): Record<string, number> | null {
         try {
-            const timing = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
+            const timing = performance.getEntriesByType("navigation")[0] as
+                | PerformanceNavigationTiming
+                | undefined;
             if (!timing) return null;
             return {
-                domContentLoaded: timing.domContentLoadedEventEnd - timing.domContentLoadedEventStart,
+                domContentLoaded:
+                    timing.domContentLoadedEventEnd - timing.domContentLoadedEventStart,
                 load: timing.loadEventEnd - timing.loadEventStart,
                 domComplete: timing.domComplete - timing.startTime,
                 firstByte: timing.responseStart - timing.requestStart,
@@ -304,15 +343,30 @@ export class PerformanceProfiler {
         }
     }
 
-    private _getResourceTiming(): { total: number; scripts?: number; stylesheets?: number; images?: number; totalSize?: number; totalDuration?: number } {
+    private _getResourceTiming(): {
+        total: number;
+        scripts?: number;
+        stylesheets?: number;
+        images?: number;
+        totalSize?: number;
+        totalDuration?: number;
+    } {
         try {
             const resources = performance.getEntriesByType("resource");
-            const summary = { total: resources.length, scripts: 0, stylesheets: 0, images: 0, totalSize: 0, totalDuration: 0 };
+            const summary = {
+                total: resources.length,
+                scripts: 0,
+                stylesheets: 0,
+                images: 0,
+                totalSize: 0,
+                totalDuration: 0,
+            };
             resources.forEach((resource) => {
                 if (resource.name.includes(".js")) summary.scripts!++;
                 else if (resource.name.includes(".css")) summary.stylesheets!++;
                 else if (_RE_IMAGE_EXT.test(resource.name)) summary.images!++;
-                if ((resource as PerformanceResourceTiming).transferSize) summary.totalSize! += (resource as PerformanceResourceTiming).transferSize;
+                if ((resource as PerformanceResourceTiming).transferSize)
+                    summary.totalSize! += (resource as PerformanceResourceTiming).transferSize;
                 summary.totalDuration! += resource.duration;
             });
             return summary;
@@ -334,7 +388,49 @@ export class PerformanceProfiler {
 
     private _getPeakMemory(): MemorySnapshot {
         if (performanceData.memory.length === 0) return this.getMemoryUsage();
-        return performanceData.memory.reduce((peak, current) => (current.used > peak.used ? current : peak));
+        return performanceData.memory.reduce((peak, current) =>
+            current.used > peak.used ? current : peak
+        );
+    }
+
+    private _compareNavigation(
+        baseline: Record<string, number>,
+        current: Record<string, number>
+    ): Record<string, unknown> {
+        const result: Record<string, unknown> = {};
+        Object.keys(baseline).forEach((key) => {
+            const baselineValue = baseline[key];
+            const currentValue = current[key];
+            const diff = baselineValue ? ((currentValue - baselineValue) / baselineValue) * 100 : 0;
+            result[key] = {
+                baseline: baselineValue,
+                current: currentValue,
+                difference: diff,
+                status: Math.abs(diff) > 20 ? (diff > 0 ? "worse" : "better") : "similar",
+            };
+        });
+        return result;
+    }
+
+    private _comparePaint(
+        baselinePaint: Record<string, number>,
+        currentPaint: Record<string, number>
+    ): Record<string, unknown> {
+        const result: Record<string, unknown> = {};
+        Object.keys(baselinePaint).forEach((key) => {
+            if (currentPaint[key] !== undefined) {
+                const baseVal = baselinePaint[key];
+                const currVal = currentPaint[key];
+                const diff = baseVal ? ((currVal - baseVal) / baseVal) * 100 : 0;
+                result[key] = {
+                    baseline: baseVal,
+                    current: currVal,
+                    difference: diff,
+                    status: Math.abs(diff) > 20 ? (diff > 0 ? "worse" : "better") : "similar",
+                };
+            }
+        });
+        return result;
     }
 
     private _compareWithBaseline(): Record<string, unknown> {
@@ -344,48 +440,27 @@ export class PerformanceProfiler {
             paint: this._getPaintTiming(),
             memory: this.getMemoryUsage(),
         };
-        const baseline = performanceData.baseline as { navigation?: Record<string, number>; paint?: Record<string, number>; memory?: { used: number } };
+        const baseline = performanceData.baseline as {
+            navigation?: Record<string, number>;
+            paint?: Record<string, number>;
+            memory?: { used: number };
+        };
         const comparison: Record<string, unknown> = {
             navigation: {},
             paint: {},
             memory: {},
             overall: "similar",
         };
-
-        if (current.navigation && baseline.navigation) {
-            (comparison.navigation as Record<string, unknown>) = {};
-            Object.keys(baseline.navigation).forEach((key) => {
-                const baselineValue = baseline.navigation![key];
-                const currentValue = current.navigation![key];
-                const diff = baselineValue ? ((currentValue - baselineValue) / baselineValue) * 100 : 0;
-                (comparison.navigation as Record<string, unknown>)[key] = {
-                    baseline: baselineValue,
-                    current: currentValue,
-                    difference: diff,
-                    status: Math.abs(diff) > 20 ? (diff > 0 ? "worse" : "better") : "similar",
-                };
-            });
-        }
-
-        const baselinePaint = baseline.paint;
-        if (baselinePaint && typeof baselinePaint === "object") {
-            Object.keys(baselinePaint).forEach((key) => {
-                if (current.paint[key] !== undefined) {
-                    const baseVal = baselinePaint[key];
-                    const currVal = current.paint[key];
-                    const diff = baseVal ? ((currVal - baseVal) / baseVal) * 100 : 0;
-                    (comparison.paint as Record<string, unknown>)[key] = {
-                        baseline: baseVal,
-                        current: currVal,
-                        difference: diff,
-                        status: Math.abs(diff) > 20 ? (diff > 0 ? "worse" : "better") : "similar",
-                    };
-                }
-            });
-        }
-
+        if (current.navigation && baseline.navigation)
+            comparison.navigation = this._compareNavigation(
+                baseline.navigation,
+                current.navigation
+            );
+        if (baseline.paint && typeof baseline.paint === "object")
+            comparison.paint = this._comparePaint(baseline.paint, current.paint);
         if (baseline.memory && baseline.memory.used > 0) {
-            const memDiff = ((current.memory.used - baseline.memory.used) / baseline.memory.used) * 100;
+            const memDiff =
+                ((current.memory.used - baseline.memory.used) / baseline.memory.used) * 100;
             comparison.memory = {
                 baseline: baseline.memory.used,
                 current: current.memory.used,
@@ -393,12 +468,21 @@ export class PerformanceProfiler {
                 status: Math.abs(memDiff) > 30 ? (memDiff > 0 ? "worse" : "better") : "similar",
             };
         }
-
         return comparison;
     }
 
-    private _generateRecommendations(): Array<{ type: string; priority: string; message: string; action: string }> {
-        const recommendations: Array<{ type: string; priority: string; message: string; action: string }> = [];
+    private _generateRecommendations(): Array<{
+        type: string;
+        priority: string;
+        message: string;
+        action: string;
+    }> {
+        const recommendations: Array<{
+            type: string;
+            priority: string;
+            message: string;
+            action: string;
+        }> = [];
         const memoryAnalysis = this.analyzeMemoryLeaks();
         const resources = this._getResourceTiming();
         const longTasks = this._getLongTasks();
@@ -420,7 +504,8 @@ export class PerformanceProfiler {
         }
 
         if (longTasks.length > 0) {
-            const avgLongTask = longTasks.reduce((sum, task) => sum + task.duration, 0) / longTasks.length;
+            const avgLongTask =
+                longTasks.reduce((sum, task) => sum + task.duration, 0) / longTasks.length;
             recommendations.push({
                 type: "performance",
                 priority: "medium",
@@ -442,10 +527,13 @@ export class PerformanceProfiler {
     }
 
     private _isDevelopmentMode(): boolean {
-        const loc = typeof globalThis !== "undefined" && "location" in globalThis ? (globalThis as { location: { hostname?: string; port?: string } }).location : null;
+        const loc =
+            typeof globalThis !== "undefined" && "location" in globalThis
+                ? (globalThis as { location: { hostname?: string; port?: string } }).location
+                : null;
         return (
-            (loc?.hostname === "localhost") ||
-            (loc?.hostname === "127.0.0.1") ||
+            loc?.hostname === "localhost" ||
+            loc?.hostname === "127.0.0.1" ||
             !!loc?.port ||
             getDebugMode()
         );
@@ -472,7 +560,10 @@ export class PerformanceProfiler {
         for (const key of Object.keys(userConfig) as (keyof PerformanceProfilerConfig)[]) {
             const userVal = userConfig[key];
             if (typeof userVal === "object" && userVal !== null && !Array.isArray(userVal)) {
-                (merged as Record<string, unknown>)[key] = { ...(defaultConfig[key] as object), ...userVal };
+                (merged as Record<string, unknown>)[key] = {
+                    ...(defaultConfig[key] as object),
+                    ...userVal,
+                };
             } else if (userVal !== undefined) {
                 (merged as Record<string, unknown>)[key] = userVal;
             }

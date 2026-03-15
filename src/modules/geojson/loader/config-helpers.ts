@@ -1,4 +1,4 @@
-﻿/**
+/**
  * GeoLeaf GeoJSON Loader - Config Helpers
  * @module geojson/loader/config-helpers
  */
@@ -30,7 +30,8 @@ const Loader = {
     getSidepanelConfig(def: LayerDef | null | undefined): unknown[] | null {
         if (!def) return null;
         if (def.sidepanelFields && Array.isArray(def.sidepanelFields)) return def.sidepanelFields;
-        if (def.sidepanel?.detailLayout && Array.isArray(def.sidepanel.detailLayout)) return def.sidepanel.detailLayout;
+        if (def.sidepanel?.detailLayout && Array.isArray(def.sidepanel.detailLayout))
+            return def.sidepanel.detailLayout;
         return null;
     },
 };

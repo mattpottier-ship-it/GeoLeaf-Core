@@ -1,4 +1,4 @@
-# GeoLeaf - Chemin critique d'initialisation (v1.1.0)
+﻿# GeoLeaf - Chemin critique d'initialisation (v1.1.0)
 
 Product Version: GeoLeaf Platform V1
 
@@ -486,4 +486,4 @@ console.log("[Demo] Carte ajustée sur emprise");
 ---
 
 **Dernière mise à jour** : 15 février 2026  
-**Version GeoLeaf** : 1.1.0
+**Version GeoLeaf** : 1.1.1

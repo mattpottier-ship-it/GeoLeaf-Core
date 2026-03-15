@@ -1,4 +1,4 @@
-﻿/*!
+/*!
  * GeoLeaf Core – Config / Accessors
  * © 2026 Mattieu Pottier
  * Released under the MIT License
@@ -57,7 +57,7 @@ C.set = function (path: string, value: unknown): void {
     if (Storage?.set) {
         Storage.set(path, value);
     } else {
-        Log.warn("[GeoLeaf.Config] Module Storage non disponible pour set().");
+        Log.warn("[GeoLeaf.Config] Storage module unavailable for set().");
     }
 };
 

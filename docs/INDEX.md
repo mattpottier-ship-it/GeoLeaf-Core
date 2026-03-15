@@ -1,7 +1,7 @@
 # GeoLeaf Core — Documentation Index
 
 **Product Version:** GeoLeaf Platform V1  
-**Version:** 1.1.0  
+**Version:** 1.1.1  
 **License:** MIT
 
 Documentation for the **GeoLeaf Core** library (MIT only). This index is intended for the public repository. It describes only MIT-licensed Core; it does not include commercial extension documentation or commercial legal terms. For available extensions, visit [geoleaf.dev](https://geoleaf.dev).
@@ -43,7 +43,7 @@ Documentation for the **GeoLeaf Core** library (MIT only). This index is intende
 - [Versioning](VERSIONING_POLICY.md) — SemVer policy
 - [Distribution](guides/DISTRIBUTION_GUIDE_2026.md) — Build and deploy
 - [Performance metrics](PERFORMANCE_METRICS.md) — Runtime metrics (time to map ready, callback, debug)
-  <!-- Note: les extensions commerciales ne font pas partie de cette documentation. -->
+    <!-- Note: les extensions commerciales ne font pas partie de cette documentation. -->
 
 ---
 

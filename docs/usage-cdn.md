@@ -1,7 +1,7 @@
-# GeoLeaf – Utilisation via CDN et NPM
+﻿# GeoLeaf – Utilisation via CDN et NPM
 
 **Version produit**: GeoLeaf Platform V1  
-**Version**: 1.1.0  
+**Version**: 1.1.1  
 **Dernière mise à jour**: 14 février 2026
 
 > Convention de versioning : **Platform V1** est le label produit ; le SemVer technique des packages/releases reste en **1.1.x**. Voir [VERSIONING_POLICY.md](VERSIONING_POLICY.md).
@@ -26,8 +26,8 @@ Ce document décrit les méthodes recommandées pour charger GeoLeaf dans une ap
 ## 1. Utilisation via UNPKG (CDN)
 
 ```html
-<link rel="stylesheet" href="https://unpkg.com/@geoleaf/core@1.1.0/dist/geoleaf-main.min.css" />
-<script src="https://unpkg.com/@geoleaf/core@1.1.0/dist/geoleaf.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/@geoleaf/core@1.1.1/dist/geoleaf-main.min.css" />
+<script src="https://unpkg.com/@geoleaf/core@1.1.1/dist/geoleaf.min.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 ```
@@ -39,9 +39,9 @@ Ce document décrit les méthodes recommandées pour charger GeoLeaf dans une ap
 ```html
 <link
     rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/@geoleaf/core@1.1.0/dist/geoleaf-main.min.css"
+    href="https://cdn.jsdelivr.net/npm/@geoleaf/core@1.1.1/dist/geoleaf-main.min.css"
 />
-<script src="https://cdn.jsdelivr.net/npm/@geoleaf/core@1.1.0/dist/geoleaf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@geoleaf/core@1.1.1/dist/geoleaf.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 ```
@@ -92,9 +92,9 @@ GeoLeaf.Core.init({
 
         <link
             rel="stylesheet"
-            href="https://cdn.jsdelivr.net/npm/@geoleaf/core@1.1.0/dist/geoleaf-main.min.css"
+            href="https://cdn.jsdelivr.net/npm/@geoleaf/core@1.1.1/dist/geoleaf-main.min.css"
         />
-        <script src="https://cdn.jsdelivr.net/npm/@geoleaf/core@1.1.0/dist/geoleaf.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@geoleaf/core@1.1.1/dist/geoleaf.min.js"></script>
 
         <style>
             html,

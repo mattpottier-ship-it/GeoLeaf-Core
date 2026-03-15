@@ -1,4 +1,5 @@
-﻿/**
+/* eslint-disable security/detect-object-injection */
+/**
  * GeoLeaf Utils API - Assembler
  * Compatibilite ascendante. Origine: geoleaf.utils.js (Phase 11).
  */

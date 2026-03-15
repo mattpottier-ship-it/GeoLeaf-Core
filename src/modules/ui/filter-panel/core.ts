@@ -1,6 +1,6 @@
 /**
  * GeoLeaf UI Filter Panel - Core
- * API publique et délégation vers les sous-modules
+ * API public et delegation to thes sous-modules
  *
  * @module ui/filter-panel/core
  */
@@ -13,7 +13,7 @@ import { FilterPanelApplier } from "./applier.js";
 import { FilterPanelRenderer } from "./renderer.js";
 import { FilterPanelProximity } from "./proximity.js";
 
-// Direct ESM bindings (P3-DEAD-01 complete)
+// Direct ESM bindings (P3-DEAD-01 completee)
 const getShared = (): any => FilterPanelShared;
 const getStateReader = (): any => FilterPanelStateReader;
 const getApplier = (): any => FilterPanelApplier;
@@ -23,11 +23,11 @@ const getProximity = (): any => FilterPanelProximity;
 const FilterPanel: any = {};
 
 // ========================================
-//   API PUBLIQUE - Délégation vers sous-modules
+//   API PUBLIQUE - Delegation vers sous-modules
 // ========================================
 
 /**
- * Construit le panneau de filtres depuis la configuration du profil actif
+ * Builds the filter panels from the configuration of the profile active
  * @param {Object} options - Options
  */
 FilterPanel.buildFilterPanelFromActiveProfile = function (options: any) {
@@ -35,11 +35,11 @@ FilterPanel.buildFilterPanelFromActiveProfile = function (options: any) {
     if (Renderer && Renderer.buildFilterPanelFromActiveProfile) {
         return Renderer.buildFilterPanelFromActiveProfile(options);
     }
-    getLog().error("[GeoLeaf.UI.FilterPanel] Module Renderer non chargé");
+    getLog().error("[GeoLeaf.UI.FilterPanel] Renderer module not loaded");
 };
 
 /**
- * Bascule la visibilité du panneau de filtres
+ * Switches la visibility du filter panels
  * @param {boolean} [forceState]
  */
 FilterPanel.toggleFilterPanelVisibility = function (forceState: any) {
@@ -50,7 +50,7 @@ FilterPanel.toggleFilterPanelVisibility = function (forceState: any) {
 };
 
 /**
- * Initialise le bouton toggle du panneau de filtres
+ * Initializes le button toggle du filter panels
  */
 FilterPanel.initFilterToggle = function () {
     const Renderer = getRenderer();
@@ -60,7 +60,7 @@ FilterPanel.initFilterToggle = function () {
 };
 
 /**
- * Rafraîchit les badges de tags
+ * Refreshes les badges de tags
  */
 FilterPanel.refreshFilterTags = function () {
     const Renderer = getRenderer();
@@ -70,7 +70,7 @@ FilterPanel.refreshFilterTags = function () {
 };
 
 /**
- * Applique les filtres initiaux
+ * Applies thes filtres initiaux
  */
 FilterPanel.applyFiltersInitial = function () {
     const Applier = getApplier();
@@ -80,7 +80,7 @@ FilterPanel.applyFiltersInitial = function () {
 };
 
 /**
- * Initialise le filtre de proximité
+ * Initializes le proximity filter
  * @param {L.Map} map
  */
 FilterPanel.initProximityFilter = function (map: any) {
@@ -91,7 +91,7 @@ FilterPanel.initProximityFilter = function (map: any) {
 };
 
 /**
- * Retourne l'élément DOM du panneau de filtres
+ * Returns the element DOM du filter panels
  * @returns {HTMLElement|null}
  */
 FilterPanel._getFilterPanelElement = function () {
@@ -103,7 +103,7 @@ FilterPanel._getFilterPanelElement = function () {
 };
 
 /**
- * Récupère les POI de base
+ * Retrieves thes POI de base
  * @returns {Array}
  */
 FilterPanel._getBasePois = function () {
@@ -115,7 +115,7 @@ FilterPanel._getBasePois = function () {
 };
 
 /**
- * Récupère les routes de base
+ * Retrieves thes routes de base
  * @returns {Array}
  */
 FilterPanel._getBaseRoutes = function () {
@@ -127,7 +127,7 @@ FilterPanel._getBaseRoutes = function () {
 };
 
 /**
- * Lit l'état des filtres depuis le panneau
+ * Lit the state des filtres from the panel
  * @param {HTMLElement} panelEl
  * @returns {Object}
  */
@@ -140,7 +140,7 @@ FilterPanel._readFiltersFromPanel = function (panelEl: any) {
 };
 
 /**
- * Filtre une liste de POI
+ * Filtre a list de POI
  * @param {Array} basePois
  * @param {Object} filterState
  * @returns {Array}
@@ -154,7 +154,7 @@ FilterPanel._filterPoiList = function (basePois: any, filterState: any) {
 };
 
 /**
- * Filtre une liste de routes
+ * Filtre a list de routes
  * @param {Array} baseRoutes
  * @param {Object} filterState
  * @returns {Array}
@@ -168,7 +168,7 @@ FilterPanel._filterRouteList = function (baseRoutes: any, filterState: any) {
 };
 
 /**
- * Rafraîchit la couche POI
+ * Refreshes the layer POI
  * @param {Array} filteredPois
  */
 FilterPanel._refreshPoiLayer = function (filteredPois: any) {

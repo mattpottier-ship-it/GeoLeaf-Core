@@ -1,13 +1,16 @@
-﻿/**
- * @fileoverview EventListenerManager - Gestion centralisée des event listeners
- * @module GeoLeaf.Utils.EventListenerManager
+/* eslint-disable security/detect-object-injection */
+/**
+ * @fileoverview EventListnerManager - Gestion centralizede des event listners
+ * @module GeoLeaf.Utils.EventListnerManager
  */
 
 import { Log } from "../log/index.js";
 
 interface ListenerEntry {
     id: number;
-    target: EventTarget | { on?: (e: string, h: () => void) => void; off?: (e: string, h: () => void) => void };
+    target:
+        | EventTarget
+        | { on?: (e: string, h: () => void) => void; off?: (e: string, h: () => void) => void };
     event: string;
     handler: EventListenerOrEventListenerObject | (() => void);
     options?: boolean | AddEventListenerOptions;
@@ -100,7 +103,11 @@ export class EventListenerManager {
         } else {
             const t = listener.target as EventTarget;
             if (t && typeof t.removeEventListener === "function") {
-                t.removeEventListener(listener.event, listener.handler as EventListener, listener.options);
+                t.removeEventListener(
+                    listener.event,
+                    listener.handler as EventListener,
+                    listener.options
+                );
             }
         }
 
@@ -124,7 +131,11 @@ export class EventListenerManager {
             } else {
                 const t = listener.target as EventTarget;
                 if (t && typeof t.removeEventListener === "function") {
-                    t.removeEventListener(listener.event, listener.handler as EventListener, listener.options);
+                    t.removeEventListener(
+                        listener.event,
+                        listener.handler as EventListener,
+                        listener.options
+                    );
                 }
             }
         });
@@ -132,7 +143,9 @@ export class EventListenerManager {
         this.listeners = this.listeners.filter((l) => l.target !== target);
 
         if (matchingListeners.length > 0) {
-            Log.info(`[EventListenerManager.${this.name}] Removed ${matchingListeners.length} listener(s) for target`);
+            Log.info(
+                `[EventListenerManager.${this.name}] Removed ${matchingListeners.length} listener(s) for target`
+            );
         }
 
         return matchingListeners.length;
@@ -151,7 +164,11 @@ export class EventListenerManager {
                 } else {
                     const t = listener.target as EventTarget;
                     if (t && typeof t.removeEventListener === "function") {
-                        t.removeEventListener(listener.event, listener.handler as EventListener, listener.options);
+                        t.removeEventListener(
+                            listener.event,
+                            listener.handler as EventListener,
+                            listener.options
+                        );
                     }
                 }
             } catch (error) {
@@ -170,7 +187,13 @@ export class EventListenerManager {
         return this.listeners.length;
     }
 
-    listActiveListeners(): Array<{ id: number; event: string; label: string; type: string; age: number }> {
+    listActiveListeners(): Array<{
+        id: number;
+        event: string;
+        label: string;
+        type: string;
+        age: number;
+    }> {
         return this.listeners.map((l) => ({
             id: l.id,
             event: l.event,

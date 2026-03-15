@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-object-injection */
 declare const _L: any;
 /*!
  * GeoLeaf Core
@@ -8,8 +9,8 @@ declare const _L: any;
 
 /**
  * GeoLeaf POI Module - Popup & Tooltips
- * Gestion des popups rapides et tooltips sur les marqueurs.
- * Délègue le rendu au module _ContentBuilder centralisé.
+ * Gestion des popups rapides et tooltips sur the markers.
+ * Delegates the render au module _ContentBuilder centralized.
  *
  * @module poi/popup
  * @version 2.0.0
@@ -25,7 +26,7 @@ import { Assemblers } from "../ui/content-builder/assemblers.ts";
 // ========================================
 
 /**
- * Récupère le ContentBuilder (Assemblers).
+ * Retrieves the ContentBuilder (Assemblers).
  * Les fonctions buildPopupHTML / buildTooltipHTML sont sur le sous-module Assemblers.
  * @returns {Object|null}
  */
@@ -34,12 +35,12 @@ function getContentBuilder() {
 }
 
 /**
- * Résout la valeur d'un champ à partir d'un objet POI.
- * Délègue à Utils.resolveField si disponible.
+ * Resolves the value of a field to partir d'an object POI.
+ * Delegates to Utils.resolveField si available.
  *
- * @param {object} poi - Objet POI source.
- * @param {string} field - Chemin du champ (ex: "attributes.photo").
- * @returns {*} Valeur du champ ou null.
+ * @param {object} poi - Object POI source.
+ * @param {string} field - Path du field (ex: "attributes.photo").
+ * @returns {*} Value du field ou null.
  */
 function resolveField(poi: any, field: any) {
     if (!poi || !field) return null;
@@ -48,7 +49,7 @@ function resolveField(poi: any, field: any) {
         return _resolveField(poi, field);
     }
 
-    // Fallback minimal
+    // Fallback minimum
     const parts = field.split(".");
     let current = poi;
     for (const part of parts) {
@@ -68,62 +69,54 @@ function resolveField(poi: any, field: any) {
 // ========================================
 
 /**
- * Récupère la configuration de popup pour une couche/POI.
+ * Retrieves the configuration de popup pour a layer/POI.
  *
- * @param {object} poi - Données du POI.
+ * @param {object} poi - Data du POI.
  * @returns {Array|null} Configuration detailPopup ou null.
  */
 function getPopupConfig(poi: any) {
-    // 1. Config attachée depuis la couche du POI
+    // 1. Config attached from the layer du POI
     if (poi._layerConfig?.popup?.detailPopup) {
-        Log.info && Log.info("[POI Popup] Config popup depuis layerConfig");
+        Log?.info("[POI Popup] Config popup from layerConfig");
         return poi._layerConfig.popup.detailPopup;
     }
 
-    // 2. Fallback: profil actif
+    // 2. Fallback: profile active
     if (Config && typeof (Config as any).getActiveProfile === "function") {
         const profile = (Config as any).getActiveProfile();
 
-        // Chercher la config dans les emplacements standards
+        // Chercher la config in thes emplacements standards
         if (profile?.popup?.detailPopup) {
-            Log.info &&
-                Log.info(
-                    "[POI Popup] Config popup depuis profil actif (profile.popup.detailPopup)"
-                );
+            Log?.info("[POI Popup] Config popup from profile actif (profile.popup.detailPopup)");
             return profile.popup.detailPopup;
         }
 
-        // ALTERNATIVE: Vérifier aussi dans panels.poi (ancienne structure)
+        // ALTERNATIVE: Check aussi dans panels.poi (old structure)
         if (profile?.panels?.poi?.popup?.detailPopup) {
-            Log.info &&
-                Log.info(
-                    "[POI Popup] Config popup depuis profil actif (profile.panels.poi.popup.detailPopup - ancienne structure)"
-                );
+            Log?.info(
+                "[POI Popup] Config popup from profile actif (profile.panels.poi.popup.detailPopup - old structure)"
+            );
             return profile.panels.poi.popup.detailPopup;
         }
     }
 
-    Log.warn &&
-        Log.warn(
-            "[POI Popup] Aucune configuration detailPopup trouvée pour POI:",
-            poi.id || "unknown"
-        );
+    Log?.warn("[POI Popup] No detailPopup configuration found for POI:", poi.id || "unknown");
     return null;
 }
 
 /**
- * Récupère la configuration de tooltip pour une couche/POI.
+ * Retrieves the configuration de tooltip pour a layer/POI.
  *
- * @param {object} poi - Données du POI.
+ * @param {object} poi - Data du POI.
  * @returns {Array|null} Configuration detailTooltip ou null.
  */
 function getTooltipConfig(poi: any) {
-    // 1. Config depuis popup.detailTooltip (structure standard)
+    // 1. Config from popup.detailTooltip (structure standard)
     if (poi._layerConfig?.popup?.detailTooltip) {
         return poi._layerConfig.popup.detailTooltip;
     }
 
-    // 2. Config depuis tooltip.detailTooltip
+    // 2. Config from tooltip.detailTooltip
     if (poi._layerConfig?.tooltip?.detailTooltip) {
         return poi._layerConfig.tooltip.detailTooltip;
     }
@@ -133,7 +126,7 @@ function getTooltipConfig(poi: any) {
         return poi._layerConfig.detailTooltip;
     }
 
-    // 4. Fallback: profil actif
+    // 4. Fallback: profile active
     if (Config && typeof (Config as any).getActiveProfile === "function") {
         const profile = (Config as any).getActiveProfile();
         if (profile?.popup?.detailTooltip) {
@@ -149,11 +142,11 @@ function getTooltipConfig(poi: any) {
 // ========================================
 
 /**
- * Construit le contenu HTML d'un popup rapide pour un POI.
- * Utilise ContentBuilder si disponible, sinon logique interne.
+ * Builds the contenu HTML of a popup rapide for a POI.
+ * Utilise ContentBuilder si available, sinon logical internal.
  *
- * @param {object} poi - Données du POI.
- * @param {Function} resolveCategoryDisplay - Fonction pour résoudre l'affichage de catégorie.
+ * @param {object} poi - Data du POI.
+ * @param {Function} resolveCategoryDisplay - Fonction pour resolve l'display de category.
  * @returns {string} HTML du popup.
  */
 function buildQuickPopupContent(poi: any, resolveCategoryDisplay: any) {
@@ -165,24 +158,24 @@ function buildQuickPopupContent(poi: any, resolveCategoryDisplay: any) {
     const config = getPopupConfig(poi);
     const ContentBuilder = getContentBuilder();
 
-    // Si ContentBuilder disponible, déléguer
+    // Si ContentBuilder available, delegate
     if (ContentBuilder && typeof ContentBuilder.buildPopupHTML === "function") {
         return ContentBuilder.buildPopupHTML(poi, config, {
             resolveCategoryDisplay: resolveCategoryDisplay,
         });
     }
 
-    // Fallback si ContentBuilder non chargé
+    // Fallback si ContentBuilder non loaded
     Log.warn && Log.warn("[POI Popup] ContentBuilder non disponible, fallback basique");
     return buildFallbackPopup(poi, config, resolveCategoryDisplay);
 }
 
 /**
- * Construit le contenu d'un tooltip pour un POI.
- * Utilise ContentBuilder si disponible.
+ * Builds the contenu of a tooltip for a POI.
+ * Utilise ContentBuilder si available.
  *
- * @param {object} poi - Données du POI.
- * @param {Function} resolveCategoryDisplay - Fonction pour résoudre l'affichage de catégorie.
+ * @param {object} poi - Data du POI.
+ * @param {Function} resolveCategoryDisplay - Fonction pour resolve l'display de category.
  * @returns {string} HTML du tooltip.
  */
 function buildTooltipContent(poi: any, resolveCategoryDisplay: any) {
@@ -194,14 +187,14 @@ function buildTooltipContent(poi: any, resolveCategoryDisplay: any) {
     const config = getTooltipConfig(poi);
     const ContentBuilder = getContentBuilder();
 
-    // Si ContentBuilder disponible, déléguer
+    // Si ContentBuilder available, delegate
     if (ContentBuilder && typeof ContentBuilder.buildTooltipHTML === "function") {
         return ContentBuilder.buildTooltipHTML(poi, config, {
             resolveCategoryDisplay: resolveCategoryDisplay,
         });
     }
 
-    // Fallback si ContentBuilder non chargé
+    // Fallback si ContentBuilder non loaded
     return escapeHtml(
         resolveField(poi, "title") ||
             resolveField(poi, "label") ||
@@ -213,9 +206,9 @@ function buildTooltipContent(poi: any, resolveCategoryDisplay: any) {
 /**
  * Fallback pour construire un popup basique sans ContentBuilder.
  *
- * @param {object} poi - Données du POI.
- * @param {Array} _config - Configuration detailPopup (réservé pour usage futur).
- * @param {Function} _resolveCategoryDisplay - Fonction pour résoudre l'affichage de catégorie (réservé).
+ * @param {object} poi - Data du POI.
+ * @param {Array} _config - Configuration detailPopup (reserved pour usage futur).
+ * @param {Function} _resolveCategoryDisplay - Fonction pour resolve l'display de category (reserved).
  * @returns {string} HTML du popup.
  */
 function buildFallbackPopup(poi: any, _config: any, _resolveCategoryDisplay: any) {
@@ -252,15 +245,15 @@ function buildFallbackPopup(poi: any, _config: any, _resolveCategoryDisplay: any
 // ========================================
 
 /**
- * Attache un tooltip à un marqueur Leaflet.
+ * Attache un tooltip to a marker Leaflet.
  *
  * @param {L.Marker} marker - Marqueur Leaflet.
- * @param {string} content - Contenu du tooltip (texte).
+ * @param {string} content - Contenu du tooltip (text).
  * @param {object} options - Options du tooltip.
  */
 function attachTooltip(marker: any, content: any, options: any) {
     if (!marker || typeof marker.bindTooltip !== "function") {
-        Log.warn && Log.warn("[POI Popup] Marker invalide pour attachTooltip");
+        Log.warn && Log.warn("[POI Popup] Invalid marker for attachTooltip");
         return;
     }
 
@@ -276,12 +269,12 @@ function attachTooltip(marker: any, content: any, options: any) {
 }
 
 /**
- * Gère le tooltip d'un marqueur selon la configuration.
+ * Manages the tooltip d'a marker based on the configuration.
  *
  * @param {L.Marker} marker - Marqueur Leaflet.
- * @param {object} poi - Données du POI.
+ * @param {object} poi - Data du POI.
  * @param {object} config - Configuration POI globale.
- * @param {Function} resolveCategoryDisplay - Fonction pour résoudre l'affichage de catégorie.
+ * @param {Function} resolveCategoryDisplay - Fonction pour resolve l'display de category.
  */
 function manageTooltip(marker: any, poi: any, config: any, resolveCategoryDisplay: any) {
     if (!marker || !poi) return;
@@ -303,7 +296,7 @@ function manageTooltip(marker: any, poi: any, config: any, resolveCategoryDispla
 }
 
 /**
- * Attache un popup à un marqueur Leaflet.
+ * Attache un popup to a marker Leaflet.
  *
  * @param {L.Marker} marker - Marqueur Leaflet.
  * @param {string} content - Contenu HTML du popup.
@@ -332,7 +325,7 @@ function attachPopup(marker: any, content: any, options: any) {
 // ========================================
 
 const POIPopup = {
-    // Construction de contenu
+    // Building de contenu
     buildQuickPopupContent,
     buildTooltipContent,
 

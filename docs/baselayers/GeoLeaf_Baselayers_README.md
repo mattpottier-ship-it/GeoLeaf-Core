@@ -1,6 +1,6 @@
-# GeoLeaf.Baselayers â€“ Documentation du module Baselayers
+﻿# GeoLeaf.Baselayers â€“ Documentation du module Baselayers
 
-Product Version: GeoLeaf Platform V1 **Version**: 1.1.0  
+Product Version: GeoLeaf Platform V1 **Version**: 1.1.1  
 **Fichier (monorepo)** : `src/modules/baselayers/`  
 **DerniÃ¨re mise Ã  jour**: 19 janvier 2026
 

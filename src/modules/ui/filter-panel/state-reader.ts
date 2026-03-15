@@ -1,6 +1,6 @@
 /**
  * GeoLeaf UI Filter Panel - State Reader
- * Lecture de l'état des filtres depuis le DOM
+ * Read de the state des filtres from the DOM
  *
  * @module ui/filter-panel/state-reader
  */
@@ -13,7 +13,7 @@ const FilterPanelProximity: any = _FilterPanelProximity;
 const FilterPanelStateReader: any = {};
 
 /**
- * Structure par défaut de l'état des filtres
+ * Structure by default de the state des filtres
  * @returns {Object}
  */
 FilterPanelStateReader.getDefaultState = function () {
@@ -35,83 +35,29 @@ FilterPanelStateReader.getDefaultState = function () {
     };
 };
 
-/**
- * Lit l'état actuel des filtres depuis le panneau DOM
- * @param {HTMLElement} panelEl - Élément du panneau de filtres
- * @returns {Object} - État des filtres
- */
-FilterPanelStateReader.readFiltersFromPanel = function (panelEl: any) {
-    const state = FilterPanelStateReader.getDefaultState();
+function _resolveProximityContainer(panelEl: any): Element | null {
+    const panelEl_ = panelEl.querySelector("[data-gl-filter-id='proximity']");
+    const toolbarEl = document.getElementById("gl-proximity-toolbar-wrapper");
+    if (panelEl_?.getAttribute("data-proximity-active") === "true") return panelEl_;
+    if (toolbarEl?.getAttribute("data-proximity-active") === "true") return toolbarEl;
+    return null;
+}
 
-    if (!panelEl) return state;
-
-    // Types de données (POI / Routes)
-    const poiCheckbox = panelEl.querySelector("[data-gl-filter-id='dataTypes'] input[value='poi']");
-    const routesCheckbox = panelEl.querySelector(
-        "[data-gl-filter-id='dataTypes'] input[value='routes']"
-    );
-    if (poiCheckbox) state.dataTypes.poi = poiCheckbox.checked;
-    if (routesCheckbox) state.dataTypes.routes = routesCheckbox.checked;
-
-    // Recherche textuelle
-    const searchInput = panelEl.querySelector(
-        "[data-gl-filter-id='searchText'] input[type='text']"
-    );
-    if (searchInput && searchInput.value.trim() !== "") {
-        state.searchText = searchInput.value.trim().toLowerCase();
-        state.hasSearchText = true;
-    }
-
-    // Proximité — vérifier data-proximity-active="true" sur chaque source indépendamment.
-    // ?? seul ne suffit pas : querySelector retourne un élément inactif (non null) s'il existe dans
-    // le panneau, court-circuitant le fallback vers le wrapper global de la toolbar mobile.
-    const panelProximityEl: Element | null = panelEl.querySelector(
-        "[data-gl-filter-id='proximity']"
-    );
-    const toolbarProximityEl: Element | null = document.getElementById(
-        "gl-proximity-toolbar-wrapper"
-    );
-    const proximityContainer: Element | null =
-        (panelProximityEl?.getAttribute("data-proximity-active") === "true"
-            ? panelProximityEl
-            : null) ??
-        (toolbarProximityEl?.getAttribute("data-proximity-active") === "true"
-            ? toolbarProximityEl
-            : null);
-
+function _readProximityState(panelEl: any, state: any): void {
+    const proximityContainer = _resolveProximityContainer(panelEl);
     if (proximityContainer) {
         const lat = parseFloat(proximityContainer.getAttribute("data-proximity-lat") ?? "");
         const lng = parseFloat(proximityContainer.getAttribute("data-proximity-lng") ?? "");
         const radius = parseFloat(proximityContainer.getAttribute("data-proximity-radius") ?? "");
-
         if (!isNaN(lat) && !isNaN(lng) && !isNaN(radius)) {
             state.proximity.active = true;
-            state.proximity.center = { lat: lat, lng: lng };
+            state.proximity.center = { lat, lng };
             state.proximity.radius = radius;
         }
     }
+}
 
-    // Tree-view : catégories cochées
-    panelEl.querySelectorAll("input.gl-filter-tree__checkbox--category:checked").forEach(function (
-        input: any
-    ) {
-        const val = input.value;
-        if (val) {
-            state.categoriesTree.push(String(val));
-        }
-    });
-
-    // Tree-view : sous-catégories cochées
-    panelEl
-        .querySelectorAll("input.gl-filter-tree__checkbox--subcategory:checked")
-        .forEach(function (input: any) {
-            const subId = input.getAttribute("data-gl-filter-subcategory-id");
-            if (subId) {
-                state.subCategoriesTree.push(String(subId));
-            }
-        });
-
-    // Slider de note minimale
+function _readRatingState(panelEl: any, state: any): void {
     const ratingInput = panelEl.querySelector(
         "[data-gl-filter-id='minRating'] input[type='range']"
     );
@@ -122,8 +68,9 @@ FilterPanelStateReader.readFiltersFromPanel = function (panelEl: any) {
             state.hasMinRating = val > 0;
         }
     }
+}
 
-    // Tags sélectionnés (badges)
+function _readTagsState(panelEl: any, state: any): void {
     const tagsContainer = panelEl.querySelector(
         "[data-gl-filter-id='tags'] .gl-filter-panel__tags-container"
     );
@@ -139,13 +86,82 @@ FilterPanelStateReader.readFiltersFromPanel = function (panelEl: any) {
         state.selectedTags = selected;
         state.hasTags = selected.length > 0;
     }
+}
+
+function _resetProximityControls(proximityWrapper: any): void {
+    proximityWrapper.removeAttribute("data-proximity-active");
+    proximityWrapper.removeAttribute("data-proximity-lat");
+    proximityWrapper.removeAttribute("data-proximity-lng");
+    proximityWrapper.removeAttribute("data-proximity-radius");
+    const btn = proximityWrapper.querySelector(".gl-filter-panel__proximity-btn");
+    if (btn) {
+        btn.classList.remove("is-active");
+        btn.textContent = btn.getAttribute("data-label-inactive") || "Activer";
+    }
+    const rangeWrapper = proximityWrapper.querySelector(".gl-filter-panel__proximity-range");
+    if (rangeWrapper) rangeWrapper.style.display = "none";
+    const instruction = proximityWrapper.querySelector(".gl-filter-panel__proximity-instruction");
+    if (instruction) instruction.style.display = "none";
+    FilterPanelProximity.resetProximity();
+}
+
+/**
+ * Lit the state current des filtres from the panel DOM
+ * @param {HTMLElement} panelEl - Element du filter panels
+ * @returns {Object} - STATE des filtres
+ */
+FilterPanelStateReader.readFiltersFromPanel = function (panelEl: any) {
+    const state = FilterPanelStateReader.getDefaultState();
+    if (!panelEl) return state;
+
+    // Types de data (POI / Routes)
+    const poiCheckbox = panelEl.querySelector("[data-gl-filter-id='dataTypes'] input[value='poi']");
+    const routesCheckbox = panelEl.querySelector(
+        "[data-gl-filter-id='dataTypes'] input[value='routes']"
+    );
+    if (poiCheckbox) state.dataTypes.poi = poiCheckbox.checked;
+    if (routesCheckbox) state.dataTypes.routes = routesCheckbox.checked;
+
+    // Recherche textualle
+    const searchInput = panelEl.querySelector(
+        "[data-gl-filter-id='searchText'] input[type='text']"
+    );
+    if (searchInput && searchInput.value.trim() !== "") {
+        state.searchText = searchInput.value.trim().toLowerCase();
+        state.hasSearchText = true;
+    }
+
+    // Proximity
+    _readProximityState(panelEl, state);
+
+    // Tree-view: checked categories
+    panelEl.querySelectorAll("input.gl-filter-tree__checkbox--category:checked").forEach(function (
+        input: any
+    ) {
+        const val = input.value;
+        if (val) state.categoriesTree.push(String(val));
+    });
+
+    // Tree-view: checked sub-categories
+    panelEl
+        .querySelectorAll("input.gl-filter-tree__checkbox--subcategory:checked")
+        .forEach(function (input: any) {
+            const subId = input.getAttribute("data-gl-filter-subcategory-id");
+            if (subId) state.subCategoriesTree.push(String(subId));
+        });
+
+    // Slider de note minimume
+    _readRatingState(panelEl, state);
+
+    // Tags selected (badges)
+    _readTagsState(panelEl, state);
 
     return state;
 };
 
 /**
- * Réinitialise les contrôles du panneau de filtres à leur état par défaut
- * @param {HTMLElement} panelEl - Élément du panneau de filtres
+ * Reinitializes les controles du filter panels to leur state by default
+ * @param {HTMLElement} panelEl - Element du filter panels
  */
 FilterPanelStateReader.resetControls = function (panelEl: any) {
     if (!panelEl) return;
@@ -166,43 +182,16 @@ FilterPanelStateReader.resetControls = function (panelEl: any) {
         searchInput.value = "";
     }
 
-    // Proximité
+    // Proximity
     const proximityWrapper = panelEl.querySelector("[data-gl-filter-id='proximity']");
-    if (proximityWrapper) {
-        proximityWrapper.removeAttribute("data-proximity-active");
-        proximityWrapper.removeAttribute("data-proximity-lat");
-        proximityWrapper.removeAttribute("data-proximity-lng");
-        proximityWrapper.removeAttribute("data-proximity-radius");
+    if (proximityWrapper) _resetProximityControls(proximityWrapper);
 
-        const btn = proximityWrapper.querySelector(".gl-filter-panel__proximity-btn");
-        if (btn) {
-            btn.classList.remove("is-active");
-            btn.textContent = btn.getAttribute("data-label-inactive") || "Activer";
-        }
-
-        const rangeWrapper = proximityWrapper.querySelector(".gl-filter-panel__proximity-range");
-        if (rangeWrapper) {
-            rangeWrapper.style.display = "none";
-        }
-
-        const instruction = proximityWrapper.querySelector(
-            ".gl-filter-panel__proximity-instruction"
-        );
-        if (instruction) {
-            instruction.style.display = "none";
-        }
-
-        // Supprimer le cercle, le marqueur et le handler de clic via l'état module-local
-        // (les anciens _g.GeoLeaf.UI._proximityMarker/Circle/Map sont morts depuis P3-DEAD-01)
-        FilterPanelProximity.resetProximity();
-    }
-
-    // Checkboxes du tree-view (catégories & sous-catégories)
+    // Checkboxes du tree-view (categories & sous-categories)
     panelEl.querySelectorAll(".gl-filter-tree__checkbox").forEach(function (input: any) {
         input.checked = false;
     });
 
-    // Tags - désélectionner tous les badges
+    // Tags - deselect all badges
     const tagBadges = panelEl.querySelectorAll(".gl-filter-panel__tag-badge.is-selected");
     tagBadges.forEach(function (badge: any) {
         badge.classList.remove("is-selected");
@@ -238,14 +227,14 @@ FilterPanelStateReader.resetControls = function (panelEl: any) {
 };
 
 /**
- * Réinitialise uniquement les catégories, sous-catégories, tags et note.
- * Ne touche PAS à la recherche textuelle ni à la proximité.
- * @param {HTMLElement} panelEl - Élément du panneau de filtres
+ * Reinitializes only les categories, sous-categories, tags et note.
+ * Ne key PAS to the recherche textualle ni to the proximity.
+ * @param {HTMLElement} panelEl - Element du filter panels
  */
 FilterPanelStateReader.resetCategoryTagControls = function (panelEl: any) {
     if (!panelEl) return;
 
-    // Checkboxes tree-view catégories & sous-catégories
+    // Checkboxes tree-view categories & sous-categories
     panelEl.querySelectorAll(".gl-filter-tree__checkbox").forEach(function (input: any) {
         input.checked = false;
     });

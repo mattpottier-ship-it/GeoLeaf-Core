@@ -1,6 +1,6 @@
-# GeoLeaf.Validators â€“ Documentation du module Validators
+﻿# GeoLeaf.Validators â€“ Documentation du module Validators
 
-Product Version: GeoLeaf Platform V1 **Version**: 1.1.0  
+Product Version: GeoLeaf Platform V1 **Version**: 1.1.1  
 **Fichier (monorepo)** : `src/modules/validators/`  
 **DerniÃ¨re mise Ã  jour**: 19 janvier 2026  
 **DerniÃ¨re vÃ©rification**: 19 janvier 2026

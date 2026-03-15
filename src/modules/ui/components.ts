@@ -1,13 +1,13 @@
-// @ts-nocheck � migration TS, typage progressif
+// @ts-nocheck ´┐¢ migration TS, typage progressif
 /**
- * GeoLeaf UI Components - Module commun partagé
- * Composants d'interface réutilisables pour Legend et LayerManager
+ * GeoLeaf UI Components - Common shared module
+ * Reusable UI components for Legend and LayerManager
  *
  * Extrait le code commun entre:
  * - legend-renderer.js
  * - layer-manager/renderer.js
  *
- * DÉPENDANCES:
+ * DEPENDENCIES:
  * - Leaflet (L.DomUtil, L.DomEvent)
  * - Log (import ESM)
  *
@@ -24,16 +24,125 @@ import { Log } from "../log/index.js";
  * @namespace _UIComponents
  * @private
  */
+function _appendCircleIconSvg(circleEl, iconId, size, iconColor) {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.style.width = size * 0.85 + "px";
+    svg.style.height = size * 0.85 + "px";
+    svg.style.fill = iconColor || "currentColor";
+    svg.style.stroke = iconColor || "currentColor";
+    svg.style.color = "#ffffff";
+    svg.style.pointerEvents = "none";
+    svg.style.position = "absolute";
+    const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
+    use.setAttribute("href", "#" + iconId);
+    svg.appendChild(use);
+    circleEl.appendChild(svg);
+    if (Log) {
+        const spriteExists = document.querySelector('svg[data-geoleaf-sprite="profile"]');
+        if (!spriteExists) {
+            svg.setAttribute("data-sprite-missing", "true");
+            Log.warn("[UIComponents] Icon", "#" + iconId, "referenced but sprite not found in DOM");
+        } else if (!spriteExists.querySelector("#" + iconId)) {
+            svg.setAttribute("data-symbol-missing", "#" + iconId);
+            Log.warn("[UIComponents] Symbol", "#" + iconId, "not found in SVG sprite");
+        }
+    }
+}
+
+function _buildLineSvgEl(config, width, color, dashArray, outlineColor, outlineWidth) {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", "0 0 40 8");
+    svg.style.width = "40px";
+    const totalHeight = Math.max(width, 3) + (outlineWidth || 0) + 4;
+    svg.style.height = totalHeight + "px";
+    if (outlineColor && outlineWidth) {
+        const outlineLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        outlineLine.setAttribute("x1", "0");
+        outlineLine.setAttribute("y1", "4");
+        outlineLine.setAttribute("x2", "40");
+        outlineLine.setAttribute("y2", "4");
+        outlineLine.setAttribute("stroke", outlineColor);
+        outlineLine.setAttribute("stroke-width", width + outlineWidth * 2);
+        outlineLine.setAttribute("stroke-linecap", "round");
+        if (config.outlineOpacity !== undefined)
+            outlineLine.setAttribute("stroke-opacity", config.outlineOpacity);
+        svg.appendChild(outlineLine);
+    }
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", "0");
+    line.setAttribute("y1", "4");
+    line.setAttribute("x2", "40");
+    line.setAttribute("y2", "4");
+    line.setAttribute("stroke", color);
+    line.setAttribute("stroke-width", width);
+    line.setAttribute("stroke-linecap", "round");
+    if (dashArray) line.setAttribute("stroke-dasharray", dashArray);
+    else if (config.style === "dashed") line.setAttribute("stroke-dasharray", "8,4");
+    else if (config.style === "dotted") line.setAttribute("stroke-dasharray", "2,3");
+    if (config.opacity !== undefined) line.setAttribute("stroke-opacity", config.opacity);
+    svg.appendChild(line);
+    return svg;
+}
+
+function _buildLegendHatchDefs(svg, config) {
+    const hatchCfg = config.hatch;
+    const type = hatchCfg.type || "diagonal";
+    const spacing = hatchCfg.spacingPx || 10;
+    const hatchColor = (hatchCfg.stroke && hatchCfg.stroke.color) || "#000000";
+    const hatchOpacity =
+        (hatchCfg.stroke && hatchCfg.stroke.opacity) !== undefined ? hatchCfg.stroke.opacity : 1;
+    const hatchWidth = (hatchCfg.stroke && hatchCfg.stroke.widthPx) || 1;
+    const patternId = "hatch-legend-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
+    const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+    const pattern = document.createElementNS("http://www.w3.org/2000/svg", "pattern");
+    pattern.setAttribute("id", patternId);
+    pattern.setAttribute("patternUnits", "userSpaceOnUse");
+    pattern.setAttribute("width", spacing);
+    pattern.setAttribute("height", spacing);
+    const ns = "http://www.w3.org/2000/svg";
+    const mkLine = (x1, y1, x2, y2) => {
+        const l = document.createElementNS(ns, "line");
+        l.setAttribute("x1", x1);
+        l.setAttribute("y1", y1);
+        l.setAttribute("x2", x2);
+        l.setAttribute("y2", y2);
+        l.setAttribute("stroke", hatchColor);
+        l.setAttribute("stroke-width", hatchWidth);
+        l.setAttribute("stroke-opacity", hatchOpacity);
+        return l;
+    };
+    if (type === "diagonal") pattern.appendChild(mkLine("0", "0", spacing, spacing));
+    else if (type === "dot") {
+        const c = document.createElementNS(ns, "circle");
+        c.setAttribute("cx", spacing / 2);
+        c.setAttribute("cy", spacing / 2);
+        c.setAttribute("r", Math.max(0.3, spacing * 0.07));
+        c.setAttribute("fill", hatchColor);
+        c.setAttribute("fill-opacity", hatchOpacity);
+        pattern.appendChild(c);
+    } else if (type === "cross") {
+        pattern.appendChild(mkLine("0", spacing / 2, spacing, spacing / 2));
+        pattern.appendChild(mkLine(spacing / 2, "0", spacing / 2, spacing));
+    } else if (type === "x") {
+        pattern.appendChild(mkLine("0", "0", spacing, spacing));
+        pattern.appendChild(mkLine(spacing, "0", "0", spacing));
+    }
+    defs.appendChild(pattern);
+    svg.appendChild(defs);
+    return patternId;
+}
+
 const _UIComponents = {
     /**
-     * Crée un accordéon
+     * Creates an accordion
      * @param {HTMLElement} container - Conteneur parent
-     * @param {Object} config - Configuration de l'accordéon
-     * @param {string} config.layerId - ID de la couche
-     * @param {string} config.label - Titre de l'accordéon
-     * @param {boolean} config.collapsed - État initial
+     * @param {Object} config - Configuration of the accordion
+     * @param {string} config.layerId - ID de the layer
+     * @param {string} config.label - Title of the accordion
+     * @param {boolean} config.collapsed - Initial state
      * @param {boolean} config.visible - Couche visible ou non (pour grisage)
-     * @param {Function} [config.onToggle] - Callback lors du toggle
+     * @param {Function} [config.onToggle] - Callback during the toggle
      * @returns {Object} - { accordionEl, headerEl, bodyEl }
      */
     createAccordion(container, config) {
@@ -44,39 +153,34 @@ const _UIComponents = {
             accordionEl.classList.add("gl-legend__accordion--collapsed");
         }
 
-        // Ajouter classe inactive si la couche n'est pas visible
+        // Addsr class inactive si the layer n'est pas visible
         if (config.visible === false) {
             accordionEl.classList.add("gl-legend__accordion--inactive");
         }
 
-        // Header de l'accordéon
+        // A1+A2+A3: single semantic <button> — native keyboard, no nesting violation
         const headerEl = globalThis.L.DomUtil.create(
-            "div",
+            "button",
             "gl-legend__accordion-header",
             accordionEl
         );
-        headerEl.setAttribute("role", "button");
-        headerEl.setAttribute("tabindex", "0");
+        headerEl.type = "button";
         headerEl.setAttribute("aria-expanded", !config.collapsed);
 
         const titleEl = globalThis.L.DomUtil.create("span", "gl-legend__accordion-title", headerEl);
         titleEl.textContent = config.label;
 
-        const toggleEl = globalThis.L.DomUtil.create(
-            "button",
-            "gl-legend__accordion-toggle",
-            headerEl
-        );
-        toggleEl.type = "button";
-        toggleEl.setAttribute("aria-label", "Basculer l'accordéon");
-        toggleEl.textContent = config.collapsed ? "▶" : "▼";
+        // Icon span excluded from accessibility tree (replaces nested <button>)
+        const toggleEl = globalThis.L.DomUtil.create("span", "gl-legend__accordion-icon", headerEl);
+        toggleEl.setAttribute("aria-hidden", "true");
+        toggleEl.textContent = config.collapsed ? "\u25b6" : "\u25bc";
 
-        // Body de l'accordéon
+        // Body of the accordion
         const bodyEl = globalThis.L.DomUtil.create("div", "gl-legend__accordion-body", accordionEl);
 
-        // Gestionnaire de clic sur le header
+        // Manager for click sur le header
         const onToggle = (ev) => {
-            // Ne rien faire si la couche est inactive
+            // Ne rien faire si the layer est inactive
             if (config.visible === false) {
                 if (globalThis.L && globalThis.L.DomEvent) {
                     globalThis.L.DomEvent.stopPropagation(ev);
@@ -91,10 +195,10 @@ const _UIComponents = {
             ev.preventDefault();
 
             const isCollapsed = accordionEl.classList.toggle("gl-legend__accordion--collapsed");
-            toggleEl.textContent = isCollapsed ? "▶" : "▼";
+            toggleEl.textContent = isCollapsed ? "\u25b6" : "\u25bc";
             headerEl.setAttribute("aria-expanded", !isCollapsed);
 
-            // Callback optionnel
+            // Callback optional
             if (typeof config.onToggle === "function") {
                 config.onToggle(config.layerId, !isCollapsed);
             }
@@ -106,21 +210,18 @@ const _UIComponents = {
     },
 
     /**
-     * Rend un symbole cercle (POI/Marker)
+     * Rend un symbole circle (POI/Marker)
      * @param {HTMLElement} container - Conteneur du symbole
      * @param {Object} config - Configuration du symbole
-     * @returns {HTMLElement} - Élément créé
+     * @returns {HTMLElement} - Created element
      */
     renderCircleSymbol(container, config) {
-        const circleEl = globalThis.L.DomUtil.create("div", "gl-legend__circle", container);
-
-        // Utiliser le radius transmis, sinon 24px par défaut (plus grand pour les légendes avec icônes)
         const radius = config.radius !== undefined ? config.radius : 24;
         const size = radius * 2;
         const fillColor = config.fillColor || config.color || "#3388ff";
         const strokeColor = config.color || config.borderColor || "rgba(0,0,0,0.2)";
         const strokeWidth = config.weight || 1;
-
+        const circleEl = globalThis.L.DomUtil.create("div", "gl-legend__circle", container);
         circleEl.style.width = size + "px";
         circleEl.style.height = size + "px";
         circleEl.style.backgroundColor = fillColor;
@@ -130,78 +231,27 @@ const _UIComponents = {
         circleEl.style.display = "flex";
         circleEl.style.alignItems = "center";
         circleEl.style.justifyContent = "center";
-
-        if (config.fillOpacity !== undefined) {
-            circleEl.style.opacity = config.fillOpacity;
-        }
-
-        // Afficher l'icône sprite SVG si présente
+        if (config.fillOpacity !== undefined) circleEl.style.opacity = config.fillOpacity;
         if (config.icon) {
-            // Validation de sécurité: L'ID d'icône doit être alphanumérique avec tirets/underscores seulement
             const iconId = config.icon.startsWith("#") ? config.icon.substring(1) : config.icon;
             if (!/^[a-zA-Z0-9_-]+$/.test(iconId)) {
                 if (Log)
                     Log.error(
-                        "[UIComponents] ID d'icône invalide (caractères non autorisés):",
+                        "[UIComponents] ID d'ic\u00f4ne invalide (caract\u00e8res non autoris\u00e9s):",
                         config.icon
                     );
                 return circleEl;
             }
-
-            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-            svg.setAttribute("viewBox", "0 0 24 24");
-            // Rendre l'icône à 85% du cercle pour qu'elle soit bien visible
-            svg.style.width = size * 0.85 + "px";
-            svg.style.height = size * 0.85 + "px";
-            svg.style.fill = config.iconColor || "currentColor";
-            svg.style.stroke = config.iconColor || "currentColor";
-            svg.style.color = "#ffffff"; // Définir la couleur de base pour currentColor
-            svg.style.pointerEvents = "none";
-            svg.style.position = "absolute";
-
-            const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
-            // ID validé, construire le href sécurisé
-            const iconHref = "#" + iconId;
-            // Utiliser la syntaxe moderne href au lieu de xlink:href
-            use.setAttribute("href", iconHref);
-            svg.appendChild(use);
-            circleEl.appendChild(svg);
-
-            // Vérification d'erreur seulement si Log est disponible
-            if (Log) {
-                const spriteExists = document.querySelector('svg[data-geoleaf-sprite="profile"]');
-                if (!spriteExists) {
-                    svg.setAttribute("data-sprite-missing", "true");
-                    Log.warn(
-                        "[UIComponents] Icône",
-                        config.icon,
-                        "référencée mais sprite non trouvé dans le DOM"
-                    );
-                } else {
-                    const symbolId = config.icon.startsWith("#")
-                        ? config.icon.substring(1)
-                        : config.icon;
-                    const symbol = spriteExists.querySelector("#" + symbolId);
-                    if (!symbol) {
-                        svg.setAttribute("data-symbol-missing", config.icon);
-                        Log.warn(
-                            "[UIComponents] Symbole",
-                            config.icon,
-                            "non trouvé dans le sprite SVG"
-                        );
-                    }
-                }
-            }
+            _appendCircleIconSvg(circleEl, iconId, size, config.iconColor);
         }
-
         return circleEl;
     },
 
     /**
-     * Rend un symbole ligne
+     * Rend un symbole line
      * @param {HTMLElement} container - Conteneur du symbole
      * @param {Object} config - Configuration du symbole
-     * @returns {HTMLElement} - Élément créé
+     * @returns {HTMLElement} - Created element
      */
     renderLineSymbol(container, config) {
         const width = config.width || 3;
@@ -210,66 +260,22 @@ const _UIComponents = {
         const dashArray = config.dashArray || null;
         const outlineColor = config.outlineColor || null;
         const outlineWidth = config.outlineWidth || null;
-
-        // Créer un SVG pour les lignes complexes (dashArray custom, tirets épais, ou avec outline)
         if (dashArray || width > 5 || (outlineColor && outlineWidth)) {
-            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-            svg.setAttribute("viewBox", "0 0 40 8");
-            svg.style.width = "40px";
-            const totalHeight = Math.max(width, 3) + (outlineWidth || 0) + 4;
-            svg.style.height = totalHeight + "px";
-
-            // Si outline existe, dessiner d'abord la ligne de contour
-            if (outlineColor && outlineWidth) {
-                const outlineLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                outlineLine.setAttribute("x1", "0");
-                outlineLine.setAttribute("y1", "4");
-                outlineLine.setAttribute("x2", "40");
-                outlineLine.setAttribute("y2", "4");
-                outlineLine.setAttribute("stroke", outlineColor);
-                outlineLine.setAttribute("stroke-width", width + outlineWidth * 2);
-                outlineLine.setAttribute("stroke-linecap", "round");
-
-                if (config.outlineOpacity !== undefined) {
-                    outlineLine.setAttribute("stroke-opacity", config.outlineOpacity);
-                }
-
-                svg.appendChild(outlineLine);
-            }
-
-            // Dessiner ensuite la ligne principale
-            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            line.setAttribute("x1", "0");
-            line.setAttribute("y1", "4");
-            line.setAttribute("x2", "40");
-            line.setAttribute("y2", "4");
-            line.setAttribute("stroke", color);
-            line.setAttribute("stroke-width", width);
-            line.setAttribute("stroke-linecap", "round");
-
-            if (dashArray) {
-                line.setAttribute("stroke-dasharray", dashArray);
-            } else if (style === "dashed") {
-                line.setAttribute("stroke-dasharray", "8,4");
-            } else if (style === "dotted") {
-                line.setAttribute("stroke-dasharray", "2,3");
-            }
-
-            if (config.opacity !== undefined) {
-                line.setAttribute("stroke-opacity", config.opacity);
-            }
-
-            svg.appendChild(line);
+            const svg = _buildLineSvgEl(
+                config,
+                width,
+                color,
+                dashArray,
+                outlineColor,
+                outlineWidth
+            );
             container.appendChild(svg);
             return svg;
         }
-
-        // Fallback : DIV simple pour lignes basiques
         const lineEl = globalThis.L.DomUtil.create("div", "gl-legend__line", container);
         lineEl.style.width = "30px";
         lineEl.style.height = width + "px";
         lineEl.style.backgroundColor = color;
-
         if (style === "dashed") {
             lineEl.style.backgroundImage = `linear-gradient(to right, ${color} 50%, transparent 50%)`;
             lineEl.style.backgroundSize = "8px 100%";
@@ -277,188 +283,66 @@ const _UIComponents = {
             lineEl.style.backgroundImage = `linear-gradient(to right, ${color} 30%, transparent 30%)`;
             lineEl.style.backgroundSize = "4px 100%";
         }
-
-        if (config.opacity !== undefined) {
-            lineEl.style.opacity = config.opacity;
-        }
-
+        if (config.opacity !== undefined) lineEl.style.opacity = config.opacity;
         return lineEl;
     },
 
     /**
-     * Rend un symbole polygone/remplissage
+     * Rend un symbole polygon/fill
      * @param {HTMLElement} container - Conteneur du symbole
      * @param {Object} config - Configuration du symbole
-     * @returns {HTMLElement} - Élément créé
+     * @returns {HTMLElement} - Created element
      */
     renderPolygonSymbol(container, config) {
         const color = config.fillColor || config.color || "#3388ff";
         const borderColor = config.borderColor || config.color || "#333";
         const borderWidth = config.weight || 1;
         const hasHatch = config.hatch && config.hatch.enabled;
-        // Vérifier fillOpacity OU opacity (le generator peut utiliser l'un ou l'autre)
         let fillOpacity =
             config.fillOpacity !== undefined
                 ? config.fillOpacity
                 : config.opacity !== undefined
                   ? config.opacity
                   : 1;
-
-        // FIX: Si hatch avec renderMode="pattern_only", forcer fillOpacity=1.0
-        // (même logique que layer-manager.js ligne 823-828 - doit rester synchronisé)
-        if (hasHatch && config.hatch.renderMode === "pattern_only") {
-            fillOpacity = 1.0;
-        }
-
-        // Utiliser SVG si hachures présentes OU si fillOpacity = 0 (contour seul)
+        if (hasHatch && config.hatch.renderMode === "pattern_only") fillOpacity = 1.0;
         if (hasHatch || fillOpacity === 0) {
             const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
             svg.setAttribute("viewBox", "0 0 32 24");
             svg.style.width = "32px";
             svg.style.height = "24px";
-
-            // Créer le pattern de hachure SVG si nécessaire
+            const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            rect.setAttribute("x", "1");
+            rect.setAttribute("y", "1");
+            rect.setAttribute("width", "30");
+            rect.setAttribute("height", "22");
+            rect.setAttribute("stroke", borderColor);
+            rect.setAttribute("stroke-width", borderWidth);
             if (hasHatch) {
-                const hatchCfg = config.hatch;
-                const type = hatchCfg.type || "diagonal";
-                const spacing = hatchCfg.spacingPx || 10;
-                const hatchColor = (hatchCfg.stroke && hatchCfg.stroke.color) || "#000000";
-                const hatchOpacity =
-                    (hatchCfg.stroke && hatchCfg.stroke.opacity) !== undefined
-                        ? hatchCfg.stroke.opacity
-                        : 1;
-                const hatchWidth = (hatchCfg.stroke && hatchCfg.stroke.widthPx) || 1;
-
-                const patternId =
-                    "hatch-legend-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
-                const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
-                const pattern = document.createElementNS("http://www.w3.org/2000/svg", "pattern");
-
-                pattern.setAttribute("id", patternId);
-                pattern.setAttribute("patternUnits", "userSpaceOnUse");
-                pattern.setAttribute("width", spacing);
-                pattern.setAttribute("height", spacing);
-
-                // Créer le contenu selon le type
-                if (type === "diagonal") {
-                    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                    line.setAttribute("x1", "0");
-                    line.setAttribute("y1", "0");
-                    line.setAttribute("x2", spacing);
-                    line.setAttribute("y2", spacing);
-                    line.setAttribute("stroke", hatchColor);
-                    line.setAttribute("stroke-width", hatchWidth);
-                    line.setAttribute("stroke-opacity", hatchOpacity);
-                    pattern.appendChild(line);
-                } else if (type === "dot") {
-                    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                    circle.setAttribute("cx", spacing / 2);
-                    circle.setAttribute("cy", spacing / 2);
-                    circle.setAttribute("r", Math.max(0.3, spacing * 0.07));
-                    circle.setAttribute("fill", hatchColor);
-                    circle.setAttribute("fill-opacity", hatchOpacity);
-                    pattern.appendChild(circle);
-                } else if (type === "cross") {
-                    const hLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                    hLine.setAttribute("x1", "0");
-                    hLine.setAttribute("y1", spacing / 2);
-                    hLine.setAttribute("x2", spacing);
-                    hLine.setAttribute("y2", spacing / 2);
-                    hLine.setAttribute("stroke", hatchColor);
-                    hLine.setAttribute("stroke-width", hatchWidth);
-                    hLine.setAttribute("stroke-opacity", hatchOpacity);
-                    pattern.appendChild(hLine);
-
-                    const vLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                    vLine.setAttribute("x1", spacing / 2);
-                    vLine.setAttribute("y1", "0");
-                    vLine.setAttribute("x2", spacing / 2);
-                    vLine.setAttribute("y2", spacing);
-                    vLine.setAttribute("stroke", hatchColor);
-                    vLine.setAttribute("stroke-width", hatchWidth);
-                    vLine.setAttribute("stroke-opacity", hatchOpacity);
-                    pattern.appendChild(vLine);
-                } else if (type === "x") {
-                    const line1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                    line1.setAttribute("x1", "0");
-                    line1.setAttribute("y1", "0");
-                    line1.setAttribute("x2", spacing);
-                    line1.setAttribute("y2", spacing);
-                    line1.setAttribute("stroke", hatchColor);
-                    line1.setAttribute("stroke-width", hatchWidth);
-                    line1.setAttribute("stroke-opacity", hatchOpacity);
-                    pattern.appendChild(line1);
-
-                    const line2 = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                    line2.setAttribute("x1", spacing);
-                    line2.setAttribute("y1", "0");
-                    line2.setAttribute("x2", "0");
-                    line2.setAttribute("y2", spacing);
-                    line2.setAttribute("stroke", hatchColor);
-                    line2.setAttribute("stroke-width", hatchWidth);
-                    line2.setAttribute("stroke-opacity", hatchOpacity);
-                    pattern.appendChild(line2);
-                }
-
-                defs.appendChild(pattern);
-                svg.appendChild(defs);
-
-                // Rectangle avec hachure
-                const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-                rect.setAttribute("x", "1");
-                rect.setAttribute("y", "1");
-                rect.setAttribute("width", "30");
-                rect.setAttribute("height", "22");
+                const patternId = _buildLegendHatchDefs(svg, config);
                 rect.setAttribute("fill", `url(#${patternId})`);
-                rect.setAttribute("stroke", borderColor);
-                rect.setAttribute("stroke-width", borderWidth);
-                if (fillOpacity !== 1) {
-                    rect.setAttribute("fill-opacity", fillOpacity);
-                }
-
-                svg.appendChild(rect);
+                if (fillOpacity !== 1) rect.setAttribute("fill-opacity", fillOpacity);
             } else {
-                // fillOpacity = 0 : rectangle transparent avec contour seulement
-                const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-                rect.setAttribute("x", "1");
-                rect.setAttribute("y", "1");
-                rect.setAttribute("width", "30");
-                rect.setAttribute("height", "22");
                 rect.setAttribute("fill", "none");
-                rect.setAttribute("stroke", borderColor);
-                rect.setAttribute("stroke-width", borderWidth);
-
-                // Appliquer le dashArray si présent
-                if (config.dashArray) {
-                    rect.setAttribute("stroke-dasharray", config.dashArray);
-                }
-
-                svg.appendChild(rect);
+                if (config.dashArray) rect.setAttribute("stroke-dasharray", config.dashArray);
             }
-
+            svg.appendChild(rect);
             container.appendChild(svg);
             return svg;
         }
-
-        // Fallback : DIV simple avec remplissage
         const polygonEl = globalThis.L.DomUtil.create("div", "gl-legend__polygon", container);
         polygonEl.style.width = "24px";
         polygonEl.style.height = "16px";
         polygonEl.style.backgroundColor = color;
         polygonEl.style.border = borderWidth + "px solid " + borderColor;
-
-        if (fillOpacity !== 1) {
-            polygonEl.style.opacity = fillOpacity;
-        }
-
+        if (fillOpacity !== 1) polygonEl.style.opacity = fillOpacity;
         return polygonEl;
     },
 
     /**
-     * Rend un symbole étoile (rating)
+     * Renders a star symbol (rating)
      * @param {HTMLElement} container - Conteneur du symbole
      * @param {Object} config - Configuration du symbole
-     * @returns {HTMLElement} - Élément créé
+     * @returns {HTMLElement} - Created element
      */
     renderStarSymbol(container, config) {
         const starContainer = globalThis.L.DomUtil.create("div", "gl-legend__stars", container);
@@ -481,10 +365,10 @@ const _UIComponents = {
      * Rend un symbole selon son type
      * @param {HTMLElement} container - Conteneur du symbole
      * @param {Object} config - Configuration du symbole
-     * @returns {HTMLElement} - Élément créé
+     * @returns {HTMLElement} - Created element
      */
     renderSymbol(container, config) {
-        // Support de la structure avec config.symbol ou directement config
+        // Support de la structure avec config.symbol ou directly config
         const symbolConfig = config.symbol || config;
         const symbolType = symbolConfig.type || config.type || "circle";
 
@@ -518,7 +402,7 @@ const _UIComponents = {
                     }
                     return imgEl;
                 }
-                // Icon avec sprite SVG - utiliser renderCircleSymbol qui gère déjà les sprites
+                // Icon with SVG sprite - use renderCircleSymbol which already handles sprites
                 if (symbolConfig.icon) {
                     return this.renderCircleSymbol(container, symbolConfig);
                 }
@@ -531,16 +415,16 @@ const _UIComponents = {
     },
 
     /**
-     * Crée un bouton toggle (checkbox/switch)
+     * Creates a toggle button (checkbox/switch)
      * @param {HTMLElement} container - Conteneur parent
      * @param {Object} config - Configuration du toggle
      * @param {string} [config.id] - ID du toggle
-     * @param {boolean} config.isActive - État initial (alias: active)
-     * @param {string} [config.className] - Classe CSS personnalisée
+     * @param {boolean} config.isActive - Initial state (alias: active)
+     * @param {string} [config.className] - Custom CSS class
      * @param {string} [config.label] - Label du toggle
      * @param {string} [config.title] - Tooltip
-     * @param {Function} [config.onToggle] - Callback lors du toggle
-     * @returns {HTMLElement} - Élément bouton créé
+     * @param {Function} [config.onToggle] - Callback during the toggle
+     * @returns {HTMLElement} - Created button element
      */
     createToggleButton(container, config) {
         // Support isActive ou active
@@ -568,7 +452,7 @@ const _UIComponents = {
             toggleBtn.textContent = config.label;
         }
 
-        // Attacher le gestionnaire
+        // Attacher le manager
         if (typeof config.onToggle === "function") {
             const className = config.className || "gl-toggle-btn";
             const onToggle = (ev) => {
@@ -590,10 +474,10 @@ const _UIComponents = {
     },
 
     /**
-     * Attache un gestionnaire d'événements compatible Leaflet
-     * @param {HTMLElement} element - Élément cible
-     * @param {string} eventName - Nom de l'événement
-     * @param {Function} handler - Gestionnaire
+     * Attaches a Leaflet-compatible event manager
+     * @param {HTMLElement} element - Target element
+     * @param {string} eventName - Name of the event
+     * @param {Function} handler - Manager
      */
     attachEventHandler(element, eventName, handler) {
         if (globalThis.L && globalThis.L.DomEvent) {

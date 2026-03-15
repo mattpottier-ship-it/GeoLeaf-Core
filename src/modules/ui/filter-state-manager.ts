@@ -1,6 +1,6 @@
 /**
  * GeoLeaf UI Module - Filter State Manager
- * Gestion centralisée de l'état des filtres avec patterns observateur
+ * Gestion centralizede de the state des filters avec patterns observer
  *
  * @module ui/filter-state-manager
  * @author Assistant
@@ -9,22 +9,22 @@
 import { Log } from "../log/index.js";
 
 // ========================================
-//   ÉTAT CENTRALISÉ DES FILTRES
+//   CENTRALIZED FILTER STATE
 // ========================================
 
 /**
- * État actuel des filtres
+ * Current state des filters
  * @type {Object}
  * @private
  */
 const _filterState = {
-    // État des filtres par ID
+    // STATE des filters par ID
     values: new Map(),
 
-    // Métadonnées des filtres
+    // Metadata des filters
     metadata: new Map(),
 
-    // Profil actuel
+    // Profil current
     activeProfile: null,
 
     // Callbacks observers
@@ -37,81 +37,69 @@ const _filterState = {
  * @private
  */
 const _debounceTimers = new Map();
+const _ARRAY_FILTER_TYPES = new Set(["multiselect", "tree", "tree-category", "categoryTree"]);
 
 // ========================================
-//   GESTION DE L'ÉTAT DES FILTRES
+//   GESTION DE L'STATE DES FILTRES
 // ========================================
+
+function _getDefaultForType(filter: any): unknown {
+    if (_ARRAY_FILTER_TYPES.has(filter.type)) return filter.default ?? [];
+    if (filter.type === "select") return filter.default ?? "";
+    if (filter.type === "range") return filter.default ?? (filter.min + filter.max) / 2;
+    return filter.default ?? "";
+}
+
+function _initFilterFromDesc(filter: any): void {
+    if (!filter.id) return;
+    const metadata = {
+        type: filter.type,
+        label: filter.label,
+        required: !!filter.required,
+        min: filter.min,
+        max: filter.max,
+        options: filter.options ?? [],
+        optionsFrom: filter.optionsFrom,
+    };
+    _filterState.metadata.set(filter.id, metadata);
+    _filterState.values.set(filter.id, _getDefaultForType(filter));
+}
 
 /**
- * Initialise l'état des filtres depuis un profil
- * @param {Object} profile - Configuration du profil
- * @returns {boolean} Succès de l'initialisation
+ * Initializes the filter state from a profile
+ * @param {Object} profile - Configuration of the profile
+ * @returns {boolean} Successfully initialized
  */
 function initializeFromProfile(profile: any) {
     if (!profile || !profile.filters) {
-        if (Log) Log.warn("[UI.FilterStateManager] Profil ou filtres manquants");
+        if (Log) Log.warn("[UI.FilterStateManager] Profil ou filters manquants");
         return false;
     }
 
-    // Réinitialise l'état
+    // Reinitializes the state
     _filterState.values.clear();
     _filterState.metadata.clear();
     _filterState.activeProfile = profile;
 
-    // Configure chaque filtre avec ses valeurs par défaut
-    profile.filters.forEach((filter: any) => {
-        if (!filter.id) return;
+    // Configure chaque filters avec ses values by default
+    profile.filters.forEach(_initFilterFromDesc);
 
-        const metadata = {
-            type: filter.type,
-            label: filter.label,
-            required: !!filter.required,
-            min: filter.min,
-            max: filter.max,
-            options: filter.options || [],
-            optionsFrom: filter.optionsFrom,
-        };
-
-        _filterState.metadata.set(filter.id, metadata);
-
-        // Valeur par défaut selon le type
-        let defaultValue = null;
-        switch (filter.type) {
-            case "select":
-            case "multiselect":
-                defaultValue = filter.default || (filter.type === "multiselect" ? [] : "");
-                break;
-            case "range":
-                defaultValue = filter.default ?? (filter.min + filter.max) / 2;
-                break;
-            case "tree":
-            case "tree-category":
-            case "categoryTree":
-                defaultValue = filter.default || [];
-                break;
-            default:
-                defaultValue = filter.default || "";
-        }
-
-        _filterState.values.set(filter.id, defaultValue);
-    });
-
-    // Notifie les observateurs
+    // Notifie les observers
     _notifyObservers("init", null, _filterState.values);
 
     if (Log) {
-        Log.info(`[UI.FilterStateManager] Initialisé avec ${_filterState.values.size} filtres`);
+        Log.info(`[UI.FilterStateManager] Initialized with ${_filterState.values.size} filters`);
     }
 
     return true;
 }
 
 /**
- * Met à jour la valeur d'un filtre
- * @param {string} filterId - ID du filtre
- * @param {*} value - Nouvelle valeur
- * @param {boolean} skipNotify - Éviter la notification (défaut: false)
- * @returns {boolean} Succès de la mise à jour
+ * Updates the value d'a filter
+ * @param {string} filterId - ID du filters
+ * @param {*} value - Nouvelle value
+ * @param {boolean} skipNotify - Skip notification (default: false)
+ * @returns {boolean} Update success
  */
 function updateFilterValue(filterId: any, value: any, skipNotify = false) {
     if (!filterId || !_filterState.metadata.has(filterId)) {
@@ -122,17 +110,17 @@ function updateFilterValue(filterId: any, value: any, skipNotify = false) {
     const metadata = _filterState.metadata.get(filterId);
     const oldValue = _filterState.values.get(filterId);
 
-    // Validation selon le type
+    // Validation selon the type
     const validatedValue = _validateFilterValue(value, metadata);
     if (validatedValue === null && value !== null) {
-        if (Log) Log.warn(`[UI.FilterStateManager] Valeur invalide pour ${filterId}:`, value);
+        if (Log) Log.warn(`[UI.FilterStateManager] Invalid value for ${filterId}:`, value);
         return false;
     }
 
-    // Mise à jour
+    // Update
     _filterState.values.set(filterId, validatedValue);
 
-    // Notification avec debouncing pour les ranges
+    // Notification avec debouncing for thes ranges
     if (!skipNotify) {
         if (metadata.type === "range") {
             _notifyWithDebounce(filterId, "change", oldValue, validatedValue, 200);
@@ -145,16 +133,16 @@ function updateFilterValue(filterId: any, value: any, skipNotify = false) {
 }
 
 /**
- * Récupère la valeur d'un filtre
- * @param {string} filterId - ID du filtre
- * @returns {*} Valeur du filtre ou null si inexistant
+ * Retrieves the value d'a filter
+ * @param {string} filterId - ID du filters
+ * @returns {*} Value du filters ou null si inexisting
  */
 function getFilterValue(filterId: any) {
     return _filterState.values.get(filterId) || null;
 }
 
 /**
- * Récupère toutes les valeurs de filtres
+ * Retrieves toutes the values de filters
  * @returns {Object} Object avec filterId -> value
  */
 function getAllFilterValues() {
@@ -162,17 +150,17 @@ function getAllFilterValues() {
 }
 
 /**
- * Récupère les métadonnées d'un filtre
- * @param {string} filterId - ID du filtre
- * @returns {Object|null} Métadonnées ou null
+ * Retrieves thes metadata d'a filter
+ * @param {string} filterId - ID du filters
+ * @returns {Object|null} Metadata ou null
  */
 function getFilterMetadata(filterId: any) {
     return _filterState.metadata.get(filterId) || null;
 }
 
 /**
- * Remet à zéro tous les filtres
- * @param {boolean} skipNotify - Éviter la notification (défaut: false)
+ * Resets all filters
+ * @param {boolean} skipNotify - Skip notification (default: false)
  */
 function resetAllFilters(skipNotify = false) {
     const oldState = new Map(_filterState.values);
@@ -181,7 +169,7 @@ function resetAllFilters(skipNotify = false) {
         const metadata = _filterState.metadata.get(filterId);
         if (!metadata) return;
 
-        // Remise à zéro selon le type
+        // Reset according to type
         let resetValue = null;
         switch (metadata.type) {
             case "multiselect":
@@ -206,34 +194,34 @@ function resetAllFilters(skipNotify = false) {
 }
 
 // ========================================
-//   SYSTÈME D'OBSERVATEURS
+//   OBSERVER SYSTEM
 // ========================================
 
 /**
- * Ajoute un observateur pour les changements d'état
- * @param {Function} callback - Fonction appelée lors des changements
- * @returns {Function} Fonction pour désabonner l'observateur
+ * Adds a observer for thes changements d'state
+ * @param {Function} callback - Fonction called whens changements
+ * @returns {Function} Function to unsubscribe the observer
  */
 function addObserver(callback: any) {
     if (typeof callback !== "function") {
-        if (Log) Log.warn("[UI.FilterStateManager] Observateur doit être une fonction");
+        if (Log) Log.warn("[UI.FilterStateManager] Observer must be a function");
         return () => {};
     }
 
     _filterState.observers.add(callback);
 
-    // Retourne fonction de désabonnement
+    // Returns unsubscription function
     return function unsubscribe() {
         _filterState.observers.delete(callback);
     };
 }
 
 /**
- * Notifie tous les observateurs
- * @param {string} type - Type de changement ('init', 'change', 'reset')
- * @param {string|null} filterId - ID du filtre changé (null pour global)
- * @param {*} newValue - Nouvelle valeur
- * @param {*} oldValue - Ancienne valeur
+ * Notifie tous les observers
+ * @param {string} type - Type of changement ('init', 'change', 'reset')
+ * @param {string|null} filterId - Changed filter ID (null for global)
+ * @param {*} newValue - Nouvelle value
+ * @param {*} oldValue - Ancienne value
  * @private
  */
 function _notifyObservers(type: any, filterId: any, newValue: any, oldValue?: any) {
@@ -250,18 +238,18 @@ function _notifyObservers(type: any, filterId: any, newValue: any, oldValue?: an
         try {
             (callback as any)(event);
         } catch (error) {
-            if (Log) Log.error("[UI.FilterStateManager] Erreur dans observateur:", error);
+            if (Log) Log.error("[UI.FilterStateManager] Error in observer:", error);
         }
     });
 }
 
 /**
  * Notification avec debouncing
- * @param {string} filterId - ID du filtre
- * @param {string} type - Type d'événement
- * @param {*} oldValue - Ancienne valeur
- * @param {*} newValue - Nouvelle valeur
- * @param {number} delay - Délai de debounce
+ * @param {string} filterId - ID du filters
+ * @param {string} type - Type d'event
+ * @param {*} oldValue - Ancienne value
+ * @param {*} newValue - Nouvelle value
+ * @param {number} delay - Delay de debounce
  * @private
  */
 function _notifyWithDebounce(filterId: any, type: any, oldValue: any, newValue: any, delay: any) {
@@ -283,126 +271,81 @@ function _notifyWithDebounce(filterId: any, type: any, oldValue: any, newValue: 
 //   VALIDATION DE VALEURS
 // ========================================
 
+function _validateRangeValue(value: any, metadata: any): number {
+    const num = parseFloat(value);
+    if (isNaN(num)) return metadata.min ?? 0;
+    if (metadata.min !== undefined && num < metadata.min) return metadata.min;
+    if (metadata.max !== undefined && num > metadata.max) return metadata.max;
+    return num;
+}
+
 /**
- * Valide une valeur selon les métadonnées du filtre
- * @param {*} value - Valeur à valider
- * @param {Object} metadata - Métadonnées du filtre
- * @returns {*} Valeur validée ou null si invalide
+ * Valide a value based on thes metadata du filters
+ * @param {*} value - Value to valider
+ * @param {Object} metadata - Metadata du filters
+ * @returns {*} Value validated ou null si invalid
  * @private
  */
 function _validateFilterValue(value: any, metadata: any) {
     if (!metadata) return null;
-
-    switch (metadata.type) {
-        case "select":
-            return typeof value === "string" ? value : "";
-
-        case "multiselect":
-            return Array.isArray(value) ? value : [];
-
-        case "range": {
-            const num = parseFloat(value);
-            if (isNaN(num)) return metadata.min || 0;
-            if (metadata.min !== undefined && num < metadata.min) return metadata.min;
-            if (metadata.max !== undefined && num > metadata.max) return metadata.max;
-            return num;
-        }
-
-        case "tree":
-        case "tree-category":
-        case "categoryTree":
-            return Array.isArray(value) ? value : [];
-
-        default:
-            return value;
-    }
+    if (_ARRAY_FILTER_TYPES.has(metadata.type)) return Array.isArray(value) ? value : [];
+    if (metadata.type === "select") return typeof value === "string" ? value : "";
+    if (metadata.type === "range") return _validateRangeValue(value, metadata);
+    return value;
 }
 
 // ========================================
-//   UTILITAIRES DE REQUÊTES
+//   QUERY UTILITIES
 // ========================================
 
+function _rangeDefaultVal(metadata: any): number {
+    return (metadata.min + metadata.max) / 2;
+}
+
+function _isFilterActive(metadata: any, value: any): boolean {
+    if (_ARRAY_FILTER_TYPES.has(metadata.type)) return Array.isArray(value) && value.length > 0;
+    if (metadata.type === "select") return !!value && value !== "";
+    if (metadata.type === "range") return Math.abs(value - _rangeDefaultVal(metadata)) > 0.01;
+    return false;
+}
+
+function _getFilterDisplayValue(metadata: any, value: any): string {
+    if (_ARRAY_FILTER_TYPES.has(metadata.type)) return `${(value as unknown[]).length} selected(s)`;
+    if (metadata.type === "select") return value as string;
+    if (metadata.type === "range") return (value as number).toString().replace(".", ",");
+    return "";
+}
+
 /**
- * Vérifie si des filtres sont actuellement actifs
- * @returns {boolean} True si au moins un filtre est actif
+ * Checks if des filters sont currentlement actives
+ * @returns {boolean} True si au moins a filter est active
  */
 function hasActiveFilters() {
     for (const [filterId, value] of _filterState.values) {
         const metadata = _filterState.metadata.get(filterId);
         if (!metadata) continue;
-
-        // Vérifie selon le type si la valeur est "active"
-        switch (metadata.type) {
-            case "multiselect":
-            case "tree":
-            case "tree-category":
-            case "categoryTree":
-                if (Array.isArray(value) && value.length > 0) return true;
-                break;
-            case "select":
-                if (value && value !== "") return true;
-                break;
-            case "range": {
-                // Considère actif si différent de la valeur par défaut
-                const defaultVal = (metadata.min + metadata.max) / 2;
-                if (Math.abs(value - defaultVal) > 0.01) return true;
-                break;
-            }
-        }
+        if (_isFilterActive(metadata, value)) return true;
     }
     return false;
 }
 
 /**
- * Récupère un résumé des filtres actifs
- * @returns {Array} Liste des filtres actifs avec leurs valeurs
+ * Retrieves a summary of active filters
+ * @returns {Array} List des filters actives with theurs values
  */
 function getActiveFiltersSummary() {
     const summary = [];
-
     for (const [filterId, value] of _filterState.values) {
         const metadata = _filterState.metadata.get(filterId);
         if (!metadata) continue;
-
-        let isActive = false;
-        let displayValue = "";
-
-        switch (metadata.type) {
-            case "multiselect":
-            case "tree":
-            case "tree-category":
-            case "categoryTree":
-                if (Array.isArray(value) && value.length > 0) {
-                    isActive = true;
-                    displayValue = `${value.length} sélectionné(s)`;
-                }
-                break;
-            case "select":
-                if (value && value !== "") {
-                    isActive = true;
-                    displayValue = value;
-                }
-                break;
-            case "range": {
-                const defaultVal = (metadata.min + metadata.max) / 2;
-                if (Math.abs(value - defaultVal) > 0.01) {
-                    isActive = true;
-                    displayValue = value.toString().replace(".", ",");
-                }
-                break;
-            }
-        }
-
-        if (isActive) {
-            summary.push({
-                id: filterId,
-                label: metadata.label || filterId,
-                value: displayValue,
-                type: metadata.type,
-            });
-        }
+        if (!_isFilterActive(metadata, value)) continue;
+        summary.push({
+            id: filterId,
+            label: metadata.label || filterId,
+            value: _getFilterDisplayValue(metadata, value),
+            type: metadata.type,
+        });
     }
-
     return summary;
 }
 
@@ -422,7 +365,7 @@ const _UIFilterStateManager = {
     getActiveFiltersSummary,
 };
 
-// Propriétés en lecture seule
+// Properties as read-only
 Object.defineProperty(_UIFilterStateManager, "activeProfile", {
     get: () => _filterState.activeProfile,
     enumerable: true,

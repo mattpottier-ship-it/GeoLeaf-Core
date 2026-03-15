@@ -1,5 +1,5 @@
 /**
- * GeoLeaf - Event Bus léger (pub/sub)
+ * GeoLeaf - Event Bus lightweight (pub/sub)
  * @module utils/event-bus
  */
 
@@ -34,7 +34,7 @@ function createEventBus(): EventBus {
             try {
                 h(data);
             } catch {
-                // isolation des erreurs
+                // isolation des errors
             }
         });
     }

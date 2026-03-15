@@ -1,9 +1,9 @@
-﻿/**
- * GeoLeaf UI — Barrel export
- * Point d'entrée unique pour le sous-module ui/
+/**
+ * GeoLeaf UI — Barl export
+ * Point d'input unique for the sous-module ui/
  *
- * Note : UI (namespace orchestrateur, stateful) n'est PAS exporté ici.
- * Utiliser la façade geoleaf.ui.js ou importer directement ui/ui-api.js.
+ * Note : UI (namespace orchestrateur, stateful) n'est PAS exported ici.
+ * Utiliser la facade geoleaf.ui.js ou importer directly ui/ui-api.js.
  *
  * @module ui
  */
@@ -31,7 +31,7 @@ export {
     attachTagsListeners,
 } from "./filter-control-builder.js";
 
-// Content builder (re-exports from sub-barrel content-builder.js)
+// Content builder (re-exports from sub-barl content-builder.js)
 export {
     ContentBuilderCore,
     ContentBuilderHelpers,

@@ -1,8 +1,8 @@
-// @ts-nocheck � migration TS, typage progressif
+// @ts-nocheck — migration TS, typage progressif
 /**
  * API Controller - Sprint 4.3 (Version Robuste)
- * Orchestrateur principal pour les op�rations API GeoLeaf
- * Architecture modulaire avec validation renforc�e
+ * Orchestrateur main for thes opérations API GeoLeaf
+ * Architecture modulaire avec validation renforcée
  * @module APIController
  */
 "use strict";
@@ -13,8 +13,8 @@ const _g =
 _g.GeoLeaf = _g.GeoLeaf || {};
 
 /**
- * Contr�leur principal pour l'API GeoLeaf
- * G�re l'orchestration des managers sp�cialis�s
+ * Contrôleur main pour l'API GeoLeaf
+ * Gère l'orchestration des managers spécialisés
  */
 class APIController {
     constructor() {
@@ -22,7 +22,7 @@ class APIController {
         this.managers = {};
         this.moduleAccessFn = null;
 
-        // �tat de sanit� du contr�leur
+        // État de sanité du contrôleur
         this.healthStatus = {
             managers: 0,
             errors: [],
@@ -31,8 +31,8 @@ class APIController {
     }
 
     /**
-     * Initialise le contr�leur et tous ses managers
-     * @returns {boolean} Succ�s de l'initialisation
+     * Initialise le contrôleur et tous ses managers
+     * @returns {boolean} Succès of the initialization
      */
     init() {
         try {
@@ -46,13 +46,13 @@ class APIController {
             // Initialiser les managers dans l'ordre
             this._initializeManagers();
 
-            // Configurer l'acc�s aux modules
+            // Configurer l'accès aux modules
             const success = this._setupModuleAccess();
             if (!success) {
                 throw new Error("Module access setup failed");
             }
 
-            // Valider l'�tat final
+            // Valider l'état final
             this._validateInitialization();
 
             this.isInitialized = true;
@@ -73,7 +73,7 @@ class APIController {
     }
 
     /**
-     * Initialise tous les managers disponibles
+     * Initialise tous les managers availables
      * @private
      */
     _initializeManagers() {
@@ -102,7 +102,7 @@ class APIController {
     }
 
     /**
-     * Obtient la classe d'un manager
+     * Obtient la class of a manager
      * @private
      */
     /* eslint-disable security/detect-object-injection -- type from enum, className from map */
@@ -119,24 +119,24 @@ class APIController {
     /* eslint-enable security/detect-object-injection */
 
     /**
-     * Configure l'acc�s aux modules
+     * Configure l'accès aux modules
      * @private
      */
     _setupModuleAccess() {
-        // Le module manager doit �tre initialis� en premier
+        // The module manager doit être initialisé en premier
         if (!this.managers.module) {
             if (Log) Log.error("[APIController] Module manager not available");
             return false;
         }
 
-        // Initialiser le module manager avec les modules existants
+        // Initialiser the module manager avec the modules existants
         const initSuccess = this.managers.module.init ? this.managers.module.init() : true;
         if (!initSuccess) {
             if (Log) Log.error("[APIController] Module manager initialization failed");
             return false;
         }
 
-        // Cr�er la fonction d'acc�s aux modules avec validation
+        // Créer la fonction d'accès aux modules avec validation
         this.moduleAccessFn = (name) => {
             try {
                 if (!name || typeof name !== "string") {
@@ -148,10 +148,12 @@ class APIController {
                     return this.managers.module.getModule(name);
                 }
 
-                // Fallback vers l'acc�s global
+                // Fallback to global access
+                /* eslint-disable security/detect-object-injection -- name from controlled API arg */
                 if (_g.GeoLeaf && _g.GeoLeaf[name]) {
                     return _g.GeoLeaf[name];
                 }
+                /* eslint-enable security/detect-object-injection */
 
                 return null;
             } catch (error) {
@@ -165,7 +167,7 @@ class APIController {
     }
 
     /**
-     * Valide l'�tat de l'initialisation
+     * Valiof the état of the initialization
      * @private
      */
     _validateInitialization() {
@@ -188,7 +190,7 @@ class APIController {
     }
 
     /**
-     * _g.GeoLeaf.init() - Initialisation de carte
+     * _g.GeoLeaf.init() - Initialization de carte
      */
     geoleafInit(options) {
         if (!this._ensureInitialized()) return null;
@@ -206,7 +208,7 @@ class APIController {
     }
 
     /**
-     * _g.GeoLeaf.loadConfig() - Chargement configuration
+     * _g.GeoLeaf.loadConfig() - Loadsment configuration
      */
     geoleafLoadConfig(input) {
         if (!this._ensureInitialized()) return Promise.resolve(null);
@@ -224,7 +226,7 @@ class APIController {
     }
 
     /**
-     * _g.GeoLeaf.setTheme() - Changement de th�me
+     * _g.GeoLeaf.setTheme() - Changement de thème
      */
     geoleafSetTheme(theme) {
         if (!this._ensureInitialized()) return false;
@@ -242,7 +244,7 @@ class APIController {
     }
 
     /**
-     * _g.GeoLeaf.createMap() - Cr�ation multi-cartes
+     * _g.GeoLeaf.createMap() - Création multi-cartes
      */
     geoleafCreateMap(targetId, options) {
         if (!this._ensureInitialized()) return null;
@@ -260,7 +262,7 @@ class APIController {
     }
 
     /**
-     * S'assure que le contr�leur est initialis�
+     * S'assure que le contrôleur est initialisé
      * @private
      */
     _ensureInitialized() {
@@ -272,7 +274,7 @@ class APIController {
     }
 
     /**
-     * Obtient l'�tat de sant� du contr�leur
+     * Obtient l'état de santé du contrôleur
      */
     getHealthStatus() {
         return {
@@ -284,7 +286,7 @@ class APIController {
     }
 
     /**
-     * R�initialise le contr�leur
+     * Réinitializes le contrôleur
      */
     reset() {
         this.isInitialized = false;
@@ -300,14 +302,14 @@ class APIController {
     }
 }
 
-// perf 5.9 : Instanciation lazy � cr�ation au premier acc�s via getter
-// (�vite init synchrone co�teuse de _initializeManagers � l'import)
+// perf 5.9 : Instanciation lazy — création au premier accès via getter
+// (évite init synchrone coûteuse de _initializeManagers — l'import)
 let _apiControllerInstance = null;
 
 function _getAPIController() {
     if (!_apiControllerInstance) {
         _apiControllerInstance = new APIController();
-        // Init diff�r�e : les managers ne sont r�solus qu'une fois le namespace GeoLeaf.API peupl�
+        // Init différée : les managers ne sont résolus qu'une fois le namespace GeoLeaf.API peuplé
         _apiControllerInstance.init();
     }
     return _apiControllerInstance;

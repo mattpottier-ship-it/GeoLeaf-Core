@@ -5,30 +5,30 @@
  */
 
 /**
- * Affiche un toast de démarrage listant la version GeoLeaf
- * et les plugins optionnels chargés.
+ * Displays un toast de startup listant la version GeoLeaf
+ * et les plugins optionals loadeds.
  *
- * Appelé automatiquement à la fin de GeoLeaf.boot() si non désactivé.
+ * Called automatically at the end of GeoLeaf.boot() if not deactivated.
  *
  * @module api/boot-info
  */
 
 /**
- * Détecte les plugins chargés en interrogeant window.GeoLeaf.
+ * Detects les plugins loadeds en interrogeant window.GeoLeaf.
  * @param {object} GeoLeaf - Le namespace global GeoLeaf
- * @returns {string[]} Liste des noms de plugins actifs
+ * @returns {string[]} List des noms de plugins actives
  */
-/* eslint-disable complexity -- plugin detection branches */
+/* eslint-disable complexity -- plugin detection branchs */
 function _detectLoadedPlugins(GeoLeaf: any) {
-    // Source principale : PluginRegistry (fiable, auto-enregistrement par chaque plugin).
-    // Si le registry est disponible, on s'y fie intégralement — même liste vide (Core seul).
+    // Source maine : PluginRegistry (fiable, auto-enregistrement par chaque plugin).
+    // If the registry is available, it is fully trusted — even if the list is empty (Core only).
     // Ne PAS tomber en fallback duck-typing : les facades Core (Storage, Labels, LayerManager)
-    // existent même sans plugin premium, ce qui fausse la détection.
+    // existent same sans plugin premium, ce qui fausse la detection.
     if (GeoLeaf.plugins?.getLoadedPlugins) {
         return GeoLeaf.plugins.getLoadedPlugins().filter((n: any) => !["core"].includes(n));
     }
 
-    // Fallback duck-typing si registry non disponible (compat ascendante)
+    // Fallback duck-typing si registry non available (compat ascendante)
     const plugins = [];
     if (GeoLeaf.Storage && typeof GeoLeaf.Storage === "object") {
         const hasDB = GeoLeaf.Storage.DB && typeof GeoLeaf.Storage.DB === "object";
@@ -51,7 +51,7 @@ function _detectLoadedPlugins(GeoLeaf: any) {
 /* eslint-enable complexity */
 
 /**
- * Construit le message du toast de démarrage.
+ * Builds the message du toast de startup.
  * @param {object} GeoLeaf
  * @returns {{ title: string, message: string }}
  */
@@ -84,36 +84,36 @@ function _buildBootMessage(GeoLeaf: any) {
 }
 
 /**
- * Affiche le toast de démarrage.
- * Respecte la config `debug.showBootInfo` (défaut: true en dev, false en prod).
+ * Displays le toast de startup.
+ * Respects the `debug.showBootInfo` config (default: true in dev, false in prod).
  *
  * @param {object} GeoLeaf - Le namespace global GeoLeaf
  * @param {object} [options]
- * @param {boolean} [options.force=false] - Forcer l'affichage même si désactivé en config
- * @param {number} [options.duration=4000] - Durée d'affichage en ms
+ * @param {boolean} [options.force=false] - Forcer l'display same si deactivated en config
+ * @param {number} [options.duration=4000] - Duration d'display en ms
  */
 export function showBootInfo(GeoLeaf: any, options: any = {}) {
     if (!GeoLeaf) return;
 
-    // Vérification config — désactivable via profil JSON : "debug": { "showBootInfo": false }
+    // Config check — can be disabled via JSON profile: "debug": { "showBootInfo": false }
     if (!options.force) {
         try {
             const showFlag = GeoLeaf.Config?.get?.("debug.showBootInfo");
-            // Si explicitement désactivé, ne pas afficher
+            // Si explicitement deactivated, ne pas display
             if (showFlag === false) return;
         } catch (_) {
-            /* Config non disponible — afficher quand même */
+            /* Config non available — display quand same */
         }
     }
 
     const { title, message } = _buildBootMessage(GeoLeaf);
 
-    // Log only — toast désactivé (dev info uniquement)
+    // Log only — toast deactivated (dev info only)
     console.info(`[GeoLeaf] ${title} | ${message}`);
 }
 
 /**
- * API publique exposée sur GeoLeaf.bootInfo
+ * API public exposede sur GeoLeaf.bootInfo
  */
 export const BootInfo = {
     show: showBootInfo,

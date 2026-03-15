@@ -1,7 +1,7 @@
-# GeoLeaf Profiles Guide
+﻿# GeoLeaf Profiles Guide
 
 **Product Version:** GeoLeaf Platform V1  
-**Version:** 1.1.0  
+**Version:** 1.1.1  
 **Last Updated:** January 2026  
 **Audience:** Developers creating custom business profiles
 

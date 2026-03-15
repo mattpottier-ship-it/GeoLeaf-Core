@@ -1,37 +1,57 @@
+/* eslint-disable security/detect-object-injection */
 /*!
+
  * GeoLeaf Core – Baselayers / Registry
+
  * © 2026 Mattieu Pottier
+
  * Released under the MIT License
+
  */
 
 import { Log } from "../log/index.js";
+
 import { DEFAULT_BASELAYERS, normalizeOptions, applyLibertyFilters } from "./providers.js";
 
 const _g: any =
     typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : {};
 
 // ---------------------------------------------------------
-// État interne partagé
+
+// STATE internal shared
+
 // ---------------------------------------------------------
+
 let _map: any = null;
+
 let _activeKey: any = null;
+
 export const _baseLayers = Object.create(null);
 
 // ---------------------------------------------------------
-// Résolution de la carte
+
+// Resolution de the map
+
 // ---------------------------------------------------------
+
 export function ensureMap(explicitMap?: any) {
     if (explicitMap && typeof explicitMap.setView === "function") {
         _map = explicitMap;
+
         Log.info("[GeoLeaf.Baselayers] ensureMap: using explicit map passed to init().");
+
         return;
     }
+
     if (_map && typeof _map.setView === "function") return;
 
     const mh = _g.GeoLeaf?.Utils?.MapHelpers;
+
     const resolved = mh && typeof mh.ensureMap === "function" ? mh.ensureMap() : null;
+
     if (resolved) {
         _map = resolved;
+
         Log.info("[GeoLeaf.Baselayers] ensureMap: acquired via MapHelpers.ensureMap().");
     }
 }
@@ -45,150 +65,208 @@ export function getInternalMap() {
 }
 
 // ---------------------------------------------------------
-// Enregistrement des couches
+
+// Registersment des layers
+
 // ---------------------------------------------------------
-export function registerDefaultBaseLayers() {
-    const L = _g.L;
-    if (!L) return;
-    Object.keys(DEFAULT_BASELAYERS).forEach((key) => {
-        if (!_baseLayers[key]) registerBaseLayer(key, DEFAULT_BASELAYERS[key]);
-    });
+
+// Registersment des layers (helpers)
+
+// ---------------------------------------------------------
+
+function _buildMaplibreLayer(L: any, definition: any, actualKey: any): any {
+    if (typeof L.maplibreGL === "function") {
+        const mlOptions = {
+            style: definition.style,
+
+            attribution: definition.attribution || "",
+
+            interactive: false,
+
+            padding: 0.25,
+
+            maplibreOptions: {
+                preserveDrawingBuffer: true,
+
+                trackResize: true,
+
+                fadeDuration: 0,
+            },
+        };
+
+        const layerInstance = L.maplibreGL(mlOptions);
+
+        layerInstance.once("add", function () {
+            const glMap = layerInstance.getMaplibreMap && layerInstance.getMaplibreMap();
+
+            if (glMap) {
+                glMap.once("styledata", function () {
+                    applyLibertyFilters(glMap);
+                });
+            }
+        });
+
+        Log.info("[GeoLeaf.Baselayers] MapLibre vector basemap created:", actualKey);
+
+        return layerInstance;
+    } else {
+        Log.warn(
+            "[GeoLeaf.Baselayers] MapLibre GL plugin not loaded. Raster fallback for :",
+
+            actualKey
+        );
+
+        const fallbackUrl = definition.url || definition.fallbackUrl;
+
+        return fallbackUrl
+            ? L.tileLayer(fallbackUrl, normalizeOptions(definition))
+            : L.tileLayer(DEFAULT_BASELAYERS.street.url, DEFAULT_BASELAYERS.street.options);
+    }
+}
+
+function _resolveLayerInstance(L: any, definition: any, actualKey: any): any {
+    if (definition instanceof L.TileLayer) return definition;
+
+    if (definition.layer && definition.layer instanceof L.TileLayer) return definition.layer;
+
+    if (definition.type === "maplibre" || definition.style)
+        return _buildMaplibreLayer(L, definition, actualKey);
+
+    if (definition.url) return L.tileLayer(definition.url, normalizeOptions(definition));
+
+    Log.warn(
+        "[GeoLeaf.Baselayers] Invalid definition for layer :",
+        actualKey,
+        "(no url / no layer provided)"
+    );
+
+    return null;
 }
 
 export function registerBaseLayer(key: any, definition: any) {
     const L = _g.L;
+
     if (!key) {
-        Log.warn("[GeoLeaf.Baselayers] registerBaseLayer appelé sans clé.");
+        Log.warn("[GeoLeaf.Baselayers] registerBaseLayer called without key.");
+
         return;
     }
+
     if (!definition) {
-        Log.warn("[GeoLeaf.Baselayers] Définition manquante pour la couche :", key);
+        Log.warn("[GeoLeaf.Baselayers] Missing definition for layer:", key);
+
         return;
     }
 
     const actualKey = definition.id || key;
-    let layerInstance: any = null;
+
     const label = definition.label || actualKey;
 
-    if (definition instanceof L.TileLayer) {
-        layerInstance = definition;
-    } else if (definition.layer && definition.layer instanceof L.TileLayer) {
-        layerInstance = definition.layer;
-    } else if (definition.type === "maplibre" || definition.style) {
-        if (typeof L.maplibreGL === "function") {
-            const mlOptions = {
-                style: definition.style,
-                attribution: definition.attribution || "",
-                interactive: false,
-                padding: 0.25,
-                maplibreOptions: {
-                    preserveDrawingBuffer: true,
-                    trackResize: true,
-                    fadeDuration: 0,
-                },
-            };
-            layerInstance = L.maplibreGL(mlOptions);
-            layerInstance.once("add", function () {
-                const glMap = layerInstance.getMaplibreMap && layerInstance.getMaplibreMap();
-                if (glMap) {
-                    glMap.once("styledata", function () {
-                        applyLibertyFilters(glMap);
-                    });
-                }
-            });
-            Log.info("[GeoLeaf.Baselayers] Basemap vectorielle MapLibre créée :", actualKey);
-        } else {
-            Log.warn(
-                "[GeoLeaf.Baselayers] MapLibre GL plugin non chargé. Fallback raster pour :",
-                actualKey
-            );
-            const fallbackUrl = definition.url || definition.fallbackUrl;
-            layerInstance = fallbackUrl
-                ? L.tileLayer(fallbackUrl, normalizeOptions(definition))
-                : L.tileLayer(DEFAULT_BASELAYERS.street.url, DEFAULT_BASELAYERS.street.options);
-        }
-    } else if (definition.url) {
-        layerInstance = L.tileLayer(definition.url, normalizeOptions(definition));
-    } else {
-        Log.warn(
-            "[GeoLeaf.Baselayers] Définition invalide pour la couche :",
-            actualKey,
-            "(aucune url / aucun layer fourni)"
-        );
-        return;
-    }
+    const layerInstance = _resolveLayerInstance(L, definition, actualKey);
+
+    if (!layerInstance) return;
 
     _baseLayers[actualKey] = { key: actualKey, label, layer: layerInstance };
 }
 
 export function registerBaseLayers(definitions: any) {
     if (!definitions || typeof definitions !== "object") {
-        Log.warn("[GeoLeaf.Baselayers] registerBaseLayers attend un objet de définitions.");
+        Log.warn("[GeoLeaf.Baselayers] registerBaseLayers expects a definitions object.");
+
         return;
     }
+
     Object.keys(definitions).forEach((key) => registerBaseLayer(key, definitions[key]));
 }
 
+export function registerDefaultBaseLayers() {
+    const L = _g.L;
+
+    if (!L) return;
+
+    Object.keys(DEFAULT_BASELAYERS).forEach((key) => {
+        if (!_baseLayers[key]) registerBaseLayer(key, DEFAULT_BASELAYERS[key]);
+    });
+}
+
 // ---------------------------------------------------------
-// Activation de couche
+
+// Activation de layer (helpers)
+
 // ---------------------------------------------------------
-export function setBaseLayer(key: any, options?: any) {
-    options = options || {};
+
+function _removePreviousBaseLayer(previousKey: any): void {
+    if (!previousKey || !_baseLayers[previousKey]) return;
+
+    const prev = _baseLayers[previousKey].layer;
+
+    try {
+        if (prev && _map && typeof _map.hasLayer === "function" && _map.hasLayer(prev)) {
+            _map.removeLayer(prev);
+        }
+    } catch (e) {
+        Log.warn("[GeoLeaf.Baselayers] Cannot remove previous layer:", e);
+    }
+}
+
+export function setBaseLayer(key: any, options: any = {}) {
     if (!key) {
-        Log.warn("[GeoLeaf.Baselayers] setBaseLayer appelé sans clé.");
+        Log.warn("[GeoLeaf.Baselayers] setBaseLayer called without key.");
+
         return;
     }
 
     const previousKey = _activeKey;
+
     ensureMap();
 
     Log.info("[GeoLeaf.Baselayers] setBaseLayer:", key, "_map=", !!_map);
 
     if (!_map) {
-        Log.warn("[GeoLeaf.Baselayers] Aucun L.Map disponible.");
+        Log.warn("[GeoLeaf.Baselayers] No L.Map available.");
+
         return;
     }
 
     if (!_baseLayers[key]) {
-        Log.warn("[GeoLeaf.Baselayers] Couche inconnue :", key);
+        Log.warn("[GeoLeaf.Baselayers] Unknown layer :", key);
+
         const keys = Object.keys(_baseLayers);
+
         if (!previousKey && keys.length > 0) {
             setBaseLayer(keys[0], { silent: true });
         }
+
         return;
     }
 
     if (_activeKey === key) {
-        // Signal UI refresh — ui.js écoute via l'export refreshUI
+        // Signal UI refresh
+
         return;
     }
 
-    if (previousKey && _baseLayers[previousKey]) {
-        const prev = _baseLayers[previousKey].layer;
-        try {
-            if (prev && _map && typeof _map.hasLayer === "function" && _map.hasLayer(prev)) {
-                _map.removeLayer(prev);
-            }
-        } catch (e) {
-            Log.warn("[GeoLeaf.Baselayers] Impossible de retirer la couche précédente:", e);
-        }
-    }
+    _removePreviousBaseLayer(previousKey);
 
     const nextLayer = _baseLayers[key].layer;
-    if (!nextLayer || typeof nextLayer.addTo !== "function") {
-        Log.error("[GeoLeaf.Baselayers] Couche invalide pour la clé:", key);
+
+    if (typeof nextLayer?.addTo !== "function") {
+        Log.error("[GeoLeaf.Baselayers] Invalid layer for key:", key);
+
         return;
     }
 
     try {
         nextLayer.addTo(_map);
     } catch (e) {
-        Log.error("[GeoLeaf.Baselayers] Impossible d'ajouter la couche:", e);
+        Log.error("[GeoLeaf.Baselayers] Cannot add layer:", e);
+
         return;
     }
 
     _activeKey = key;
-    Log.info("[GeoLeaf.Baselayers] Couche active :", key);
+
+    Log.info("[GeoLeaf.Baselayers] Active layer :", key);
 
     if (!options.silent) {
         _dispatchBasemapChange(key, previousKey, nextLayer);
@@ -197,17 +275,22 @@ export function setBaseLayer(key: any, options?: any) {
 
 function _dispatchBasemapChange(key: any, previousKey: any, layer: any) {
     if (typeof document === "undefined" || typeof document.dispatchEvent !== "function") return;
+
     const detail = { key, previousKey, map: _map, layer, source: "geoleaf.baselayers" };
+
     try {
         document.dispatchEvent(new CustomEvent("geoleaf:basemap:change", { detail }));
     } catch (err) {
-        Log.warn("[GeoLeaf.Baselayers] Impossible d'émettre geoleaf:basemap:change.", err);
+        Log.warn("[GeoLeaf.Baselayers] Cannot dispatch geoleaf:basemap:change.", err);
     }
 }
 
 // ---------------------------------------------------------
+
 // Accesseurs
+
 // ---------------------------------------------------------
+
 export function getBaseLayers() {
     return Object.assign({}, _baseLayers);
 }

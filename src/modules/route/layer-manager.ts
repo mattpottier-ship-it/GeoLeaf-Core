@@ -1,6 +1,6 @@
-﻿/**
+/**
  * GeoLeaf Route Layer Manager Module
- * Gestion des layers Leaflet pour les itinéraires
+ * Gestion des layers Leaflet for thes routes
  */
 
 import { Log } from "../log/index.js";
@@ -21,6 +21,31 @@ interface GeoLeafGlobal {
     L?: LeafletRouteHelpers;
 }
 
+function _createRouteLayer(context: RouteContext, g: GeoLeafGlobal): void {
+    const interactiveShapes = g.GeoLeaf?.Config?.get?.("ui.interactiveShapes", false) as boolean;
+    const lineStyle = Object.assign({}, context.options?.lineStyle ?? {}, {
+        interactive: interactiveShapes,
+    });
+    if (g.L?.polyline) {
+        (context as { routeLayer?: unknown }).routeLayer = g.L.polyline([], lineStyle).addTo(
+            context.layerGroup
+        );
+    }
+}
+
+function _fitRouteBounds(
+    context: RouteContext,
+    coords: [number, number][],
+    routeLayer: { getBounds: () => unknown }
+): void {
+    if (!context.options?.fitBoundsOnLoad || coords.length <= 1 || !context.map) return;
+    const bounds = routeLayer.getBounds();
+    const fitOpt: { maxZoom?: number } = {};
+    if (context.options.maxZoomOnFit) fitOpt.maxZoom = context.options.maxZoomOnFit;
+    const map = context.map as { fitBounds: (b: unknown, o?: unknown) => void };
+    map.fitBounds?.(bounds, fitOpt);
+}
+
 const RouteLayerManager = {
     applyRoute(
         context: RouteContext,
@@ -38,19 +63,7 @@ const RouteLayerManager = {
 
         const g = _g as GeoLeafGlobal;
         if (!context.routeLayer && context.layerGroup && context.map) {
-            const interactiveShapes = g.GeoLeaf?.Config?.get?.(
-                "ui.interactiveShapes",
-                false
-            ) as boolean;
-            const lineStyle = Object.assign({}, context.options?.lineStyle ?? {}, {
-                interactive: interactiveShapes,
-            });
-            if (g.L?.polyline) {
-                (context as { routeLayer?: unknown }).routeLayer = g.L.polyline(
-                    [],
-                    lineStyle
-                ).addTo(context.layerGroup);
-            }
+            _createRouteLayer(context, g);
         }
 
         const routeLayer = context.routeLayer as
@@ -58,14 +71,7 @@ const RouteLayerManager = {
             | undefined;
         if (routeLayer) {
             routeLayer.setLatLngs(coords);
-        }
-
-        if (context.options?.fitBoundsOnLoad && coords.length > 1 && context.map && routeLayer) {
-            const bounds = routeLayer.getBounds();
-            const fitOpt: { maxZoom?: number } = {};
-            if (context.options.maxZoomOnFit) fitOpt.maxZoom = context.options.maxZoomOnFit;
-            const map = context.map as { fitBounds: (b: unknown, o?: unknown) => void };
-            if (map.fitBounds) map.fitBounds(bounds, fitOpt);
+            _fitRouteBounds(context, coords, routeLayer);
         }
 
         if (typeof fireEventsCallback === "function") {
@@ -111,10 +117,7 @@ const RouteLayerManager = {
                 });
             }
         } catch (e) {
-            Log.warn(
-                "[GeoLeaf.Route] Impossible d'émettre l'événement Leaflet geoleaf:route:loaded.",
-                e
-            );
+            Log.warn("[GeoLeaf.Route] Unable to fire Leaflet event geoleaf:route:loaded.", e);
         }
 
         if (typeof document !== "undefined" && typeof document.dispatchEvent === "function") {
@@ -143,7 +146,7 @@ const RouteLayerManager = {
                     document.dispatchEvent(legacyEvent);
                 } catch (err) {
                     Log.warn(
-                        "[GeoLeaf.Route] Impossible d'émettre le CustomEvent geoleaf:route:loaded.",
+                        "[GeoLeaf.Route] Unable to fire CustomEvent geoleaf:route:loaded.",
                         err
                     );
                 }

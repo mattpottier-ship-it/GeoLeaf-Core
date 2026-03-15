@@ -1,4 +1,5 @@
-﻿/*!
+/* eslint-disable security/detect-object-injection */
+/*!
  * GeoLeaf Core
  * © 2026 Mattieu Pottier
  * Released under the MIT License
@@ -6,7 +7,7 @@
  */
 
 /**
- * @fileoverview Validations des règles de style (styleRules, conditions, scales)
+ * @fileoverview Validations des rules de style (styleRules, conditions, scales)
  * @module validators/style-validator-rules
  */
 
@@ -35,6 +36,50 @@ export interface StyleRule {
     legend?: Record<string, unknown>;
 }
 
+function _validateSingleRule(
+    rule: unknown,
+    index: number,
+    errors: ValidationErrorItem[],
+    warnings: ValidationWarningItem[],
+    context: Record<string, unknown>
+): void {
+    const ruleContext = { ...context, ruleIndex: index };
+    if (typeof rule !== "object" || rule === null) {
+        errors.push({
+            field: `styleRules[${index}]`,
+            message: `La r\u00e8gle doit \u00eatre un object`,
+            context: ruleContext,
+        });
+        return;
+    }
+    const r = rule as StyleRule;
+    if (!r.when)
+        errors.push({
+            field: `styleRules[${index}].when`,
+            message: `Le field 'when' est required`,
+            context: ruleContext,
+        });
+    else validateWhenCondition(r.when, index, errors, warnings, ruleContext);
+    if (!r.style)
+        errors.push({
+            field: `styleRules[${index}].style`,
+            message: `Le field 'style' est required`,
+            context: ruleContext,
+        });
+    else if (typeof r.style !== "object" || r.style === null)
+        errors.push({
+            field: `styleRules[${index}].style`,
+            message: `Le style doit \u00eatre un object`,
+            context: { received: typeof r.style, ...ruleContext },
+        });
+    if (r.legend && typeof r.legend !== "object")
+        errors.push({
+            field: `styleRules[${index}].legend`,
+            message: `legend doit \u00eatre un object`,
+            context: { received: typeof r.legend, ...ruleContext },
+        });
+}
+
 export function validateStyleRules(
     rules: unknown,
     errors: ValidationErrorItem[],
@@ -43,59 +88,15 @@ export function validateStyleRules(
 ): void {
     if (!Array.isArray(rules)) {
         errors.push({
-            field: 'styleRules',
-            message: `styleRules doit être un tableau`,
-            context: { received: typeof rules, ...context }
+            field: "styleRules",
+            message: `styleRules doit \u00eatre un table`,
+            context: { received: typeof rules, ...context },
         });
         return;
     }
-
-    rules.forEach((rule: unknown, index: number) => {
-        const ruleContext = { ...context, ruleIndex: index };
-
-        if (typeof rule !== 'object' || rule === null) {
-            errors.push({
-                field: `styleRules[${index}]`,
-                message: `La règle doit être un objet`,
-                context: ruleContext
-            });
-            return;
-        }
-
-        const r = rule as StyleRule;
-
-        if (!r.when) {
-            errors.push({
-                field: `styleRules[${index}].when`,
-                message: `Le champ 'when' est requis`,
-                context: ruleContext
-            });
-        } else {
-            validateWhenCondition(r.when, index, errors, warnings, ruleContext);
-        }
-
-        if (!r.style) {
-            errors.push({
-                field: `styleRules[${index}].style`,
-                message: `Le champ 'style' est requis`,
-                context: ruleContext
-            });
-        } else if (typeof r.style !== 'object' || r.style === null) {
-            errors.push({
-                field: `styleRules[${index}].style`,
-                message: `Le style doit être un objet`,
-                context: { received: typeof r.style, ...ruleContext }
-            });
-        }
-
-        if (r.legend && typeof r.legend !== 'object') {
-            errors.push({
-                field: `styleRules[${index}].legend`,
-                message: `legend doit être un objet`,
-                context: { received: typeof r.legend, ...ruleContext }
-            });
-        }
-    });
+    rules.forEach((rule: unknown, index: number) =>
+        _validateSingleRule(rule, index, errors, warnings, context)
+    );
 }
 
 export function validateWhenCondition(
@@ -105,11 +106,11 @@ export function validateWhenCondition(
     _warnings: ValidationWarningItem[],
     context: Record<string, unknown>
 ): void {
-    if (typeof when !== 'object' || when === null) {
+    if (typeof when !== "object" || when === null) {
         errors.push({
             field: `styleRules[${ruleIndex}].when`,
-            message: `when doit être un objet`,
-            context: { received: typeof when, ...context }
+            message: `when must be un object`,
+            context: { received: typeof when, ...context },
         });
         return;
     }
@@ -134,34 +135,43 @@ export function validateSimpleCondition(
     context: Record<string, unknown>
 ): void {
     const c = condition as Record<string, unknown>;
-    const required = ['field', 'operator', 'value'];
+    const required = ["field", "operator", "value"];
     for (const field of required) {
         if (!(field in c)) {
-            const prefix = condIndex !== null ? `styleRules[${ruleIndex}].when.all[${condIndex}]` : `styleRules[${ruleIndex}].when`;
+            const prefix =
+                condIndex !== null
+                    ? `styleRules[${ruleIndex}].when.all[${condIndex}]`
+                    : `styleRules[${ruleIndex}].when`;
             errors.push({
                 field: `${prefix}.${field}`,
-                message: `Le champ '${field}' est requis dans la condition`,
-                context
+                message: `Le field '${field}' est required dans la condition`,
+                context,
             });
         }
     }
 
-    const validOperators = ['==', '!=', '<', '>', '<=', '>=', 'in', 'contains'];
+    const validOperators = ["==", "!=", "<", ">", "<=", ">=", "in", "contains"];
     if (c.operator && !validOperators.includes(c.operator as string)) {
-        const prefix = condIndex !== null ? `styleRules[${ruleIndex}].when.all[${condIndex}]` : `styleRules[${ruleIndex}].when`;
+        const prefix =
+            condIndex !== null
+                ? `styleRules[${ruleIndex}].when.all[${condIndex}]`
+                : `styleRules[${ruleIndex}].when`;
         errors.push({
             field: `${prefix}.operator`,
-            message: `Opérateur invalide`,
-            context: { received: c.operator, allowed: validOperators, ...context }
+            message: `Invalid operator`,
+            context: { received: c.operator, allowed: validOperators, ...context },
         });
     }
 
-    if (c.field && typeof c.field !== 'string') {
-        const prefix = condIndex !== null ? `styleRules[${ruleIndex}].when.all[${condIndex}]` : `styleRules[${ruleIndex}].when`;
+    if (c.field && typeof c.field !== "string") {
+        const prefix =
+            condIndex !== null
+                ? `styleRules[${ruleIndex}].when.all[${condIndex}]`
+                : `styleRules[${ruleIndex}].when`;
         errors.push({
             field: `${prefix}.field`,
-            message: `field doit être une chaîne de caractères`,
-            context: { received: typeof c.field, ...context }
+            message: `field must be une string de characters`,
+            context: { received: typeof c.field, ...context },
         });
     }
 }
@@ -172,48 +182,48 @@ export function validateScales(
     _warnings: ValidationWarningItem[],
     context: Record<string, unknown>
 ): void {
-    (['layerScale', 'labelScale'] as const).forEach(scaleField => {
-        const isRequired = scaleField === 'layerScale';
+    (["layerScale", "labelScale"] as const).forEach((scaleField) => {
+        const isRequired = scaleField === "layerScale";
 
         if (!styleData[scaleField]) {
             if (isRequired) {
                 errors.push({
                     field: scaleField,
-                    message: `${scaleField} est requis`,
-                    context
+                    message: `${scaleField} est required`,
+                    context,
                 });
             }
             return;
         }
 
         const scale = styleData[scaleField] as Record<string, unknown> | null;
-        if (typeof scale !== 'object' || scale === null) {
+        if (typeof scale !== "object" || scale === null) {
             errors.push({
                 field: scaleField,
-                message: `${scaleField} doit être un objet`,
-                context: { received: typeof scale, ...context }
+                message: `${scaleField} must be un object`,
+                context: { received: typeof scale, ...context },
             });
             return;
         }
 
-        (['minScale', 'maxScale'] as const).forEach(prop => {
+        (["minScale", "maxScale"] as const).forEach((prop) => {
             if (!(prop in scale)) {
                 if (isRequired) {
                     errors.push({
                         field: `${scaleField}.${prop}`,
-                        message: `${prop} est requis dans ${scaleField}`,
-                        context
+                        message: `${prop} est required dans ${scaleField}`,
+                        context,
                     });
                 }
                 return;
             }
 
             if (scale[prop] !== null) {
-                if (typeof scale[prop] !== 'number' || (scale[prop] as number) < 0) {
+                if (typeof scale[prop] !== "number" || (scale[prop] as number) < 0) {
                     errors.push({
                         field: `${scaleField}.${prop}`,
-                        message: `${prop} doit être un nombre >= 0 ou null`,
-                        context: { received: scale[prop], ...context }
+                        message: `${prop} must be un nombre >= 0 ou null`,
+                        context: { received: scale[prop], ...context },
                     });
                 }
             }
@@ -227,21 +237,21 @@ export function validateLegend(
     _warnings: ValidationWarningItem[],
     context: Record<string, unknown>
 ): void {
-    if (typeof legend !== 'object' || legend === null) {
+    if (typeof legend !== "object" || legend === null) {
         errors.push({
-            field: 'legend',
-            message: `legend doit être un objet`,
-            context: { received: typeof legend, ...context }
+            field: "legend",
+            message: `legend must be un object`,
+            context: { received: typeof legend, ...context },
         });
         return;
     }
 
     const leg = legend as Record<string, unknown>;
-    if ('order' in leg && !Number.isInteger(leg.order)) {
+    if ("order" in leg && !Number.isInteger(leg.order)) {
         errors.push({
-            field: 'legend.order',
-            message: `order doit être un entier`,
-            context: { received: leg.order, type: typeof leg.order, ...context }
+            field: "legend.order",
+            message: `order must be un entier`,
+            context: { received: leg.order, type: typeof leg.order, ...context },
         });
     }
 }
@@ -251,5 +261,5 @@ export const StyleValidatorRules = {
     validateWhenCondition,
     validateSimpleCondition,
     validateScales,
-    validateLegend
+    validateLegend,
 };

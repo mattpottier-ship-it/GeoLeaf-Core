@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-object-injection */
 /*!
  * GeoLeaf Core
  * © 2026 Mattieu Pottier
@@ -9,7 +10,7 @@
 /**
  * GeoLeaf Content Builder - Core Module
  *
- * Centralise les fonctions utilitaires, validateurs et résolution de badges
+ * Centralizes utility functions, validators and badge resolution
  * pour tous les renderers du Content Builder.
  *
  * @module ui/content-builder/core
@@ -18,25 +19,25 @@
  * @since Sprint 4.5 (Janvier 2026)
  *
  * @example
- * // Accès au module Core
+ * // Access to the Core module
  * const Core = GeoLeaf._ContentBuilder.Core;
  *
  * // Validation image URL
  * const imageUrl = Core.validateImageUrl('https://example.com/photo.jpg');
  *
- * // Résolution badge taxonomie
+ * // Badge taxonomy resolution
  * const badge = Core.resolveBadge(poi, 'attributes.categoryId', 'default');
  *
- * // Formatage coordonnées
+ * // Coordinate formatting
  * const coords = Core.formatCoordinates(45.7578, 4.8320);
- * // Retourne: "45.757800, 4.832000"
+ * // Returns: "45.757800, 4.832000"
  */
 import { escapeHtml, validateUrl } from "../../security/index.js";
 import { resolveField, getLog, getActiveProfile } from "../../utils/general-utils.js";
 import { getColorsFromLayerStyle } from "../../helpers/style-resolver.js";
 
 // ========================================
-//   DÉPENDANCES & HELPERS
+//   DEPENDENCIES & HELPERS
 // ========================================
 
 /**
@@ -62,39 +63,39 @@ function getEscapeHtml() {
 // ========================================
 
 /**
- * Valide une URL d'image en vérifiant les protocoles autorisés et la structure.
+ * Validates an image URL by checking allowed protocols and structure.
  *
- * Utilise GeoLeaf.Security.validateUrl si disponible, sinon applique une validation
+ * Utilise GeoLeaf.Security.validateUrl si available, sinon applique une validation
  * basique avec whitelist de protocoles (https://, http://, data:image//, /, ./).
  *
  * @function validateImageUrl
- * @param {string} url - URL à valider
- * @returns {string|null} URL valide (trimmed) ou null si invalide
+ * @param {string} url - URL to validate
+ * @returns {string|null} URL valide (trimmed) ou null si invalid
  *
  * @example
  * // URL HTTPS valide
  * const url1 = validateImageUrl('https://example.com/photo.jpg');
- * // Retourne: 'https://example.com/photo.jpg'
+ * // Returns: 'https://example.com/photo.jpg'
  *
  * @example
  * // Data URL valide
  * const url2 = validateImageUrl('data:image/png;base64,iVBORw0KG...');
- * // Retourne: 'data:image/png;base64,iVBORw0KG...'
+ * // Returns: 'data:image/png;base64,iVBORw0KG...'
  *
  * @example
- * // Chemin relatif valide
+ * // Path relatif valide
  * const url3 = validateImageUrl('/images/photo.jpg');
- * // Retourne: '/images/photo.jpg'
+ * // Returns: '/images/photo.jpg'
  *
  * @example
- * // URL invalide (protocole interdit)
+ * // URL invalid (protocole interdit)
  * const url4 = validateImageUrl('javascript:alert(1)');
- * // Retourne: null
+ * // Returns: null
  */
 function validateImageUrl(url: any) {
     if (!url || typeof url !== "string") return null;
 
-    // Utiliser le validator de GeoLeaf.Security si disponible
+    // Utiliser le validator de GeoLeaf.Security si available
     try {
         return validateUrl(url);
     } catch (e: any) {
@@ -104,37 +105,37 @@ function validateImageUrl(url: any) {
 }
 
 /**
- * Valide des coordonnées géographiques (latitude, longitude) avec support
- * de plusieurs formats d'entrée.
+ * Validates geographical coordinates (latitude, longitude) with support
+ * for multiple input formats.
  *
  * Supporte:
  * - Format array: [lat, lng]
- * - Format objet: {lat: number, lng: number}
- * - Validation limites: lat ∈ [-90, 90], lng ∈ [-180, 180]
+ * - Format object: {lat: number, lng: number}
+ * - Validation limits: lat ∈ [-90, 90], lng ∈ [-180, 180]
  *
  * @function validateCoordinates
- * @param {Array<number>|Object|*} value - Coordonnées à valider
- * @returns {{lat: number, lng: number}|null} Coordonnées valides ou null
+ * @param {Array<number>|Object|*} value - Coordinates to validate
+ * @returns {{lat: number, lng: number}|null} Valid coordinates or null
  *
  * @example
  * // Format array
  * const coords1 = validateCoordinates([45.7578, 4.8320]);
- * // Retourne: { lat: 45.7578, lng: 4.8320 }
+ * // Returns: { lat: 45.7578, lng: 4.8320 }
  *
  * @example
- * // Format objet
+ * // Format object
  * const coords2 = validateCoordinates({ lat: 45.7578, lng: 4.8320 });
- * // Retourne: { lat: 45.7578, lng: 4.8320 }
+ * // Returns: { lat: 45.7578, lng: 4.8320 }
  *
  * @example
- * // Coordonnées invalides (hors limites)
+ * // Invalid coordinates (out of bounds)
  * const coords3 = validateCoordinates([95, 200]);
- * // Retourne: null (lat > 90, lng > 180)
+ * // Returns: null (lat > 90, lng > 180)
  *
  * @example
- * // Format invalide
+ * // Format invalid
  * const coords4 = validateCoordinates('45.7578, 4.8320');
- * // Retourne: null (string non supporté)
+ * // Returns: null (string not supported)
  */
 function validateCoordinates(value: any) {
     if (value == null) return null;
@@ -146,17 +147,17 @@ function validateCoordinates(value: any) {
         lat = parseFloat(value[0]);
         lng = parseFloat(value[1]);
     }
-    // Format objet {lat, lng}
+    // Format object {lat, lng}
     else if (typeof value === "object" && value.lat !== undefined && value.lng !== undefined) {
         lat = parseFloat(value.lat);
         lng = parseFloat(value.lng);
     }
-    // Format invalide
+    // Format invalid
     else {
         return null;
     }
 
-    // Validation des valeurs
+    // Validation des values
     if (isNaN(lat) || isNaN(lng)) return null;
     if (lat < -90 || lat > 90) return null;
     if (lng < -180 || lng > 180) return null;
@@ -165,27 +166,27 @@ function validateCoordinates(value: any) {
 }
 
 /**
- * Valide une valeur numérique en la convertissant si nécessaire.
+ * Validates a numeric value by converting it if necessary.
  *
  * Accepte number, string convertible en number.
- * Rejette NaN, null, undefined, chaînes vides.
+ * Rejette NaN, null, undefined, strings emptys.
  *
  * @function validateNumber
- * @param {number|string|*} value - Valeur à valider
- * @returns {number|null} Nombre valide ou null si invalide
+ * @param {number|string|*} value - Value to validate
+ * @returns {number|null} Nombre valide ou null si invalid
  *
  * @example
  * // Number direct
  * const num1 = validateNumber(42.5);
- * // Retourne: 42.5
+ * // Returns: 42.5
  *
  * @example
  * // String convertible
  * const num2 = validateNumber('42.5');
- * // Retourne: 42.5
+ * // Returns: 42.5
  *
  * @example
- * // Valeurs invalides
+ * // Values invalids
  * validateNumber(null);      // null
  * validateNumber('');        // null
  * validateNumber('abc');     // null
@@ -199,19 +200,19 @@ function validateNumber(value: any) {
 }
 
 /**
- * Valide un rating (note) dans l'échelle 0-5.
+ * Validates a rating in the 0-5 scale.
  *
- * Utilise validateNumber puis vérifie que la valeur est dans [0, 5].
- * Utile pour les systèmes de notation 5 étoiles.
+ * Uses validateNumber then checks that the value is in [0, 5].
+ * Useful for 5-star rating systems.
  *
  * @function validateRating
- * @param {number|string|*} value - Rating à valider
- * @returns {number|null} Rating valide ∈ [0, 5] ou null si invalide
+ * @param {number|string|*} value - Rating to validate
+ * @returns {number|null} Valid rating ∈ [0, 5] or null if invalid
  *
  * @example
  * // Rating valide
  * const rating1 = validateRating(4.5);
- * // Retourne: 4.5
+ * // Returns: 4.5
  *
  * @example
  * // Rating valide (limites)
@@ -219,10 +220,10 @@ function validateNumber(value: any) {
  * const rating3 = validateRating(5);   // 5 (valide)
  *
  * @example
- * // Rating invalide (hors limites)
+ * // Rating invalid (hors limites)
  * const rating4 = validateRating(-1);  // null (< 0)
  * const rating5 = validateRating(6);   // null (> 5)
- * const rating6 = validateRating('excellent'); // null (non numérique)
+ * const rating6 = validateRating('excellent'); // null (non-numeric)
  */
 function validateRating(value: any) {
     const num = validateNumber(value);
@@ -236,54 +237,54 @@ function validateRating(value: any) {
 // ========================================
 
 /**
- * Résout un badge en appliquant la taxonomie et les styleRules de la couche.
+ * Resolves a badge by applying the layer's taxonomy and styleRules.
  *
- * Processus:
- * 1. Récupère la valeur via resolveField (ex: categoryId)
+ * Process:
+ * 1. Retrieves the value via resolveField (ex: categoryId)
  * 2. Cherche le label dans taxonomy.categories ou subcategories
- * 3. Applique les couleurs depuis GeoLeaf.Helpers.StyleResolver
- * 4. Retourne { displayValue, style } pour affichage HTML
+ * 3. Applies thes colors from GeoLeaf.Helpers.StyleResolver
+ * 4. Returns { displayValue, style } pour display HTML
  *
- * Gère 2 types de champs:
- * - categoryId: résolution catégorie principale
- * - subCategoryId: résolution sous-catégorie (avec parent categoryId)
+ * Handles 2 field types:
+ * - categoryId: main category resolution
+ * - subCategoryId: sub-category resolution (with parent categoryId)
  *
  * @function resolveBadge
- * @param {Object} poi - POI avec attributs et _layerConfig
- * @param {Object} poi.attributes - Attributs du POI (categoryId, subCategoryId, etc.)
- * @param {Object} poi._layerConfig - Configuration de la couche (styleRules)
- * @param {string} field - Chemin du champ (ex: 'attributes.categoryId')
- * @param {string} [variant] - Variante du badge (non utilisé actuellement)
- * @returns {{displayValue: string, style: string}} Badge résolu
- * @returns {string} returns.displayValue - Label du badge (taxonomie ou valeur brute)
+ * @param {Object} poi - POI avec attributes et _layerConfig
+ * @param {Object} poi.attributes - Attributes du POI (categoryId, subCategoryId, etc.)
+ * @param {Object} poi._layerConfig - Configuration de the layer (styleRules)
+ * @param {string} field - Path du field (ex: 'attributes.categoryId')
+ * @param {string} [variant] - Badge variant (not currently used)
+ * @returns {{displayValue: string, style: string}} Resolved badge
+ * @returns {string} returns.displayValue - Label du badge (taxonomy ou value brute)
  * @returns {string} returns.style - CSS inline (background-color, border-color)
  *
  * @example
- * // Résolution catégorie principale
+ * // Main category resolution
  * const badge1 = resolveBadge(
  *   { attributes: { categoryId: 'restaurant' }, _layerConfig: { id: 'pois' } },
  *   'attributes.categoryId'
  * );
- * // Retourne: {
+ * // Returns: {
  * //   displayValue: 'Restaurant',
  * //   style: 'background-color: #e74c3c; border-color: #c0392b;'
  * // }
  *
  * @example
- * // Résolution sous-catégorie
+ * // Sub-category resolution
  * const badge2 = resolveBadge(
  *   { attributes: { categoryId: 'restaurant', subCategoryId: 'gastronomique' } },
  *   'attributes.subCategoryId'
  * );
- * // Retourne: { displayValue: 'Gastronomique', style: '...' }
+ * // Returns: { displayValue: 'Gastronomique', style: '...' }
  *
  * @example
- * // Valeur non mappée dans taxonomie
+ * // Value not mapped in taxonomy
  * const badge3 = resolveBadge(
  *   { attributes: { categoryId: 'unknown' } },
  *   'attributes.categoryId'
  * );
- * // Retourne: { displayValue: 'unknown', style: '' }
+ * // Returns: { displayValue: 'unknown', style: '' }
  */
 function resolveBadge(poi: any, field: any, _variant: any) {
     const resolveField = getResolveField();
@@ -298,7 +299,7 @@ function resolveBadge(poi: any, field: any, _variant: any) {
     let displayValue = String(value);
     let style = "";
 
-    // Pas de taxonomie : retour simple
+    // Pas de taxonomy : return simple
     if (!taxonomy || !field) {
         return { displayValue, style };
     }
@@ -329,44 +330,44 @@ function resolveBadge(poi: any, field: any, _variant: any) {
 }
 
 /**
- * Résout un badge pour tooltip (texte uniquement, sans styles).
+ * Resolves un badge pour tooltip (text only, sans styles).
  *
- * Version simplifiée de resolveBadge:
- * - Retourne uniquement le texte (displayValue)
+ * Simplified version of resolveBadge:
+ * - Returns aiquement le text (displayValue)
  * - Pas de styles CSS
- * - Optimisé pour tooltips HTML limités
+ * - Optimized for limited HTML tooltips
  *
- * Supporte également categoryId et subCategoryId avec résolution taxonomie.
+ * Supporte also categoryId et subCategoryId avec Resolution taxonomy.
  *
  * @function resolveBadgeTooltip
- * @param {Object} poi - POI avec attributs
- * @param {Object} poi.attributes - Attributs du POI
- * @param {string} field - Chemin du champ (ex: 'attributes.categoryId')
- * @returns {string} Label du badge (ou valeur brute si pas de taxonomie)
+ * @param {Object} poi - POI avec attributes
+ * @param {Object} poi.attributes - Attributes du POI
+ * @param {string} field - Path du field (ex: 'attributes.categoryId')
+ * @returns {string} Label du badge (ou value brute si pas de taxonomy)
  *
  * @example
- * // Résolution catégorie avec taxonomie
+ * // Category resolution avec taxonomy
  * const text1 = resolveBadgeTooltip(
  *   { attributes: { categoryId: 'restaurant' } },
  *   'attributes.categoryId'
  * );
- * // Retourne: 'Restaurant' (label taxonomie)
+ * // Returns: 'Restaurant' (label taxonomy)
  *
  * @example
- * // Résolution sous-catégorie
+ * // Sub-category resolution
  * const text2 = resolveBadgeTooltip(
  *   { attributes: { categoryId: 'restaurant', subCategoryId: 'gastronomique' } },
  *   'attributes.subCategoryId'
  * );
- * // Retourne: 'Gastronomique'
+ * // Returns: 'Gastronomique'
  *
  * @example
- * // Valeur vide
+ * // Value empty
  * const text3 = resolveBadgeTooltip(
  *   { attributes: {} },
  *   'attributes.unknownField'
  * );
- * // Retourne: ''
+ * // Returns: ''
  */
 /**
  * Phase 4 dedup: resolveBadgeTooltip delegates to resolveBadge (text only)
@@ -381,96 +382,96 @@ function resolveBadgeTooltip(poi: any, field: any) {
 // ========================================
 
 /**
- * Formate un nombre avec la locale française (séparateurs FR).
+ * Formats a number with French locale (FR separators).
  *
  * Utilise toLocaleString('fr-FR'):
- * - Séparateur de milliers: espace (\u202f)
- * - Séparateur de décimales: virgule
+ * - Thousands separator: narrow no-break space (\u202f)
+ * - Decimal separator: comma
  *
  * @function formatNumber
- * @param {number} num - Nombre à formater
- * @returns {string} Nombre formaté avec conventions françaises
+ * @param {number} num - Number to format
+ * @returns {string} Number formatted with French conventions
  *
  * @example
  * // Entier
  * const str1 = formatNumber(1234567);
- * // Retourne: '1\u202f234\u202f567'
+ * // Returns: '1\u202f234\u202f567'
  *
  * @example
- * // Décimal
+ * // Decimal
  * const str2 = formatNumber(1234.56);
- * // Retourne: '1\u202f234,56'
+ * // Returns: '1\u202f234,56'
  *
  * @example
  * // Petit nombre
  * const str3 = formatNumber(42);
- * // Retourne: '42'
+ * // Returns: '42'
  */
 function formatNumber(num: any) {
     return num.toLocaleString("fr-FR");
 }
 
 /**
- * Formate des coordonnées géographiques en chaîne "lat, lng".
+ * Formats geographical coordinates as a "lat, lng" string.
  *
- * Utilise toFixed pour contrôler la précision décimale.
- * Précision recommandée: 6 décimales (~10cm de précision).
+ * Uses toFixed to control decimal precision.
+ * Recommended precision: 6 decimals (~10cm precision).
  *
  * @function formatCoordinates
  * @param {number} lat - Latitude (∈ [-90, 90])
  * @param {number} lng - Longitude (∈ [-180, 180])
- * @param {number} [precision=6] - Nombre de décimales (1-15)
- * @returns {string} Coordonnées formatées "lat, lng"
+ * @param {number} [precision=6] - Number of decimals (1-15)
+ * @returns {string} Formatted coordinates "lat, lng"
  *
  * @example
- * // Précision par défaut (6 décimales)
+ * // Default precision (6 decimals)
  * const str1 = formatCoordinates(45.7578137, 4.8320114);
- * // Retourne: '45.757814, 4.832011'
+ * // Returns: '45.757814, 4.832011'
  *
  * @example
- * // Haute précision (8 décimales)
+ * // High precision (8 decimals)
  * const str2 = formatCoordinates(45.7578137, 4.8320114, 8);
- * // Retourne: '45.75781370, 4.83201140'
+ * // Returns: '45.75781370, 4.83201140'
  *
  * @example
- * // Faible précision (2 décimales)
+ * // Low precision (2 decimals)
  * const str3 = formatCoordinates(45.7578137, 4.8320114, 2);
- * // Retourne: '45.76, 4.83'
+ * // Returns: '45.76, 4.83'
  */
 function formatCoordinates(lat: any, lng: any, precision = 6) {
     return lat.toFixed(precision) + ", " + lng.toFixed(precision);
 }
 
 /**
- * Formate un rating (note) au format "X.X/5".
+ * Formats a rating (note) au format "X.X/5".
  *
- * Utilise toFixed pour afficher le nombre de décimales souhaité.
- * Compatible avec les systèmes de notation 5 étoiles.
+ * Uses toFixed to display the desired number of decimals.
+ * Compatible with 5-star rating systems.
  *
  * @function formatRating
- * @param {number} rating - Note à formater (∈ [0, 5])
- * @param {number} [precision=1] - Nombre de décimales (0-2)
- * @returns {string} Rating formaté (ex: "4.5/5", "3/5")
+ * @param {number} rating - Rating to format (∈ [0, 5])
+ * @param {number} [precision=1] - Number of decimals (0-2)
+ * @returns {string} Formatted rating (ex: "4.5/5", "3/5")
  *
  * @example
- * // Précision par défaut (1 décimale)
+ * // Default precision (1 decimal)
  * const str1 = formatRating(4.567);
- * // Retourne: '4.6/5'
+ * // Returns: '4.6/5'
  *
  * @example
- * // Sans décimale
+ * // No decimal
  * const str2 = formatRating(4.567, 0);
- * // Retourne: '5/5'
+ * // Returns: '5/5'
  *
  * @example
- * // 2 décimales
+ * // 2 decimals
  * const str3 = formatRating(4.567, 2);
- * // Retourne: '4.57/5'
+ * // Returns: '4.57/5'
  *
  * @example
  * // Note parfaite
  * const str4 = formatRating(5);
- * // Retourne: '5.0/5'
+ * // Returns: '5.0/5'
  */
 function formatRating(rating: any, precision = 1) {
     return rating.toFixed(precision) + "/5";
@@ -481,7 +482,7 @@ function formatRating(rating: any, precision = 1) {
 // ========================================
 
 const ContentBuilderCore = {
-    // Helpers dépendances
+    // Helpers DEPENDENCIES
     getResolveField,
     getEscapeHtml,
     getActiveProfile,
@@ -504,7 +505,7 @@ const ContentBuilderCore = {
 };
 
 getLog().info(
-    "[GeoLeaf._ContentBuilder.Core] Module Core chargé - Helpers + Validators + Badge resolver"
+    "[GeoLeaf._ContentBuilder.Core] Module Core loaded - Helpers + Validators + Badge resolver"
 );
 
 export { ContentBuilderCore };

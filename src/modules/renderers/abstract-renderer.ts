@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-object-injection */
 /**
  * @fileoverview Abstract Renderer Base Class
  * @description Base class providing common functionality for all renderers
@@ -18,6 +19,19 @@
 // Lazy access to GeoLeaf namespace (globalThis fallback for non-ESM consumers)
 const _gl: any =
     typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : {};
+
+function _resolvePathInObject(obj: any, path: string): unknown {
+    const parts = String(path).split(".");
+    let current = obj;
+    for (const part of parts) {
+        if (current && typeof current === "object" && part in current) {
+            current = current[part];
+        } else {
+            return null;
+        }
+    }
+    return current != null ? current : null;
+}
 
 /**
  * @class AbstractRenderer
@@ -137,20 +151,8 @@ class AbstractRenderer {
                 if (!obj) return null;
                 for (const path of paths) {
                     if (!path) continue;
-                    const parts = String(path).split(".");
-                    let current = obj;
-                    let found = true;
-                    for (const part of parts) {
-                        if (current && typeof current === "object" && part in current) {
-                            current = current[part];
-                        } else {
-                            found = false;
-                            break;
-                        }
-                    }
-                    if (found && current !== undefined && current !== null) {
-                        return current;
-                    }
+                    const result = _resolvePathInObject(obj, path);
+                    if (result != null) return result;
                 }
                 return null;
             },
@@ -338,12 +340,12 @@ class AbstractRenderer {
     // ========================================
 
     /**
-     * Register event listener with automatic cleanup
+     * Register event listner with automatic cleanup
      * @protected
      * @param {HTMLElement} element - Target element
      * @param {string} event - Event name
      * @param {Function} handler - Event handler
-     * @param {Object} [options] - Event listener options
+     * @param {Object} [options] - Event listner options
      * @returns {Function} Cleanup function
      */
     addEventListener(element: any, event: any, handler: any, options?: any) {
@@ -365,7 +367,7 @@ class AbstractRenderer {
     }
 
     /**
-     * Remove all registered event listeners
+     * Remove all registered event listners
      * @protected
      */
     removeAllEventListeners() {

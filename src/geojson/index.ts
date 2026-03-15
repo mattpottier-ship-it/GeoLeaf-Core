@@ -3,8 +3,8 @@
  */
 /**
  * src/geojson/index.js — SHIM LEGACY
- * Rétrocompatibilité : expose les utilitaires GeoJSON depuis src/geojson/
- * (ancienne structure) → src/modules/geojson/
+ * Backward compatibility : expose les utilitaires GeoJSON from src/geojson/
+ * (old structure) → src/modules/geojson/
  * @module src/geojson
  */
 import { GeoJSONCore as _GeoJSONCore } from "../modules/geojson/core.js";
@@ -12,13 +12,13 @@ const GeoJSONCore: any = _GeoJSONCore;
 import { GeoJSONShared } from "../modules/geojson/shared.js";
 import { FeatureValidator } from "../modules/geojson/feature-validator.js";
 
-// Alias GeoJSON (classe principale)
+// Alias GeoJSON (class maine)
 export const GeoJSON = GeoJSONCore;
 
-// Opérateurs de style (disponibles sur GeoJSONShared)
+// Style operators (available on GeoJSONShared)
 export const STYLE_OPERATORS = (GeoJSONShared as any).STYLE_OPERATORS;
 
-// Valeurs par défaut (compatibilité tests / API legacy)
+// Values by default (compatibility tests / API legacy)
 const defaultStyle = (GeoJSONShared as any).state?.options?.defaultStyle || {
     color: "#3388ff",
     weight: 2,
@@ -37,7 +37,7 @@ export const DEFAULT_STYLES = (GeoJSONShared as any).DEFAULT_STYLES || {
     point: { radius: defaultPointStyle.radius, fillColor: defaultPointStyle.fillColor },
 };
 
-// Wrappers validation — format attendu par les tests { valid, errors: string[], featureCount? }
+// Wrappers validation — format expected par les tests { valid, errors: string[], featureCount? }
 function validateFeature(...args: any[]) {
     const r = (FeatureValidator.validateFeature as any)?.(...args);
     if (!r) return { valid: false, errors: ["Validator unavailable"] };
@@ -46,7 +46,7 @@ function validateFeature(...args: any[]) {
         errors: (r.errors || []).map((e: any) => (typeof e === "string" ? e : e.message)),
     };
 }
-/* eslint-disable complexity -- validation branches */
+/* eslint-disable complexity -- validation branchs */
 function validateFeatureCollection(collection: any, ...rest: any[]) {
     const r = (FeatureValidator.validateFeatureCollection as any)?.(collection, ...rest);
     if (!r) return { valid: false, errors: ["Validator unavailable"], featureCount: 0 };
@@ -77,7 +77,7 @@ function validateFeatureCollection(collection: any, ...rest: any[]) {
 /* eslint-enable complexity */
 export { validateFeature, validateFeatureCollection };
 
-// Fonctions absentes de l'implémentation actuelle — stubs géométriques
+// Functions absent from the current implementation — geometry stubs
 export function getGeometryType(feature: any) {
     return feature?.geometry?.type ?? null;
 }
@@ -121,7 +121,7 @@ export function evaluateStyleCondition(featureOrLeft: any, conditionOrOp: any, r
 function toLatLng(coord: any) {
     return Array.isArray(coord) && coord.length >= 2 ? [coord[1], coord[0]] : null;
 }
-/* eslint-disable complexity -- geometry type branches */
+/* eslint-disable complexity -- geometry type branchs */
 export function extractCoordinates(feature: any) {
     if (feature == null) return null;
     const geom = feature.geometry;

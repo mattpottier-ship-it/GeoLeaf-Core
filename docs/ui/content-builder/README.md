@@ -1,6 +1,6 @@
-# ðŸ“¦ Content Builder - Documentation ComplÃ¨te
+﻿# ðŸ“¦ Content Builder - Documentation ComplÃ¨te
 
-**Version**: 1.1.0  
+**Version**: 1.1.1  
 **Date**: 18 janvier 2026  
 **Module**: `GeoLeaf._ContentBuilder`
 
@@ -1248,7 +1248,7 @@ config.forEach((item) => {
 
 ---
 
-**Version**: 1.1.0  
+**Version**: 1.1.1  
 **DerniÃ¨re mise Ã  jour**: 18 janvier 2026  
 **Auteur**: GitHub Copilot + Audit 2026 Team  
 **Licence**: MIT (identique au projet GeoLeaf)

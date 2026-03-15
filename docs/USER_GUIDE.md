@@ -1,7 +1,7 @@
-# GeoLeaf JS User Guide
+﻿# GeoLeaf JS User Guide
 
 **Product Version:** GeoLeaf Platform V1  
-**Version:** 1.1.0  
+**Version:** 1.1.1  
 **Last Updated:** March 3, 2026  
 **Target Audience:** Developers integrating GeoLeaf into applications
 
@@ -101,14 +101,14 @@ Add to your HTML `<head>`:
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
 <!-- GeoLeaf -->
-<link rel="stylesheet" href="https://unpkg.com/@geoleaf/core@1.1.0/dist/geoleaf.min.css" />
+<link rel="stylesheet" href="https://unpkg.com/@geoleaf/core@1.1.1/dist/geoleaf.min.css" />
 ```
 
 Before closing `</body>`:
 
 ```html
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/@geoleaf/core@1.1.0/dist/geoleaf.min.js"></script>
+<script src="https://unpkg.com/@geoleaf/core@1.1.1/dist/geoleaf.min.js"></script>
 ```
 
 ### Option C: Self-Hosted
@@ -126,7 +126,7 @@ Open browser console and type:
 
 ```javascript
 console.log(GeoLeaf.version);
-// Should output: "1.1.0"
+// Should output: "1.1.1"
 ```
 
 ---
@@ -141,7 +141,7 @@ console.log(GeoLeaf.version);
     <head>
         <meta charset="UTF-8" />
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-        <link rel="stylesheet" href="https://unpkg.com/@geoleaf/core@1.1.0/dist/geoleaf.min.css" />
+        <link rel="stylesheet" href="https://unpkg.com/@geoleaf/core@1.1.1/dist/geoleaf.min.css" />
         <style>
             #map {
                 width: 100%;
@@ -153,7 +153,7 @@ console.log(GeoLeaf.version);
         <div id="map"></div>
 
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-        <script src="https://unpkg.com/@geoleaf/core@1.1.0/dist/geoleaf.min.js"></script>
+        <script src="https://unpkg.com/@geoleaf/core@1.1.1/dist/geoleaf.min.js"></script>
         <script>
             const map = GeoLeaf.init({
                 map: { target: "map", center: [46.2, 2.2], zoom: 6 },
@@ -972,7 +972,7 @@ GeoLeaf.on("online", async () => {
 Override default styles by loading a custom CSS file after geoleaf.css:
 
 ```html
-<link rel="stylesheet" href="https://unpkg.com/@geoleaf/core@1.1.0/dist/geoleaf.min.css" />
+<link rel="stylesheet" href="https://unpkg.com/@geoleaf/core@1.1.1/dist/geoleaf.min.css" />
 <link rel="stylesheet" href="/my-custom-theme.css" />
 ```
 

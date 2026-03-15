@@ -1,4 +1,4 @@
-﻿/*!
+/*!
  * GeoLeaf Core – Filters / Route Filter
  * © 2026 Mattieu Pottier
  * Released under the MIT License
@@ -20,31 +20,33 @@ function _haversine(lat1: any, lng1: any, lat2: any, lng2: any) {
             Math.sin(dLng / 2) ** 2;
     return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
-function _extractRating(attrs: any, item: any, props: any) {
-    let avg = 0;
-    let hasRating = false;
+function _getReviewsObj(attrs: any, item: any, props: any): any {
+    if (attrs.reviews !== undefined) return attrs.reviews;
+    if (item.reviews !== undefined) return item.reviews;
+    return props.reviews;
+}
 
-    const reviewsObj = attrs.reviews || item.reviews || props.reviews;
+function _getDirectRating(attrs: any, item: any, props: any): number | undefined {
+    if (typeof attrs.rating === "number") return attrs.rating;
+    if (typeof item.rating === "number") return item.rating;
+    if (typeof props.rating === "number") return props.rating;
+    return undefined;
+}
+
+function _extractRating(attrs: any, item: any, props: any) {
+    const reviewsObj = _getReviewsObj(attrs, item, props);
     if (reviewsObj && typeof reviewsObj === "object" && !Array.isArray(reviewsObj)) {
-        if (typeof reviewsObj.rating === "number") {
-            avg = reviewsObj.rating;
-            hasRating = true;
-        }
-    } else if (Array.isArray(reviewsObj) && reviewsObj.length > 0) {
-        const sum = reviewsObj.reduce((acc, r) => acc + (Number(r.rating) || 0), 0);
-        avg = sum / reviewsObj.length;
-        hasRating = avg > 0;
-    } else if (typeof attrs.rating === "number") {
-        avg = attrs.rating;
-        hasRating = true;
-    } else if (typeof item.rating === "number") {
-        avg = item.rating;
-        hasRating = true;
-    } else if (typeof props.rating === "number") {
-        avg = props.rating;
-        hasRating = true;
+        if (typeof reviewsObj.rating === "number")
+            return { avg: reviewsObj.rating, hasRating: true };
     }
-    return { avg, hasRating };
+    if (Array.isArray(reviewsObj) && reviewsObj.length > 0) {
+        const sum = reviewsObj.reduce((acc: number, r: any) => acc + (Number(r.rating) || 0), 0);
+        const avg = sum / reviewsObj.length;
+        return { avg, hasRating: avg > 0 };
+    }
+    const direct = _getDirectRating(attrs, item, props);
+    if (direct !== undefined) return { avg: direct, hasRating: true };
+    return { avg: 0, hasRating: false };
 }
 
 function _normalizeTags(rawTags: any) {
@@ -57,111 +59,196 @@ function _normalizeTags(rawTags: any) {
     return [];
 }
 
+function _defined(v: any): boolean {
+    return v !== undefined && v !== null;
+}
+function _strVal(v: any): string {
+    return _defined(v) ? String(v) : "";
+}
+function _firstDefined(...vals: any[]): any {
+    for (const v of vals) {
+        if (_defined(v)) return v;
+    }
+    return "";
+}
+
+function _resolveCatId(attrs: any, route: any, props: any): string {
+    return _strVal(
+        _firstDefined(
+            attrs.categoryId,
+            route.categoryId,
+            route.category,
+            props.categoryId,
+            props.category
+        )
+    );
+}
+
+function _resolveSubId(attrs: any, route: any, props: any): string {
+    return _strVal(
+        _firstDefined(
+            attrs.subCategoryId,
+            route.subCategoryId,
+            route.subCategory,
+            route.sub_category,
+            props.subCategoryId,
+            props.sub_category
+        )
+    );
+}
+
+function _passesSearchFilter(route: any, searchText: string, searchFields: string[]): boolean {
+    return searchFields.some((fieldPath: any) => {
+        const value = getNestedValue(route, fieldPath);
+        return value && String(value).toLowerCase().includes(searchText);
+    });
+}
+
+function _passesCatFilter(
+    catId: string,
+    subId: string,
+    catsSel: string[],
+    subsSel: string[],
+    hasCats: boolean,
+    hasSubs: boolean
+): boolean {
+    if (hasSubs) return !!(subId && subsSel.includes(subId));
+    if (hasCats) return !!(catId && catsSel.includes(catId));
+    return true;
+}
+
+function _passesTagFilter(attrs: any, route: any, props: any, selectedTags: string[]): boolean {
+    const raw =
+        attrs.tags !== undefined ? attrs.tags : route.tags !== undefined ? route.tags : props.tags;
+    const routeTags = _normalizeTags(raw);
+    return selectedTags.some((tag: any) => routeTags.includes(tag));
+}
+
+function _passesProximityFilter(route: any, proximity: any, getDistance: any): boolean {
+    const coords = extractRouteCoords(route);
+    if (coords.length === 0) return false;
+    return coords.some(
+        ([lat, lng]: [any, any]) =>
+            getDistance(proximity.center.lat, proximity.center.lng, lat, lng) <= proximity.radius
+    );
+}
+
+function _parseFilterState(fs: any) {
+    return {
+        catsSel: Array.isArray(fs.categoriesTree) ? fs.categoriesTree : [],
+        subsSel: Array.isArray(fs.subCategoriesTree) ? fs.subCategoriesTree : [],
+        selectedTags: Array.isArray(fs.selectedTags) ? fs.selectedTags : [],
+        hasTags: fs.hasTags,
+        hasMinRating: !!fs.hasMinRating,
+        minRating: fs.minRating,
+        searchText: typeof fs.searchText === "string" ? fs.searchText.toLowerCase() : "",
+        hasSearchText: fs.hasSearchText ? true : false,
+        proximity:
+            fs.proximity && typeof fs.proximity === "object" ? fs.proximity : { active: false },
+    };
+}
+
+function _getSearchFields(filterState: any): string[] {
+    if (filterState.searchFields && filterState.searchFields.length > 0)
+        return filterState.searchFields;
+    return getSearchFieldsFromProfile();
+}
+
+function _passesRatingFilter(attrs: any, route: any, props: any, minRating: number): boolean {
+    const { avg, hasRating } = _extractRating(attrs, route, props);
+    if (!hasRating) return false;
+    if (avg < minRating) return false;
+    return true;
+}
+
+function _resolveRouteIds(route: any): { attrs: any; props: any; catId: string; subId: string } {
+    const attrs = route.attributes ? route.attributes : {};
+    const props = route.properties ? route.properties : {};
+    return {
+        attrs,
+        props,
+        catId: _resolveCatId(attrs, route, props),
+        subId: _resolveSubId(attrs, route, props),
+    };
+}
+
+function _passesCatAndSubFilter(
+    catId: string,
+    subId: string,
+    catsSel: string[],
+    subsSel: string[]
+): boolean {
+    const hasCats = catsSel.length > 0;
+    const hasSubs = subsSel.length > 0;
+    if (!hasCats && !hasSubs) return true;
+    return _passesCatFilter(catId, subId, catsSel, subsSel, hasCats, hasSubs);
+}
+
+function _passesActiveProximityFilter(route: any, proximity: any, getDistance: any): boolean {
+    if (!proximity.center) return true;
+    return _passesProximityFilter(route, proximity, getDistance);
+}
+
+function _filterSingleRoute(
+    route: any,
+    parsed: ReturnType<typeof _parseFilterState>,
+    filterState: any,
+    getDistance: any
+): boolean {
+    const {
+        catsSel,
+        subsSel,
+        selectedTags,
+        hasTags,
+        hasMinRating,
+        minRating,
+        searchText,
+        hasSearchText,
+        proximity,
+    } = parsed;
+    const { attrs, props, catId, subId } = _resolveRouteIds(route);
+    if (hasSearchText) {
+        if (!_passesSearchFilter(route, searchText, _getSearchFields(filterState))) return false;
+    }
+    if (!_passesCatAndSubFilter(catId, subId, catsSel, subsSel)) return false;
+    if (hasTags) {
+        if (!_passesTagFilter(attrs, route, props, selectedTags)) return false;
+    }
+    if (hasMinRating) {
+        if (!_passesRatingFilter(attrs, route, props, minRating)) return false;
+    }
+    if (proximity.active) {
+        if (!_passesActiveProximityFilter(route, proximity, getDistance)) return false;
+    }
+    return true;
+}
+
 /**
- * Filtre une liste de routes selon les critères fournis.
+ * Filtre a list de routes based on thes criteria fournis.
  * @param {Array} baseRoutes
  * @param {object} filterState
  * @returns {Array}
  */
 export function filterRouteList(baseRoutes: any, filterState: any) {
-    const catsSel = filterState.categoriesTree || [];
-    const subsSel = filterState.subCategoriesTree || [];
-    const hasCats = catsSel.length > 0;
-    const hasSubs = subsSel.length > 0;
-    const selectedTags = filterState.selectedTags || [];
-    const hasTags = filterState.hasTags;
-    const hasMinRating = !!filterState.hasMinRating;
-    const minRating = filterState.minRating;
-    const searchText = (filterState.searchText || "").toLowerCase();
-    const hasSearchText = filterState.hasSearchText || false;
-    const proximity = filterState.proximity || { active: false };
-
     if (!Array.isArray(baseRoutes) || baseRoutes.length === 0) {
-        Log.debug("[Filters] Aucune route à filtrer");
+        Log.debug("[Filters] No routes to filter");
         return [];
     }
-
-    Log.debug("[Filters] Début filtrage routes:", {
+    const parsed = _parseFilterState(filterState);
+    Log.debug("[Filters] Route filtering start:", {
         totalRoutes: baseRoutes.length,
-        hasCats,
-        hasSubs,
-        hasMinRating,
-        minRating,
-        hasSearchText,
-        proximityActive: proximity.active,
+        hasCats: parsed.catsSel.length > 0,
+        hasSubs: parsed.subsSel.length > 0,
+        hasMinRating: parsed.hasMinRating,
+        minRating: parsed.minRating,
+        hasSearchText: parsed.hasSearchText,
+        proximityActive: parsed.proximity.active,
     });
-
-    const getDistance = _g.GeoLeaf?.Utils?.getDistance ?? _haversine;
-
-    return baseRoutes.filter((route) => {
-        const attrs = route.attributes || {};
-        const props = route.properties || {};
-
-        // Filtre recherche textuelle
-        if (hasSearchText) {
-            const searchFields =
-                filterState.searchFields?.length > 0
-                    ? filterState.searchFields
-                    : getSearchFieldsFromProfile();
-            const matchFound = searchFields.some((fieldPath: any) => {
-                const value = getNestedValue(route, fieldPath);
-                return value && String(value).toLowerCase().includes(searchText);
-            });
-            if (!matchFound) return false;
-        }
-
-        // Résolution catégorie / sous-catégorie
-        const catId = String(
-            attrs.categoryId ??
-                route.categoryId ??
-                route.category ??
-                props.categoryId ??
-                props.category ??
-                ""
-        );
-        const subId = String(
-            attrs.subCategoryId ??
-                route.subCategoryId ??
-                route.subCategory ??
-                route.sub_category ??
-                props.subCategoryId ??
-                props.sub_category ??
-                ""
-        );
-
-        if (hasCats || hasSubs) {
-            if (hasSubs) {
-                if (!subId || !subsSel.includes(subId)) return false;
-            } else if (hasCats) {
-                if (!catId || !catsSel.includes(catId)) return false;
-            }
-        }
-
-        // Filtre tags
-        if (hasTags) {
-            const routeTags = _normalizeTags(attrs.tags ?? route.tags ?? props.tags);
-            if (!selectedTags.some((tag: any) => routeTags.includes(tag))) return false;
-        }
-
-        // Filtre note minimale
-        if (hasMinRating) {
-            const { avg, hasRating } = _extractRating(attrs, route, props);
-            if (!hasRating || avg < minRating) return false;
-        }
-
-        // Filtre proximité (au moins un point de l'itinéraire dans le rayon)
-        if (proximity.active && proximity.center) {
-            const coords = extractRouteCoords(route);
-            if (coords.length === 0) return false;
-
-            const isInRadius = coords.some(
-                ([lat, lng]: [any,any]) =>
-                    getDistance(proximity.center.lat, proximity.center.lng, lat, lng) <=
-                    proximity.radius
-            );
-            if (!isInRadius) return false;
-        }
-
-        return true;
-    });
+    const getDistance =
+        _g.GeoLeaf && _g.GeoLeaf.Utils && _g.GeoLeaf.Utils.getDistance
+            ? _g.GeoLeaf.Utils.getDistance
+            : _haversine;
+    return baseRoutes.filter((route: any) =>
+        _filterSingleRoute(route, parsed, filterState, getDistance)
+    );
 }

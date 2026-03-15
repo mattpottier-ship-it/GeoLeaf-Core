@@ -1,17 +1,18 @@
-﻿/*!
- * GeoLeaf Core � � 2026 Mattieu Pottier � MIT License � https://geoleaf.dev
+/* eslint-disable security/detect-object-injection */
+/*!
+ * GeoLeaf Core — © 2026 Mattieu Pottier — MIT License — https://geoleaf.dev
  */
 /**
- * src/route/index.js � SHIM LEGACY
- * R�trocompatibilit� : expose Route depuis src/route/ ? src/modules/geoleaf.route.js
- * + fonctions individuelles depuis les sous-modules de route/
+ * src/route/index.js — SHIM LEGACY
+ * Rétrocompatibilité : expose Route depuis src/route/ ? src/modules/geoleaf.route.js
+ * + fonctions individuelles from thes sous-modules de route/
  * @module src/route
  */
 import { Route as _Route } from "../modules/geoleaf.route.js";
 const Route: any = _Route;
 import { RouteStyleResolver } from "../modules/route/style-resolver.js";
 
-// parseGPX: RouteLoaders n'a pas parseGPX � impl�mentation synchrone pour tests/legacy
+// parseGPX: RouteLoaders n'a pas parseGPX — implémentation synchrone pour tests/legacy
 export function parseGPX(gpxText: any) {
     if (gpxText == null || typeof gpxText !== "string" || gpxText.trim() === "") return [];
     const parser = typeof DOMParser !== "undefined" ? new DOMParser() : null;
@@ -51,22 +52,52 @@ function routeGetRouteColor(route: any, taxonomyOrProfile: any, defaultColor?: a
     );
 }
 export const getRouteColor = routeGetRouteColor;
+function _resolveDefaultStyle(a: any): any {
+    return a && typeof a === "object" && ("color" in a || "weight" in a) ? a : undefined;
+}
+
+function _resolveActiveProfile(a: any, c: any): any {
+    if (a && a.taxonomy) return a;
+    if (c && c.categories) return { taxonomy: { categories: c.categories } };
+    return a;
+}
+
+function _buildRouteWithAttrs(route: any): any {
+    if (route && (route.attributes || route.categoryId != null)) {
+        return {
+            ...route,
+            attributes: route.attributes || {
+                categoryId: route.categoryId,
+                subCategoryId: route.subCategoryId,
+            },
+        };
+    }
+    return route;
+}
+
+function _isLatInvalid(lat: number): boolean {
+    return lat < -90 || lat > 90;
+}
+function _isLngInvalid(lng: number): boolean {
+    return lng < -180 || lng > 180;
+}
+
+function _validateSingleCoord(c: any): string | null {
+    if (!Array.isArray(c) || c.length < 2) return null;
+    const lat = Number(c[0]),
+        lng = Number(c[1]);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng))
+        return "Route contains invalid coordinates (NaN or non-numeric)";
+    if (_isLatInvalid(lat) || _isLngInvalid(lng))
+        return "Route contains invalid coordinates (out of bounds)";
+    return null;
+}
+
 export function resolveRouteStyle(route: any, a?: any, b?: any, c?: any) {
-    const defaultStyle =
-        a && typeof a === "object" && ("color" in a || "weight" in a) ? a : undefined;
-    const activeProfile =
-        a && a.taxonomy ? a : c && c.categories ? { taxonomy: { categories: c.categories } } : a;
+    const defaultStyle = _resolveDefaultStyle(a);
+    const activeProfile = _resolveActiveProfile(a, c);
     const routeConfigDefault = b && typeof b === "object" ? b : {};
-    const routeWithAttrs =
-        route && (route.attributes || route.categoryId != null)
-            ? {
-                  ...route,
-                  attributes: route.attributes || {
-                      categoryId: route.categoryId,
-                      subCategoryId: route.subCategoryId,
-                  },
-              }
-            : route;
+    const routeWithAttrs = _buildRouteWithAttrs(route);
     const result = RouteStyleResolver?.resolveRouteStyle?.(
         routeWithAttrs,
         activeProfile,
@@ -95,20 +126,15 @@ function toLatLng(coord: any) {
     return [Number(coord[1]), Number(coord[0])];
 }
 
-export function extractRouteCoords(route: any) {
-    if (!route) return [];
-    if (route.coordinates && Array.isArray(route.coordinates)) return route.coordinates;
-    if (route.coords && Array.isArray(route.coords)) return route.coords;
-    const geom = route.geometry;
-    if (!geom) return [];
-    if (Array.isArray(geom)) {
-        if (geom.length && Array.isArray(geom[0])) return geom;
-        // Nested: [ { type: 'LineString', coordinates: [[lng,lat],...] } ]
-        if (geom[0] && geom[0].type === "LineString" && Array.isArray(geom[0].coordinates)) {
-            return geom[0].coordinates.map((c: any) => toLatLng(c)).filter(Boolean);
-        }
-        return [];
+function _extractFromGeomArray(geom: any[]): any[] {
+    if (geom.length && Array.isArray(geom[0])) return geom;
+    if (geom[0] && geom[0].type === "LineString" && Array.isArray(geom[0].coordinates)) {
+        return geom[0].coordinates.map((c: any) => toLatLng(c)).filter(Boolean);
     }
+    return [];
+}
+
+function _extractFromGeomObject(geom: any): any[] {
     if (geom.type === "LineString" && Array.isArray(geom.coordinates)) {
         return geom.coordinates.map((c: any) => toLatLng(c)).filter(Boolean);
     }
@@ -118,18 +144,20 @@ export function extractRouteCoords(route: any) {
             .map((c: any) => toLatLng(c))
             .filter(Boolean);
     }
-    if (
-        Array.isArray(geom) &&
-        geom[0] &&
-        geom[0].type === "LineString" &&
-        Array.isArray(geom[0].coordinates)
-    ) {
-        return geom[0].coordinates.map((c: any) => toLatLng(c)).filter(Boolean);
-    }
     return [];
 }
+
+export function extractRouteCoords(route: any) {
+    if (!route) return [];
+    if (route.coordinates && Array.isArray(route.coordinates)) return route.coordinates;
+    if (route.coords && Array.isArray(route.coords)) return route.coords;
+    const geom = route.geometry;
+    if (!geom) return [];
+    if (Array.isArray(geom)) return _extractFromGeomArray(geom);
+    return _extractFromGeomObject(geom);
+}
 export function getDistance(lat1: any, lng1: any, lat2: any, lng2: any) {
-    // Haversine simplifi�
+    // Haversine simplifié
     const R = 6371000;
     const toRad = (d: any) => (d * Math.PI) / 180;
     const dLat = toRad(lat2 - lat1);
@@ -212,19 +240,8 @@ export function validateRoute(route: any) {
         return { valid: false, errors: ["Route must have at least 2 points"] };
     }
     for (let i = 0; i < coords.length; i++) {
-        const c = coords[i];
-        if (!Array.isArray(c) || c.length < 2) continue;
-        const lat = Number(c[0]),
-            lng = Number(c[1]);
-        if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
-            return {
-                valid: false,
-                errors: ["Route contains invalid coordinates (NaN or non-numeric)"],
-            };
-        }
-        if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-            return { valid: false, errors: ["Route contains invalid coordinates (out of bounds)"] };
-        }
+        const err = _validateSingleCoord(coords[i]);
+        if (err) return { valid: false, errors: [err] };
     }
     return { valid: true, errors: [] };
 }

@@ -1,4 +1,4 @@
-﻿/*!
+/*!
  * GeoLeaf Core
  * (c) 2026 Mattieu Pottier
  * Released under the MIT License
@@ -6,7 +6,7 @@
  */
 /**
  * @module geoleaf.utils
- * @description Facade publique du module Utils - re-exporte depuis le sous-module.
+ * @description Facade public of the module Utils - re-exporte from the sous-module.
  * Note : utils/utils-api.js effectue l'assignation globale _g.GeoLeaf.Utils.
  */
 "use strict";

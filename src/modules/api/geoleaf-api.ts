@@ -1,9 +1,9 @@
 /**
- * GeoLeaf – API publique unifiée (assemblage)
- * Phase 4.3 — Architecture Controller refactorisée robuste
+ * GeoLeaf – Unified public API (assembly)
+ * Phase 4.3 — Refactored robust Controller architecture
  *
- * Construit l'objet GeoLeafAPI en déléguant vers APIController.
- * Ce module est chargé après globals.api.js (qui initialise _APIController).
+ * Builds the GeoLeafAPI object by delegating to APIController.
+ * This module is loaded after globals.api.js (which initializes _APIController).
  *
  * @module api/geoleaf-api
  */
@@ -15,59 +15,81 @@ const _g: any =
     typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : {};
 _g.GeoLeaf = _g.GeoLeaf || {};
 
-// Récupération de l'éventuel GeoLeaf déjà attaché par les modules
+// Retrieve any GeoLeaf already attached by the modules
 const existing = _g.GeoLeaf || {};
 
-// ⚠️ Les vérifications d'APIController sont déplacées dans chaque fonction (accès lazy).
-// Les throws au niveau module (avant Object.assign) empêchaient Rollup d'inclure l'API publique :
-// avec propertyReadSideEffects:false, Rollup analysait statiquement APIController = undefined
-// et concluait que le throw était inévitable → tout le code suivant = dead code éliminé.
+// ⚠️ APIController checks are deferred into each function (lazy access).
+// Module-level throws (before Object.assign) prevented Rollup from including the public API:
+// with propertyReadSideEffects:false, Rollup statically analyzed APIController = undefined
+// and concluded the throw was inevitable → all following code = dead code eliminated.
 //
-// La validation s'effectue maintenant à l'exécution, dans _getAPIController().
+// Validation now happens at runtime, inside _getAPIController().
 
-// Accès lazy et validé à l'APIController (appelé dans chaque méthode publique)
+// Lazy and validated access to APIController (called in each public method)
 function _getAPIController() {
     const ctrl = existing._APIController;
     if (!ctrl) {
         if (Log)
             Log.error(
-                "[GeoLeaf.API] APIController non disponible. Les modules API Controller doivent être chargés avant geoleaf.api.js"
+                "[GeoLeaf.API] APIController unavailable. API modules must be loaded before geoleaf.api.js"
             );
-        throw new Error("APIController manquant - vérifiez que les modules API sont chargés");
+        throw new Error("APIController missing - verify that API modules are loaded");
     }
     if (!ctrl.isInitialized) {
         if (Log)
             Log.error(
-                "[GeoLeaf.API] APIController en état défaillant. Vérification de l'état :",
+                "[GeoLeaf.API] APIController in failed state. Checking state:",
                 ctrl.getHealthStatus()
             );
-        throw new Error("APIController en état défaillant");
+        throw new Error("APIController in failed state");
     }
     return ctrl;
 }
 
 // ---------------------------------------------------------------------
-// API publique déléguée vers APIController
+// API public delegated vers APIController
 // ---------------------------------------------------------------------
 
+/**
+ * Initializes GeoLeaf with the provided options.
+ * Delegates to `APIController.geoleafInit`.
+ *
+ * @param {object} options - GeoLeaf initialization options (mapId, profile, theme, etc.)
+ * @returns {Promise<void>} Resolves when initialization is complete.
+ */
 function geoleafInit(options: any) {
     try {
         return _getAPIController().geoleafInit(options);
     } catch (error) {
-        if (Log) Log.error("[GeoLeaf.init] Erreur lors de l'initialisation :", error);
+        if (Log) Log.error("[GeoLeaf.init] Error during initialization:", error);
         throw error;
     }
 }
 
+/**
+ * Applies a visual theme to the GeoLeaf map container.
+ * Delegates to `APIController.geoleafSetTheme`.
+ *
+ * @param {string} theme - Theme identifier (e.g. `'default'`, `'dark'`, `'green'`).
+ * @returns {void}
+ */
 function geoleafSetTheme(theme: any) {
     try {
         return _getAPIController().geoleafSetTheme(theme);
     } catch (error) {
-        if (Log) Log.error("[GeoLeaf.setTheme] Erreur lors de l'application du thème :", error);
+        if (Log) Log.error("[GeoLeaf.setTheme] Error applying theme:", error);
         throw error;
     }
 }
 
+/**
+ * Loads a GeoLeaf configuration from a URL string or a plain config object.
+ * Validates input type before delegating to `APIController.geoleafLoadConfig`.
+ *
+ * @param {string | object} input - Remote URL to a JSON config file, or an inline config object.
+ * @returns {Promise<void>} Resolves when the configuration has been loaded and applied.
+ * @throws {TypeError} If `input` is null, undefined, or not a string/object.
+ */
 function geoleafLoadConfig(input: any) {
     if (
         input === null ||
@@ -81,18 +103,17 @@ function geoleafLoadConfig(input: any) {
     try {
         return _getAPIController().geoleafLoadConfig(input);
     } catch (error) {
-        if (Log)
-            Log.error("[GeoLeaf.loadConfig] Erreur lors du chargement de configuration :", error);
+        if (Log) Log.error("[GeoLeaf.loadConfig] Error loading configuration:", error);
         throw error;
     }
 }
 
 // ---------------------------------------------------------------------
-// Construction de l'API finale (mutation de l'objet global GeoLeaf)
+// Building of the API final (mutation de the object global GeoLeaf)
 // ---------------------------------------------------------------------
 
 const GeoLeafAPI = Object.assign(existing, {
-    // Méthodes principales
+    // Methods maines
     init: geoleafInit,
     setTheme: geoleafSetTheme,
     loadConfig: geoleafLoadConfig,
@@ -100,38 +121,61 @@ const GeoLeafAPI = Object.assign(existing, {
     // Constantes (source unique : constants/index.js)
     CONSTANTS: _g.GeoLeaf.CONSTANTS || {},
 
-    // Alias rétrocompat — BaseLayers = Baselayers
+    // Alias retrocompat — BaseLayers = Baselayers
     get BaseLayers() {
         return this.Baselayers;
     },
 
-    // Version (lue depuis le manifest ou les constantes)
+    // Version (lue from the manifest ou les constantes)
     version: (_g.GeoLeaf.CONSTANTS && _g.GeoLeaf.CONSTANTS.VERSION) || "1.1.0",
 
-    // Accès aux modules via APIController
+    /**
+     * Returns a registered GeoLeaf module by name via APIController.
+     * @param {string} name - Module name (e.g. `'poi'`, `'route'`, `'table'`).
+     * @returns {object | null} The module object, or `null` if not found.
+     */
     getModule: function (name: any) {
         const ctrl = existing._APIController;
         return ctrl && ctrl.moduleAccessFn ? ctrl.moduleAccessFn(name) : null;
     },
 
+    /**
+     * Returns `true` if a GeoLeaf module with the given name is registered.
+     * @param {string} name - Module name (e.g. `'poi'`, `'legend'`).
+     * @returns {boolean}
+     */
     hasModule: function (name: any) {
         const ctrl = existing._APIController;
         const mod = ctrl && ctrl.moduleAccessFn ? ctrl.moduleAccessFn(name) : null;
         return !!mod;
     },
 
-    // Accès aux namespaces via APIController
+    /**
+     * Returns a top-level GeoLeaf namespace by name (e.g. `GeoLeaf['POI']`).
+     * @param {string} name - Namespace key on the global `GeoLeaf` object.
+     * @returns {object | null} The namespace object, or `null` if absent.
+     */
     getNamespace: function (name: any) {
         // eslint-disable-next-line security/detect-object-injection
         return _g.GeoLeaf && name ? _g.GeoLeaf[name] || null : null;
     },
 
-    // Gestion des instances de cartes via APIController
+    /**
+     * Creates a new Leaflet map instance managed by GeoLeaf.
+     * @param {string} id - DOM element id for the map container.
+     * @param {object} [options] - Optional Leaflet / GeoLeaf map options.
+     * @returns {object | null} The Leaflet map instance, or `null` on failure.
+     */
     createMap: function (id: any, options: any) {
         const ctrl = existing._APIController;
         return ctrl && ctrl.geoleafCreateMap ? ctrl.geoleafCreateMap(id, options) : null;
     },
 
+    /**
+     * Retrieves a managed Leaflet map instance by its container id.
+     * @param {string} id - DOM element id of the target map container.
+     * @returns {object | null} The Leaflet map instance, or `null` if not found.
+     */
     getMap: function (id: any) {
         const ctrl = existing._APIController;
         return ctrl && ctrl.managers && ctrl.managers.factory
@@ -139,6 +183,10 @@ const GeoLeafAPI = Object.assign(existing, {
             : null;
     },
 
+    /**
+     * Returns all active Leaflet map instances managed by GeoLeaf.
+     * @returns {object[]} Array of Leaflet map instances (may be empty).
+     */
     getAllMaps: function () {
         const ctrl = existing._APIController;
         return ctrl && ctrl.managers && ctrl.managers.factory
@@ -146,6 +194,11 @@ const GeoLeafAPI = Object.assign(existing, {
             : [];
     },
 
+    /**
+     * Destroys and removes a managed Leaflet map instance.
+     * @param {string} id - DOM element id of the map container to remove.
+     * @returns {boolean} `true` if the map was found and removed, `false` otherwise.
+     */
     removeMap: function (id: any) {
         const ctrl = existing._APIController;
         if (
@@ -159,22 +212,29 @@ const GeoLeafAPI = Object.assign(existing, {
         return false;
     },
 
-    // Métriques et monitoring
+    /**
+     * Returns the current health status of the GeoLeaf APIController.
+     * Includes module load states, error counts, and initialization flags.
+     * @returns {object | null} Health status object, or `null` if APIController is unavailable.
+     */
     getHealth: function () {
         const ctrl = existing._APIController;
         return ctrl && ctrl.getHealthStatus ? ctrl.getHealthStatus() : null;
     },
 
-    // Phase 4 dedup: getMetrics was identical to getHealth — now delegates
+    /**
+     * Alias for {@link GeoLeafAPI.getHealth} — returns APIController metrics.
+     * @returns {object | null} Health status object.
+     */
     getMetrics: function () {
         return this.getHealth();
     },
 });
 
 if (Log) {
-    Log.info(`[GeoLeaf.API] API publique initialisée avec succès`);
+    Log.info(`[GeoLeaf.API] Public API initialized successfully`);
     const _ctrl = existing._APIController;
-    if (_ctrl) Log.info(`[GeoLeaf.API] Santé APIController :`, _ctrl.getHealthStatus());
+    if (_ctrl) Log.info(`[GeoLeaf.API] APIController health:`, _ctrl.getHealthStatus());
 }
 
 export { GeoLeafAPI };

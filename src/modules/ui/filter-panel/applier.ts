@@ -1,13 +1,14 @@
+/* eslint-disable security/detect-object-injection */
 /**
  * GeoLeaf UI Filter Panel - Applier
- * Application des filtres aux couches POI, Routes, GeoJSON
+ * Application des filtres aux layers POI, Routes, GeoJSON
  *
  * @module ui/filter-panel/applier
  */
 "use strict";
 
 import { getLog, getDistance } from "../../utils/general-utils.js";
-import { FilterPanelShared } from "./shared.js";
+import { FilterPanelShared } from "../../ui/filter-panel/shared.js";
 import { FilterPanelStateReader } from "./state-reader.js";
 import { Config as _Config } from "../../config/geoleaf-config/config-core.js";
 const Config: any = _Config;
@@ -16,13 +17,213 @@ import { GeoJSONCore } from "../../geojson/core.js";
 import { Route } from "../../geoleaf.route.js";
 import { Filters } from "../../geoleaf.filters.js";
 
-// Direct ESM bindings (P3-DEAD-01 complete)
+// Direct ESM bindings (P3-DEAD-01 completee)
 const getShared = () => FilterPanelShared;
-const getStateReader = () => FilterPanelStateReader;
 
 const FilterPanelApplier: any = {};
 
-// Cache et optimisations pour les performances
+// --- Module-level helpers for filterGeoJSONLayers ---
+
+function _getSearchFieldsFromLayerConfig(layerData: any): string[] | null {
+    if (!layerData || !layerData.config) return null;
+    if (layerData.config.search && Array.isArray(layerData.config.search.indexingFields)) {
+        return layerData.config.search.indexingFields;
+    }
+    if (Array.isArray(layerData.config.indexingFields)) return layerData.config.indexingFields;
+    if (Array.isArray(layerData.config.searchFields)) return layerData.config.searchFields;
+    return null;
+}
+
+function _getSearchFieldsFromProfile(): string[] | null {
+    try {
+        const activeProfile = (Config as any)._activeProfileData;
+        if (!activeProfile) return null;
+        if (!activeProfile.search) return null;
+        if (!activeProfile.search.filters) return null;
+        const searchFilter = activeProfile.search.filters.find((f: any) => f.type === "search");
+        if (searchFilter && Array.isArray(searchFilter.searchFields))
+            return searchFilter.searchFields;
+    } catch (_e) {
+        /* ignore */
+    }
+    return null;
+}
+
+function _getLayerSearchFields(GeoJSON: any, layerId: any): string[] {
+    const Log = getLog();
+    try {
+        const layerData = GeoJSON.getLayerData(layerId);
+        const fromConfig = _getSearchFieldsFromLayerConfig(layerData);
+        if (fromConfig) return fromConfig;
+    } catch (err) {
+        Log.warn(
+            "[GeoLeaf.UI.FilterPanel] Erreur r\u00e9cup\u00e9ration fields de recherche:",
+            err
+        );
+    }
+    try {
+        const fromProfile = _getSearchFieldsFromProfile();
+        if (fromProfile) return fromProfile;
+    } catch (err) {
+        Log.warn(
+            "[GeoLeaf.UI.FilterPanel] Erreur r\u00e9cup\u00e9ration fields par d\u00e9faut:",
+            err
+        );
+    }
+    return [
+        "title",
+        "description",
+        "properties.title",
+        "properties.name",
+        "properties.description",
+        "attributes.nom",
+    ];
+}
+
+function _featureMatchesSearch(
+    feature: any,
+    searchFields: string[],
+    searchLower: string,
+    Shared: any
+): boolean {
+    for (let i = 0; i < searchFields.length; i++) {
+        const fieldPath = searchFields[i];
+        let propertiesFieldPath = fieldPath;
+        if (fieldPath.startsWith("properties."))
+            propertiesFieldPath = fieldPath.substring("properties.".length);
+        let value = null;
+        if (feature.properties)
+            value = Shared.getNestedValue(feature.properties, propertiesFieldPath);
+        if (!value) value = Shared.getNestedValue(feature, fieldPath);
+        if (value && String(value).toLowerCase().includes(searchLower)) return true;
+    }
+    return false;
+}
+
+function _resolveCatId(props: any): string | null {
+    if (props.categoryId) return String(props.categoryId);
+    if (props.category) return String(props.category);
+    return null;
+}
+
+function _resolveSubId(props: any): string | null {
+    if (props.subcategoryId) return String(props.subcategoryId);
+    if (props.subCategoryId) return String(props.subCategoryId);
+    if (props.subcategory) return String(props.subcategory);
+    if (props.sub_category) return String(props.sub_category);
+    return null;
+}
+
+function _featurePassesCatFilter(
+    props: any,
+    hasCats: boolean,
+    hasSubs: boolean,
+    state: any
+): boolean {
+    const catId = _resolveCatId(props);
+    const subId = _resolveSubId(props);
+    if (!catId && !subId) return false;
+    if (hasSubs) {
+        if (!subId) return false;
+        if (!state.subCategoriesTree.includes(subId)) return false;
+    }
+    if (hasCats && !hasSubs) {
+        if (!catId) return false;
+        if (!state.categoriesTree.includes(catId)) return false;
+    }
+    return true;
+}
+
+function _getFeatureTags(props: any): string[] {
+    let featureTags = props.tags || [];
+    if (!Array.isArray(featureTags)) {
+        if (typeof featureTags === "string") {
+            featureTags = featureTags.split(/[,;]+/);
+        } else {
+            featureTags = [];
+        }
+    }
+    return featureTags.map((t: any) => String(t).trim()).filter(Boolean);
+}
+
+function _featurePassesProximityCheck(feature: any, state: any, Shared: any): boolean {
+    if (!state.proximity.center) return true;
+    const point = Shared.getRepresentativePoint(feature.geometry);
+    if (!point) return true;
+    const dist = getDistance(
+        state.proximity.center.lat,
+        state.proximity.center.lng,
+        point.lat,
+        point.lng
+    );
+    return dist <= state.proximity.radius;
+}
+
+interface _GeoFilterCtx {
+    hasSearchText: boolean;
+    searchText: string;
+    hasCats: boolean;
+    hasSubs: boolean;
+    hasTags: boolean;
+    selectedTags: string[];
+    hasProximity: boolean;
+    state: any;
+    GeoJSON: any;
+    Shared: any;
+}
+
+function _safeProps(feature: any): any {
+    return feature.properties ? feature.properties : {};
+}
+
+function _applyGeoFilter(feature: any, layerId: any, ctx: _GeoFilterCtx): boolean {
+    const safeProps = _safeProps(feature);
+    if (ctx.hasSearchText) {
+        const fields = _getLayerSearchFields(ctx.GeoJSON, layerId);
+        if (!_featureMatchesSearch(feature, fields, ctx.searchText.toLowerCase(), ctx.Shared))
+            return false;
+    }
+    if (ctx.hasCats || ctx.hasSubs) {
+        if (!_featurePassesCatFilter(safeProps, ctx.hasCats, ctx.hasSubs, ctx.state)) return false;
+    }
+    if (ctx.hasTags) {
+        const featureTags = _getFeatureTags(safeProps);
+        const hasAtLeastOneTag = ctx.selectedTags.some((tag: any) => featureTags.includes(tag));
+        if (!hasAtLeastOneTag) return false;
+    }
+    if (ctx.hasProximity) {
+        if (!_featurePassesProximityCheck(feature, ctx.state, ctx.Shared)) return false;
+    }
+    return true;
+}
+
+function _applyRouteFilters(baseRoutes: any[], state: any, skipRoutes: boolean): void {
+    const Log = getLog();
+    if (!state.dataTypes.routes) {
+        Route.hide();
+        return;
+    }
+    if (skipRoutes) {
+        Route.show();
+        return;
+    }
+    let filteredRoutes = baseRoutes;
+    if (Filters && typeof Filters.filterRouteList === "function") {
+        filteredRoutes = Filters.filterRouteList(baseRoutes, state);
+    }
+    Log.info("[GeoLeaf.UI.FilterPanel] Filters applied on routes.", {
+        total: baseRoutes.length,
+        result: filteredRoutes.length,
+    });
+    if (typeof Route.filterVisibility === "function") {
+        Route.filterVisibility(filteredRoutes);
+    } else if (typeof Route.loadFromConfig === "function") {
+        Route.loadFromConfig(filteredRoutes);
+    }
+    Route.show();
+}
+
+// Cache et optimisations for thes performances
 const _cachedFilterState = null;
 let _lastApplyTime = 0;
 const APPLY_DEBOUNCE_DELAY = 300; // 300ms
@@ -51,62 +252,50 @@ FilterPanelApplier.destroy = function () {
 };
 
 /**
- * Rafra�chit la visibilit� des POI selon la liste filtr�e.
- * IMPORTANT: Cette fonction filtre UNIQUEMENT les POI du syst�me POI traditionnel.
- * Les couches GeoJSON (point, line, polygon) sont g�r�es par filterGeoJSONLayers().
- * On n'appelle PAS filterFeatures() ici pour �viter de masquer les couches GeoJSON.
+ * Rafraîchit la visibilité des POI selon the list filtréee.
+ * IMPORTANT: Cette fonction filters UNIQUEMENT les POI du système POI traditionnel.
+ * Les GeoJSON layers (point, line, polygon) sont gérées par filterGeoJSONLayers().
+ * On n'appelle PAS filterFeatures() ici pour éviter de hide les GeoJSON layers.
  *
- * @param {Array} filteredPois - Liste des POI � afficher
+ * @param {Array} filteredPois - List des POI à display
  */
 FilterPanelApplier.refreshPoiLayer = function (filteredPois: any) {
     const Log = getLog();
 
-    // V�rifier si le syst�me POI est activ� dans la config
+    // Vérifier si le système POI est activé in the config
     const poiConfig = typeof Config.get === "function" ? Config.get("poiConfig") : null;
     if (poiConfig && poiConfig.enabled === false) {
-        Log.debug(
-            "[GeoLeaf.UI.FilterPanel] Syst�me POI d�sactiv�, pas de rafra�chissement de la couche POI."
-        );
+        Log.debug("[GeoLeaf.UI.FilterPanel] POI system disabled, skipping POI layer refresh.");
         return;
     }
 
     if (!POI) {
-        Log.warn(
-            "[GeoLeaf.UI.FilterPanel] GeoLeaf.POI indisponible, pas de rafra�chissement de la couche POI."
-        );
+        Log.warn("[GeoLeaf.UI.FilterPanel] GeoLeaf.POI unavailable, skipping POI layer refresh.");
         return;
     }
 
     if (typeof POI._clearAllForTests === "function") {
         POI._clearAllForTests();
     } else {
-        Log.warn("[GeoLeaf.UI.FilterPanel] GeoLeaf.POI._clearAllForTests indisponible.");
+        Log.warn("[GeoLeaf.UI.FilterPanel] GeoLeaf.POI._clearAllForTests unavailable.");
     }
 
     filteredPois.forEach(function (p: any) {
         try {
             POI.addPoi(p);
         } catch (err) {
-            Log.warn("[GeoLeaf.UI.FilterPanel] Impossible d'ajouter un POI filtr�:", p, err);
+            Log.warn("[GeoLeaf.UI.FilterPanel] Failed to add filtered POI:", p, err);
         }
     });
 
-    Log.debug(`[GeoLeaf.UI.FilterPanel] refreshPoiLayer: ${filteredPois.length} POI visibles`);
+    Log.debug(`[GeoLeaf.UI.FilterPanel] refreshPoiLayer: ${filteredPois.length} visible POIs`);
 };
 
 /**
- * Applique les filtres aux couches GeoJSON (polygones et polylignes)
- * @param {Object} state - �tat des filtres
+ * Applies thes filtres aux GeoJSON layers (polygons et polylines)
+ * @param {Object} state - État des filtres
  */
-FilterPanelApplier.filterGeoJSONLayers = function (state: any) {
-    const Log = getLog();
-    const Shared = getShared();
-    const GeoJSON = GeoJSONCore;
-
-    if (!GeoJSON || typeof GeoJSON.filterFeatures !== "function") {
-        return;
-    }
-
+function _buildGeoFilterCtx(state: any, GeoJSON: any, Shared: any): _GeoFilterCtx {
     const hasCats = state.categoriesTree && state.categoriesTree.length > 0;
     const hasSubs = state.subCategoriesTree && state.subCategoriesTree.length > 0;
     const hasTags = state.hasTags && state.selectedTags && state.selectedTags.length > 0;
@@ -114,344 +303,105 @@ FilterPanelApplier.filterGeoJSONLayers = function (state: any) {
     const hasProximity = state.proximity && state.proximity.active;
     const hasSearchText = state.hasSearchText && state.searchText;
     const searchText = state.searchText || "";
-    // getDistance imported from general-utils.js
-
-    // Helper pour obtenir les champs de recherche depuis la config de la couche
-    const getLayerSearchFields = (layerId: any) => {
-        try {
-            const layerData = GeoJSON.getLayerData(layerId);
-            if (layerData && layerData.config) {
-                // Priorit� 1: search.indexingFields (format standard des configs de couches)
-                if (
-                    layerData.config.search &&
-                    Array.isArray(layerData.config.search.indexingFields)
-                ) {
-                    return layerData.config.search.indexingFields;
-                }
-                // Priorit� 2: indexingFields � la racine (legacy)
-                if (Array.isArray(layerData.config.indexingFields)) {
-                    return layerData.config.indexingFields;
-                }
-                // Priorit� 3: searchFields (legacy)
-                if (Array.isArray(layerData.config.searchFields)) {
-                    return layerData.config.searchFields;
-                }
-            }
-        } catch (err) {
-            Log.warn("[GeoLeaf.UI.FilterPanel] Erreur r�cup�ration champs de recherche:", err);
-        }
-
-        // Fallback: champs par d�faut du profil
-        try {
-            const activeProfile = Config._activeProfileData;
-            if (activeProfile && activeProfile.search && activeProfile.search.filters) {
-                const searchFilter = activeProfile.search.filters.find(
-                    (f: any) => f.type === "search"
-                );
-                if (searchFilter && Array.isArray(searchFilter.searchFields)) {
-                    return searchFilter.searchFields;
-                }
-            }
-        } catch (err) {
-            Log.warn("[GeoLeaf.UI.FilterPanel] Erreur r�cup�ration champs par d�faut:", err);
-        }
-
-        // Fallback ultime
-        return [
-            "title",
-            "description",
-            "properties.title",
-            "properties.name",
-            "properties.description",
-            "attributes.nom",
-        ];
+    return {
+        hasSearchText: !!hasSearchText,
+        searchText,
+        hasCats,
+        hasSubs,
+        hasTags,
+        selectedTags,
+        hasProximity: !!hasProximity,
+        state,
+        GeoJSON,
+        Shared,
     };
+}
 
-    // Helper pour tester la recherche textuelle sur une feature
-    const matchesSearchText = (feature: any, layerId: any) => {
-        if (!hasSearchText) return true;
-
-        const searchFields = getLayerSearchFields(layerId);
-        const searchLower = searchText.toLowerCase();
-
-        for (let i = 0; i < searchFields.length; i++) {
-            const fieldPath = searchFields[i];
-            let value = null;
-
-            // Normaliser le chemin: si commence par "properties.", on le supprime
-            // puisque on va chercher directement dans feature.properties
-            let propertiesFieldPath = fieldPath;
-            if (fieldPath.startsWith("properties.")) {
-                propertiesFieldPath = fieldPath.substring("properties.".length);
-            }
-
-            // Tester d'abord dans properties
-            if (feature.properties) {
-                value = Shared.getNestedValue(feature.properties, propertiesFieldPath);
-            }
-
-            // Si pas trouv�, tester � la racine avec le chemin original
-            if (!value) {
-                value = Shared.getNestedValue(feature, fieldPath);
-            }
-
-            if (value && String(value).toLowerCase().includes(searchLower)) {
-                return true;
-            }
-        }
-
-        return false;
-    };
-
-    // Fonction de filtre commune pour polygones et lignes
-    const createFilterFunction = (_geometryType: any) => (feature: any, layerId: any) => {
-        const props = feature.properties || {};
-
-        // Filtrage par recherche textuelle
-        if (hasSearchText && !matchesSearchText(feature, layerId)) {
-            return false;
-        }
-
-        // Filtrage par cat�gorie/sous-cat�gorie
-        if (hasCats || hasSubs) {
-            const catId = props.categoryId || props.category || null;
-            const subId =
-                props.subcategoryId ||
-                props.subCategoryId ||
-                props.subcategory ||
-                props.sub_category ||
-                null;
-
-            // Si pas de cat�gorie sur cette feature, masquer quand filtre actif
-            if (!catId && !subId) return false;
-
-            // Si des sous-cat�gories sont s�lectionn�es
-            if (hasSubs) {
-                if (!subId || !state.subCategoriesTree.includes(String(subId))) {
-                    return false;
-                }
-            }
-
-            // Si seulement des cat�gories (pas de sous-cat)
-            if (hasCats && !hasSubs) {
-                if (!catId || !state.categoriesTree.includes(String(catId))) {
-                    return false;
-                }
-            }
-        }
-
-        // Filtrage par tags (au moins UN des tags s�lectionn�s doit �tre pr�sent)
-        if (hasTags) {
-            let featureTags = props.tags || [];
-            if (!Array.isArray(featureTags)) {
-                if (typeof featureTags === "string") {
-                    featureTags = featureTags.split(/[,;]+/);
-                } else {
-                    featureTags = [];
-                }
-            }
-            featureTags = featureTags.map((t: any) => String(t).trim()).filter(Boolean);
-
-            const hasAtLeastOneTag = selectedTags.some((tag: any) => featureTags.includes(tag));
-            if (!hasAtLeastOneTag) {
-                return false;
-            }
-        }
-
-        // Filtrage par proximit�
-        if (hasProximity && state.proximity.center && getDistance) {
-            const point = Shared.getRepresentativePoint(feature.geometry);
-            if (point) {
-                const distance = getDistance(
-                    state.proximity.center.lat,
-                    state.proximity.center.lng,
-                    point.lat,
-                    point.lng
-                );
-                if (distance > state.proximity.radius) {
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    };
-
-    // Filtrer les polygones (zones)
-    GeoJSON.filterFeatures(createFilterFunction("polygon"), { geometryType: "polygon" });
-
-    // Filtrer les polylignes (routes GeoJSON)
-    GeoJSON.filterFeatures(createFilterFunction("line"), { geometryType: "line" });
-
-    // Filtrer les points (POI GeoJSON - MultiPoint, Point, etc.)
-    GeoJSON.filterFeatures(createFilterFunction("point"), { geometryType: "point" });
+FilterPanelApplier.filterGeoJSONLayers = function (state: any) {
+    const Shared = getShared();
+    const GeoJSON = GeoJSONCore;
+    if (!GeoJSON || typeof GeoJSON.filterFeatures !== "function") return;
+    const ctx = _buildGeoFilterCtx(state, GeoJSON, Shared);
+    const filterFn = (_geometryType: any) => (feature: any, layerId: any) =>
+        _applyGeoFilter(feature, layerId, ctx);
+    GeoJSON.filterFeatures(filterFn("polygon"), { geometryType: "polygon" });
+    GeoJSON.filterFeatures(filterFn("line"), { geometryType: "line" });
+    GeoJSON.filterFeatures(filterFn("point"), { geometryType: "point" });
 };
 
 /**
- * Applique tous les filtres actifs avec debounce
- * @param {HTMLElement} panelEl - �l�ment du panneau de filtres
+ * Applies tous the filters actives avec debounce
  */
 FilterPanelApplier.applyFiltersNow = function (panelEl: any, skipRoutes: any) {
     _debouncedApplyFilters(panelEl, skipRoutes);
 };
 
 /**
- * Applique tous les filtres actifs imm�diatement (interne, avec protection contre les appels r�p�t�s)
+ * Applies tous the filters actives imm\u00e9diatement (internal)
  * @private
- * @param {HTMLElement} panelEl - �l�ment du panneau de filtres
- * @param {boolean} skipRoutes - Si true, skip le traitement des routes (preserve leurs styles)
  */
 FilterPanelApplier._applyFiltersImmediate = function (panelEl: any, skipRoutes: any) {
     const Log = getLog();
     const Shared = getShared();
-    const StateReader = getStateReader();
+    const StateReader = FilterPanelStateReader;
 
-    // �viter les appels r�p�t�s trop rapproch�s
     const now = Date.now();
-    if (now - _lastApplyTime < 100) return; // 100ms minimum entre les appels
+    if (now - _lastApplyTime < 100) return;
     _lastApplyTime = now;
 
     const basePois = Shared.getBasePois();
     const baseRoutes = Shared.getBaseRoutes();
     const state = StateReader.readFiltersFromPanel(panelEl);
 
-    // Filtrage des couches GeoJSON (polygones, polylignes)
     FilterPanelApplier.filterGeoJSONLayers(state);
 
     if (!basePois.length && !baseRoutes.length) {
-        Log.info("[GeoLeaf.UI.FilterPanel] Aucun POI ni route source trouv�.");
+        Log.info("[GeoLeaf.UI.FilterPanel] No source POI or route found.");
         return;
     }
 
-    // G�rer le filtrage et l'affichage des itin�raires via GeoLeaf.Route
     if (Route && typeof Route.isInitialized === "function" && Route.isInitialized()) {
-        if (state.dataTypes.routes) {
-            // Si skipRoutes=true, on affiche juste les routes existantes sans les recharger
-            if (skipRoutes) {
-                Route.show();
-            } else {
-                // Filtrer les routes
-                let filteredRoutes = baseRoutes;
-                filteredRoutes =
-                    Filters && typeof Filters.filterRouteList === "function"
-                        ? Filters.filterRouteList(baseRoutes, state)
-                        : baseRoutes;
-
-                Log.info("[GeoLeaf.UI.FilterPanel] Filtres appliqu�s sur les routes.", {
-                    total: baseRoutes.length,
-                    result: filteredRoutes.length,
-                });
-
-                // Utiliser filterVisibility() si disponible pour pr�server les styles
-                // Sinon, utiliser loadFromConfig() (comportement par d�faut)
-                if (typeof Route.filterVisibility === "function") {
-                    Route.filterVisibility(filteredRoutes);
-                } else if (typeof Route.loadFromConfig === "function") {
-                    Route.loadFromConfig(filteredRoutes);
-                }
-                Route.show();
-            }
-        } else {
-            Route.hide();
-        }
+        _applyRouteFilters(baseRoutes, state, skipRoutes);
     }
 
-    // Filtrer les POI
     const filtered = FilterPanelApplier.filterPoiList(basePois, state);
-
-    Log.info("[GeoLeaf.UI.FilterPanel] Filtres appliqu�s sur les POI.", {
+    Log.info("[GeoLeaf.UI.FilterPanel] Filters applied on POIs.", {
         total: basePois.length,
         result: filtered.length,
         filters: state,
     });
-
     FilterPanelApplier.refreshPoiLayer(filtered);
 };
 
 /**
- * Filtre une liste de POI selon les crit�res fournis
- * D�l�gue vers GeoLeaf.Filters.filterPoiList()
- *
- * @param {Array} basePois - Liste compl�te des POI
- * @param {Object} filterState - �tat des filtres
- * @returns {Array} POI filtr�s
+ * Filtre a list de POI based on thes criteria fournis
  */
 FilterPanelApplier.filterPoiList = function (basePois: any, filterState: any) {
     if (Filters && typeof Filters.filterPoiList === "function") {
         return Filters.filterPoiList(basePois, filterState);
     }
-
-    const Log = getLog();
-    Log.warn("[GeoLeaf.UI.FilterPanel] Module Filters non charg�, retour liste compl�te");
-    return basePois || [];
+    return basePois;
 };
 
 /**
- * Filtre une liste de routes selon les crit�res fournis
- * D�l�gue vers GeoLeaf.Filters.filterRouteList()
- *
- * @param {Array} baseRoutes - Liste compl�te des routes
- * @param {Object} filterState - �tat des filtres
- * @returns {Array} Routes filtr�es
+ * Filtre a list de routes based on thes criteria fournis
  */
 FilterPanelApplier.filterRouteList = function (baseRoutes: any, filterState: any) {
     if (Filters && typeof Filters.filterRouteList === "function") {
         return Filters.filterRouteList(baseRoutes, filterState);
     }
-
-    const Log = getLog();
-    Log.warn("[GeoLeaf.UI.FilterPanel] Module Filters non charg�, retour liste compl�te");
-    return baseRoutes || [];
+    return baseRoutes;
 };
 
 /**
- * Applique les filtres initiaux au chargement
+ * Applies initial filters by retrieving the panel from Shared
  */
 FilterPanelApplier.applyFiltersInitial = function () {
-    const Log = getLog();
     const Shared = getShared();
-    const StateReader = getStateReader();
-
     const panelEl = Shared.getFilterPanelElement();
-    if (!panelEl) {
-        Log.warn(
-            "[GeoLeaf.UI.FilterPanel] Panneau de filtres non trouv�, impossible d'appliquer les filtres initiaux."
-        );
-        return;
-    }
-
-    Log.info("[GeoLeaf.UI.FilterPanel] Application des filtres initiaux...");
-
-    const state = StateReader.readFiltersFromPanel(panelEl);
-    const basePois = Shared.getBasePois();
-    const baseRoutes = Shared.getBaseRoutes();
-
-    if (!basePois.length && !baseRoutes.length) {
-        Log.info("[GeoLeaf.UI.FilterPanel] Aucun POI ni route source trouv�.");
-        return;
-    }
-
-    // G�rer les itin�raires
-    if (Route && typeof Route.isInitialized === "function" && Route.isInitialized()) {
-        if (state.dataTypes.routes) {
-            const filteredRoutes = FilterPanelApplier.filterRouteList(baseRoutes, state);
-            if (typeof Route.loadFromConfig === "function") {
-                Route.loadFromConfig(filteredRoutes);
-            }
-            Route.show();
-        } else {
-            Route.hide();
-        }
-    }
-
-    // Filtrer et charger les POI
-    const filtered = FilterPanelApplier.filterPoiList(basePois, state);
-    Log.info("[GeoLeaf.UI.FilterPanel] POI filtr�s pour chargement initial.", {
-        total: basePois.length,
-        result: filtered.length,
-    });
-
-    FilterPanelApplier.refreshPoiLayer(filtered);
+    if (!panelEl) return;
+    _lastApplyTime = 0;
+    FilterPanelApplier._applyFiltersImmediate(panelEl, false);
 };
 
 export { FilterPanelApplier };

@@ -1,8 +1,24 @@
 /**
- * globals.ui-lite.ts — Bridge UMD/ESM : B6 + B7 + B9 — sans labels (~15 KB min)
- * PERF-02 build "core lite"
+ * @module globals.ui-lite
  *
- * @see globals.ui.ts pour la version complète
+ * @description
+ * UMD/ESM bridge — B6 + B7 + B9 Lite — UI without Labels (~15 KB min excluded).
+ *
+ * This runtime initialization module is the Lite variant of `globals.ui.ts`.
+ * It is imported as a side-effect by `globals-lite.ts` (PERF-02 build).
+ *
+ * Excluded vs full variant:
+ *   - `Labels` module (~15 KB min) — `LabelButtonManager`, `LabelRenderer`, `Labels`
+ *
+ * Registers (same as `globals.ui` minus Labels):
+ *   - **B6** — Legend (`LegendControl`, `LegendGenerator`, `LegendRenderer`),
+ *     Layer Manager (`BasemapSelector`, `CacheSection`, `LMControl`, `LMRenderer`,
+ *     `LMShared`, `StyleSelector`)
+ *   - **B7** — Themes (`ThemeCache`, `ThemeLoader`, `ThemeSelector`, `ThemeApplier*`)
+ *   - **B9** — UI components, content builder, filter panel, mobile/desktop toolbar
+ *
+ * @see globals.ui for the full variant (includes Labels)
+ * @see globals-lite for the Lite orchestrator
  */
 
 // B6 : legend, layer-manager (labels exclu)
@@ -55,7 +71,7 @@ const _g: any =
 
 _g.GeoLeaf = _g.GeoLeaf || {};
 
-// B6 assignations (sans labels)
+// B6 assignations (without thebels)
 _g.GeoLeaf._LegendControl = LegendControl;
 _g.GeoLeaf._LegendGenerator = LegendGenerator;
 _g.GeoLeaf._LegendRenderer = LegendRenderer;

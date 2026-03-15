@@ -6,15 +6,15 @@
  */
 
 /**
- * GeoLeaf Core Lite — Build allégé sans modules optionnels lourds.
- * Exclut : Table (~26 KB min), Labels (~8 KB min), Route (~18 KB min), VectorTiles (~20 KB min).
- * Cible : bundle gzip < 130 KB (vs 148 KB full).
+ * GeoLeaf Core Lite — Lightweight build without heavy optional modules.
+ * Excludes: Table (~26 KB min), Labels (~8 KB min), Route (~18 KB min), VectorTiles (~20 KB min).
+ * Target: bundle gzip < 130 KB (vs 148 KB full).
  *
- * Modules inclus : Core, UI, POI, Legend, LayerManager, Baselayers, Themes, GeoJSON, Config,
- *                  Utils, Log, Security, Errors, Validators, Filters, Helpers.
+ * Included modules: Core, UI, POI, Legend, LayerManager, Baselayers, Themes, GeoJSON, Config,
+ *                   Utils, Log, Security, Errors, Validators, Filters, Helpers.
  *
  * @version 1.1.0
- * @see src/bundle-esm-entry.ts pour le build complet
+ * @see src/bundle-esm-entry.ts for the full build
  */
 
 // ── Side-effects : globals lite + bootstrap ──
@@ -23,7 +23,7 @@ import "./app/helpers.js";
 import "./app/init.js";
 import "./app/boot.js";
 
-// ── Module loader allégé (sans table / labels / route) ──
+// ── Lightweight module loader (without table / labels / route) ──
 const _gl: any = typeof globalThis !== "undefined" ? globalThis : window;
 _gl.GeoLeaf = _gl.GeoLeaf || {};
 _gl.GeoLeaf._loadModule = async function (moduleName: any) {

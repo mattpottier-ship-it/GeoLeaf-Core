@@ -12,20 +12,71 @@ import { LayerManager } from "../../geoleaf.layer-manager.js";
 import { GeoJSONCore } from "../../geojson/core.js";
 const _Config: any = Config;
 
+function _showLegendOverlay() {
+    if (Legend && typeof Legend.showLoadingOverlay === "function") {
+        Legend.showLoadingOverlay();
+    }
+}
+function _hideLegendOverlay() {
+    if (Legend && typeof Legend.hideLoadingOverlay === "function") {
+        Legend.hideLoadingOverlay();
+    }
+}
+function _dispatchCustomEvent(name: string, detail: Record<string, unknown>) {
+    try {
+        document.dispatchEvent(new CustomEvent(name, { detail }));
+    } catch (_e: any) {
+        /* silent */
+    }
+}
+function _refreshLayerManager() {
+    if (LayerManager && LayerManager.refresh) {
+        LayerManager.refresh();
+    }
+}
+
+function _updateLoadingProgress(p: number): void {
+    try {
+        if (
+            typeof window !== "undefined" &&
+            (window as any)._glLoadingScreen &&
+            typeof (window as any)._glLoadingScreen.updateProgress === "function"
+        ) {
+            (window as any)._glLoadingScreen.updateProgress(p);
+        }
+    } catch (_e: any) {
+        /* ignore */
+    }
+}
+
+async function _loadLayersInBatches(
+    visibleLayers: any[],
+    batchSize: number,
+    applyFn: (cfg: any) => Promise<void>
+): Promise<void> {
+    for (let i = 0; i < visibleLayers.length; i += batchSize) {
+        const batch = visibleLayers.slice(i, i + batchSize);
+        await Promise.all(batch.map((layerConfig: any) => applyFn(layerConfig)));
+        if (i === 0) {
+            _updateLoadingProgress(98);
+        }
+    }
+}
+
 /**
- * Module Theme Applier
+ * Theme Applier module
  * @namespace _ThemeApplier
  * @private
  */
 const _ThemeApplier: any = {
-    /** @type {string|null} Thème actuellement actif */
+    /** @type {string|null} Currently active theme */
     _currentThemeId: null,
 
-    /** @type {boolean} Flag pour savoir si c'est le premier chargement */
+    /** @type {boolean} Flag pour savoir si c'est le premier loading */
     _isFirstLoad: true,
 
     /**
-     * Initialise le ThemeApplier
+     * Initializes the ThemeApplier
      * @private
      */
     _init() {
@@ -48,125 +99,61 @@ const _ThemeApplier: any = {
     },
 
     /**
-     * Applique un thème
-     * @param {Object} theme - Configuration du thème
+     * Applies a theme
+     * @param {Object} theme - Configuration of the theme
      * @param {Object} [options] - Options d'application
      * @param {boolean} [options.fitBounds] - Force le fitBounds
      * @returns {Promise<void>}
      */
     applyTheme(theme: any, options: any = {}) {
-        // Initialiser si nécessaire
         if (!this._pendingLayerConfigs) {
             this._init();
         }
-
-        if (Legend && typeof Legend.showLoadingOverlay === "function") {
-            Legend.showLoadingOverlay();
-        }
+        _showLegendOverlay();
 
         if (!theme || !theme.id) {
-            return Promise.reject(new Error("Thème invalide"));
+            return Promise.reject(new Error("Invalid theme"));
         }
-
-        // Vérifier les dépendances
         if (!GeoJSONCore || !LayerManager) {
-            return Promise.reject(new Error("Modules GeoJSON ou LayerManager non disponibles"));
+            return Promise.reject(new Error("GeoJSON or LayerManager modules not available"));
         }
 
-        // Notifier le début du chargement du thème
-        try {
-            document.dispatchEvent(
-                new CustomEvent("geoleaf:theme:applying", {
-                    detail: {
-                        themeId: theme.id,
-                        themeName: theme.name || theme.label || theme.id,
-                    },
-                })
-            );
-        } catch (_e: any) {
-            /* silencieux */
-        }
+        _dispatchCustomEvent("geoleaf:theme:applying", {
+            themeId: theme.id,
+            themeName: theme.name || theme.label || theme.id,
+        });
 
-        // Désactiver toutes les couches d'abord
+        return this._applyThemeLayers(theme, options);
+    },
+
+    _applyThemeLayers(theme: any, options: any) {
         this._hideAllLayers();
 
-        // Appliquer les couches du thème avec chargement optimisé par lots
         const layerConfigs = theme.layers || [];
-
-        // Récupérer la configuration de performance depuis le profil
         const profileConfig = _Config?.Profile?.getActiveProfileConfig();
         const perfConfig = profileConfig?.performance || {};
-        // fitBounds désactivé : le positionnement se fait via map.bounds du profil
         const enableFitBounds = false;
-
-        // Séparer les couches visibles et invisibles
-        const visibleLayers = layerConfigs.filter((config: any) => config.visible !== false);
-
-        // Charger d'abord les couches visibles par lots
+        const visibleLayers = layerConfigs.filter((cfg: any) => cfg.visible !== false);
         const BATCH_SIZE = perfConfig.themeBatchSize || 3;
-
-        // Helper progression pour l'écran de chargement (97→99)
-        const updateProgress = (p: any) => {
-            try {
-                if (
-                    typeof window !== "undefined" &&
-                    (window as any)._glLoadingScreen &&
-                    typeof (window as any)._glLoadingScreen.updateProgress === "function"
-                ) {
-                    (window as any)._glLoadingScreen.updateProgress(p);
-                }
-            } catch (_e: any) {
-                /* ignore */
-            }
-        };
-
-        const loadInBatches = async (layers: any) => {
-            for (let i = 0; i < layers.length; i += BATCH_SIZE) {
-                const batch = layers.slice(i, i + BATCH_SIZE);
-                await Promise.all(batch.map((layerConfig: any) => this._applyLayerConfig(layerConfig)));
-
-                if (i === 0) {
-                    updateProgress(98);
-                }
-            }
-        };
-
         const self = this;
 
-        return loadInBatches(visibleLayers)
+        return _loadLayersInBatches(visibleLayers, BATCH_SIZE, (cfg) => this._applyLayerConfig(cfg))
             .then(() => {
-                updateProgress(98);
+                _updateLoadingProgress(98);
                 return Promise.resolve();
             })
             .then(() => {
-                updateProgress(99);
+                _updateLoadingProgress(99);
                 self._currentThemeId = theme.id;
-
-                // Rafraîchir le LayerManager
-                if (LayerManager && LayerManager.refresh) {
-                    LayerManager.refresh();
-                }
-
-                // Synchroniser l'état de visibilité dans la légende
+                _refreshLayerManager();
                 self._syncLegendVisibility();
-
-                // Événement de thème appliqué
-                try {
-                    const themeNotificationEvent = new CustomEvent("geoleaf:theme:applied", {
-                        detail: {
-                            themeId: theme.id,
-                            themeName: theme.name || theme.label || theme.id,
-                            layerCount: visibleLayers.length,
-                            totalLayersInTheme: layerConfigs.length,
-                            timestamp: new Date().toISOString(),
-                        },
-                    });
-                    document.dispatchEvent(themeNotificationEvent);
-                } catch (_e: any) {
-                    // Silencieux
-                }
-
-                // FitBounds selon la configuration
+                _dispatchCustomEvent("geoleaf:theme:applied", {
+                    themeId: theme.id,
+                    themeName: theme.name || theme.label || theme.id,
+                    layerCount: visibleLayers.length,
+                    totalLayersInTheme: layerConfigs.length,
+                    timestamp: new Date().toISOString(),
+                });
                 const shouldFitBounds =
                     options.fitBounds === true || (self._isFirstLoad && enableFitBounds);
                 if (shouldFitBounds) {
@@ -180,14 +167,12 @@ const _ThemeApplier: any = {
                 throw err;
             })
             .finally(() => {
-                if (Legend && typeof Legend.hideLoadingOverlay === "function") {
-                    Legend.hideLoadingOverlay();
-                }
+                _hideLegendOverlay();
             });
     },
 
     /**
-     * Récupère l'ID du thème actuellement actif
+     * Retrieves the ID of the theme currentlement active
      * @returns {string|null}
      */
     getCurrentThemeId() {

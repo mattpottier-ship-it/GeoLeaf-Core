@@ -1,4 +1,4 @@
-﻿/*!
+/*!
  * GeoLeaf Core
  * © 2026 Mattieu Pottier
  * Released under the MIT License
@@ -6,7 +6,7 @@
  */
 
 /**
- * Style Resolver - Helper pour résoudre les couleurs depuis les styleRules des couches
+ * Style Resolver - Helper pour resolve les colors from thes styleRules des layers
  * @module helpers/style-resolver
  */
 
@@ -69,6 +69,27 @@ interface PoiWithLayer {
     _layerConfig?: { id: string };
 }
 
+function _resolveCategoryId(poi: PoiWithLayer): unknown {
+    return (
+        poi.categoryId ??
+        poi.category ??
+        (poi.attributes as Record<string, unknown> | undefined)?.categoryId ??
+        (poi.properties as Record<string, unknown> | undefined)?.categoryId ??
+        (poi.properties as Record<string, unknown> | undefined)?.category
+    );
+}
+
+function _resolveSubCategoryId(poi: PoiWithLayer): unknown {
+    return (
+        poi.subCategoryId ??
+        poi.subCategory ??
+        (poi as { sub_category?: string }).sub_category ??
+        (poi.attributes as Record<string, unknown> | undefined)?.subCategoryId ??
+        (poi.properties as Record<string, unknown> | undefined)?.subCategoryId ??
+        (poi.properties as Record<string, unknown> | undefined)?.sub_category
+    );
+}
+
 export function getColorsFromLayerStyle(
     poi: PoiWithLayer | null | undefined,
     layerId: string | null | undefined
@@ -81,20 +102,8 @@ export function getColorsFromLayerStyle(
     const styleConfig = layerData.currentStyle;
     if (!styleConfig?.styleRules) return null;
 
-    const categoryId =
-        poi.categoryId ??
-        poi.category ??
-        (poi.attributes as Record<string, unknown> | undefined)?.categoryId ??
-        (poi.properties as Record<string, unknown> | undefined)?.categoryId ??
-        (poi.properties as Record<string, unknown> | undefined)?.category;
-
-    const subCategoryId =
-        poi.subCategoryId ??
-        poi.subCategory ??
-        (poi as { sub_category?: string }).sub_category ??
-        (poi.attributes as Record<string, unknown> | undefined)?.subCategoryId ??
-        (poi.properties as Record<string, unknown> | undefined)?.subCategoryId ??
-        (poi.properties as Record<string, unknown> | undefined)?.sub_category;
+    const categoryId = _resolveCategoryId(poi);
+    const subCategoryId = _resolveSubCategoryId(poi);
 
     if (subCategoryId) {
         const rule = styleConfig.styleRules.find(

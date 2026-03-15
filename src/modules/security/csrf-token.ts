@@ -1,4 +1,4 @@
-﻿/*!
+/*!
  * GeoLeaf Core
  * © 2026 Mattieu Pottier
  * Released under the MIT License
@@ -10,16 +10,19 @@
  * @description CSRF Token Manager — generates and validates CSRF tokens.
  */
 
-import { Log } from '../log/index.js';
+import { Log } from "../log/index.js";
 
-const _g = typeof globalThis !== 'undefined'
-    ? globalThis as Window & typeof globalThis
-    : (typeof window !== 'undefined' ? window : {} as Window);
+const _g =
+    typeof globalThis !== "undefined"
+        ? (globalThis as Window & typeof globalThis)
+        : typeof window !== "undefined"
+          ? window
+          : ({} as Window);
 
 export interface SecureCookieOptions {
     maxAge?: number;
     path?: string;
-    sameSite?: 'Strict' | 'Lax' | 'None';
+    sameSite?: "Strict" | "Lax" | "None";
     secure?: boolean;
 }
 
@@ -61,9 +64,12 @@ export const CSRFToken: CSRFTokenInternal = {
             this._token = this._generateToken();
             this._tokenExpiry = Date.now() + this._tokenDuration;
             this._startAutoRefresh();
-            Log.info('[CSRF] Token initialized');
+            Log.info("[CSRF] Token initialized");
         } catch (e) {
-            Log.error('[CSRF] Init failed — crypto.getRandomValues unavailable:', (e as Error).message);
+            Log.error(
+                "[CSRF] Init failed — crypto.getRandomValues unavailable:",
+                (e as Error).message
+            );
             this._token = null;
         }
     },
@@ -73,22 +79,22 @@ export const CSRFToken: CSRFTokenInternal = {
             const array = new Uint8Array(32);
             _g.crypto.getRandomValues(array);
             return btoa(String.fromCharCode(...array))
-                .replace(/\+/g, '-')
-                .replace(/\//g, '_')
-                .replace(/=/g, '');
+                .replace(/\+/g, "-")
+                .replace(/\//g, "_")
+                .replace(/=/g, "");
         }
-        Log.error('[CSRF] crypto.getRandomValues not available — CSRF protection disabled');
-        throw new Error('[CSRF] Secure random number generation not available');
+        Log.error("[CSRF] crypto.getRandomValues not available — CSRF protection disabled");
+        throw new Error("[CSRF] Secure random number generation not available");
     },
 
     getToken(): string | null {
         if (!this._token || Date.now() >= (this._tokenExpiry ?? 0)) {
-            Log.info('[CSRF] Token expired, generating new one');
+            Log.info("[CSRF] Token expired, generating new one");
             try {
                 this._token = this._generateToken();
                 this._tokenExpiry = Date.now() + this._tokenDuration;
             } catch (e) {
-                Log.error('[CSRF] Token generation failed:', (e as Error).message);
+                Log.error("[CSRF] Token generation failed:", (e as Error).message);
                 this._token = null;
             }
         }
@@ -96,17 +102,17 @@ export const CSRFToken: CSRFTokenInternal = {
     },
 
     validateToken(token: string | null | undefined): boolean {
-        if (!token || typeof token !== 'string') return false;
+        if (!token || typeof token !== "string") return false;
         if (token === this._token && Date.now() < (this._tokenExpiry ?? 0)) return true;
-        Log.warn('[CSRF] Token validation failed');
+        Log.warn("[CSRF] Token validation failed");
         return false;
     },
 
     addTokenToData<T extends FormData | Record<string, unknown>>(data: T): T {
         const token = this.getToken();
         if (data instanceof FormData) {
-            (data as FormData).append('csrf_token', token ?? '');
-        } else if (typeof data === 'object' && data !== null) {
+            (data as FormData).append("csrf_token", token ?? "");
+        } else if (typeof data === "object" && data !== null) {
             (data as Record<string, unknown>).csrf_token = token;
         }
         return data;
@@ -115,27 +121,27 @@ export const CSRFToken: CSRFTokenInternal = {
     addTokenToHeaders(options: Record<string, unknown> = {}): Record<string, unknown> {
         const token = this.getToken();
         if (!options.headers) options.headers = {};
-        (options.headers as Record<string, string>)['X-CSRF-Token'] = token ?? '';
+        (options.headers as Record<string, string>)["X-CSRF-Token"] = token ?? "";
         return options;
     },
 
     createTokenInput(): HTMLInputElement {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'csrf_token';
-        input.value = this.getToken() ?? '';
-        input.className = 'csrf-token-input';
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = "csrf_token";
+        input.value = this.getToken() ?? "";
+        input.className = "csrf-token-input";
         return input;
     },
 
     addTokenToForm(form: HTMLFormElement): void {
         if (!form || !(form instanceof HTMLFormElement)) {
-            Log.error('[CSRF] Invalid form element');
+            Log.error("[CSRF] Invalid form element");
             return;
         }
         const existingInput = form.querySelector('input[name="csrf_token"]');
         if (existingInput) {
-            (existingInput as HTMLInputElement).value = this.getToken() ?? '';
+            (existingInput as HTMLInputElement).value = this.getToken() ?? "";
             return;
         }
         form.appendChild(this.createTokenInput());
@@ -144,8 +150,8 @@ export const CSRFToken: CSRFTokenInternal = {
     validateFormToken(data: FormData | Record<string, unknown>): boolean {
         let token: string | unknown;
         if (data instanceof FormData) {
-            token = data.get('csrf_token');
-        } else if (typeof data === 'object' && data !== null) {
+            token = data.get("csrf_token");
+        } else if (typeof data === "object" && data !== null) {
             token = (data as Record<string, unknown>).csrf_token;
         } else {
             token = undefined;
@@ -154,20 +160,15 @@ export const CSRFToken: CSRFTokenInternal = {
     },
 
     setSecureCookie(cookieName: string, value: string, options: SecureCookieOptions = {}): void {
-        const {
-            maxAge = 3600,
-            path = '/',
-            sameSite = 'Strict',
-            secure = true
-        } = options;
+        const { maxAge = 3600, path = "/", sameSite = "Strict", secure = true } = options;
 
         let cookie = `${encodeURIComponent(cookieName)}=${encodeURIComponent(value)}`;
         cookie += `; Max-Age=${maxAge}`;
         cookie += `; Path=${path}`;
         cookie += `; SameSite=${sameSite}`;
 
-        if (secure && _g.location?.protocol === 'https:') {
-            cookie += '; Secure';
+        if (secure && _g.location?.protocol === "https:") {
+            cookie += "; Secure";
         }
 
         document.cookie = cookie;
@@ -175,15 +176,15 @@ export const CSRFToken: CSRFTokenInternal = {
     },
 
     _startAutoRefresh(): void {
-        const refreshInterval = this._tokenDuration - (5 * 60 * 1000);
+        const refreshInterval = this._tokenDuration - 5 * 60 * 1000;
         this._refreshIntervalId = setInterval(() => {
-            Log.info('[CSRF] Auto-refreshing token');
+            Log.info("[CSRF] Auto-refreshing token");
             this._token = this._generateToken();
             this._tokenExpiry = Date.now() + this._tokenDuration;
 
-            if (typeof CustomEvent !== 'undefined') {
-                const event = new CustomEvent('geoleaf:csrf:refreshed', {
-                    detail: { token: this._token }
+            if (typeof CustomEvent !== "undefined") {
+                const event = new CustomEvent("geoleaf:csrf:refreshed", {
+                    detail: { token: this._token },
                 });
                 document.dispatchEvent(event);
             }
@@ -197,17 +198,17 @@ export const CSRFToken: CSRFTokenInternal = {
         }
         this._token = null;
         this._tokenExpiry = null;
-        Log.debug('[CSRF] Destroyed');
+        Log.debug("[CSRF] Destroyed");
     },
 
     rotateToken(): void {
-        Log.info('[CSRF] Rotating token');
+        Log.info("[CSRF] Rotating token");
         this._token = this._generateToken();
         this._tokenExpiry = Date.now() + this._tokenDuration;
 
-        if (typeof CustomEvent !== 'undefined') {
-            const event = new CustomEvent('geoleaf:csrf:rotated', {
-                detail: { token: this._token }
+        if (typeof CustomEvent !== "undefined") {
+            const event = new CustomEvent("geoleaf:csrf:rotated", {
+                detail: { token: this._token },
             });
             document.dispatchEvent(event);
         }
@@ -217,7 +218,7 @@ export const CSRFToken: CSRFTokenInternal = {
         return {
             hasToken: !!this._token,
             expiresIn: this._tokenExpiry ? Math.max(0, this._tokenExpiry - Date.now()) : 0,
-            isValid: !!(this._token && Date.now() < (this._tokenExpiry ?? 0))
+            isValid: !!(this._token && Date.now() < (this._tokenExpiry ?? 0)),
         };
-    }
+    },
 };

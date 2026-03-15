@@ -1,7 +1,8 @@
+/* eslint-disable security/detect-object-injection */
 /**
  * GeoLeaf POI Module - Section Orchestrator
- * Orchestration du rendu des sections (dispatcher, extraction valeurs, accordéons)
- * Phase 6.2 - Extraction depuis core.js
+ * Orchestration du rendu des sections (dispatcher, extraction values, accordions)
+ * Phase 6.2 - Extraction from core.js
  */
 import { Log } from "../../log/index.js";
 import { ComponentRenderers } from "./component-renderers.ts";
@@ -10,7 +11,7 @@ import { MediaRenderers } from "./media-renderers.ts";
 import { resolveField } from "../../utils/general-utils.js";
 
 /**
- * Orchestrateur de sections pour le side panel POI
+ * Orchestrateur de sections for the side panel POI
  */
 class SectionOrchestrator {
     componentRenderers: any = null;
@@ -19,7 +20,7 @@ class SectionOrchestrator {
     constructor() {}
 
     /**
-     * Initialise les renderers (lazy loading)
+     * Initializes the renderers (lazy loading)
      * @private
      */
     _initRenderers() {
@@ -35,58 +36,99 @@ class SectionOrchestrator {
     }
 
     /**
-     * Récupère la valeur d'un champ avec support du dot notation
-     * @param {object} poi - POI complet
-     * @param {string} fieldPath - Chemin du champ (ex: "attributes.address.city")
+     * Decrit a value for thes logs.
+     * @private
+     */
+    _describeVal(v: any): string {
+        if (v === undefined) return "undefined";
+        if (v === null) return "null";
+        if (v === "") return "\u201c\u201d (empty string)";
+        if (Array.isArray(v)) return `Array(${v.length})`;
+        if (v && typeof v === "object") return `Object(${Object.keys(v).length} keys)`;
+        return String(v);
+    }
+
+    /**
+     * Determine si the value of a field est empty.
+     * Note: 0 est non-empty (value valide pour prix, metriques, etc.)
+     * @private
+     */
+    _isEmptyFieldValue(v: any): boolean {
+        if (v === null || v === undefined || v === "") return true;
+        if (Array.isArray(v)) return v.length === 0;
+        if (typeof v === "object") return Object.keys(v).length === 0;
+        return false;
+    }
+
+    /**
+     * Dispatche the render selon the type of section via une table de correspondance.
+     * CC=3 : pas de switch, tous les case sont des fonctions dans DISPATCH.
+     * @private
+     */
+    async _dispatchSection(section: any, poi: any, fieldValue: any): Promise<any> {
+        const f = this.fieldRenderers;
+        const m = this.mediaRenderers;
+        const comp = this.componentRenderers;
+        const DISPATCH: Record<string, () => any> = {
+            text: () => f.renderText(section, poi, fieldValue),
+            longtext: () => f.renderText(section, poi, fieldValue),
+            number: () => f.renderText(section, poi, String(fieldValue)),
+            metric: () =>
+                f.renderText(
+                    section,
+                    poi,
+                    (section.prefix || "") + String(fieldValue) + (section.suffix || "")
+                ),
+            image: () => m.renderImage(section, fieldValue),
+            gallery: () => m.renderGallery(section, fieldValue),
+            badge: () => comp.renderBadge(section, fieldValue, poi),
+            link: () => comp.renderLink(section, fieldValue),
+            list: () => comp.renderList(section, fieldValue),
+            table: () => comp.renderTable(section, fieldValue),
+            tags: () => comp.renderTags(section, fieldValue),
+            rating: () => comp.renderRating(section, fieldValue),
+            reviews: () => comp.renderReviews(section, fieldValue),
+        };
+        const fn = DISPATCH[section.type];
+        if (!fn) {
+            if (Log) Log.warn("[POI] Type de section inconnu:", section.type);
+            return null;
+        }
+        return await fn();
+    }
+
+    /**
+     * Recupere the value of a field avec support du dot notation.
+     * @param {object} poi - POI complete
+     * @param {string} fieldPath - Path du field (ex: "attributes.address.city")
      * @returns {*}
      */
     getFieldValue(poi: any, fieldPath: any) {
         if (!fieldPath) return null;
-
         const resolve_fn =
             resolveField ||
             function (obj: any, path: any) {
-                const parts = path.split(".");
-                let current: any = obj;
-                for (const part of parts) {
-                    if (current && typeof current === "object" && part in current) {
-                        current = current[part];
+                let cur: any = obj;
+                for (const part of path.split(".")) {
+                    if (cur && typeof cur === "object" && part in cur) {
+                        cur = cur[part];
                     } else {
                         return null;
                     }
                 }
-                return current;
+                return cur;
             };
-
         const value = resolve_fn(poi, fieldPath);
-
-        if (Log && Log.info) {
-            Log.info(
-                "[POI] getFieldValue:",
-                fieldPath,
-                "→",
-                value === undefined
-                    ? "undefined"
-                    : value === null
-                      ? "null"
-                      : value === ""
-                        ? '""(empty string)'
-                        : Array.isArray(value)
-                          ? `Array(${value.length})`
-                          : value && typeof value === "object"
-                            ? `Object(${Object.keys(value).length} keys)`
-                            : value
-            );
-        }
-
+        if (Log && Log.info)
+            Log.info("[POI] getFieldValue:", fieldPath, "\u2192", this._describeVal(value));
         return value;
     }
 
     /**
-     * Wrappe un contenu dans un accordéon <details>
+     * Wrappe un contenu dans un accordion <details>
      * @param {object} section - Configuration de section
-     * @param {HTMLElement} content - Contenu à wrapper
-     * @param {boolean} isOpen - Ouvrir par défaut
+     * @param {HTMLElement} content - Contenu to wrapper
+     * @param {boolean} isOpen - Ouvrir by default
      * @returns {HTMLElement}
      */
     wrapInAccordion(section: any, content: any, isOpen = false) {
@@ -119,177 +161,45 @@ class SectionOrchestrator {
     }
 
     /**
-     * Rend une section complète selon son type
+     * Rend une section completee selon son type.
      * @param {object} section - Configuration de section
-     * @param {object} poi - POI complet
-     * @param {object} state - État partagé POI
+     * @param {object} poi - POI complete
+     * @param {object} _state - Etat partage POI
      * @returns {Promise<HTMLElement|null>}
      */
     async renderSection(section: any, poi: any, _state: any) {
-        if (!section || !section.type) return null;
-
-        // Initialiser les renderers si nécessaire
+        if (!section?.type) return null;
         this._initRenderers();
-
-        // Résoudre la valeur du champ
         const fieldValue = this.getFieldValue(poi, section.field);
-
-        if (Log) {
-            const valueType = Array.isArray(fieldValue)
-                ? `Array(${fieldValue.length})`
-                : fieldValue && typeof fieldValue === "object"
-                  ? `Object(${Object.keys(fieldValue).length} keys)`
-                  : typeof fieldValue;
-            Log.debug(
-                "[POI] Section:",
-                section.label || section.type,
-                "- Field:",
-                section.field,
-                "- ValueType:",
-                valueType,
-                "- Value:",
-                fieldValue
-            );
-        }
-
-        // Ne pas afficher si la valeur est vide, SAUF pour:
-        // - text avec style='title' (le titre est obligatoire)
-        // - badge (peut avoir un comportement par défaut)
+        Log?.debug(
+            "[POI] Section:",
+            section.type,
+            "- Field:",
+            section.field,
+            "- Value:",
+            this._describeVal(fieldValue)
+        );
         const isRequiredField =
             (section.type === "text" && section.style === "title") || section.type === "badge";
-
-        // Vérifier si la valeur est vraiment vide (null, undefined, '', [], {})
-        // ATTENTION: 0 est une valeur valide (pour les prix, métriques, etc.)
-        const isEmpty =
-            fieldValue === null ||
-            fieldValue === undefined ||
-            fieldValue === "" ||
-            (Array.isArray(fieldValue) && fieldValue.length === 0) ||
-            (typeof fieldValue === "object" &&
-                !Array.isArray(fieldValue) &&
-                Object.keys(fieldValue).length === 0);
-
-        if (Log) {
-            Log.info(
-                "[POI] Check isEmpty for:",
-                section.label,
-                "- fieldValue:",
-                fieldValue,
-                "- isArray:",
-                Array.isArray(fieldValue),
-                "- arrayLength:",
-                Array.isArray(fieldValue) ? fieldValue.length : "N/A",
-                "- isEmpty:",
-                isEmpty
-            );
-        }
-
+        const isEmpty = this._isEmptyFieldValue(fieldValue);
+        Log?.info("[POI] isEmpty:", isEmpty, "isRequiredField:", isRequiredField);
         if (isEmpty && !isRequiredField) {
-            if (Log)
-                Log.warn("[POI] Section ignorée (valeur vide):", section.label || section.type);
+            Log?.warn("[POI] Section ignoree (valeur vide):", section.type);
             return null;
         }
-
-        if (Log)
-            Log.info(
-                "[POI] → Appel render pour:",
-                section.label,
-                "- Type:",
-                section.type,
-                "- Value:",
-                Array.isArray(fieldValue)
-                    ? `Array(${fieldValue.length})`
-                    : fieldValue && typeof fieldValue === "object"
-                      ? "Object"
-                      : fieldValue
-            );
-
-        // Créer l'élément selon le type
-        let content: any = null;
-
-        switch (section.type) {
-            case "text":
-            case "longtext": // Alias pour text avec plus de contenu
-                if (this.fieldRenderers) {
-                    content = await this.fieldRenderers.renderText(section, poi, fieldValue);
-                }
-                break;
-            case "number": // Afficher un nombre simple comme du texte
-                if (this.fieldRenderers) {
-                    content = await this.fieldRenderers.renderText(
-                        section,
-                        poi,
-                        String(fieldValue)
-                    );
-                }
-                break;
-            case "metric": {
-                // Nombre avec suffixe/préfixe
-                const suffix = section.suffix || "";
-                const prefix = section.prefix || "";
-                if (this.fieldRenderers) {
-                    content = await this.fieldRenderers.renderText(
-                        section,
-                        poi,
-                        prefix + String(fieldValue) + suffix
-                    );
-                }
-                break;
-            }
-            case "image":
-                if (this.mediaRenderers) {
-                    content = this.mediaRenderers.renderImage(section, fieldValue);
-                }
-                break;
-            case "gallery":
-                if (this.mediaRenderers) {
-                    content = this.mediaRenderers.renderGallery(section, fieldValue);
-                }
-                break;
-            case "badge":
-                content = this.componentRenderers.renderBadge(section, fieldValue, poi);
-                break;
-            case "link":
-                content = this.componentRenderers.renderLink(section, fieldValue);
-                break;
-            case "list":
-                content = this.componentRenderers.renderList(section, fieldValue);
-                break;
-            case "table":
-                content = this.componentRenderers.renderTable(section, fieldValue);
-                break;
-            case "tags":
-                content = this.componentRenderers.renderTags(section, fieldValue);
-                break;
-            case "rating":
-                content = this.componentRenderers.renderRating(section, fieldValue);
-                break;
-            case "reviews":
-                content = this.componentRenderers.renderReviews(section, fieldValue);
-                break;
-            default:
-                if (Log) Log.warn("[POI] Type de section inconnu:", section.type);
-                return null;
-        }
-
+        Log?.info(
+            "[POI] \u2192 Appel render - Type:",
+            section.type,
+            "- Value:",
+            this._describeVal(fieldValue)
+        );
+        const content = await this._dispatchSection(section, poi, fieldValue);
         if (!content) {
-            if (Log) Log.debug("[POI] Aucun contenu généré pour:", section.label || section.type);
+            Log?.debug("[POI] Aucun contenu genere pour:", section.type);
             return null;
         }
-
-        if (Log)
-            Log.debug(
-                "[POI] Contenu généré pour:",
-                section.label || section.type,
-                "- Accordion:",
-                section.accordion
-            );
-
-        // Wraper dans un accordéon si nécessaire
-        if (section.accordion) {
-            return this.wrapInAccordion(section, content, section.defaultOpen);
-        }
-
+        Log?.debug("[POI] Contenu genere:", section.type, "- Accordion:", section.accordion);
+        if (section.accordion) return this.wrapInAccordion(section, content, section.defaultOpen);
         return content;
     }
 }

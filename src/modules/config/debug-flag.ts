@@ -14,7 +14,7 @@
  * reading the global namespace directly.
  *
  * NOTE: This still reads `globalThis.GeoLeaf.DEBUG` at call time to support
- * the use case where end users set `window.GeoLeaf.DEBUG = true` after init.
+ * the use casee where end users set `window.GeoLeaf.DEBUG = true` after init.
  */
 
 /**

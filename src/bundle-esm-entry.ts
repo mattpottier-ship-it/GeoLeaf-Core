@@ -6,16 +6,28 @@
  */
 
 /**
- * GeoLeaf Bundle ESM Entry Point — Phase 7
- * Point d'entrée EXCLUSIF pour le build ESM (esmConfig dans rollup.config.mjs).
+ * @module bundle-esm-entry
  *
- * Ce fichier NE doit PAS être utilisé pour le build UMD (utiliser bundle-entry.js).
- * Il expose les ~50 named exports ESM publics destinés aux bundlers tiers (Vite, webpack...).
+ * @description
+ * GeoLeaf Bundle ESM Entry Point — Phase 7.
  *
- * Les lazy chunks (dist/chunks/) sont produits via les import() dynamiques.
+ * This is the **exclusive entry point for ESM bundle generation** via Rollup
+ * (`esmConfig` in `rollup.config.mjs`). It must NOT be used for UMD builds
+ * (use `bundle-entry.ts` instead).
+ *
+ * Responsibilities:
+ *   - Side-effects: `globals.js` (assigns `window.GeoLeaf.*`) + `app/` bootstrap
+ *   - Dynamic `_loadModule` / `_loadAllSecondaryModules` helpers for lazy loading
+ *   - ~50 named ESM exports intended for third-party bundlers (Vite, webpack, etc.)
+ *
+ * Lazy chunks (`dist/chunks/`) are produced via dynamic `import()` expressions.
+ * In UMD mode Rollup inlines them (single bundle); in ESM mode each produces a
+ * separate network chunk for optimal code splitting.
  *
  * @version 1.1.0
- * @see src/bundle-entry.js pour le build UMD
+ * @see bundle-entry for the UMD entry point
+ * @see modules/globals for the UMD/ESM bridge orchestrator
+ * @see app/init for the application initialization sequence
  */
 
 // ── Side-effects : globals.js + bootstrap applicatif ──
@@ -27,18 +39,18 @@ import "./app/init.js";
 import "./app/boot.js";
 
 // ── Module loader pour code splitting ESM ──
-// En mode ESM ces import() produisent des chunks séparés dans dist/chunks/.
+// In mode ESM ces import() produisent des chunks separateds dans dist/chunks/.
 const _gl: any = typeof globalThis !== "undefined" ? globalThis : window;
 _gl.GeoLeaf = _gl.GeoLeaf || {};
 /* eslint-disable complexity -- switch for dynamic module names */
 _gl.GeoLeaf._loadModule = async function (moduleName: any) {
     switch (moduleName) {
-        // POI : chargement complet (core → renderers → extras)
+        // POI : loading complete (core → renderers → extras)
         case "poi":
             await import("./lazy/poi-core.js");
             await Promise.all([import("./lazy/poi-renderers.js"), import("./lazy/poi-extras.js")]);
             break;
-        // POI sub-chunks (chargement granulaire)
+        // POI sub-chunks (loading granulaire)
         case "poiCore":
             await import("./lazy/poi-core.js");
             break;
@@ -75,7 +87,7 @@ _gl.GeoLeaf._loadModule = async function (moduleName: any) {
 };
 /* eslint-enable complexity */
 _gl.GeoLeaf._loadAllSecondaryModules = async function () {
-    // POI core en premier (poi-renderers/extras/add-form en dépendent)
+    // POI core en premier (poi-renderers/extras/add-form en depend)
     await import("./lazy/poi-core.js");
     await Promise.all([
         import("./lazy/poi-renderers.js"),
@@ -90,7 +102,7 @@ _gl.GeoLeaf._loadAllSecondaryModules = async function () {
 };
 
 // ── Named exports ESM publics (consommables par bundlers tiers) ──
-// Façades haut niveau
+// Facades haut niveau
 export { Core } from "./modules/geoleaf.core.js";
 export { GeoLeafAPI } from "./modules/geoleaf.api.js";
 export { UI } from "./modules/geoleaf.ui.js";
@@ -105,7 +117,7 @@ export { Filters } from "./modules/geoleaf.filters.js";
 export { Baselayers } from "./modules/geoleaf.baselayers.js";
 export { Helpers } from "./modules/geoleaf.helpers.js";
 export { Validators } from "./modules/geoleaf.validators.js";
-// API sub-modules — B4 [ARCH-02]: import depuis le barrel api/index.js
+// API sub-modules — B4 [ARCH-02]: import from the barl api/index.js
 export {
     APIController,
     APIFactoryManager,
@@ -115,7 +127,7 @@ export {
     BootInfo,
     showBootInfo,
 } from "./modules/api/index.js";
-// Core utilitaires fréquemment importés
+// Core utilitaires frequently importeds
 export { Log } from "./modules/log/index.js";
 export { Errors } from "./modules/errors/index.js";
 export { CONSTANTS } from "./modules/constants/index.js";

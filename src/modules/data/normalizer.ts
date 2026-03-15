@@ -1,7 +1,7 @@
 /**
  * GeoLeaf Data Normalizer Module
- * Module central pour la normalisation des données provenant de différentes sources.
- * Convertit JSON, GeoJSON, GPX (future) et Routes vers un format POI unifié.
+ * Module central for the normalisation des data provenant de different sources.
+ * Converts JSON, GeoJSON, GPX (future) et Routes vers un format POI unified.
  *
  * @module data/normalizer
  * @version 1.0.0
@@ -28,7 +28,7 @@ const SOURCE_TYPES = {
 // getLog imported from general-utils.js (Phase 4 dedup)
 
 /**
- * Génère un ID unique
+ * Generates a ID unique
  * @returns {string}
  */
 function generateUniqueId() {
@@ -36,7 +36,7 @@ function generateUniqueId() {
 }
 
 /**
- * Détermine le type de géométrie à partir des coordonnées Leaflet
+ * Determines the type of geometry froms coordinates Leaflet
  * @param {Object} layer - Layer Leaflet
  * @returns {string} 'Point', 'Polygon', 'LineString' ou 'Unknown'
  */
@@ -48,14 +48,14 @@ function detectGeometryType(layer: any) {
     }
     if (typeof layer.getLatLngs === "function") {
         const latLngs = layer.getLatLngs();
-        // Polygon : tableau de tableaux de points (anneau extérieur + trous éventuels)
-        // LineString : tableau de points
+        // Polygon : array de arrayx de points (anneau outer + trous potential)
+        // LineString : array de points
         if (Array.isArray(latLngs) && latLngs.length > 0) {
             if (Array.isArray(latLngs[0]) && Array.isArray(latLngs[0][0])) {
                 return "Polygon";
             }
             if (Array.isArray(latLngs[0])) {
-                // Peut être Polygon ou LineString selon si fermé
+                // Can be Polygon ou LineString selon si closed
                 return "Polygon";
             }
             return "LineString";
@@ -65,11 +65,11 @@ function detectGeometryType(layer: any) {
 }
 
 /**
- * Extrait les coordonnées d'un layer Leaflet
+ * Extrait les coordinates of a layer Leaflet
  * @param {Object} layer - Layer Leaflet
- * @returns {Array|null} Coordonnées [lat, lng] ou null
+ * @returns {Array|null} Coordinates [lat, lng] ou null
  */
-/* eslint-disable complexity -- layer type branches */
+/* eslint-disable complexity -- layer type branchs */
 function extractCoordinates(layer: any) {
     if (!layer) return null;
 
@@ -91,7 +91,7 @@ function extractCoordinates(layer: any) {
                 return center ? [center.lat, center.lng] : null;
             }
         } catch (_e) {
-            // Bounds invalides
+            // Bounds invalids
         }
     }
 
@@ -104,10 +104,10 @@ function extractCoordinates(layer: any) {
 // ========================================
 
 /**
- * Normalise une entrée JSON en POI
- * @param {Object} data - Données JSON brutes
+ * Normalise une input JSON en POI
+ * @param {Object} data - Data JSON brutes
  * @param {Object} layerConfig - Configuration du layer
- * @returns {Object} POI normalisé
+ * @returns {Object} POI normalized
  */
 /* eslint-disable complexity, security/detect-object-injection -- config-driven field mapping */
 function normalizeFromJSON(data: any, layerConfig: any = {}) {
@@ -116,7 +116,7 @@ function normalizeFromJSON(data: any, layerConfig: any = {}) {
     const id = data.id || data.uid || data.guid || generateUniqueId();
     const dataMapping = layerConfig.dataMapping || {};
 
-    // Extraction du titre
+    // Extraction du title
     const titleField = dataMapping.title || "title";
     const title =
         data[titleField] || data.title || data.name || data.label || data.nom || "Sans titre";
@@ -125,23 +125,23 @@ function normalizeFromJSON(data: any, layerConfig: any = {}) {
     const descField = dataMapping.description || "description";
     const description = data[descField] || data.description || data.shortDescription || "";
 
-    // Extraction des coordonnées
+    // Extraction des coordinates
     const latField = dataMapping.lat || "lat";
     const lngField = dataMapping.lng || "lng";
     let lat = data[latField];
     let lng = data[lngField];
 
-    // Fallbacks pour coordonnées
+    // Fallbacks pour coordinates
     if (lat === undefined) lat = data.latitude || data.y;
     if (lng === undefined) lng = data.longitude || data.lng || data.x;
 
-    // Extraction catégorie/sous-catégorie
+    // Extraction category/sous-category
     const catField = dataMapping.categoryId || "categoryId";
     const subCatField = dataMapping.subCategoryId || "subCategoryId";
     const categoryId = data[catField] || data.categoryId || data.category || null;
     const subCategoryId = data[subCatField] || data.subCategoryId || data.subcategory || null;
 
-    // Construction des attributs (toutes les propriétés)
+    // Building des attributes (toutes les properties)
     const attributes = { ...data };
 
     return {
@@ -164,8 +164,8 @@ function normalizeFromJSON(data: any, layerConfig: any = {}) {
  * Normalise une feature GeoJSON en POI
  * @param {Object} feature - Feature GeoJSON
  * @param {Object} layerConfig - Configuration du layer
- * @param {Object} layer - Layer Leaflet (optionnel, pour coordonnées)
- * @returns {Object} POI normalisé
+ * @param {Object} layer - Layer Leaflet (optional, pour coordinates)
+ * @returns {Object} POI normalized
  */
 /* eslint-disable complexity, max-lines-per-function, security/detect-object-injection -- GeoJSON field mapping */
 function normalizeFromGeoJSON(feature: any, layerConfig: any = {}, layer: any = null) {
@@ -178,13 +178,13 @@ function normalizeFromGeoJSON(feature: any, layerConfig: any = {}, layer: any = 
     // ID
     const id = feature.id || props.id || props.uid || props.guid || generateUniqueId();
 
-    // Type de géométrie
+    // Type of geometry
     let geometryType = geometry.type || "Unknown";
     if (layer && geometryType === "Unknown") {
         geometryType = detectGeometryType(layer);
     }
 
-    // Extraction du titre
+    // Extraction du title
     const titleField = dataMapping.title || "title";
     const titlePath = titleField.includes(".") ? titleField.split(".").pop() : titleField;
     const title =
@@ -195,7 +195,7 @@ function normalizeFromGeoJSON(feature: any, layerConfig: any = {}, layer: any = 
     const descPath = descField.includes(".") ? descField.split(".").pop() : descField;
     const description = props[descPath] || props.description || props.shortDescription || "";
 
-    // Coordonnées
+    // Coordinates
     let lat = null,
         lng = null;
     if (geometry.coordinates) {
@@ -210,7 +210,7 @@ function normalizeFromGeoJSON(feature: any, layerConfig: any = {}, layer: any = 
                 lng = coords[1];
             }
         } else if (geometry.coordinates.length > 0) {
-            // Calculer le centre approximatif
+            // Calculatesr le centre approximatif
             const flatCoords = flattenCoordinates(geometry.coordinates, geometry.type);
             if (flatCoords.length > 0) {
                 let sumLat = 0,
@@ -231,7 +231,7 @@ function normalizeFromGeoJSON(feature: any, layerConfig: any = {}, layer: any = 
         }
     }
 
-    // Catégorie/sous-catégorie
+    // Category/sub-category
     const catField = dataMapping.categoryId || "categoryId";
     const catPath = catField.includes(".") ? catField.split(".").pop() : catField;
     const subCatField = dataMapping.subCategoryId || "subCategoryId";
@@ -240,7 +240,7 @@ function normalizeFromGeoJSON(feature: any, layerConfig: any = {}, layer: any = 
     const categoryId = props[catPath] || props.categoryId || props.category || null;
     const subCategoryId = props[subCatPath] || props.subCategoryId || props.subcategory || null;
 
-    // Construction des attributs
+    // Building des attributes
     // Hoist nested props.attributes.* fields to top level so that config paths like
     // "attributes.reviews.rating" resolve correctly when the GeoJSON stores rich data
     // under properties.attributes (e.g. reviews, gallery, photo, etc.)
@@ -259,17 +259,17 @@ function normalizeFromGeoJSON(feature: any, layerConfig: any = {}, layer: any = 
         categoryId: categoryId,
         subCategoryId: subCategoryId,
         attributes: attributes,
-        properties: props, // Conserve aussi properties pour compatibilité
+        properties: props, // Conserve aussi properties pour compatibility
         rawData: feature,
     };
 }
 /* eslint-enable complexity, max-lines-per-function, security/detect-object-injection */
 
 /**
- * Aplatit les coordonnées GeoJSON selon le type de géométrie
- * @param {Array} coords - Coordonnées imbriquées
- * @param {string} type - Type de géométrie
- * @returns {Array} Tableau de [lng, lat]
+ * Aplatit les coordinates GeoJSON selon the type of geometry
+ * @param {Array} coords - Coordinates nestedes
+ * @param {string} type - Type of geometry
+ * @returns {Array} Array de [lng, lat]
  */
 function flattenCoordinates(coords: any, type: any) {
     if (!coords || !Array.isArray(coords)) return [];
@@ -286,7 +286,7 @@ function flattenCoordinates(coords: any, type: any) {
         case "MultiPolygon":
             return coords.flat(2);
         default: {
-            // Aplatir récursivement
+            // Aplatir recursively
             const flat: any[] = [];
             const flatten = (arr: any) => {
                 if (!Array.isArray(arr)) return;
@@ -306,7 +306,7 @@ function flattenCoordinates(coords: any, type: any) {
  * Normalise un waypoint GPX en POI (placeholder pour futur module)
  * @param {Object} waypoint - Waypoint GPX
  * @param {Object} layerConfig - Configuration du layer
- * @returns {Object} POI normalisé
+ * @returns {Object} POI normalized
  */
 /* eslint-disable complexity -- GPX field fallbacks */
 function normalizeFromGPX(waypoint: any, _layerConfig: any = {}) {
@@ -339,7 +339,7 @@ function normalizeFromGPX(waypoint: any, _layerConfig: any = {}) {
  * Normalise un point de route en POI
  * @param {Object} routePoint - Point de route
  * @param {Object} routeConfig - Configuration de la route
- * @returns {Object} POI normalisé
+ * @returns {Object} POI normalized
  */
 /* eslint-disable complexity -- route point field fallbacks */
 function normalizeFromRoute(routePoint: any, _routeConfig: any = {}) {
@@ -382,16 +382,16 @@ function normalizeFromRoute(routePoint: any, _routeConfig: any = {}) {
 // ========================================
 
 /**
- * Normalise des données selon leur type de source
- * @param {string} sourceType - Type de source ('json', 'geojson', 'gpx', 'route')
- * @param {Object} data - Données brutes
+ * Normalise des data based on theur type of source
+ * @param {string} sourceType - Type of source ('json', 'geojson', 'gpx', 'route')
+ * @param {Object} data - Data brutes
  * @param {Object} layerConfig - Configuration du layer
  * @param {Object} options - Options additionnelles (layer Leaflet, etc.)
- * @returns {Object} POI normalisé
+ * @returns {Object} POI normalized
  */
 function normalizeFeature(sourceType: any, data: any, layerConfig: any = {}, options: any = {}) {
     if (!data) {
-        getLog().warn("[Normalizer] Données nulles pour normalisation");
+        getLog().warn("[Normalizer] Null data for normalization");
         return null;
     }
 
@@ -409,46 +409,46 @@ function normalizeFeature(sourceType: any, data: any, layerConfig: any = {}, opt
             return normalizeFromRoute(data, layerConfig);
 
         default:
-            getLog().warn("[Normalizer] Type de source non reconnu:", sourceType);
-            // Tenter une détection automatique
+            getLog().warn("[Normalizer] Unrecognized source type:", sourceType);
+            // Tenter une detection automatic
             return autoDetectAndNormalize(data, layerConfig, options);
     }
 }
 
 /**
- * Détecte automatiquement le type de source et normalise
- * @param {Object} data - Données brutes
+ * Detects automaticment the type of source et normalise
+ * @param {Object} data - Data brutes
  * @param {Object} layerConfig - Configuration du layer
  * @param {Object} options - Options additionnelles
- * @returns {Object} POI normalisé
+ * @returns {Object} POI normalized
  */
 function autoDetectAndNormalize(data: any, layerConfig: any = {}, options: any = {}) {
-    // Détection GeoJSON
+    // Detection GeoJSON
     if (data.type === "Feature" && data.geometry) {
         return normalizeFromGeoJSON(data, layerConfig, options.layer);
     }
 
-    // Détection GPX (waypoint)
+    // Detection GPX (waypoint)
     if (data.lat !== undefined && data.lon !== undefined && (data.name || data.sym)) {
         return normalizeFromGPX(data, layerConfig);
     }
 
-    // Détection Route
+    // Detection Route
     if (data.latLng || (data.order !== undefined && data.address)) {
         return normalizeFromRoute(data, layerConfig);
     }
 
-    // Par défaut : JSON
+    // By default : JSON
     return normalizeFromJSON(data, layerConfig);
 }
 
 /**
- * Normalise un tableau de données
- * @param {string} sourceType - Type de source
- * @param {Array} dataArray - Tableau de données brutes
+ * Normalise un data table
+ * @param {string} sourceType - Type of source
+ * @param {Array} dataArray - Data table brutes
  * @param {Object} layerConfig - Configuration du layer
  * @param {Object} options - Options additionnelles
- * @returns {Array} Tableau de POIs normalisés
+ * @returns {Array} Array de POIs normalized
  */
 function normalizeCollection(
     sourceType: any,
@@ -457,7 +457,7 @@ function normalizeCollection(
     options: any = {}
 ) {
     if (!Array.isArray(dataArray)) {
-        getLog().warn("[Normalizer] normalizeCollection attend un tableau");
+        getLog().warn("[Normalizer] normalizeCollection expects an array");
         return [];
     }
 
@@ -480,7 +480,7 @@ const DataNormalizer = {
     normalizeFromGPX,
     normalizeFromRoute,
 
-    // Fonctions principales
+    // Fonctions maines
     normalizeFeature,
     autoDetectAndNormalize,
     normalizeCollection,
@@ -491,7 +491,7 @@ const DataNormalizer = {
     generateUniqueId,
 };
 
-// Log de chargement
-getLog().info("[GeoLeaf._Normalizer] Module Normalizer chargé");
+// Log de loading
+getLog().info("[GeoLeaf._Normalizer] Module Normalizer loaded");
 
 export { DataNormalizer };

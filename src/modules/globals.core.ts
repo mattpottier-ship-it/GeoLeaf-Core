@@ -1,8 +1,22 @@
 /**
- * globals.core.js ? Bridge UMD/ESM : B1 + B2 ? runtime core
- * log, errors, constants, security, utils
+ * @module globals.core
  *
- * @see globals.js (orchestrateur)
+ * @description
+ * UMD/ESM bridge — B1 + B2 — runtime core initialization.
+ *
+ * This runtime initialization module registers the foundational GeoLeaf services
+ * on `globalThis.GeoLeaf`. It is imported as a side-effect by `globals.ts` and
+ * must be the **first** sub-module executed.
+ *
+ * Registers:
+ *   - **B1** — `Log`, `Errors`, `CONSTANTS`, `Security`, `CSRFToken`
+ *   - **B2** — `Utils` (animation, DOM, events, fetch, file validation,
+ *     lazy loading, map helpers, object utils, performance, scale, timers)
+ *
+ * Also sets `_g.GeoLeaf._version` from the Rollup-injected `__GEOLEAF_VERSION__`
+ * constant, falling back to `'1.1.1-dev'` in development mode.
+ *
+ * @see globals for the orchestrator and import order
  * @see docs/architecture/BOOT_SEQUENCE.md
  */
 
@@ -41,9 +55,9 @@ const _g: any =
 
 _g.GeoLeaf = _g.GeoLeaf || {};
 
-// Version injectable au build ? fallback pour le dev sans build
+// Version injectable au build ? fallback for the dev sans build
 _g.GeoLeaf._version =
-    typeof __GEOLEAF_VERSION__ !== "undefined" ? __GEOLEAF_VERSION__ : "1.1.0-dev";
+    typeof __GEOLEAF_VERSION__ !== "undefined" ? __GEOLEAF_VERSION__ : "1.1.1-dev";
 
 // -- B1 assignations ----------------------------------------------------------
 _g.GeoLeaf.Log = Log;

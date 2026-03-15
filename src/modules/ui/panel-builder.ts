@@ -7,19 +7,19 @@
 
 /**
  * GeoLeaf UI Module - Panel Builder
- * Construction de panneaux de détails POI avec layouts configurables
+ * Building POI detail panels with configurable layouts
  */
 
 import { $create } from "../utils/dom-helpers.js";
 import { resolveField } from "../utils/general-utils.js";
 
 /**
- * Crée un bloc section simple (sans accordéon).
+ * Creates a bloc section simple (sans accordion).
  *
- * @param {string} label - Titre de la section.
- * @param {Node|string} innerContent - Contenu de la section (Node ou texte).
+ * @param {string} label - Title de la section.
+ * @param {Node|string} innerContent - Contenu de la section (Node ou text).
  * @param {string} extraClass - Classes CSS additionnelles.
- * @returns {HTMLElement} Élément section.
+ * @returns {HTMLElement} Element section.
  */
 function createPlainSection(label: any, innerContent: any, extraClass: any) {
     const section = $create("section", {
@@ -48,12 +48,12 @@ function createPlainSection(label: any, innerContent: any, extraClass: any) {
 }
 
 /**
- * Crée un bloc section accordéon (panneau repliable).
+ * Creates a bloc section accordion (panel collapsible).
  *
- * @param {string} label - Titre de l'accordéon.
- * @param {Node|string} innerContent - Contenu de l'accordéon.
+ * @param {string} label - Title of the accordion.
+ * @param {Node|string} innerContent - Contenu of the accordion.
  * @param {object} options - Options { defaultOpen: boolean }.
- * @returns {HTMLElement} Élément section accordéon.
+ * @returns {HTMLElement} Element section accordion.
  */
 function createAccordionSection(label: any, innerContent: any, options: any) {
     const opts = options || {};
@@ -101,11 +101,11 @@ function createAccordionSection(label: any, innerContent: any, options: any) {
 }
 
 /**
- * Construit le rendu d'un item de type "text".
+ * Builds the rendu of a item de type "text".
  *
- * @param {*} value - Valeur à afficher.
+ * @param {*} value - Value to display.
  * @param {string} variant - Variant ("multiline" ou autre).
- * @returns {HTMLElement|null} Élément div ou null.
+ * @returns {HTMLElement|null} Element div ou null.
  */
 function renderText(value: any, variant: any) {
     const div = $create("div", {
@@ -117,38 +117,35 @@ function renderText(value: any, variant: any) {
     return div;
 }
 
+function _resolveEntryLabel(entry: any): string | null {
+    if (typeof entry.label === "string") return entry.label;
+    if (typeof entry.text === "string") return entry.text;
+    return null;
+}
+
+function _resolveListEntry(entry: any): string | null {
+    if (entry == null) return null;
+    if (typeof entry === "string" || typeof entry === "number") return String(entry);
+    if (typeof entry !== "object") return null;
+    const label = _resolveEntryLabel(entry);
+    const val = entry.value != null ? String(entry.value) : null;
+    if (label && val) return label + " : " + val;
+    return label ?? val ?? null;
+}
+
 /**
- * Construit le rendu d'un item de type "list".
+ * Builds the rendu of a item de type "list".
  *
- * @param {*} value - Array ou string (lignes séparées).
- * @returns {HTMLElement|null} Élément ul ou null.
+ * @param {*} value - Array ou string (lines separatedes).
+ * @returns {HTMLElement|null} Element ul ou null.
  */
 function renderList(value: any) {
     const items: any[] = [];
 
     if (Array.isArray(value)) {
         value.forEach(function (entry) {
-            if (entry == null) return;
-
-            if (typeof entry === "string" || typeof entry === "number") {
-                items.push(String(entry));
-            } else if (typeof entry === "object") {
-                const label =
-                    typeof entry.label === "string"
-                        ? entry.label
-                        : typeof entry.text === "string"
-                          ? entry.text
-                          : null;
-                const val = entry.value != null ? String(entry.value) : null;
-
-                if (label && val) {
-                    items.push(label + " : " + val);
-                } else if (label) {
-                    items.push(label);
-                } else if (val) {
-                    items.push(val);
-                }
-            }
+            const text = _resolveListEntry(entry);
+            if (text !== null) items.push(text);
         });
     } else if (typeof value === "string") {
         value.split(/\r?\n/).forEach(function (line) {
@@ -179,12 +176,54 @@ function renderList(value: any) {
 }
 
 /**
- * Construit le rendu d'un item de type "table".
+ * Builds the rendu of a item de type "table".
  *
- * @param {Array} value - Tableau d'objets représentant les lignes.
- * @param {object} item - Configuration du tableau (columns, borders).
- * @returns {HTMLElement|null} Wrapper de tableau ou null.
+ * @param {Array} value - Array of objects representing the rows.
+ * @param {object} item - Configuration du array (columns, borders).
+ * @returns {HTMLElement|null} Wrapper de array ou null.
  */
+function _buildTableBorderClass(borders: any): string {
+    const cls: string[] = [];
+    if (borders.outer) cls.push("gl-poi-panel__table--border-outer");
+    if (borders.row) cls.push("gl-poi-panel__table--border-row");
+    if (borders.column) cls.push("gl-poi-panel__table--border-column");
+    return cls.length ? " " + cls.join(" ") : "";
+}
+
+function _buildPanelTableHead(columns: any[]): HTMLElement {
+    const thead = $create("thead");
+    const headRow = $create("tr", {
+        className: "gl-poi-panel__table-row gl-poi-panel__table-row--head",
+    });
+    columns.forEach(function (col: any) {
+        const th = $create("th", {
+            className: "gl-poi-panel__table-cell gl-poi-panel__table-cell--head",
+            textContent: col.label || col.key || "",
+        });
+        headRow.appendChild(th);
+    });
+    thead.appendChild(headRow);
+    return thead;
+}
+
+function _buildPanelTableBody(value: any[], columns: any[]): HTMLElement {
+    const tbody = $create("tbody");
+    value.forEach(function (rowObj) {
+        if (!rowObj || typeof rowObj !== "object") return;
+        const tr = $create("tr", { className: "gl-poi-panel__table-row" });
+        columns.forEach(function (col: any) {
+            const cellVal = rowObj[col.key];
+            const td = $create("td", {
+                className: "gl-poi-panel__table-cell",
+                textContent: cellVal == null ? "" : String(cellVal),
+            });
+            tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+    });
+    return tbody;
+}
+
 function renderTable(value: any, item: any) {
     if (!Array.isArray(value) || !value.length) {
         return null;
@@ -200,69 +239,22 @@ function renderTable(value: any, item: any) {
     });
 
     const borders = item.borders || {};
-    const borderClasses = [];
-    if (borders.outer) borderClasses.push("gl-poi-panel__table--border-outer");
-    if (borders.row) borderClasses.push("gl-poi-panel__table--border-row");
-    if (borders.column) borderClasses.push("gl-poi-panel__table--border-column");
-
     const table = $create("table", {
-        className:
-            "gl-poi-panel__table" + (borderClasses.length ? " " + borderClasses.join(" ") : ""),
+        className: "gl-poi-panel__table" + _buildTableBorderClass(borders),
         attributes: borders.color ? { "data-gl-border-color": borders.color } : {},
     });
 
-    // En-tête
-    const thead = $create("thead");
-    const headRow = $create("tr", {
-        className: "gl-poi-panel__table-row gl-poi-panel__table-row--head",
-    });
-
-    columns.forEach(function (col: any) {
-        const th = $create("th", {
-            className: "gl-poi-panel__table-cell gl-poi-panel__table-cell--head",
-            textContent: col.label || col.key || "",
-        });
-        headRow.appendChild(th);
-    });
-
-    thead.appendChild(headRow);
-    table.appendChild(thead);
-
-    // Corps
-    const tbody = $create("tbody");
-
-    value.forEach(function (rowObj) {
-        if (!rowObj || typeof rowObj !== "object") {
-            return;
-        }
-
-        const tr = $create("tr", {
-            className: "gl-poi-panel__table-row",
-        });
-
-        columns.forEach(function (col: any) {
-            const cellVal = rowObj[col.key];
-            const td = $create("td", {
-                className: "gl-poi-panel__table-cell",
-                textContent: cellVal == null ? "" : String(cellVal),
-            });
-
-            tr.appendChild(td);
-        });
-
-        tbody.appendChild(tr);
-    });
-
-    table.appendChild(tbody);
+    table.appendChild(_buildPanelTableHead(columns));
+    table.appendChild(_buildPanelTableBody(value, columns));
     wrapper.appendChild(table);
     return wrapper;
 }
 
 /**
- * Construit le rendu d'un item de type "gallery".
+ * Builds the rendu of a item de type "gallery".
  *
- * @param {Array} value - Tableau d'images { url, alt, caption }.
- * @returns {HTMLElement|null} Container galerie ou null.
+ * @param {Array} value - Array d'images { url, alt, caption }.
+ * @returns {HTMLElement|null} Container gallery ou null.
  */
 function renderGallery(value: any) {
     if (!Array.isArray(value)) {
@@ -299,14 +291,85 @@ function renderGallery(value: any) {
     return container;
 }
 
+function _appendReviewFooter(review: any): HTMLElement {
+    const footer = $create("footer", { className: "gl-poi-panel__review-footer" }) as HTMLElement;
+    if (typeof review.helpfulCount === "number") {
+        footer.appendChild(
+            $create("span", {
+                className: "gl-poi-panel__review-helpful",
+                textContent: review.helpfulCount + " personnes ont found cet avis utile",
+            })
+        );
+    }
+    if (review.url) {
+        footer.appendChild(
+            $create("a", {
+                href: review.url,
+                target: "_blank",
+                rel: "noopener noreferrer",
+                className: "gl-poi-panel__review-link",
+                textContent: "Voir l'avis",
+            })
+        );
+    }
+    return footer;
+}
+
+function _renderReviewItem(review: any): HTMLElement {
+    const itemEl = $create("article", { className: "gl-poi-panel__review" }) as HTMLElement;
+    const header = $create("header", { className: "gl-poi-panel__review-header" }) as HTMLElement;
+    header.appendChild(
+        $create("span", {
+            className: "gl-poi-panel__review-author",
+            textContent: review.authorName || "",
+        })
+    );
+    if (typeof review.rating === "number") {
+        header.appendChild(
+            $create("span", {
+                className: "gl-poi-panel__review-rating",
+                textContent: review.rating.toFixed(1) + "/5",
+            })
+        );
+    }
+    if (review.source) {
+        header.appendChild(
+            $create("span", {
+                className: "gl-poi-panel__review-source",
+                textContent: review.source,
+            })
+        );
+    }
+    itemEl.appendChild(header);
+    if (review.title) {
+        itemEl.appendChild(
+            $create("h4", { className: "gl-poi-panel__review-title", textContent: review.title })
+        );
+    }
+    const reviewText = review.text || review.comment;
+    if (reviewText) {
+        itemEl.appendChild(
+            $create("p", { className: "gl-poi-panel__review-text", textContent: reviewText })
+        );
+    }
+    const reviewDate = review.date || review.createdAt;
+    if (reviewDate) {
+        itemEl.appendChild(
+            $create("time", { className: "gl-poi-panel__review-date", textContent: reviewDate })
+        );
+    }
+    itemEl.appendChild(_appendReviewFooter(review));
+    return itemEl;
+}
+
 /**
- * Construit le rendu d'un item de type "reviews" (avis voyageurs).
+ * Builds the rendu of a item de type "reviews" (avis voyageurs).
  *
- * @param {*} value - Array ou objet avec propriété 'recent'.
+ * @param {*} value - Array ou object avec property 'recent'.
  * @returns {HTMLElement|null} Container d'avis ou null.
  */
 function renderReviews(value: any) {
-    // Si value est un objet avec une propriété 'recent', utiliser celle-ci
+    // Si value est an object with ae property 'recent', utiliser celle-ci
     let reviewsArray = value;
     if (
         value &&
@@ -327,104 +390,19 @@ function renderReviews(value: any) {
 
     reviewsArray.forEach(function (review) {
         if (!review) return;
-
-        const itemEl = $create("article", {
-            className: "gl-poi-panel__review",
-        });
-
-        const header = $create("header", {
-            className: "gl-poi-panel__review-header",
-        });
-
-        const nameSpan = $create("span", {
-            className: "gl-poi-panel__review-author",
-            textContent: review.authorName || "",
-        });
-        header.appendChild(nameSpan);
-
-        if (typeof review.rating === "number") {
-            const ratingSpan = $create("span", {
-                className: "gl-poi-panel__review-rating",
-                textContent: review.rating.toFixed(1) + "/5",
-            });
-            header.appendChild(ratingSpan);
-        }
-
-        if (review.source) {
-            const sourceSpan = $create("span", {
-                className: "gl-poi-panel__review-source",
-                textContent: review.source,
-            });
-            header.appendChild(sourceSpan);
-        }
-
-        itemEl.appendChild(header);
-
-        if (review.title) {
-            const titleEl = $create("h4", {
-                className: "gl-poi-panel__review-title",
-                textContent: review.title,
-            });
-            itemEl.appendChild(titleEl);
-        }
-
-        // Gérer à la fois 'text' (ancien format) et 'comment' (nouveau format)
-        const reviewText = review.text || review.comment;
-        if (reviewText) {
-            const textEl = $create("p", {
-                className: "gl-poi-panel__review-text",
-                textContent: reviewText,
-            });
-            itemEl.appendChild(textEl);
-        }
-
-        // Gérer à la fois 'date' (ancien format) et 'createdAt' (nouveau format)
-        const reviewDate = review.date || review.createdAt;
-        if (reviewDate) {
-            const dateEl = $create("time", {
-                className: "gl-poi-panel__review-date",
-                textContent: reviewDate,
-            });
-            itemEl.appendChild(dateEl);
-        }
-
-        const footer = $create("footer", {
-            className: "gl-poi-panel__review-footer",
-        });
-
-        if (typeof review.helpfulCount === "number") {
-            const helpfulSpan = $create("span", {
-                className: "gl-poi-panel__review-helpful",
-                textContent: review.helpfulCount + " personnes ont trouvé cet avis utile",
-            });
-            footer.appendChild(helpfulSpan);
-        }
-
-        if (review.url) {
-            const link = $create("a", {
-                href: review.url,
-                target: "_blank",
-                rel: "noopener noreferrer",
-                className: "gl-poi-panel__review-link",
-                textContent: "Voir l'avis",
-            });
-            footer.appendChild(link);
-        }
-
-        itemEl.appendChild(footer);
-        container.appendChild(itemEl);
+        container.appendChild(_renderReviewItem(review));
     });
 
     return container;
 }
 
 /**
- * Construit le contenu interne pour un item de layout.
- * Dispatcher principal vers les fonctions de rendu spécialisées.
+ * Builds the contenu internal for a item de layout.
+ * Dispatcher main to thes fonctions de rendu specialized.
  *
- * @param {object} poi - Objet POI source.
+ * @param {object} poi - Object POI source.
  * @param {object} item - Configuration du layout item (type, field, variant, etc).
- * @returns {HTMLElement|null} Élément construit ou null.
+ * @returns {HTMLElement|null} Element construit ou null.
  */
 function buildLayoutItemContent(poi: any, item: any) {
     const type = item.type;
@@ -457,7 +435,7 @@ function buildLayoutItemContent(poi: any, item: any) {
         return renderReviews(value);
     }
 
-    // Fallback : texte simple
+    // Fallback : text simple
     const defaultDiv = $create("div", {
         className: "gl-poi-panel__text",
         textContent: String(value),

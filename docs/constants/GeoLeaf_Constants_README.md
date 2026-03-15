@@ -1,7 +1,7 @@
-# GeoLeaf.CONSTANTS – Documentation des constantes globales
+﻿# GeoLeaf.CONSTANTS – Documentation des constantes globales
 
 Product Version: GeoLeaf Platform V1  
-**Version**: 1.1.0  
+**Version**: 1.1.1  
 **Fichier**: `src/modules/geoleaf.constants.js` (31 lignes)  
 **Dernière mise à jour**: 19 janvier 2026
 
@@ -535,4 +535,4 @@ Lors de l'utilisation de valeurs numériques dans votre code :
 ---
 
 **Dernière mise à jour** : 19 janvier 2026  
-**Version GeoLeaf** : 1.1.0
+**Version GeoLeaf** : 1.1.1

@@ -1,8 +1,8 @@
 # profile.json - Référence Complète
 
 **Version produit :** GeoLeaf Platform V1  
-**Version:** 1.1.0  
-**Date de dernière mise à jour:** 28 janvier 2026  
+**Version:** 1.1.1  
+**Date de dernière mise à jour:** 15 mars 2026  
 **Statut:** ✅ Production Ready
 
 > Convention de versioning : **Platform V1** est le label produit ; le SemVer technique des packages/releases reste en **1.1.x**. Voir [VERSIONING_POLICY.md](VERSIONING_POLICY.md).

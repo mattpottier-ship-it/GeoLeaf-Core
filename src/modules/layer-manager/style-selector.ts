@@ -1,6 +1,6 @@
-﻿/**
+/**
  * @module _LayerManagerStyleSelector
- * @description Sélecteur de styles pour le gestionnaire de couches.
+ * @description Selector de styles for the manager for layers.
  * @version 3.1.0
  */
 
@@ -16,6 +16,38 @@ import { LegendContract } from "../../contracts/legend.contract.js";
 const state = {
     currentStyles: new Map<string, string>(),
 };
+
+function _applyStyleResult(
+    layerData: any,
+    layerId: string,
+    styleId: string,
+    res: { styleData: unknown; metadata: unknown }
+): void {
+    layerData.currentStyle = res.styleData;
+    layerData.currentStyleMetadata = res.metadata;
+    if (typeof GeoJSONCore.setLayerStyle === "function") {
+        GeoJSONCore.setLayerStyle(layerId, res.styleData);
+    }
+    Labels?.initializeLayerLabels?.(layerId);
+    if (LabelButtonManager) LabelButtonManager.syncImmediate(layerId);
+    if (LegendContract.isAvailable()) {
+        LegendContract.loadLayerLegend(layerData.config.id, styleId, layerData.config);
+    }
+}
+
+function _resolveStyleConfig(
+    layerId: string,
+    styleId: string
+): { layerData: any; styleConfig: StyleItemConfig } | null {
+    if (!GeoJSONCore) return null;
+    const layerData = GeoJSONCore.getLayerData(layerId);
+    if (!layerData) return null;
+    if (!layerData.config.styles || !Array.isArray(layerData.config.styles.available)) return null;
+    const styleConfig = layerData.config.styles.available.find(
+        (s: StyleItemConfig) => s.id === styleId
+    );
+    return styleConfig ? { layerData, styleConfig } : null;
+}
 
 export interface StyleItemConfig {
     id: string;
@@ -105,17 +137,9 @@ const _LayerManagerStyleSelector = {
     },
 
     async applyStyle(layerId: string, styleId: string): Promise<void> {
-        if (!GeoJSONCore) return;
-
-        const layerData = GeoJSONCore.getLayerData(layerId);
-        if (!layerData) return;
-
-        if (!layerData.config.styles || !Array.isArray(layerData.config.styles.available)) {
-            return;
-        }
-
-        const styleConfig = layerData.config.styles.available.find((s: StyleItemConfig) => s.id === styleId);
-        if (!styleConfig) return;
+        const resolved = _resolveStyleConfig(layerId, styleId);
+        if (!resolved) return;
+        const { layerData, styleConfig } = resolved;
 
         try {
             if (!StyleLoader) {
@@ -136,25 +160,12 @@ const _LayerManagerStyleSelector = {
                 layerDirectory
             );
 
-            const res = result as { styleData: unknown; metadata: unknown };
-            layerData.currentStyle = res.styleData;
-            layerData.currentStyleMetadata = res.metadata;
-
-            if (typeof GeoJSONCore.setLayerStyle === "function") {
-                GeoJSONCore.setLayerStyle(layerId, res.styleData);
-            }
-
-            if (Labels && typeof Labels.initializeLayerLabels === "function") {
-                Labels.initializeLayerLabels(layerId);
-            }
-
-            if (LabelButtonManager) {
-                LabelButtonManager.syncImmediate(layerId);
-            }
-
-            if (LegendContract.isAvailable()) {
-                LegendContract.loadLayerLegend(layerData.config.id, styleId, layerData.config);
-            }
+            _applyStyleResult(
+                layerData,
+                layerId,
+                styleId,
+                result as { styleData: unknown; metadata: unknown }
+            );
         } catch (_error) {
             // log removed
         }
@@ -163,7 +174,14 @@ const _LayerManagerStyleSelector = {
     _applyStyleLegacy(
         layerId: string,
         styleId: string,
-        layerData: { config: { _profileId?: string; _layerDirectory?: string; id: string; styles: { directory?: string; available: StyleItemConfig[] } } },
+        layerData: {
+            config: {
+                _profileId?: string;
+                _layerDirectory?: string;
+                id: string;
+                styles: { directory?: string; available: StyleItemConfig[] };
+            };
+        },
         styleConfig: StyleItemConfig
     ): void {
         const profileId = layerData.config._profileId;
@@ -171,7 +189,9 @@ const _LayerManagerStyleSelector = {
 
         if (!profileId || !layerDirectory) return;
 
-        const dataCfg = (Config as { get?: (key: string) => { profilesBasePath?: string } }).get?.("data");
+        const dataCfg = (Config as { get?: (key: string) => { profilesBasePath?: string } }).get?.(
+            "data"
+        );
         const profilesBasePath = dataCfg?.profilesBasePath ?? "profiles";
 
         const styleDirectory = layerData.config.styles.directory ?? "styles";

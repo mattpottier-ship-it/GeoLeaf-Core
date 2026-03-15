@@ -1,4 +1,4 @@
-﻿/*!
+/*!
  * GeoLeaf Core
  * (c) 2026 Mattieu Pottier
  * Released under the MIT License
@@ -6,7 +6,7 @@
  */
 /**
  * @module geoleaf.table
- * @description Facade publique du module Table - re-exporte depuis le sous-module.
+ * @description Facade public of the module Table - re-exporte from the sous-module.
  */
 "use strict";
 

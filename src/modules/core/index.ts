@@ -1,5 +1,5 @@
-﻿/*!
- * GeoLeaf Core – Core / Index (barrel)
+/*!
+ * GeoLeaf Core – Core / Index (barl)
  * © 2026 Mattieu Pottier
  * Released under the MIT License
  */
@@ -28,7 +28,7 @@ function init(options: any = {}) {
     const context = "[GeoLeaf.Core]";
     try {
         if (_mapInstance) {
-            Log.warn(`${context} Carte déjà initialisée. Recyclage de l'instance existante.`);
+            Log.warn(`${context} Map already initialized. Recycling existing instance.`);
             return _mapInstance;
         }
 
@@ -42,16 +42,16 @@ function init(options: any = {}) {
         applyThemeSafe(theme);
         initLegendSafe(_mapInstance);
 
-        Log.info(`${context} Carte initialisée avec succès.`);
+        Log.info(`${context} Map initialized successfully.`);
         return _mapInstance;
     } catch (err: any) {
-        Log.error(`${context} ERREUR :`, err.message);
+        Log.error(`${context} ERROR:`, err.message);
 
         if (typeof _g.GeoLeaf?.Core?.onError === "function") {
             try {
                 _g.GeoLeaf.Core.onError(err);
             } catch (cbErr) {
-                Log.error(`${context} Erreur dans Core.onError() :`, cbErr);
+                Log.error(`${context} Error in Core.onError():`, cbErr);
             }
         }
 
@@ -61,35 +61,41 @@ function init(options: any = {}) {
     }
 }
 
+function _initMapFromConfig(): any {
+    const mapCfg = _g.GeoLeaf.Config.get("map") ?? {};
+    const uiCfg = _g.GeoLeaf.Config.get("ui") ?? {};
+    return init({
+        target: mapCfg.target ?? "geoleaf-map",
+        center: mapCfg.center ?? CONSTANTS.DEFAULT_CENTER,
+        zoom: typeof mapCfg.zoom === "number" ? mapCfg.zoom : CONSTANTS.DEFAULT_ZOOM,
+        theme: uiCfg.theme ?? "light",
+        mapOptions: mapCfg.mapOptions ?? {},
+    });
+}
+
 // ---------------------------------------------------------
 // initMap (compat descendante)
 // ---------------------------------------------------------
 function initMap(a: any, b: any, c: any, d: any) {
-    Log.warn("[GeoLeaf.Core] GeoLeaf.Core.initMap() est obsolète, utilisez GeoLeaf.Core.init().");
+    Log.warn(
+        "[GeoLeaf.Core] GeoLeaf.Core.initMap() is deprecated, use GeoLeaf.Core.init() instead."
+    );
 
     if (_g.GeoLeaf?.Config?.get) {
         try {
-            const mapCfg = _g.GeoLeaf.Config.get("map") || {};
-            const uiCfg = _g.GeoLeaf.Config.get("ui") || {};
-            return init({
-                target: mapCfg.target || "geoleaf-map",
-                center: mapCfg.center || CONSTANTS.DEFAULT_CENTER,
-                zoom: typeof mapCfg.zoom === "number" ? mapCfg.zoom : CONSTANTS.DEFAULT_ZOOM,
-                theme: uiCfg.theme || "light",
-                mapOptions: mapCfg.mapOptions || {},
-            });
+            return _initMapFromConfig();
         } catch (err: any) {
-            Log.error("[GeoLeaf.Core] initMap() n'a pas pu construire les options :", err);
+            Log.error("[GeoLeaf.Core] initMap() could not build options:", err);
         }
     }
 
     if (a && typeof a === "object" && !Array.isArray(a)) return init(a);
 
     if (typeof a === "string" && Array.isArray(b) && typeof c === "number") {
-        return init({ target: a, center: b, zoom: c, theme: d || "light" });
+        return init({ target: a, center: b, zoom: c, theme: d ?? "light" });
     }
 
-    Log.error("[GeoLeaf.Core] initMap() appelé avec une signature obsolète ou invalide.");
+    Log.error("[GeoLeaf.Core] initMap() called with an obsolete or invalid signature.");
     return null;
 }
 
@@ -101,7 +107,7 @@ function getMap() {
 }
 
 // ---------------------------------------------------------
-// API publique
+// API public
 // ---------------------------------------------------------
 export const Core = {
     init,

@@ -16,7 +16,7 @@
 .gl-page {
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
+    height: 100vh;
     background: var(--gl-color-bg-page);
     color: var(--gl-color-text-main);
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
@@ -46,6 +46,7 @@
     height: 100%;
     position: absolute;
     inset: 0;
+    outline: none;
 }
 
 /* ========================================================================== */
@@ -1366,6 +1367,16 @@ body:has(#gl-filter-panel.is-open) .gl-filter-toggle {
 }
 
 .gl-filter-panel__accordion-title {
+    background: none;
+    border: none;
+    padding: 0;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
     font-size: 0.85rem;
     font-weight: 600;
     color: var(--gl-color-text-main);

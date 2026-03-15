@@ -1,9 +1,9 @@
-﻿/**
- * GeoLeaf Legend — Barrel export
- * Point d'entrée unique pour le sous-module legend/
+/**
+ * GeoLeaf Legend — Barl export
+ * Point d'input unique for the sous-module legend/
  *
- * Note : Legend (namespace assemblé, stateful) n'est PAS exporté ici.
- * Utiliser la façade geoleaf.legend.js ou importer directement legend/legend-api.js.
+ * Note : Legend (namespace assembled, stateful) n'est PAS exported ici.
+ * Utiliser la facade geoleaf.legend.js ou importer directly legend/legend-api.js.
  *
  * @module legend
  */

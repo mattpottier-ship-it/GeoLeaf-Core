@@ -7,14 +7,14 @@
 "use strict";
 
 /**
- * Construit un objet de trace Chrome DevTools (profil JSON) à partir des
- * marks et measures collectés par `PerformanceProfiler`.
+ * Builds a object de trace Chrome DevTools (profile JSON) froms
+ * marks and measures collected by `PerformanceProfiler`.
  *
- * Compatible avec l'onglet Performance de Chrome DevTools:
- * `DevTools → Performance → Load Profile → sélectionner le fichier JSON`
+ * Compatible avec l'tab Performance de Chrome DevTools:
+ * `DevTools → Performance → Load Profile → selectionner le file JSON`
  *
  * @param {{ marks: Map<string, number>, measures: Map<string, number> }} data
- * @returns {{traceEvents: Array, metadata: Object}} Objet de trace DevTools
+ * @returns {{traceEvents: Array, metadata: Object}} Object de trace DevTools
  */
 export function buildDevToolsTrace({ marks, measures }: { marks: any; measures: any }) {
     const devToolsData = {

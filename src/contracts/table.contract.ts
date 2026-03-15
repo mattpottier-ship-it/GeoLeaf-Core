@@ -1,15 +1,15 @@
 /**
  * GeoLeaf Contract — Table (lazy-chunk boundary)
  *
- * Interface ESM pure pour que table/panel.js puisse appeler les méthodes
- * du module Table (geoleaf.table.js) sans couplage runtime.
+ * Interface ESM pure pour que table/panel.js puisse appeler the methods
+ * of the module Table (geoleaf.table.js) sans couplage runtime.
  *
  * Phase 10-E — Pattern G : contrat de chunk Table.
  *
  * CYCLE ROMPU :
- *   geoleaf.table.js → table/panel.js (static import, inchangé)
+ *   geoleaf.table.js → table/panel.js (static import, unchanged)
  *   table/panel.js   → TableContract  (registration pattern)
- *   geoleaf.table.js appelle TableContract.register(Table) au chargement
+ *   geoleaf.table.js appelle TableContract.register(Table) au loading
  *
  * USAGE dans panel.js :
  *   import { TableContract } from '../../../contracts/table.contract.js';
@@ -18,7 +18,7 @@
  *       TableContract.setLayer(layerId);
  *   }
  *
- * REGISTRATION dans geoleaf.table.js (côté Table) :
+ * REGISTRATION dans geoleaf.table.js (side Table) :
  *   import { TableContract } from '../../contracts/table.contract.js';
  *   TableContract.register(TableModule);
  */
@@ -30,14 +30,14 @@ let _table: any = null;
 let _panel: any = null;
 
 /**
- * Contrat d'interface pour le module Table.
- * Permet à panel.js d'appeler les méthodes Table sans importer geoleaf.table.js
- * (ce qui créerait un cycle).
+ * Contrat d'interface pour the module Table.
+ * Allows panel.js d'appeler the methods Table sans importer geoleaf.table.js
+ * (which would create a cycle).
  * @namespace TableContract
  */
 const TableContract = {
     /**
-     * Enregistre l'instance Table (appelé par geoleaf.table.js au chargement).
+     * Registers the instance Table (called par geoleaf.table.js au loading).
      * @param {Object} tableInstance
      * @param {Object} [panelInstance]
      */
@@ -47,7 +47,7 @@ const TableContract = {
     },
 
     /**
-     * Retourne true si Table est disponible.
+     * Returns true si Table est available.
      * @returns {boolean}
      */
     isAvailable() {
@@ -64,7 +64,7 @@ const TableContract = {
     },
 
     /**
-     * Zoom sur la sélection courante.
+     * Zoom sur the selection currente.
      */
     zoomToSelection() {
         if (_table && typeof _table.zoomToSelection === "function") {
@@ -82,7 +82,7 @@ const TableContract = {
     },
 
     /**
-     * Export de la sélection.
+     * Export de the selection.
      */
     exportSelection() {
         if (_table && typeof _table.exportSelection === "function") {
@@ -91,7 +91,7 @@ const TableContract = {
     },
 
     /**
-     * Toggle visibilité du tableau.
+     * Toggle visibility du array.
      */
     toggle() {
         if (_table && typeof _table.toggle === "function") {
@@ -100,7 +100,7 @@ const TableContract = {
     },
 
     /**
-     * Affiche le tableau.
+     * Displays the table.
      */
     show() {
         if (_table && typeof _table.show === "function") {
@@ -131,7 +131,7 @@ const TableContract = {
     },
 
     /**
-     * Clear la sélection.
+     * Clear the selection.
      */
     clearSelection() {
         if (_table && typeof _table.clearSelection === "function") {
@@ -149,7 +149,7 @@ const TableContract = {
     },
 
     /**
-     * Met à jour les boutons toolbar du panel.
+     * Updates thes buttons toolbar du panel.
      * @param {number} selectedCount
      */
     updateToolbarButtons(selectedCount: any) {

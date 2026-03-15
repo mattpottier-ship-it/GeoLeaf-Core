@@ -1,6 +1,6 @@
-﻿/**
+/**
  * POI Renderers - Media Renderers Module (Migrated to AbstractRenderer)
- * Rendu des médias: images, galeries, lightbox
+ * Rendu des media: images, galleries, lightbox
  *
  * @module poi/renderers/media-renderers
  * @requires renderers/abstract-renderer
@@ -68,7 +68,7 @@ class MediaRenderers extends AbstractRenderer {
     }
 
     /**
-     * Rend une galerie d'images avec miniatures
+     * Rend une gallery d'images avec thumbnails
      * @param {Object} section - Section config
      * @param {Array<string>} gallery - Array of image URLs
      * @returns {HTMLElement|null}
@@ -83,7 +83,7 @@ class MediaRenderers extends AbstractRenderer {
 
         const galleryDiv = this.createElement("div", "gl-poi-gallery");
 
-        // Image principale
+        // Image maine
         const mainDiv = this._createMainImage(gallery[0]);
         galleryDiv.appendChild(mainDiv);
 
@@ -97,7 +97,7 @@ class MediaRenderers extends AbstractRenderer {
     }
 
     /**
-     * Crée l'image principale de la galerie
+     * Creates the image maine de la gallery
      * @private
      * @param {string} imageUrl - Image URL
      * @returns {HTMLElement}
@@ -118,7 +118,7 @@ class MediaRenderers extends AbstractRenderer {
     }
 
     /**
-     * Crée les miniatures de la galerie
+     * Creates thes thumbnails de la gallery
      * @private
      * @param {Array<string>} gallery - Array of image URLs
      * @param {HTMLElement} mainDiv - Main image container
@@ -137,7 +137,7 @@ class MediaRenderers extends AbstractRenderer {
     }
 
     /**
-     * Crée une miniature individuelle
+     * Creates ae thumbnail individuelle
      * @private
      * @param {string} imgUrl - Image URL
      * @param {number} index - Image index
@@ -161,7 +161,7 @@ class MediaRenderers extends AbstractRenderer {
 
         thumbDiv.appendChild(imgThumb);
 
-        // Event listener pour changer l'image principale
+        // Event listner pour changer l'image maine
         this.addEventListener(
             thumbDiv,
             "click",
@@ -169,14 +169,14 @@ class MediaRenderers extends AbstractRenderer {
                 e.preventDefault();
                 e.stopPropagation();
 
-                // Retirer la classe active de toutes les miniatures
+                // Retirer la class active de toutes les thumbnails
                 const allThumbs = thumbsDiv.querySelectorAll(".gl-poi-gallery__thumb");
                 allThumbs.forEach((t: any) => (t as any).classList.remove("active"));
 
-                // Ajouter la classe active à la miniature cliquée
+                // Add active class to the clicked thumbnail
                 thumbDiv.classList.add("active");
 
-                // Changer l'image principale
+                // Changer l'image maine
                 mainImg.src = imgUrl;
                 mainImg.alt = `Image ${index + 1}`;
                 mainDiv.setAttribute("data-gallery-index", index.toString());

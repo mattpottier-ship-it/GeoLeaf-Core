@@ -1,5 +1,5 @@
 /**
- * @fileoverview TimerManager - Gestion centralisée des timers
+ * @fileoverview TimerManager - Gestion centralizede des timers
  * @module GeoLeaf.Utils.TimerManager
  */
 

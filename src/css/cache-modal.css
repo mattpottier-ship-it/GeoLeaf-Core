@@ -1,8 +1,8 @@
 /**
  * GeoLeaf - Cache Modal Styles
  *
- * Styles pour le modal de gestion du cache hors ligne
- * Supporte les thèmes light et dark
+ * Styles for the offline cache management modal
+ * Supports light and dark themes
  */
 
 /* Modal overlay */
@@ -286,17 +286,17 @@ body.gl-theme-dark .gl-cache-export__btn--secondary:hover {
 }
 
 .gl-cache-modal__body .gl-cache-control__header {
-    display: none; /* Cacher le header car on a déjà le titre dans le modal */
+    display: none; /* Hide the header since we already have the title in the modal */
 }
 
-/* IMPORTANT: Désactiver le scroll interne du cache control */
+/* IMPORTANT: Disable internal scroll of the cache control */
 .gl-cache-modal__body .gl-cache-control__body {
     padding: 0;
     overflow-y: visible !important;
     max-height: none !important;
 }
 
-/* Les styles du bouton cache sont définis dans geoleaf-controls.css */
+/* Cache button styles are defined in geoleaf-controls.css */
 
 /* Responsive */
 @media (max-width: 768px) {

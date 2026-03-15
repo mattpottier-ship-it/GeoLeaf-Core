@@ -1,9 +1,9 @@
-# GeoLeaf.Filters â€“ Documentation du module Filters
+﻿# GeoLeaf.Filters â€“ Documentation du module Filters
 
 Product Version: GeoLeaf Platform V1  
 Le module **GeoLeaf.Filters** gÃ¨re le filtrage avancÃ© des POI et des Routes selon de multiples critÃ¨res.
 
-**Version**: 1.1.0  
+**Version**: 1.1.1  
 **Fichier**: `src/modules/geoleaf.filters.js` (494 lignes)  
 **DerniÃ¨re mise Ã  jour**: DÃ©cembre 2, 2025
 

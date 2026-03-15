@@ -1,9 +1,9 @@
-# ðŸ“– Cookbook - GeoLeaf.js
+﻿# ðŸ“– Cookbook - GeoLeaf.js
 
 > **Exemples pratiques et cas d'usage** pour maÃ®triser GeoLeaf.js
 
 **Version produit**: GeoLeaf Platform V1  
-**Version**: 1.1.0  
+**Version**: 1.1.1  
 **DerniÃ¨re mise Ã  jour**: 14 fÃ©vrier 2026
 
 > Convention de versioning : **Platform V1** est le label produit ; le SemVer technique des packages/releases reste en **1.1.x**. Voir [VERSIONING_POLICY.md](VERSIONING_POLICY.md).
@@ -784,5 +784,5 @@ async function exportCSV() {
 ---
 
 **DerniÃ¨re mise Ã  jour**: 19 janvier 2026  
-**Version**: 1.1.0  
+**Version**: 1.1.1  
 **Auteurs**: Ã‰quipe GeoLeaf

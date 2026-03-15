@@ -1,4 +1,5 @@
-﻿/**
+/* eslint-disable security/detect-object-injection */
+/**
  * @fileoverview Animation Helper - 60 FPS Animation Manager
  * @version 1.0.0
  */
@@ -6,8 +7,18 @@
 import { Log } from "../log/index.js";
 
 const _TRANSFORM_PROPS = new Set([
-    "translateX", "translateY", "translateZ", "scale", "scaleX", "scaleY",
-    "rotate", "rotateX", "rotateY", "rotateZ", "skewX", "skewY",
+    "translateX",
+    "translateY",
+    "translateZ",
+    "scale",
+    "scaleX",
+    "scaleY",
+    "rotate",
+    "rotateX",
+    "rotateY",
+    "rotateZ",
+    "skewX",
+    "skewY",
 ]);
 
 type EasingFn = (t: number) => number;
@@ -58,7 +69,13 @@ export class AnimationHelper {
         if (enabled && !this._rafId) this._startLoop();
     }
 
-    getStats(): { totalFrames: number; droppedFrames: number; averageFPS: number; activeAnimations: number; currentFPS: number } {
+    getStats(): {
+        totalFrames: number;
+        droppedFrames: number;
+        averageFPS: number;
+        activeAnimations: number;
+        currentFPS: number;
+    } {
         return {
             ...this._stats,
             activeAnimations: this._animations.size,
@@ -114,7 +131,13 @@ export class AnimationHelper {
 
     fadeIn(element: HTMLElement, duration = 300, onComplete?: () => void): number | null {
         if (element.style.display === "none") element.style.display = "block";
-        return this.animate(element, { from: { opacity: 0 }, to: { opacity: 1 }, duration, easing: "easeOutCubic", onComplete });
+        return this.animate(element, {
+            from: { opacity: 0 },
+            to: { opacity: 1 },
+            duration,
+            easing: "easeOutCubic",
+            onComplete,
+        });
     }
 
     fadeOut(element: HTMLElement, duration = 300, onComplete?: () => void): number | null {

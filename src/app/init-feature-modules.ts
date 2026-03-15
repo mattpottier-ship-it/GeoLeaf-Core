@@ -27,7 +27,7 @@ declare const L: any;
 export function initBasemaps({ GeoLeaf, cfg, map, AppLog }: any) {
     const baseLayersModule = GeoLeaf.BaseLayers || GeoLeaf.Baselayers;
     if (!baseLayersModule || typeof baseLayersModule.init !== "function") {
-        AppLog.warn("Module BaseLayers introuvable.");
+        AppLog.warn("BaseLayers module not found.");
         return;
     }
 
@@ -68,7 +68,7 @@ export function initBasemaps({ GeoLeaf, cfg, map, AppLog }: any) {
             basemaps: cfg.basemaps,
         });
     } catch (e) {
-        AppLog.warn("BaseLayers.init a levé une exception :", e);
+        AppLog.warn("BaseLayers.init threw an exception:", e);
     }
 }
 /* eslint-enable complexity, security/detect-object-injection */
@@ -81,7 +81,7 @@ export function initBasemaps({ GeoLeaf, cfg, map, AppLog }: any) {
 export function initPOI({ GeoLeaf, cfg, map, AppLog }: any) {
     const poiApi = GeoLeaf.POI;
     if (!poiApi || typeof poiApi.add !== "function") {
-        AppLog.warn("GeoLeaf.POI.add() indisponible, aucun POI ne sera affiché.");
+        AppLog.warn("GeoLeaf.POI.add() unavailable, no POI will be displayed.");
         return;
     }
 
@@ -89,7 +89,7 @@ export function initPOI({ GeoLeaf, cfg, map, AppLog }: any) {
         if (typeof poiApi.init === "function") {
             poiApi.init({ map: map, config: cfg.poiConfig || {} });
 
-            // Chargement des légendes POI
+            // Load POI legends
             if (
                 GeoLeaf.Legend &&
                 typeof GeoLeaf.Legend.loadLayerLegend === "function" &&
@@ -115,21 +115,19 @@ export function initPOI({ GeoLeaf, cfg, map, AppLog }: any) {
                                 }
                             })
                             .catch((err) =>
-                                AppLog.warn(`Erreur chargement config couche ${layerRef.id}:`, err)
+                                AppLog.warn(`Error loading layer config ${layerRef.id}:`, err)
                             );
                     }
                 });
             }
         }
     } catch (e) {
-        AppLog.warn("GeoLeaf.POI.init() a levé une erreur :", e);
+        AppLog.warn("GeoLeaf.POI.init() threw an error:", e);
     }
 
     const showFilterPanel = cfg.ui && cfg.ui.showFilterPanel === true;
     if (showFilterPanel) {
-        AppLog.info(
-            "Panneau de filtres activé : les POI seront chargés via le système de filtres."
-        );
+        AppLog.info("Filter panel enabled: POIs will be loaded via the filter system.");
         if (GeoLeaf.UI && typeof GeoLeaf.UI.applyFiltersInitial === "function") {
             GeoLeaf.UI.applyFiltersInitial();
         }
@@ -156,7 +154,7 @@ export function initPOI({ GeoLeaf, cfg, map, AppLog }: any) {
     });
 
     if (bounds.length > 0) {
-        // fitBounds POI uniquement si pas de bounds dans le profil ET pas de couches GeoJSON
+        // fitBounds POI only si pas de bounds dans the profile ET pas de GeoJSON layers
         const hasBoundsFromProfile =
             cfg.map && Array.isArray(cfg.map.bounds) && cfg.map.bounds.length === 2;
         const hasGeoJSONLayers = cfg.layers && Array.isArray(cfg.layers) && cfg.layers.length > 0;
@@ -168,7 +166,7 @@ export function initPOI({ GeoLeaf, cfg, map, AppLog }: any) {
                     animate: false,
                 });
             } catch (e) {
-                AppLog.warn("Erreur lors de fitBounds :", e);
+                AppLog.warn("Error during fitBounds:", e);
             }
         }
         if (GeoLeaf.UI && typeof GeoLeaf.UI.refreshFilterTags === "function") {
@@ -194,15 +192,15 @@ export function initRoute({ GeoLeaf, cfg, map, AppLog }: any) {
     try {
         routeApi.init({ map: map, fitBoundsOnLoad: false, maxZoomOnFit: 12 });
     } catch (e) {
-        AppLog.warn("GeoLeaf.Route.init() a levé une erreur :", e);
+        AppLog.warn("GeoLeaf.Route.init() threw an error:", e);
         return;
     }
     if (Array.isArray(cfg.routes) && cfg.routes.length > 0) {
         try {
             routeApi.loadFromConfig(cfg.routes);
-            AppLog.log("Itinéraires chargés.");
+            AppLog.log("Routes loaded.");
         } catch (e) {
-            AppLog.warn("GeoLeaf.Route.loadFromConfig() a levé une erreur :", e);
+            AppLog.warn("GeoLeaf.Route.loadFromConfig() threw an error:", e);
         }
     }
 }
@@ -215,14 +213,14 @@ export function initRoute({ GeoLeaf, cfg, map, AppLog }: any) {
 export function initGeoJSON({ GeoLeaf, _cfg, map, AppLog, _app }: any) {
     const geoJsonApi = GeoLeaf.GeoJSON;
     if (!geoJsonApi || typeof geoJsonApi.init !== "function") {
-        AppLog.log("GeoLeaf.GeoJSON.init() indisponible — pas de couches GeoJSON.");
+        AppLog.log("GeoLeaf.GeoJSON.init() unavailable — no GeoJSON layers.");
         return;
     }
 
     try {
         geoJsonApi.init({ map: map, fitBoundsOnLoad: false, maxZoomOnFit: 12 });
     } catch (e) {
-        AppLog.warn("GeoLeaf.GeoJSON.init() a levé une erreur :", e);
+        AppLog.warn("GeoLeaf.GeoJSON.init() threw an error:", e);
         return;
     }
 
@@ -231,7 +229,7 @@ export function initGeoJSON({ GeoLeaf, _cfg, map, AppLog, _app }: any) {
             if (event && event.detail && typeof event.detail.count === "number") {
                 const count = event.detail.count;
                 const message =
-                    count === 1 ? "1 couche GeoJSON chargée" : count + " couches GeoJSON chargées";
+                    count === 1 ? "1 GeoJSON layer loaded" : count + " GeoJSON layers loaded";
                 if (_app && typeof _app.showNotification === "function") {
                     _app.showNotification(message, 3000);
                 }
@@ -239,8 +237,8 @@ export function initGeoJSON({ GeoLeaf, _cfg, map, AppLog, _app }: any) {
         });
     }
 
-    // Initialisation du système de thèmes
-    // B5 [ESM-02]: IIFE remplacée par fonction nommée — scoping inutile en ESM
+    // Theme system initialization
+    // B5 [ESM-02]: IIFE replaced by named function — scoping unnecessary in ESM
     function buildLoadAllConfigsPromise() {
         if (
             GeoLeaf._GeoJSONLoader &&
@@ -254,7 +252,7 @@ export function initGeoJSON({ GeoLeaf, _cfg, map, AppLog, _app }: any) {
                 return GeoLeaf._GeoJSONLoader
                     .loadAllLayersConfigsForLayerManager(activeProfile)
                     .catch((err: any) => {
-                        AppLog.warn("Erreur chargement configs couches:", err);
+                        AppLog.warn("Error loading layer configs:", err);
                         return [];
                     });
             }
@@ -266,7 +264,7 @@ export function initGeoJSON({ GeoLeaf, _cfg, map, AppLog, _app }: any) {
     /* eslint-disable max-lines-per-function -- theme init callback */
     loadAllConfigsPromise.then(function () {
         if (!GeoLeaf.ThemeSelector || typeof GeoLeaf.ThemeSelector.init !== "function") {
-            AppLog.warn("ThemeSelector non disponible");
+            AppLog.warn("ThemeSelector not available");
             return;
         }
 
@@ -279,7 +277,7 @@ export function initGeoJSON({ GeoLeaf, _cfg, map, AppLog, _app }: any) {
         const secondaryContainer = document.getElementById("gl-theme-secondary-container");
 
         if (!currentProfileId || !primaryContainer || !secondaryContainer) {
-            AppLog.warn("ThemeSelector : conteneurs ou profil manquants");
+            AppLog.warn("ThemeSelector: containers or profile missing");
             return;
         }
 
@@ -289,7 +287,7 @@ export function initGeoJSON({ GeoLeaf, _cfg, map, AppLog, _app }: any) {
             secondaryContainer: secondaryContainer,
         })
             .then(function () {
-                AppLog.log("ThemeSelector initialisé et thème appliqué");
+                AppLog.log("ThemeSelector initialized and theme applied");
 
                 if (
                     GeoLeaf._GeoJSONLayerManager &&
@@ -320,7 +318,7 @@ export function initGeoJSON({ GeoLeaf, _cfg, map, AppLog, _app }: any) {
                 });
             })
             .catch(function (e: any) {
-                AppLog.warn("Erreur initialisation ThemeSelector:", e);
+                AppLog.warn("Error initializing ThemeSelector:", e);
             });
     });
     /* eslint-enable max-lines-per-function */

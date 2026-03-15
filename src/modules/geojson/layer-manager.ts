@@ -7,7 +7,7 @@
 
 /**
  * GeoLeaf GeoJSON Module - Layer Manager
- * SHIM LEGACY — re-exporte les sous-modules du dossier geojson/layer-manager/
+ * SHIM LEGACY — re-exporte les sous-modules du folder geojson/layer-manager/
  * @module geojson/layer-manager
  */
 

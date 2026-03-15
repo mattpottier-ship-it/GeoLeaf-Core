@@ -1,19 +1,28 @@
-﻿/**
- * globals.js  Orchestrateur du bridge UMD/ESM (Phase 9  refactoris�)
- * Ce fichier d�l�gue aux sous-modules par domaine m�tier.
- * Chaque sous-module importe ses propres d�pendances et appende _g.GeoLeaf.
+/**
+ * @module globals
  *
- * Ordre d'ex�cution garanti par ESM (depth-first) :
- *   core  config  geojson  ui  storage  poi  api
+ * @description
+ * UMD/ESM bridge orchestrator — Phase 9 refactor.
  *
- *  _namespace.js supprim� en Phase 8  tous les modules utilisent Pattern A pur
- *  globals.js d�coup� en sous-fichiers par domaine en Phase 9 (P3-DEAD-05)
+ * This runtime initialization module delegates to domain-specific sub-modules,
+ * each of which imports its own dependencies and appends to `_g.GeoLeaf`.
+ * It is imported as a **side-effect** by both `bundle-entry.ts` (UMD) and
+ * `bundle-esm-entry.ts` (ESM) to populate `window.GeoLeaf.*`.
  *
- * @see ROADMAP_PHASE7_ESM.md
+ * Guaranteed execution order (ESM depth-first resolution):
+ *   `globals.core` → `globals.config` → `globals.geojson` →
+ *   `globals.ui` → `globals.storage` → `globals.poi` → `globals.api`
+ *
+ * History:
+ *   - `_namespace.js` removed in Phase 8 — all modules use pure Pattern A
+ *   - `globals.js` split into domain sub-files in Phase 9 (P3-DEAD-05)
+ *
+ * @see globals.core for runtime core (log, errors, utils)
+ * @see globals.api for public facades and PluginRegistry
  * @see docs/architecture/BOOT_SEQUENCE.md
  */
 
-// B1+B2  runtime core : log, errors, constants, security, utils (DOIT �tre en premier)
+// B1+B2  runtime core : log, errors, constants, security, utils (DOIT être en premier)
 import "./globals.core.js";
 // B3+B4  helpers, validators, renderers, data, loaders, map, config
 import "./globals.config.js";
@@ -25,10 +34,10 @@ import "./globals.ui.js";
 import "./globals.storage.js";
 // B10  poi, add-form, renderers
 import "./globals.poi.js";
-// B11  facades geoleaf.*.js + api/ + PluginRegistry (DOIT �tre en dernier)
+// B11  facades geoleaf.*.js + api/ + PluginRegistry (DOIT être en dernier)
 import "./globals.api.js";
 
-// Re-exporter _g pour les consommateurs qui l'importent directement
+// Re-exporter _g for thes consommateurs qui l'importent directly
 const _g: any =
     typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : {};
 

@@ -7,7 +7,7 @@
 
 /**
  * GeoLeaf POI Module - Core
- * Fonctions principales d'initialisation, chargement et gestion des POI
+ * Fonctions maines d'initialization, loading et gestion des POI
  */
 import { Log } from "../log/index.js";
 import { Config } from "../config/config-primitives.js";
@@ -17,515 +17,482 @@ import { POIMarkers } from "./markers.ts";
 import { POISidepanel } from "./sidepanel.ts";
 import { POINormalizers } from "./normalizers.ts";
 
-// Références aux modules POI
+// References to POI modules
 
 /**
- * Fonction principale d'initialisation du module POI.
+ * Fonction maine d'initialization of the module POI.
  *
- * @param {L.Map|object} mapOrOptions - Instance de la carte Leaflet ou objet {map, config}.
- * @param {object} config - Configuration POI depuis globalThis.GeoLeaf.config.json (optionnel si premier param est objet).
+ * @param {L.Map|object} mapOrOptions - Instance de the map Leaflet ou object {map, config}.
+ * @param {object} config - Configuration POI from globalThis.GeoLeaf.config.json (optional si premier param est object).
  */
-async function init(mapOrOptions: any, config?: any) {
-    // Support pour les deux signatures: init(map, config) et init({map, config})
-    let map, opts;
-
+function _resolveInitParams(mapOrOptions: any, config?: any): { map: any; opts: any } {
     if (mapOrOptions && typeof mapOrOptions === "object" && mapOrOptions.map) {
-        map = mapOrOptions.map;
-        opts = mapOrOptions.config || mapOrOptions;
-    } else {
-        map = mapOrOptions;
-        opts = config;
+        return { map: mapOrOptions.map, opts: mapOrOptions.config || mapOrOptions };
     }
+    return { map: mapOrOptions, opts: config };
+}
 
-    if (!map || typeof map.addLayer !== "function") {
-        if (Log)
-            Log.error(
-                "[POI] Aucune carte Leaflet valide fournie. Impossible d'initialiser le module POI."
-            );
+function _setupPoiClustering(state: any, constants: any, L: any): void {
+    const clustering = state.poiConfig.clustering !== false;
+    if (!clustering) return;
+    if (typeof L === "undefined") return;
+    if (typeof L.markerClusterGroup !== "function") return;
+    state.poiClusterGroup = L.markerClusterGroup({
+        maxClusterRadius: state.poiConfig.clusterRadius || 80,
+        disableClusteringAtZoom: state.poiConfig.disableClusteringAtZoom || constants.POI_MAX_ZOOM,
+        animate: false,
+        showCoverageOnHover: false,
+    });
+    state.mapInstance.addLayer(state.poiClusterGroup);
+    if (Log) Log.info("[POI] Clustering enabled (MarkerClusterGroup created).");
+}
+
+function _initPoiSidePanel(): void {
+    if (!POISidepanel) return;
+    if (typeof POISidepanel.createSidePanel !== "function") return;
+    POISidepanel.createSidePanel();
+}
+
+async function _initPoiSprite(): Promise<void> {
+    if (!POIMarkers) return;
+    if (typeof POIMarkers.ensureProfileSpriteInjectedSync !== "function") return;
+    await POIMarkers.ensureProfileSpriteInjectedSync();
+}
+
+function _validatePoiMap(map: any): boolean {
+    if (!map) return false;
+    if (typeof map.addLayer !== "function") return false;
+    return true;
+}
+
+function _scheduleLoadOnStorageReady(): void {
+    const onStorageReady = () => {
+        document.removeEventListener("geoleaf:storage:ready", onStorageReady);
+        loadAndDisplay();
+    };
+    document.addEventListener("geoleaf:storage:ready", onStorageReady, { once: true });
+    if (document.readyState !== "loading") {
+        Promise.resolve().then(() => {
+            document.removeEventListener("geoleaf:storage:ready", onStorageReady);
+            loadAndDisplay();
+        });
         return;
     }
+    document.addEventListener(
+        "DOMContentLoaded",
+        () => {
+            document.removeEventListener("geoleaf:storage:ready", onStorageReady);
+            loadAndDisplay();
+        },
+        { once: true }
+    );
+}
 
+async function init(mapOrOptions: any, config?: any) {
+    const { map, opts } = _resolveInitParams(mapOrOptions, config);
+    if (!_validatePoiMap(map)) {
+        if (Log) Log.error("[POI] No valid Leaflet map provided. Cannot initialize POI module.");
+        return;
+    }
     const shared = POIShared;
     if (!shared) {
-        if (Log) Log.error("[POI] Module shared non chargé.");
+        if (Log) Log.error("[POI] Module shared not loaded.");
         return;
     }
-
     const state = shared.state;
     const constants = shared.constants;
-
     state.mapInstance = map;
     state.poiConfig = opts || {};
-
-    if (Log) Log.info("[POI] Initialisation du module POI...");
-
-    // Forcer un maxZoom valide sur la carte
-    if (shared.ensureMapMaxZoom) {
-        shared.ensureMapMaxZoom(map, constants.POI_MAX_ZOOM);
-    }
-
-    // Créer le layer group principal
+    if (Log) Log.info("[POI] Initializing POI module...");
+    if (shared.ensureMapMaxZoom) shared.ensureMapMaxZoom(map, constants.POI_MAX_ZOOM);
     const L = (globalThis as any).L;
     state.poiLayerGroup = L.layerGroup().addTo(map);
-
-    // Créer le cluster group si clustering activé
-    const clustering = state.poiConfig.clustering !== false;
-    if (clustering && typeof L !== "undefined" && typeof L.markerClusterGroup === "function") {
-        state.poiClusterGroup = L.markerClusterGroup({
-            maxClusterRadius: state.poiConfig.clusterRadius || 80,
-            disableClusteringAtZoom:
-                state.poiConfig.disableClusteringAtZoom || constants.POI_MAX_ZOOM,
-            animate: false,
-            showCoverageOnHover: false,
-        });
-        state.mapInstance.addLayer(state.poiClusterGroup);
-        if (Log) Log.info("[POI] Clustering activé (MarkerClusterGroup créé).");
+    _setupPoiClustering(state, constants, L);
+    _initPoiSidePanel();
+    await _initPoiSprite();
+    if (state.poiConfig.enabled === false) return;
+    if (StorageContract.isAvailable()) {
+        loadAndDisplay();
+        return;
     }
-
-    // Créer le panneau latéral (caché par défaut)
-    const sidePanel = POISidepanel;
-    if (sidePanel && typeof sidePanel.createSidePanel === "function") {
-        sidePanel.createSidePanel();
-    }
-
-    // Charger le sprite SVG AVANT de charger les POIs
-    const markers = POIMarkers;
-    if (markers && typeof markers.ensureProfileSpriteInjectedSync === "function") {
-        await markers.ensureProfileSpriteInjectedSync();
-    }
-
-    // Charger et afficher les POIs — event-driven (perf: suppression setTimeout 1000ms)
-    if (state.poiConfig.enabled !== false) {
-        // Si Storage déjà prêt, charger immédiatement ; sinon attendre l'événement
-        const storageReady = StorageContract.isAvailable();
-        if (storageReady) {
-            loadAndDisplay();
-        } else {
-            // Écouter l'événement une seule fois, avec fallback DOMContentLoaded
-            const onStorageReady = () => {
-                document.removeEventListener("geoleaf:storage:ready", onStorageReady);
-                loadAndDisplay();
-            };
-            document.addEventListener("geoleaf:storage:ready", onStorageReady, { once: true });
-            // Fallback : si l'événement n'arrive pas (Storage absent), charger quand même après DOMContentLoaded
-            if (document.readyState === "loading") {
-                document.addEventListener(
-                    "DOMContentLoaded",
-                    () => {
-                        document.removeEventListener("geoleaf:storage:ready", onStorageReady);
-                        loadAndDisplay();
-                    },
-                    { once: true }
-                );
-            } else {
-                // DOM déjà prêt : planifier au prochain tick pour laisser Storage finir son init synchrone
-                Promise.resolve().then(() => {
-                    document.removeEventListener("geoleaf:storage:ready", onStorageReady);
-                    loadAndDisplay();
-                });
-            }
-        }
-    }
+    _scheduleLoadOnStorageReady();
 }
 
 /**
- * ✅ NOUVELLE FONCTION: Charge et fusionne les POI stockés localement avec les POI existants
+ * ✅ NEW FUNCTION: Loads and merges locally stored POIs with existing POIs
  */
+function _detectWrappedPoiItem(
+    item: any
+): { isPoi: boolean; poiData: any; itemAction: string } | null {
+    if (!item.data) return null;
+    if (item.data.type !== "poi") return null;
+    if (!item.action) return null;
+    const actionStr = item.action as string;
+    if (!actionStr.includes("add") && !actionStr.includes("update")) return null;
+    return { isPoi: true, poiData: item.data, itemAction: item.action };
+}
+
+function _hasPoiCoords(item: any): boolean {
+    if (item.latlng) return true;
+    if (item.latitude) return true;
+    return false;
+}
+
+function _detectHeuristicPoiInData(
+    item: any
+): { isPoi: boolean; poiData: any; itemAction: string } | null {
+    if (!item.data) return null;
+    const d = item.data;
+    if (!d.id && !d.latlng && !d.latitude) return null;
+    const hintId = d.id || "no-id";
+    if (Log) Log.info(`[POI] Heuristic POI detection: ${hintId}`);
+    return { isPoi: true, poiData: d, itemAction: item.action || "add" };
+}
+
+function _detectDirectPoiItem(
+    item: any
+): { isPoi: boolean; poiData: any; itemAction: string } | null {
+    if (item.type === "poi")
+        return { isPoi: true, poiData: item, itemAction: item.action || "add" };
+    const heuristic = _detectHeuristicPoiInData(item);
+    if (heuristic) return heuristic;
+    if (!item.id) return null;
+    if (!_hasPoiCoords(item)) return null;
+    if (Log) Log.info(`[POI] Direct POI detection: ${item.id}`);
+    return { isPoi: true, poiData: item, itemAction: "add" };
+}
+
+function _detectQueueItemFormat(item: any): {
+    isPoi: boolean;
+    poiData: any;
+    itemAction: string | null;
+} {
+    if (!item) return { isPoi: false, poiData: null, itemAction: null };
+    const wrapped = _detectWrappedPoiItem(item);
+    if (wrapped) return wrapped;
+    const direct = _detectDirectPoiItem(item);
+    if (direct) return direct;
+    return { isPoi: false, poiData: null, itemAction: null };
+}
+
+function _processPoiQueueItem(item: any, normalizers: any, cachedPois: any[]): void {
+    const { isPoi, poiData, itemAction } = _detectQueueItemFormat(item);
+    if (!isPoi || !poiData) {
+        if (Log)
+            Log.debug(
+                `[POI] Item ignored - action: ${item.action}, type: ${item.type || (item.data && item.data.type)}, keys: ${Object.keys(item).join(",")}`
+            );
+        return;
+    }
+    const normalizedPoi = normalizers.normalizePoi(poiData);
+    if (!normalizedPoi) {
+        if (Log) Log.warn("[POI] Failed to normalize cached POI:", poiData);
+        return;
+    }
+    cachedPois.push(normalizedPoi);
+    if (Log)
+        Log.info(
+            `[POI] Cached POI normalized: ${normalizedPoi.id || "No ID"} (action: ${itemAction})`
+        );
+}
+
+function _mergeWithoutDuplicates(existingPois: any[], cachedPois: any[]): any[] {
+    const merged = [...existingPois];
+    for (const cachedPoi of cachedPois) {
+        const duplicate = merged.find((p: any) => p.id === cachedPoi.id);
+        if (!duplicate) merged.push(cachedPoi);
+    }
+    return merged;
+}
+
+function _waitForStorage(checkStorageAvailable: () => boolean, existingPois: any, callback: any) {
+    if (Log)
+        Log.warn(
+            "[POI] Module Storage pas encore pr\u00eat, attente \u00e9v\u00e9nement geoleaf:storage:ready..."
+        );
+    const onReady = () => {
+        if (checkStorageAvailable()) {
+            loadAndMergeStoredPois(existingPois, callback);
+        } else {
+            if (Log) Log.error("[POI] Storage module still not available, aborting.");
+            callback(existingPois);
+        }
+    };
+    document.addEventListener("geoleaf:storage:ready", onReady, { once: true });
+    Promise.resolve().then(() => {
+        if (!checkStorageAvailable()) {
+            document.removeEventListener("geoleaf:storage:ready", onReady);
+            callback(existingPois);
+        }
+    });
+}
+
+function _onStorageQueueLoaded(queueItems: any[], existingPois: any, callback: any) {
+    if (Log) Log.info(`[POI] Cache retrieval: ${queueItems.length} items found`);
+    if (!Array.isArray(queueItems) || queueItems.length === 0) {
+        if (Log) Log.info("[POI] No POI found in the sync queue.");
+        callback(existingPois);
+        return;
+    }
+    if (Log) {
+        const itemTypes = queueItems.map(
+            (item: any) => `${item.action}:${item.data?.type || "no-type"}`
+        );
+        Log.info(`[POI] Item types in cache: [${itemTypes.join(", ")}]`);
+        queueItems.slice(0, 2).forEach((item: any, i: number) => {
+            Log.info(`[POI] DEBUG Item ${i}:`, {
+                action: item.action,
+                type: item.type,
+                data_type: item.data?.type,
+                keys: Object.keys(item),
+                data_keys: item.data ? Object.keys(item.data) : "no data",
+            });
+        });
+    }
+    const cachedPois: any[] = [];
+    const normalizers = POINormalizers;
+    if (!normalizers) {
+        if (Log) Log.error("[POI] Normalizers module not available for cached POIs.");
+        callback(existingPois);
+        return;
+    }
+    queueItems.forEach((item: any) => {
+        _processPoiQueueItem(item, normalizers, cachedPois);
+    });
+    if (cachedPois.length > 0) {
+        if (Log) Log.info(`[POI] ${cachedPois.length} POI(s) retrieved from local cache.`);
+        callback(_mergeWithoutDuplicates(existingPois, cachedPois));
+    } else {
+        callback(existingPois);
+    }
+}
+
 function loadAndMergeStoredPois(existingPois: any, callback: any) {
     if (typeof callback !== "function") {
-        if (Log) Log.error("[POI] loadAndMergeStoredPois: callback requis");
+        if (Log) Log.error("[POI] loadAndMergeStoredPois: callback required");
         return;
     }
-
-    // Phase 10-C: Vérification disponibilité Storage via StorageContract
     const StorageAny = StorageContract as any;
-    const checkStorageAvailable = () => {
-        return (
-            StorageContract.isAvailable() &&
-            typeof StorageAny.DB?.getAllFromSyncQueue === "function"
-        );
-    };
-
+    const checkStorageAvailable = () =>
+        StorageContract.isAvailable() && typeof StorageAny.DB?.getAllFromSyncQueue === "function";
     if (!checkStorageAvailable()) {
-        // perf: remplacer setTimeout(1000) par écoute événement geoleaf:storage:ready
-        if (Log)
-            Log.warn(
-                "[POI] Module Storage pas encore prêt, attente événement geoleaf:storage:ready..."
-            );
-        const onReady = () => {
-            if (checkStorageAvailable()) {
-                loadAndMergeStoredPois(existingPois, callback);
-            } else {
-                if (Log) Log.error("[POI] Module Storage toujours non disponible, abandon.");
-                callback(existingPois);
-            }
-        };
-        document.addEventListener("geoleaf:storage:ready", onReady, { once: true });
-        // Fallback si l'événement n'arrive jamais (Storage absent du build)
-        Promise.resolve().then(() => {
-            if (!checkStorageAvailable()) {
-                document.removeEventListener("geoleaf:storage:ready", onReady);
-                callback(existingPois);
-            }
-        });
+        _waitForStorage(checkStorageAvailable, existingPois, callback);
         return;
     }
-
-    if (Log) Log.info("[POI] Module Storage disponible, récupération des POI...");
-
-    // Utiliser le module de synchronisation pour récupérer les POI du cache
+    if (Log) Log.info("[POI] Storage module available, retrieving POIs...");
     StorageAny.DB.getAllFromSyncQueue()
-        .then((queueItems: any[]) => {
-            if (Log) Log.info(`[POI] Récupération cache: ${queueItems.length} items trouvés`);
-
-            if (!Array.isArray(queueItems) || queueItems.length === 0) {
-                if (Log) Log.info("[POI] Aucun POI trouvé dans la file de synchronisation.");
-                callback(existingPois);
-                return;
-            }
-
-            // Débugger les types d'items trouvés
-            if (Log) {
-                const itemTypes = queueItems.map(
-                    (item: any) => `${item.action}:${item.data?.type || "no-type"}`
-                );
-                Log.info(`[POI] Types d'items dans le cache: [${itemTypes.join(", ")}]`);
-
-                // DEBUG: Structure complète des premiers items
-                queueItems.slice(0, 2).forEach((item: any, i: number) => {
-                    Log.info(`[POI] DEBUG Item ${i}:`, {
-                        action: item.action,
-                        type: item.type,
-                        data_type: item.data?.type,
-                        keys: Object.keys(item),
-                        data_keys: item.data ? Object.keys(item.data) : "no data",
-                    });
-                });
-            }
-
-            // Filtrer les éléments POI (action 'add' ou 'update') et extraire les données
-            const cachedPois: any[] = [];
-            const normalizers = POINormalizers;
-
-            if (!normalizers) {
-                if (Log)
-                    Log.error("[POI] Module Normalizers non disponible pour les POI du cache.");
-                callback(existingPois);
-                return;
-            }
-
-            queueItems.forEach((item: any) => {
-                // Essayer différents formats de structure pour les POI
-                let isPoi = false;
-                let poiData = null;
-                let itemAction = null;
-
-                // Format 1: item.data.type === 'poi' && item.action contient 'add'
-                if (
-                    item.data &&
-                    item.data.type === "poi" &&
-                    item.action &&
-                    (item.action.includes("add") || item.action.includes("update"))
-                ) {
-                    isPoi = true;
-                    poiData = item.data;
-                    itemAction = item.action;
-                }
-                // Format 2: item.type === 'poi' directement
-                else if (item.type === "poi") {
-                    isPoi = true;
-                    poiData = item;
-                    itemAction = item.action || "add";
-                }
-                // Format 3: Contient un id POI et des coordonnées (detection heuristique)
-                else if (item.data && (item.data.id || item.data.latlng || item.data.latitude)) {
-                    isPoi = true;
-                    poiData = item.data;
-                    itemAction = item.action || "add";
-                    if (Log)
-                        Log.info(`[POI] Détection heuristique POI: ${item.data.id || "no-id"}`);
-                }
-                // Format 4: L'item lui-même est un POI (pas d'enveloppe data)
-                else if (item.id && (item.latlng || item.latitude)) {
-                    isPoi = true;
-                    poiData = item;
-                    itemAction = "add";
-                    if (Log) Log.info(`[POI] Détection POI direct: ${item.id}`);
-                }
-
-                if (isPoi && poiData) {
-                    // Normaliser le POI stocké comme les autres
-                    const normalizedPoi = normalizers.normalizePoi(poiData);
-                    if (normalizedPoi) {
-                        cachedPois.push(normalizedPoi);
-                        if (Log)
-                            Log.info(
-                                `[POI] POI du cache normalisé: ${normalizedPoi.id || "Sans ID"} (action: ${itemAction})`
-                            );
-                    } else {
-                        if (Log) Log.warn("[POI] Échec normalisation POI du cache:", poiData);
-                    }
-                } else {
-                    if (Log)
-                        Log.debug(
-                            `[POI] Item ignoré - action: ${item.action}, type: ${item.type || item.data?.type}, keys: ${Object.keys(item).join(",")}`
-                        );
-                }
-            });
-
-            if (cachedPois.length > 0) {
-                if (Log) Log.info(`[POI] ${cachedPois.length} POI(s) récupéré(s) du cache local.`);
-
-                // Fusionner avec les POI existants (éviter les doublons par ID)
-                const mergedPois = [...existingPois];
-                cachedPois.forEach((cachedPoi: any) => {
-                    if (!mergedPois.find((p: any) => p.id === cachedPoi.id)) {
-                        mergedPois.push(cachedPoi);
-                    }
-                });
-
-                callback(mergedPois);
-            } else {
-                callback(existingPois);
-            }
-        })
+        .then((queueItems: any[]) => _onStorageQueueLoaded(queueItems, existingPois, callback))
         .catch((err: any) => {
-            if (Log) Log.error("[POI] Erreur lors de la récupération des POI du cache :", err);
+            if (Log) Log.error("[POI] Error retrieving cached POIs :", err);
             callback(existingPois);
         });
 }
 
-/**
- * Charge les POIs et les affiche sur la carte.
- */
+function _loadFromProfilePois(state: any): boolean {
+    const ConfigAny = Config as any;
+    if (!ConfigAny) return false;
+    if (typeof ConfigAny.getActiveProfilePoi !== "function") return false;
+    const profilePois = ConfigAny.getActiveProfilePoi();
+    if (!Array.isArray(profilePois)) return false;
+    if (profilePois.length === 0) return false;
+    state.allPois = profilePois;
+    if (Log) Log.info(`[POI] ${state.allPois.length} POI(s) from active profile.`);
+    loadAndMergeStoredPois(state.allPois, (mergedPois: any) => {
+        state.allPois = mergedPois;
+        displayPois(state.allPois);
+    });
+    return true;
+}
+
+function _loadFromDataUrl(state: any): void {
+    const dataUrl = state.poiConfig.dataUrl;
+    if (!dataUrl) {
+        if (Log) Log.info("[POI] No dataUrl specified and no cached POIs. Manual add mode.");
+        return;
+    }
+    state.isLoading = true;
+    if (Log) Log.info("[POI] Loading POI data from :", dataUrl);
+    fetch(dataUrl)
+        .then((response) => {
+            if (!response.ok)
+                throw new Error(`Erreur HTTP ${response.status} lors du loading de ${dataUrl}`);
+            return response.json();
+        })
+        .then((data: any) => {
+            if (Array.isArray(data)) {
+                state.allPois = data;
+            } else if (data && Array.isArray(data.pois)) {
+                state.allPois = data.pois;
+            } else {
+                state.allPois = [];
+            }
+            if (Log) Log.info(`[POI] ${state.allPois.length} POI(s) loaded from dataUrl.`);
+            displayPois(state.allPois);
+        })
+        .catch((err: any) => {
+            if (Log) Log.error("[POI] Error loading POIs :", err);
+        })
+        .finally(() => {
+            state.isLoading = false;
+        });
+}
+
 function loadAndDisplay() {
     const shared = POIShared;
     if (!shared) return;
     const state = shared.state;
-
     if (state.isLoading) {
-        if (Log) Log.warn("[POI] Chargement déjà en cours...");
+        if (Log) Log.warn("[POI] Loading already in progress...");
         return;
     }
-
-    // 1) Essayer d'utiliser les POI normalisés du profil actif
-    const ConfigAny = Config as any;
     try {
-        if (ConfigAny && typeof ConfigAny.getActiveProfilePoi === "function") {
-            const profilePois = ConfigAny.getActiveProfilePoi();
-            if (Array.isArray(profilePois) && profilePois.length > 0) {
-                state.allPois = profilePois;
-                if (Log)
-                    Log.info(`[POI] ${state.allPois.length} POI(s) provenant du profil actif.`);
-
-                // ✅ CORRECTION: Charger aussi les POI du cache après les POI du profil
-                loadAndMergeStoredPois(state.allPois, function (mergedPois: any) {
-                    state.allPois = mergedPois;
-                    displayPois(state.allPois);
-                });
-                return;
-            }
-        }
+        if (_loadFromProfilePois(state)) return;
     } catch (err: any) {
-        if (Log) Log.error("[POI] Erreur lors de la récupération des POI du profil actif :", err);
+        if (Log) Log.error("[POI] Error retrieving POIs from active profile :", err);
     }
-
-    // ✅ CORRECTION: Essayer de charger les POI stockés en cache AVANT le fallback dataUrl
-    loadAndMergeStoredPois([], function (cachedPois: any[]) {
+    loadAndMergeStoredPois([], (cachedPois: any[]) => {
         if (cachedPois.length > 0) {
             state.allPois = cachedPois;
-            if (Log) Log.info(`[POI] ${cachedPois.length} POI(s) chargé(s) depuis le cache local.`);
+            if (Log) Log.info(`[POI] ${cachedPois.length} POI(s) loaded from local cache.`);
             displayPois(cachedPois);
             return;
         }
-
-        // 2) Fallback : charger un fichier JSON depuis dataUrl (mode historique)
-        const dataUrl = state.poiConfig.dataUrl;
-        if (!dataUrl) {
-            if (Log)
-                Log.info(
-                    "[POI] Aucune dataUrl spécifiée et aucun POI en cache. Mode ajout manuel."
-                );
-            return;
-        }
-
-        state.isLoading = true;
-        if (Log) Log.info("[POI] Chargement des données POI depuis :", dataUrl);
-
-        fetch(dataUrl)
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error(
-                        `Erreur HTTP ${response.status} lors du chargement de ${dataUrl}`
-                    );
-                }
-                return response.json();
-            })
-            .then((data: any) => {
-                if (Array.isArray(data)) {
-                    state.allPois = data;
-                } else if (data && Array.isArray(data.pois)) {
-                    state.allPois = data.pois;
-                } else {
-                    state.allPois = [];
-                }
-                if (Log) Log.info(`[POI] ${state.allPois.length} POI(s) chargé(s) depuis dataUrl.`);
-                displayPois(state.allPois);
-            })
-            .catch((err: any) => {
-                if (Log) Log.error("[POI] Erreur lors du chargement des POIs :", err);
-            })
-            .finally(() => {
-                state.isLoading = false;
-            });
+        _loadFromDataUrl(state);
     });
 }
 
-/**
- * Affiche tous les POIs passés en paramètre sur la carte.
- *
- * @param {array} pois - Tableau d'objets POI.
- */
-function displayPois(pois: any) {
-    if (!pois || !Array.isArray(pois)) {
-        if (Log) Log.warn("[POI] displayPois() : Aucune donnée POI valide à afficher.");
-        return;
-    }
+function _clearPoiLayers(state: any): void {
+    if (state.poiLayerGroup) state.poiLayerGroup.clearLayers();
+    if (state.poiClusterGroup) state.poiClusterGroup.clearLayers();
+}
 
-    const shared = POIShared;
-    if (!shared) return;
-    const state = shared.state;
+function _getPoiMarkerKey(poi: any): string {
+    if (poi.id) return poi.id;
+    if (poi.title) return poi.title;
+    return poi.label;
+}
 
-    // Nettoyer les layers existants
-    if (state.poiLayerGroup) {
-        state.poiLayerGroup.clearLayers();
-    }
-    if (state.poiClusterGroup) {
-        state.poiClusterGroup.clearLayers();
-    }
+function _renderPoisClustered(pois: any[], state: any, markers: any): void {
+    pois.forEach((poi: any) => {
+        const marker = markers.createMarker(poi);
+        if (!marker) return;
+        state.poiClusterGroup.addLayer(marker);
+        state.poiMarkers.set(_getPoiMarkerKey(poi), marker);
+    });
+    if (!state.mapInstance.hasLayer(state.poiClusterGroup))
+        state.mapInstance.addLayer(state.poiClusterGroup);
+    if (Log) Log.info("[POI] Display with clustering.");
+}
 
-    const clustering = state.poiConfig.clustering !== false;
-    const markers = POIMarkers;
-
-    if (!markers || typeof markers.createMarker !== "function") {
-        if (Log) Log.error("[POI] Module Markers non chargé.");
-        return;
-    }
-
-    if (clustering && state.poiClusterGroup) {
-        // Mode clustering
-        pois.forEach((poi: any) => {
-            const marker = markers.createMarker(poi);
-            if (marker) {
-                state.poiClusterGroup.addLayer(marker);
-                state.poiMarkers.set(poi.id || poi.title || poi.label, marker);
-            }
-        });
-
-        if (!state.mapInstance.hasLayer(state.poiClusterGroup)) {
-            state.mapInstance.addLayer(state.poiClusterGroup);
-        }
-
-        if (Log) Log.info("[POI] Affichage avec clustering.");
-    } else {
-        // Mode sans clustering
-        pois.forEach((poi: any) => {
-            const marker = markers.createMarker(poi);
-            if (marker) {
-                state.poiLayerGroup.addLayer(marker);
-                state.poiMarkers.set(poi.id || poi.title || poi.label, marker);
-            }
-        });
-
-        if (!state.mapInstance.hasLayer(state.poiLayerGroup)) {
-            state.mapInstance.addLayer(state.poiLayerGroup);
-        }
-
-        if (Log) Log.info("[POI] Affichage sans clustering.");
-    }
+function _renderPoisLayered(pois: any[], state: any, markers: any): void {
+    pois.forEach((poi: any) => {
+        const marker = markers.createMarker(poi);
+        if (!marker) return;
+        state.poiLayerGroup.addLayer(marker);
+        state.poiMarkers.set(_getPoiMarkerKey(poi), marker);
+    });
+    if (!state.mapInstance.hasLayer(state.poiLayerGroup))
+        state.mapInstance.addLayer(state.poiLayerGroup);
+    if (Log) Log.info("[POI] Display without clustering.");
 }
 
 /**
- * Ajoute un POI manuellement sur la carte.
- * CORRIGÉ V3: Normalisation systématique des nouveaux POI
+ * Displays all POIs passed as parameter on the map.
  *
- * @param {object} poi - Données du POI.
- * @returns {L.Marker|null} Marqueur créé ou null.
+ * @param {array} pois - Array d'objects POI.
  */
-function addPoi(poi: any) {
-    if (!poi) {
-        if (Log) Log.warn("[POI] addPoi() : POI invalide.");
-        return null;
+function displayPois(pois: any) {
+    if (!pois || !Array.isArray(pois)) {
+        if (Log) Log.warn("[POI] displayPois() : No valid POI data to display.");
+        return;
     }
-
     const shared = POIShared;
-    if (!shared) return null;
+    if (!shared) return;
     const state = shared.state;
-
-    const normalizers = POINormalizers;
+    _clearPoiLayers(state);
     const markers = POIMarkers;
-
-    if (!normalizers || !markers) {
-        if (Log) Log.error("[POI] Modules Normalizers ou Markers non chargés.");
-        return null;
+    if (!markers || typeof markers.createMarker !== "function") {
+        if (Log) Log.error("[POI] Module Markers not loaded.");
+        return;
     }
+    const clustering = state.poiConfig.clustering !== false;
+    if (clustering && state.poiClusterGroup) {
+        _renderPoisClustered(pois, state, markers);
+    } else {
+        _renderPoisLayered(pois, state, markers);
+    }
+}
 
-    // ✅ CORRECTION V3: NORMALISER le POI avant traitement
-    // Ceci garantit une structure cohérente avec les POI existants
+function _validateAndNormalizePoi(poi: any, normalizers: any): any | null {
     const normalizedPoi = normalizers.normalizePoi(poi);
     if (!normalizedPoi) {
-        if (Log) Log.warn("[POI] addPoi() : Échec de la normalisation du POI.", poi);
+        if (Log) Log.warn("[POI] addPoi() : POI normalization failed.", poi);
         return null;
     }
+    if (!normalizedPoi.id) normalizedPoi.id = normalizers.generatePoiId(normalizedPoi);
+    return normalizedPoi;
+}
 
-    // Générer un ID si manquant après normalisation
-    if (!normalizedPoi.id) {
-        normalizedPoi.id = normalizers.generatePoiId(normalizedPoi);
-    }
+function _logNormalizedPoiDebug(normalizedPoi: any): void {
+    if (!Log) return;
+    Log.info("[POI] Adding normalized POI:", normalizedPoi.id);
+    Log.info("[POI] - Has _layerConfig:", !!normalizedPoi._layerConfig);
+    Log.info("[POI] - Has _sidepanelConfig:", !!normalizedPoi._sidepanelConfig);
+    Log.info("[POI] - Has _popupConfig:", !!normalizedPoi._popupConfig);
+    Log.info("[POI] - Attributes keys:", Object.keys(normalizedPoi.attributes || {}));
+}
 
-    if (Log) {
-        Log.info("[POI] Adding normalized POI:", normalizedPoi.id);
-        Log.info("[POI] - Has _layerConfig:", !!normalizedPoi._layerConfig);
-        Log.info("[POI] - Has _sidepanelConfig:", !!normalizedPoi._sidepanelConfig);
-        Log.info("[POI] - Has _popupConfig:", !!normalizedPoi._popupConfig);
-        Log.info("[POI] - Attributes keys:", Object.keys(normalizedPoi.attributes || {}));
-    }
-
-    // Créer le marqueur avec le POI normalisé
-    const marker = markers.createMarker(normalizedPoi);
-    if (!marker) {
-        if (Log)
-            Log.warn(
-                "[POI] addPoi() : Impossible de créer le marqueur pour ce POI normalisé.",
-                normalizedPoi
-            );
-        return null;
-    }
-
-    // Ajouter au bon layer group
+function _addPoiToLayers(marker: any, state: any): void {
     const clustering = state.poiConfig.clustering !== false;
     if (clustering && state.poiClusterGroup) {
         state.poiClusterGroup.addLayer(marker);
     } else {
         state.poiLayerGroup.addLayer(marker);
     }
+}
 
-    // Stocker le POI NORMALISÉ dans la liste (important pour la cohérence)
+/**
+ * Adds a POI manually sur the map.
+ * FIXED V3: Systematic normalization of new POIs
+ *
+ * @param {object} poi - Data du POI.
+ * @returns {L.Marker|null} Marqueur created ou null.
+ */
+function addPoi(poi: any) {
+    if (!poi) {
+        if (Log) Log.warn("[POI] addPoi() : POI invalide.");
+        return null;
+    }
+    const shared = POIShared;
+    if (!shared) return null;
+    const state = shared.state;
+    const normalizers = POINormalizers;
+    const markers = POIMarkers;
+    if (!normalizers) return null;
+    if (!markers) return null;
+    const normalizedPoi = _validateAndNormalizePoi(poi, normalizers);
+    if (!normalizedPoi) return null;
+    _logNormalizedPoiDebug(normalizedPoi);
+    const marker = markers.createMarker(normalizedPoi);
+    if (!marker) {
+        if (Log)
+            Log.warn(
+                "[POI] addPoi() : Cannot create marker for this normalized POI.",
+                normalizedPoi
+            );
+        return null;
+    }
+    _addPoiToLayers(marker, state);
     state.allPois.push(normalizedPoi);
     state.poiMarkers.set(normalizedPoi.id, marker);
-
-    // Note: La sauvegarde en cache est gérée par le submit-handler via SyncHandler
-    // pour éviter la duplication et assurer la cohérence
-
-    if (Log) Log.info("[POI] ✅ POI normalisé ajouté avec succès :", normalizedPoi.id);
-
+    if (Log) Log.info("[POI] \u2705 Normalized POI added successfully :", normalizedPoi.id);
     return marker;
 }
 
 /**
- * Récupère tous les POI chargés.
+ * Retrieves tous les POI loadeds.
  *
- * @returns {array} Tableau des POI.
+ * @returns {array} Array des POI.
  */
 function getAllPois() {
     const shared = POIShared;
@@ -533,10 +500,10 @@ function getAllPois() {
 }
 
 /**
- * Récupère un POI par son ID.
+ * Retrieves un POI par son ID.
  *
  * @param {string} id - ID du POI.
- * @returns {object|null} POI trouvé ou null.
+ * @returns {object|null} POI found ou null.
  */
 function getPoiById(id: any) {
     const shared = POIShared;
@@ -547,9 +514,9 @@ function getPoiById(id: any) {
 }
 
 /**
- * Recharge les POI (efface et réaffiche).
+ * Reloads POIs (clears and re-displays).
  *
- * @param {array} pois - Nouveau tableau de POI (optionnel).
+ * @param {array} pois - Nouveau array de POI (optional).
  */
 function reload(pois?: any) {
     const shared = POIShared;
@@ -562,7 +529,7 @@ function reload(pois?: any) {
 
     displayPois(state.allPois);
 
-    if (Log) Log.info("[POI] POI rechargés.");
+    if (Log) Log.info("[POI] POIs reloaded.");
 }
 
 // ========================================

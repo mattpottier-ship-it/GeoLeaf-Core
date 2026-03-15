@@ -1,9 +1,9 @@
-# â“ FAQ - GeoLeaf.js
+﻿# â“ FAQ - GeoLeaf.js
 
 > **Questions frÃ©quemment posÃ©es** et leurs rÃ©ponses
 
 **Version produit**: GeoLeaf Platform V1  
-**Version**: 1.1.0  
+**Version**: 1.1.1  
 **DerniÃ¨re mise Ã  jour**: 14 fÃ©vrier 2026
 
 > Convention de versioning : **Platform V1** est le label produit ; le SemVer technique des packages/releases reste en **1.1.x**. Voir [VERSIONING_POLICY.md](VERSIONING_POLICY.md).
@@ -1376,7 +1376,7 @@ Pourquoi ajouter cette feature?
 ---
 
 **DerniÃ¨re mise Ã  jour**: 19 janvier 2026  
-**Version**: 1.1.0  
+**Version**: 1.1.1  
 **Auteurs**: Ã‰quipe GeoLeaf
 
 ---

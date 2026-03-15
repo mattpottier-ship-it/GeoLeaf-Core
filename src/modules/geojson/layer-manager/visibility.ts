@@ -16,28 +16,39 @@ const _g: any =
 const getState = () => GeoJSONShared.state;
 const ScaleUtils = { calculateMapScale, isScaleInRange };
 
+function _normalizeScaleValue(value: any): number | null {
+    if (typeof value !== "number") return null;
+    return value <= 0 ? null : value;
+}
+
+function _resolveBaseVisibility(meta: any): boolean {
+    if (meta && meta.userOverride) return meta.logicalState;
+    if (meta && meta.themeOverride) return meta.themeDesired;
+    return true;
+}
+
 const LayerManager: any = {};
 
 /**
- * Affiche une couche (rend visible).
+ * Displays a layer (rend visible).
  *
- * @param {string} layerId - ID de la couche
+ * @param {string} layerId - ID de the layer
  */
-/* eslint-disable complexity -- visibility state branches */
+/* eslint-disable complexity -- visibility state branchs */
 LayerManager.showLayer = function (layerId: any) {
     const state = getState();
     const Log = getLog();
     const layerData: any = state.layers.get(layerId);
 
     if (!layerData) {
-        Log.warn("[GeoLeaf.GeoJSON] showLayer: couche introuvable :", layerId);
+        Log.warn("[GeoLeaf.GeoJSON] showLayer: layer not found:", layerId);
         return;
     }
 
-    // Utiliser le gestionnaire de visibilité centralisé
+    // Utiliser le manager for visibility centralized
     const VisibilityManager = _g.GeoLeaf && _g.GeoLeaf._LayerVisibilityManager;
     if (!VisibilityManager) {
-        Log.error("[GeoLeaf.GeoJSON] LayerVisibilityManager non disponible");
+        Log.error("[GeoLeaf.GeoJSON] LayerVisibilityManager not available");
         return;
     }
 
@@ -47,30 +58,30 @@ LayerManager.showLayer = function (layerId: any) {
         VisibilityManager.VisibilitySource.USER
     );
 
-    // IMPORTANT: Recalculer la visibilité physique en fonction du zoom
-    // setVisibility met à jour logicalState (bouton), mais il faut aussi recalculer current
+    // IMPORTANT: Recalculer la visibility physical en fonction du zoom
+    // setVisibility met up to date logicalState (button), mais il faut aussi recalculer current
     LayerManager.updateLayerVisibilityByZoom();
 
-    // Charger la légende si disponible (uniquement si changement effectué)
+    // Load the legend if available (only if change was made)
     if (changed) {
-        // _loadLayerLegend est défini dans integration.ts sur un objet LayerManager séparé.
-        // Après Object.assign dans globals.geojson.ts, la méthode existe sur _GeoJSONLayerManager.
-        // On résout via le global plutôt que via l'objet local pour éviter "is not a function".
+        // _loadLayerLegend est defined dans integration.ts sur an object LayerManager separated.
+        // After Object.assign in globals.geojson.ts, the method exists on _GeoJSONLayerManager.
+        // Resolved via the global rather than the local object to avoid "is not a function".
         const _unifiedMgr = _g.GeoLeaf?._GeoJSONLayerManager;
         if (_unifiedMgr && typeof _unifiedMgr._loadLayerLegend === "function") {
             _unifiedMgr._loadLayerLegend(layerId, layerData);
         }
 
-        // Gérer les labels au moment de l'activation
+        // Handle les labels au moment of the activation
         if (_g.GeoLeaf && _g.GeoLeaf.Labels && _g.GeoLeaf.Labels.hasLabelConfig(layerId)) {
-            // Vérifier si visibleByDefault est true pour les labels
+            // Check si visibleByDefault est true for thes labels
             const visibleByDefault = layerData.currentStyle?.label?.visibleByDefault === true;
 
             if (visibleByDefault) {
-                // Activer et afficher les labels immédiatement
+                // Activer et display les labels immediately
                 _g.GeoLeaf.Labels.enableLabels(layerId, {}, true);
             } else if (_g.GeoLeaf.Labels.areLabelsEnabled(layerId)) {
-                // Sinon, juste rafraîchir si déjà activés
+                // Sinon, juste refresh si already activateds
                 _g.GeoLeaf.Labels.refreshLabels(layerId);
             }
         }
@@ -78,15 +89,15 @@ LayerManager.showLayer = function (layerId: any) {
             _g.GeoLeaf._LabelButtonManager.syncImmediate(layerId);
         }
 
-        Log.debug("[GeoLeaf.GeoJSON] Couche affichée :", layerId);
+        Log.debug("[GeoLeaf.GeoJSON] Layer shown:", layerId);
     }
 };
 /* eslint-enable complexity */
 
 /**
- * Masque une couche (rend invisible).
+ * Masque a layer (rend invisible).
  *
- * @param {string} layerId - ID de la couche
+ * @param {string} layerId - ID de the layer
  */
 LayerManager.hideLayer = function (layerId: any) {
     const state = getState();
@@ -94,14 +105,14 @@ LayerManager.hideLayer = function (layerId: any) {
     const layerData: any = state.layers.get(layerId);
 
     if (!layerData) {
-        Log.warn("[GeoLeaf.GeoJSON] hideLayer: couche introuvable :", layerId);
+        Log.warn("[GeoLeaf.GeoJSON] hideLayer: layer not found:", layerId);
         return;
     }
 
-    // Utiliser le gestionnaire de visibilité centralisé
+    // Utiliser le manager for visibility centralized
     const VisibilityManager = _g.GeoLeaf && _g.GeoLeaf._LayerVisibilityManager;
     if (!VisibilityManager) {
-        Log.error("[GeoLeaf.GeoJSON] LayerVisibilityManager non disponible");
+        Log.error("[GeoLeaf.GeoJSON] LayerVisibilityManager not available");
         return;
     }
 
@@ -111,11 +122,11 @@ LayerManager.hideLayer = function (layerId: any) {
         VisibilityManager.VisibilitySource.USER
     );
 
-    // IMPORTANT: Recalculer la visibilité physique (even on hide, to ensure consistency)
+    // IMPORTANT: Recalculer la visibility physical (even on hide, to ensure consistency)
     LayerManager.updateLayerVisibilityByZoom();
 
     if (changed) {
-        // Masquer les labels et mettre à jour le bouton
+        // Masquer les labels et update le button
         if (_g.GeoLeaf && _g.GeoLeaf.Labels) {
             _g.GeoLeaf.Labels.disableLabels(layerId);
         }
@@ -123,14 +134,14 @@ LayerManager.hideLayer = function (layerId: any) {
             _g.GeoLeaf._LabelButtonManager.syncImmediate(layerId);
         }
 
-        Log.debug("[GeoLeaf.GeoJSON] Couche masquée :", layerId);
+        Log.debug("[GeoLeaf.GeoJSON] Layer hidden:", layerId);
     }
 };
 
 /**
- * Toggle la visibilité d'une couche.
+ * Toggle la visibility d'a layer.
  *
- * @param {string} layerId - ID de la couche
+ * @param {string} layerId - ID de the layer
  */
 LayerManager.toggleLayer = function (layerId: any) {
     const state = getState();
@@ -138,14 +149,14 @@ LayerManager.toggleLayer = function (layerId: any) {
     const layerData: any = state.layers.get(layerId);
 
     if (!layerData) {
-        Log.warn("[GeoLeaf.GeoJSON] toggleLayer: couche introuvable :", layerId);
+        Log.warn("[GeoLeaf.GeoJSON] toggleLayer: layer not found:", layerId);
         return;
     }
 
-    // Obtenir l'état actuel via le gestionnaire de visibilité
+    // Obtenir the state current via le manager for visibility
     const VisibilityManager = _g.GeoLeaf && _g.GeoLeaf._LayerVisibilityManager;
     if (!VisibilityManager) {
-        Log.error("[GeoLeaf.GeoJSON] LayerVisibilityManager non disponible");
+        Log.error("[GeoLeaf.GeoJSON] LayerVisibilityManager not available");
         return;
     }
 
@@ -161,10 +172,10 @@ LayerManager.toggleLayer = function (layerId: any) {
 };
 
 /**
- * Met à jour la visibilité des couches en fonction de layerScale du style actif.
- * Respecte les préférences utilisateur (désactivation manuelle ou par thème).
- * Utilise le gestionnaire de visibilité centralisé avec source 'zoom'.
- * Exécution immédiate pour réactivité pendant le zoom (le debounce LayerManager.refresh évite les saccades d'UI).
+ * Updates the visibility des layers en fonction de layerScale du style active.
+ * Respecte les preferences user (deactivation manuelle ou par theme).
+ * Utilise le manager for visibility centralized avec source 'zoom'.
+ * Immediate execution for reactivity during zoom (LayerManager.refresh debounce avoids UI jitter).
  */
 LayerManager.updateLayerVisibilityByZoom = function () {
     const state = getState();
@@ -182,11 +193,6 @@ LayerManager.updateLayerVisibilityByZoom = function () {
             ? ScaleUtils.calculateMapScale(state.map, { logger: Log })
             : 0;
 
-    const normalizeScaleValue = (value: any) => {
-        if (typeof value !== "number") return null;
-        return value <= 0 ? null : value;
-    };
-
     /* eslint-disable complexity -- per-layer visibility rules */
     state.layers.forEach((layerData: any, layerId: any) => {
         const config = layerData.config;
@@ -197,36 +203,21 @@ LayerManager.updateLayerVisibilityByZoom = function () {
         if (!styleScale && hasCurrentStyle) {
             if (Log && typeof Log.warn === "function") {
                 Log.warn(
-                    `[GeoLeaf.GeoJSON] layerScale manquant pour ${layerId}, couche laissée visible par défaut`
+                    `[GeoLeaf.GeoJSON] layerScale missing for ${layerId}, layer left visible by default`
                 );
             }
         }
 
-        const minScale = normalizeScaleValue(styleScale && styleScale.minScale);
-        const maxScale = normalizeScaleValue(styleScale && styleScale.maxScale);
+        const minScale = _normalizeScaleValue(styleScale && styleScale.minScale);
+        const maxScale = _normalizeScaleValue(styleScale && styleScale.maxScale);
 
         const shouldBeVisibleByScale =
             ScaleUtils && typeof ScaleUtils.isScaleInRange === "function"
                 ? ScaleUtils.isScaleInRange(currentScale, minScale, maxScale, Log)
                 : true;
 
-        // Base visibility: user override > theme intent > config default
-        const meta = layerData._visibility;
-        let baseVisible;
-        if (meta && meta.userOverride) {
-            // IMPORTANT: Pour userOverride, utiliser logicalState (état bouton), pas current (état zoom)
-            baseVisible = meta.logicalState;
-        } else if (meta && meta.themeOverride) {
-            baseVisible = meta.themeDesired;
-        } else {
-            // visibility.active parameter is deprecated - now managed by layerScale in style files
-            baseVisible = true;
-        }
+        const baseVisible = _resolveBaseVisibility(layerData._visibility);
 
-        // RÈGLE CRITIQUE :
-        // - L'AFFICHAGE sur la carte RESPECTE TOUJOURS les seuils de zoom
-        // - Le BOUTON (via logicalState) reste indépendant du zoom
-        // - Utilisateur voit : bouton ON, mais couche cachée si hors zoom
         const shouldBeVisible = baseVisible && shouldBeVisibleByScale;
 
         VisibilityManager.setVisibility(
@@ -239,7 +230,7 @@ LayerManager.updateLayerVisibilityByZoom = function () {
 };
 
 /**
- * Émet un événement de changement de visibilité.
+ * Emits an event de changement de visibility.
  *
  * @param {string} layerId
  * @param {boolean} visible

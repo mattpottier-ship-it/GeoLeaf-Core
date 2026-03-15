@@ -1,7 +1,7 @@
 # GeoLeaf.GeoJSON – Documentation du module GeoJSON
 
 Product Version: GeoLeaf Platform V1  
-**Version**: 1.1.0  
+**Version**: 1.1.1  
 **Fichiers (monorepo)** : `src/modules/geojson/` (incl. layer-manager, loader)  
 **Dernière mise à jour**: 14 février 2026
 

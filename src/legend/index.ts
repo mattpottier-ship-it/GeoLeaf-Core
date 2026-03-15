@@ -3,18 +3,18 @@
  */
 /**
  * src/legend/index.js — SHIM LEGACY
- * Rétrocompatibilité : expose Legend depuis src/legend/ → src/modules/geoleaf.legend.js
+ * Backward compatibility : expose Legend from src/legend/ → src/modules/geoleaf.legend.js
  * @module src/legend
  */
 import { Legend as _Legend } from "../modules/geoleaf.legend.js";
 const Legend: any = _Legend;
 
-// Méthodes disponibles sur Legend (proxy-forwarding)
+// Methods availables sur Legend (proxy-forwarding)
 export const init = (...args: any[]) => (Legend.init as any)?.(...args);
 export const reset = (...args: any[]) => (Legend.reset as any)?.(...args);
 export const getOptions = (...args: any[]) => (Legend.getOptions as any)?.(...args);
 
-// Méthodes absentes de l'implémentation actuelle — stubs compatibles
+// Methods absentes of the implementation currentle — stubs compatibles
 export function addSection(_id: any, _label: any, _opts: any = {}) {
     return { id: _id, label: _label, items: [], ..._opts };
 }

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * GeoLeaf Legend API (assemblage namespace Legend)
  * @module legend/legend-api
  */
@@ -10,8 +10,8 @@
  */
 
 /**
- * Module principal GeoLeaf.Legend
- * Gestionnaire de légende cartographique multi-couches avec accordéons
+ * Module main GeoLeaf.Legend
+ * Manager for legend cartographical multi-layers avec accordions
  */
 
 "use strict";
@@ -19,7 +19,12 @@
 import { Log } from "../log/index.js";
 import type { LegendData } from "./legend-generator.js";
 
-const _g: any = typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : ({} as Window);
+const _g: any =
+    typeof globalThis !== "undefined"
+        ? globalThis
+        : typeof window !== "undefined"
+          ? window
+          : ({} as Window);
 
 interface GeoLeafGlobal {
     GeoLeaf?: {
@@ -29,10 +34,18 @@ interface GeoLeafGlobal {
             getActiveProfile?: () => ProfileConfig;
         };
         _LegendControl?: { create: (opts: LegendInitOptions) => unknown };
-        _LegendGenerator?: { generateLegendFromStyle: (styleData: unknown, geometryType: string, taxonomyData: unknown) => LegendData | null };
+        _LegendGenerator?: {
+            generateLegendFromStyle: (
+                styleData: unknown,
+                geometryType: string,
+                taxonomyData: unknown
+            ) => LegendData | null;
+        };
         _POIMarkers?: { ensureProfileSpriteInjectedSync: () => Promise<void> };
         _POIShared?: unknown;
-        _LayerVisibilityManager?: { getVisibilityState: (layerId: string) => { current?: boolean } | null };
+        _LayerVisibilityManager?: {
+            getVisibilityState: (layerId: string) => { current?: boolean } | null;
+        };
     };
 }
 
@@ -65,7 +78,11 @@ interface LayerInfo {
 }
 
 let _map: unknown = null;
-let _control: { _container?: HTMLElement; hide?: () => void; updateMultiLayerContent?: (arr: unknown[]) => void } | null = null;
+let _control: {
+    _container?: HTMLElement;
+    hide?: () => void;
+    updateMultiLayerContent?: (arr: unknown[]) => void;
+} | null = null;
 let _options: LegendInitOptions = {};
 let _profileConfig: ProfileConfig | null = null;
 let _taxonomyData: Record<string, unknown> | null = null;
@@ -182,10 +199,148 @@ interface LayerConfigForLegend {
     showIconsOnMap?: boolean;
 }
 
+function _resolveProfileConfig(
+    Config: NonNullable<GeoLeafGlobal["GeoLeaf"]>["Config"]
+): ProfileConfig | null {
+    if (!Config) return null;
+    if (typeof Config.getActiveProfile === "function") return Config.getActiveProfile();
+    const allConfig = Config.getAll() as { id?: string; layers?: unknown[] };
+    return {
+        id: allConfig.id ?? (Config.get("id") as string),
+        layers: ((allConfig.layers ?? Config.get("layers")) as ProfileConfig["layers"]) ?? [],
+    };
+}
+
+function _ensureLegendControl(): void {
+    if (_control) return;
+    const ControlFactory = _getGeoLeaf()._LegendControl?.create;
+    if (ControlFactory) {
+        _control = ControlFactory(_options) as typeof _control;
+        if (_control) (_map as { addControl: (c: unknown) => void }).addControl(_control);
+    }
+}
+
+function _updateLegendContent(
+    ctrl: NonNullable<typeof _control>,
+    self: { _rebuildDisplay: () => void }
+): void {
+    const visibilityManager = _getGeoLeaf()._LayerVisibilityManager;
+    const legendsArray: {
+        layerId: string;
+        label: string;
+        collapsed: boolean;
+        order: number;
+        visible: boolean;
+        sections: LegendData["sections"];
+    }[] = [];
+
+    _allLayers.forEach((data, layerId) => {
+        if (!data.legendData) return;
+        const visState =
+            typeof visibilityManager?.getVisibilityState === "function"
+                ? visibilityManager.getVisibilityState(layerId)
+                : null;
+        const isVisible = visState?.current ?? data.visible;
+        if (!isVisible) return;
+        legendsArray.push({
+            layerId,
+            label: data.label,
+            collapsed: true,
+            order: data.order,
+            visible: true,
+            sections: data.legendData.sections ?? [],
+        });
+    });
+
+    legendsArray.sort((a, b) => a.order - b.order);
+    ctrl.updateMultiLayerContent!(legendsArray);
+
+    const hasIcons = legendsArray.some((legend) =>
+        legend.sections.some((section) =>
+            section.items?.some((item) => (item as { icon?: string }).icon)
+        )
+    );
+    if (hasIcons && !document.querySelector('svg[data-geoleaf-sprite="profile"]')) {
+        Log?.info("[Legend] Icons detected but sprite missing - scheduling retry");
+        setTimeout(() => {
+            if (document.querySelector('svg[data-geoleaf-sprite="profile"]')) {
+                Log?.info("[Legend] Sprite available - re-rendering legend");
+                self._rebuildDisplay();
+            }
+        }, 2000);
+    }
+}
+
+function _resolveStyleFilePath(
+    profileId: string | undefined,
+    layerDir: string | undefined,
+    layerConfig: LayerConfigForLegend,
+    styleId: string
+): string | null {
+    if (!layerConfig.styles?.directory) return null;
+    const stylesDir = layerConfig.styles.directory;
+    const styleFile =
+        layerConfig.styles.available?.find((s) => s.id === styleId)?.file ??
+        layerConfig.styles.default;
+    const Config = _getGeoLeaf().Config;
+    const dataCfg = Config?.get
+        ? (Config.get("data") as { profilesBasePath?: string } | null)
+        : null;
+    const profilesBasePath = dataCfg?.profilesBasePath ?? "profiles";
+    return `${profilesBasePath}/${profileId}/${layerDir}/${stylesDir}/${styleFile}`;
+}
+
+function _resolveLayerGeometryType(
+    layerConfig: LayerConfigForLegend,
+    layerInfo: LayerInfo
+): string {
+    const raw =
+        layerConfig.geometryType ?? layerConfig.geometry ?? layerInfo.geometryType ?? "point";
+    return _normalizeGeometryType(raw);
+}
+
+function _applyStyleToLegend(
+    layerId: string,
+    layerInfo: LayerInfo,
+    layerConfig: LayerConfigForLegend,
+    styleData: Record<string, unknown>
+): void {
+    const GeoLeaf = _getGeoLeaf();
+    const Generator = GeoLeaf._LegendGenerator;
+    if (!Generator) {
+        Log?.error("[Legend] LegendGenerator non disponible");
+        return;
+    }
+
+    const originalPOIShared = GeoLeaf._POIShared;
+    if (layerConfig.showIconsOnMap !== undefined) {
+        GeoLeaf._POIShared = {
+            state: { poiConfig: { showIconsOnMap: layerConfig.showIconsOnMap } },
+        };
+    }
+
+    const legendData = Generator.generateLegendFromStyle(
+        styleData,
+        layerInfo.geometryType,
+        _taxonomyData
+    );
+
+    if (layerConfig.showIconsOnMap !== undefined) {
+        GeoLeaf._POIShared = originalPOIShared;
+    }
+
+    if (legendData) {
+        layerInfo.legendData = legendData;
+        _allLayers.set(layerId, layerInfo);
+        Log?.debug(`[Legend] Legend generated for ${layerId}`);
+        _scheduleRebuild();
+    }
+}
+
 const LegendModule = {
     init(mapInstance: unknown, options?: LegendInitOptions): boolean {
         if (!mapInstance) {
-            if (Log) Log.error("[Legend] Carte Leaflet requise pour initialiser Legend");
+            Log?.error("[Legend] Carte Leaflet requirede pour initialize Legend");
             return false;
         }
 
@@ -193,35 +348,22 @@ const LegendModule = {
 
         const Config = _getGeoLeaf().Config;
         if (Config && typeof Config.get === "function") {
-            const legendConfig = Config.get("legendConfig") as { position?: string; collapsedByDefault?: boolean; title?: string } | undefined;
-
+            const legendConfig = Config.get("legendConfig") as
+                | { position?: string; collapsedByDefault?: boolean; title?: string }
+                | undefined;
             _options = Object.assign(
                 {
                     position: legendConfig?.position ?? "bottomleft",
                     collapsible: true,
                     collapsed: legendConfig?.collapsedByDefault ?? false,
-                    title: legendConfig?.title ?? "Légende",
+                    title: legendConfig?.title ?? "Legend",
                 },
                 options ?? {}
             );
-
-            if (typeof Config.getActiveProfile === "function") {
-                _profileConfig = Config.getActiveProfile();
-            } else {
-                const allConfig = Config.getAll() as { id?: string; layers?: unknown[] };
-                _profileConfig = {
-                    id: allConfig.id ?? (Config.get("id") as string),
-                    layers: (allConfig.layers ?? Config.get("layers")) as ProfileConfig["layers"] ?? [],
-                };
-            }
+            _profileConfig = _resolveProfileConfig(Config);
         } else {
             _options = Object.assign(
-                {
-                    position: "bottomleft",
-                    collapsible: true,
-                    collapsed: false,
-                    title: "Légende",
-                },
+                { position: "bottomleft", collapsible: true, collapsed: false, title: "Legend" },
                 options ?? {}
             );
         }
@@ -229,8 +371,7 @@ const LegendModule = {
         this._loadTaxonomy();
         this._initializeAllLayers();
 
-        if (Log)
-            Log.info("[Legend] Module Legend initialisé avec génération automatique depuis styles");
+        Log?.info("[Legend] Legend module initialized with automatic generation from styles");
         return true;
     },
 
@@ -238,12 +379,14 @@ const LegendModule = {
         if (!_profileConfig) return;
 
         const Config = _getGeoLeaf().Config;
-        const dataCfg = Config?.get ? (Config.get("data") as { profilesBasePath?: string } | null) : null;
+        const dataCfg = Config?.get
+            ? (Config.get("data") as { profilesBasePath?: string } | null)
+            : null;
         const profilesBasePath = dataCfg?.profilesBasePath ?? "profiles";
         const profileId = _profileConfig.id;
 
         if (!profileId) {
-            if (Log) Log.warn("[Legend] Impossible de charger taxonomy sans profileId");
+            if (Log) Log.warn("[Legend] Cannot load taxonomy without profileId");
             return;
         }
 
@@ -256,16 +399,16 @@ const LegendModule = {
             })
             .then((data: Record<string, unknown>) => {
                 _taxonomyData = data;
-                if (Log) Log.debug("[Legend] Taxonomy chargée");
+                if (Log) Log.debug("[Legend] Taxonomy loaded");
             })
             .catch((err: Error) => {
-                if (Log) Log.warn(`[Legend] Erreur chargement taxonomy: ${err.message}`);
+                if (Log) Log.warn(`[Legend] Taxonomy loading error: ${err.message}`);
             });
     },
 
     _initializeAllLayers(): void {
         if (!_profileConfig?.layers?.length) {
-            if (Log) Log.warn("[Legend] Aucune couche définie dans le profil");
+            if (Log) Log.warn("[Legend] No layer defined in the profile");
             return;
         }
 
@@ -281,55 +424,46 @@ const LegendModule = {
             });
         });
 
-        if (Log) Log.debug(`[Legend] ${_allLayers.size} couche(s) initialisée(s)`);
+        if (Log) Log.debug(`[Legend] ${_allLayers.size} layer(s) initialized`);
     },
 
     loadLayerLegend(layerId: string, styleId: string, layerConfig: LayerConfigForLegend): void {
         if (!_map) {
-            if (Log) Log.warn("[Legend] Module non initialisé");
+            Log?.warn("[Legend] Module not initialized");
             return;
         }
 
         const layerInfo = _allLayers.get(layerId);
         if (!layerInfo) {
-            if (Log) Log.warn(`[Legend] Couche ${layerId} non trouvée dans le profil`);
+            Log?.warn(`[Legend] Layer ${layerId} not found in profile`);
             return;
         }
 
         const POIMarkers = _getGeoLeaf()._POIMarkers;
         if (
-            POIMarkers &&
-            typeof (POIMarkers as { ensureProfileSpriteInjectedSync?: () => void }).ensureProfileSpriteInjectedSync === "function"
+            typeof (POIMarkers as { ensureProfileSpriteInjectedSync?: () => void })
+                ?.ensureProfileSpriteInjectedSync === "function"
         ) {
-            (POIMarkers as { ensureProfileSpriteInjectedSync: () => void }).ensureProfileSpriteInjectedSync();
-            if (Log) Log.debug(`[Legend] Sprite SVG demandé pour couche ${layerId}`);
+            (
+                POIMarkers as { ensureProfileSpriteInjectedSync: () => void }
+            ).ensureProfileSpriteInjectedSync();
+            Log?.debug(`[Legend] SVG sprite requested for layer ${layerId}`);
         }
 
         layerInfo.label = layerConfig.label ?? layerId;
-        layerInfo.geometryType = _normalizeGeometryType(
-            layerConfig.geometryType ?? layerConfig.geometry ?? layerInfo.geometryType ?? "point"
-        );
+        layerInfo.geometryType = _resolveLayerGeometryType(layerConfig, layerInfo);
         layerInfo.styleId = styleId;
 
-        const Config = _getGeoLeaf().Config;
-        const dataCfg = Config?.get ? (Config.get("data") as { profilesBasePath?: string } | null) : null;
-        const profilesBasePath = dataCfg?.profilesBasePath ?? "profiles";
         const profileId = layerConfig._profileId ?? _profileConfig?.id;
         const layerDir = layerConfig._layerDirectory;
+        const stylePath = _resolveStyleFilePath(profileId, layerDir, layerConfig, styleId);
 
-        if (!layerConfig.styles?.directory) {
-            if (Log) Log.warn(`[Legend] Configuration styles manquante pour ${layerId}`);
+        if (!stylePath) {
+            Log?.warn(`[Legend] Configuration styles manquante pour ${layerId}`);
             return;
         }
 
-        const stylesDir = layerConfig.styles.directory;
-        const styleFile =
-            layerConfig.styles.available?.find((s) => s.id === styleId)?.file ??
-            layerConfig.styles.default;
-
-        const stylePath = `${profilesBasePath}/${profileId}/${layerDir}/${stylesDir}/${styleFile}`;
-
-        if (Log) Log.debug(`[Legend] Chargement style: ${stylePath}`);
+        Log?.debug(`[Legend] Chargement style: ${stylePath}`);
 
         fetch(stylePath)
             .then((response) => {
@@ -337,41 +471,10 @@ const LegendModule = {
                 return response.json();
             })
             .then((styleData: Record<string, unknown>) => {
-                const GeoLeaf = _getGeoLeaf();
-                const Generator = GeoLeaf._LegendGenerator;
-                if (!Generator) {
-                    if (Log) Log.error("[Legend] LegendGenerator non disponible");
-                    return;
-                }
-
-                const originalPOIShared = GeoLeaf._POIShared;
-                if (layerConfig.showIconsOnMap !== undefined) {
-                    GeoLeaf._POIShared = {
-                        state: {
-                            poiConfig: { showIconsOnMap: layerConfig.showIconsOnMap },
-                        },
-                    };
-                }
-
-                const legendData = Generator.generateLegendFromStyle(
-                    styleData,
-                    layerInfo.geometryType,
-                    _taxonomyData
-                );
-
-                if (layerConfig.showIconsOnMap !== undefined) {
-                    GeoLeaf._POIShared = originalPOIShared;
-                }
-
-                if (legendData) {
-                    layerInfo.legendData = legendData;
-                    _allLayers.set(layerId, layerInfo);
-                    if (Log) Log.debug(`[Legend] Légende générée pour ${layerId}`);
-                    _scheduleRebuild();
-                }
+                _applyStyleToLegend(layerId, layerInfo, layerConfig, styleData);
             })
             .catch((err: Error) => {
-                if (Log) Log.warn(`[Legend] Erreur chargement style: ${err.message}`);
+                Log?.warn(`[Legend] Erreur loading style: ${err.message}`);
             });
     },
 
@@ -381,7 +484,7 @@ const LegendModule = {
             layerInfo.visible = visible;
             _allLayers.set(layerId, layerInfo);
             _scheduleRebuild();
-            if (Log) Log.debug(`[Legend] Visibilité de ${layerId}: ${visible}`);
+            if (Log) Log.debug(`[Legend] Visibility of ${layerId}: ${visible}`);
         }
     },
 
@@ -396,75 +499,15 @@ const LegendModule = {
             return;
         }
 
-        if (!_control) {
-            const ControlFactory = _getGeoLeaf()._LegendControl?.create;
-            if (ControlFactory) {
-                _control = ControlFactory(_options) as typeof _control;
-                if (_control) {
-                    (_map as { addControl: (c: unknown) => void }).addControl(_control);
-                }
-            }
-        }
+        _ensureLegendControl();
 
         if (_control?.updateMultiLayerContent) {
-            const visibilityManager = _getGeoLeaf()._LayerVisibilityManager;
-            const legendsArray: { layerId: string; label: string; collapsed: boolean; order: number; visible: boolean; sections: LegendData["sections"] }[] = [];
-
-            _allLayers.forEach((data, layerId) => {
-                if (!data.legendData) return;
-
-                const visState =
-                    visibilityManager && typeof visibilityManager.getVisibilityState === "function"
-                        ? visibilityManager.getVisibilityState(layerId)
-                        : null;
-
-                const isVisible = visState?.current ?? data.visible;
-                if (!isVisible) return;
-
-                legendsArray.push({
-                    layerId,
-                    label: data.label,
-                    collapsed: true,
-                    order: data.order,
-                    visible: true,
-                    sections: data.legendData.sections ?? [],
-                });
-            });
-
-            legendsArray.sort((a, b) => a.order - b.order);
-
-            _control.updateMultiLayerContent(legendsArray);
-
-            const hasIcons = legendsArray.some((legend) =>
-                legend.sections.some(
-                    (section) =>
-                        section.items?.some((item) => (item as { icon?: string }).icon)
-                )
-            );
-
-            if (hasIcons) {
-                const sprite = document.querySelector('svg[data-geoleaf-sprite="profile"]');
-                if (!sprite) {
-                    if (Log)
-                        Log.info(
-                            "[Legend] Icônes détectées mais sprite manquant - programmation retry"
-                        );
-                    setTimeout(() => {
-                        const spriteCheck = document.querySelector(
-                            'svg[data-geoleaf-sprite="profile"]'
-                        );
-                        if (spriteCheck && Log) {
-                            Log.info("[Legend] Sprite disponible - nouveau rendu de la légende");
-                            this._rebuildDisplay();
-                        }
-                    }, 2000);
-                }
-            }
+            _updateLegendContent(_control, this);
         }
     },
 
     toggleAccordion(_layerId: string): void {
-        // Géré visuellement par le renderer
+        // Managed visually by the renderer
     },
 
     getAllLayers(): Map<string, LayerInfo> {
@@ -486,7 +529,7 @@ const LegendModule = {
         if (_control && _map) {
             (_map as { removeControl: (c: unknown) => void }).removeControl(_control);
             _control = null;
-            if (Log) Log.debug("[Legend] Toutes les légendes supprimées");
+            if (Log) Log.debug("[Legend] All legends removed");
         }
     },
 

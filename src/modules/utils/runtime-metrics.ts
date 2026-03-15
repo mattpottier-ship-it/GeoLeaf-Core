@@ -9,11 +9,13 @@
  * @see docs/PERFORMANCE_METRICS.md
  */
 
+export {};
+
 const _g: any =
     typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : {};
 const GeoLeaf = _g.GeoLeaf || {};
 
-export interface RuntimeMetrics {
+interface RuntimeMetrics {
     /** Time from navigation start to map ready (first layer displayed), in ms */
     timeToMapReadyMs: number | null;
     /** Time from navigation start to app ready (interactive), in ms */
@@ -122,14 +124,14 @@ if (typeof document !== "undefined") {
  * Returns the last collected runtime metrics (or collects now if not yet done).
  * Use after geoleaf:app:ready has fired for full data.
  */
-export function getRuntimeMetrics(): RuntimeMetrics {
+function getRuntimeMetrics(): RuntimeMetrics {
     return collectMetrics();
 }
 
 /**
  * Resets cached metrics (e.g. for tests or SPA navigation).
  */
-export function resetRuntimeMetrics(): void {
+function resetRuntimeMetrics(): void {
     cachedMetrics = null;
 }
 

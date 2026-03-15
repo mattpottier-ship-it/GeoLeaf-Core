@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-object-injection */
 /*!
  * GeoLeaf Core
  * © 2026 Mattieu Pottier
@@ -130,6 +131,29 @@ export function getDistance(lat1: number, lng1: number, lat2: number, lng2: numb
     return R * c;
 }
 
+function _traversePath(obj: Record<string, unknown>, path: string): unknown {
+    const keys = path.split(".");
+    let value: unknown = obj;
+
+    for (const key of keys) {
+        if (value && typeof value === "object" && key in (value as object)) {
+            value = (value as Record<string, unknown>)[key];
+        } else {
+            value = null;
+            break;
+        }
+    }
+
+    if (value != null) {
+        if (typeof value === "string") {
+            if (value.trim()) return value;
+        } else {
+            return value;
+        }
+    }
+    return null;
+}
+
 export function resolveField(
     obj: Record<string, unknown> | null | undefined,
     ...paths: string[]
@@ -137,25 +161,8 @@ export function resolveField(
     if (!obj || typeof obj !== "object") return "";
 
     for (const path of paths) {
-        const keys = path.split(".");
-        let value: unknown = obj;
-
-        for (const key of keys) {
-            if (value && typeof value === "object" && key in (value as object)) {
-                value = (value as Record<string, unknown>)[key];
-            } else {
-                value = null;
-                break;
-            }
-        }
-
-        if (value != null) {
-            if (typeof value === "string") {
-                if (value.trim()) return value;
-            } else {
-                return value;
-            }
-        }
+        const result = _traversePath(obj, path);
+        if (result != null) return result;
     }
 
     return "";

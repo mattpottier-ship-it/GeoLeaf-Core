@@ -1,41 +1,253 @@
-// @ts-nocheck � migration TS, typage progressif
+/* eslint-disable security/detect-object-injection */
+// @ts-nocheck — migration TS, typage progressif
 /*!
  * GeoLeaf Core
  * © 2026 Mattieu Pottier
  * Released under the MIT License
  * https://geoleaf.dev
  */
-
-/**
- * GeoLeaf UI - Filter Control Builder
- * Construit les contrôles de filtres individuels
- *
- * @module ui/filter-control-builder
- */
-"use strict";
-
+import { Config } from "../config/geoleaf-config/config-core.js";
 import { Log } from "../log/index.js";
 import { $create } from "../utils/dom-helpers.js";
-import { Config } from "../config/geoleaf-config/config-core.js";
 import { Security } from "../security/index.js";
+import { _UIDomUtils } from "./dom-utils.js";
+
+function _numCfg(val, def) {
+    return typeof val === "number" && val > 0 ? val : def;
+}
+
+function _resolveProximityRadius() {
+    let minRadius = 1,
+        maxRadius = 50,
+        stepRadius = 1,
+        defaultRadius = 10;
+    try {
+        const activeProfile = Config?.getActiveProfile?.();
+        const searchConfig = activeProfile
+            ? (activeProfile.panels && activeProfile.panels.search) || activeProfile.search
+            : null;
+        if (searchConfig) {
+            minRadius = _numCfg(searchConfig.radiusMin, 1);
+            maxRadius = _numCfg(searchConfig.radiusMax, 50);
+            stepRadius = _numCfg(searchConfig.radiusStep, 1);
+            defaultRadius = Math.max(
+                minRadius,
+                Math.min(_numCfg(searchConfig.radiusDefault, 10), maxRadius)
+            );
+        }
+    } catch (err) {
+        Log?.warn?.("[GeoLeaf.UI] Erreur lecture radius config:", err);
+    }
+    return { minRadius, maxRadius, stepRadius, defaultRadius };
+}
+
+function _buildSelectControl(filterDef, labelEl) {
+    const selectEl = $create("select", {
+        className: "gl-filter-panel__control gl-filter-panel__control--select",
+        name: filterDef.id,
+        id: "gl-filter-" + filterDef.id,
+    });
+    if (labelEl) labelEl.setAttribute("for", selectEl.id);
+    if (filterDef.type === "multiselect") selectEl.multiple = true;
+    if (filterDef.optionsFrom) {
+        const profile = _UIDomUtils.getActiveProfileConfig();
+        _UIDomUtils.populateSelectOptionsFromTaxonomy(selectEl, profile, filterDef.optionsFrom);
+    }
+    return selectEl;
+}
+
+function _buildRangeControl(filterDef, labelEl) {
+    const container = $create("div", { className: "gl-filter-panel__range-wrapper" });
+    const input = $create("input", {
+        type: "range",
+        className: "gl-filter-panel__control gl-filter-panel__control--range",
+        id: "gl-filter-" + filterDef.id,
+        name: filterDef.id,
+    });
+    if (labelEl) labelEl.setAttribute("for", input.id);
+    if (typeof filterDef.min === "number") input.min = String(filterDef.min);
+    if (typeof filterDef.max === "number") input.max = String(filterDef.max);
+    if (typeof filterDef.step === "number") input.step = String(filterDef.step);
+    const valueLabel = $create("span", { className: "gl-filter-panel__range-value" });
+    let initialValue;
+    if (typeof filterDef.default === "number") {
+        initialValue = filterDef.default;
+    } else if (input.min && input.max) {
+        initialValue = (parseFloat(input.min) + parseFloat(input.max)) / 2;
+    } else {
+        initialValue = input.min ? parseFloat(input.min) : 0;
+    }
+    if (!isNaN(initialValue)) {
+        input.value = String(initialValue);
+        valueLabel.textContent = initialValue.toString().replace(".", ",");
+    }
+    input.addEventListener("input", function () {
+        const val = parseFloat(input.value);
+        if (!isNaN(val)) valueLabel.textContent = val.toString().replace(".", ",");
+    });
+    container.appendChild(input);
+    container.appendChild(valueLabel);
+    return container;
+}
+
+function _buildTreeControl(filterDef) {
+    return $create("div", {
+        className: "gl-filter-panel__tree gl-filter-panel__tree--lazy",
+        attributes: { "data-lazy-type": "categories", "data-filter-id": filterDef.id },
+    });
+}
+
+function _buildCheckboxGroupControl(filterDef) {
+    const groupContainer = $create("div", { className: "gl-filter-panel__checkbox-group" });
+    if (Array.isArray(filterDef.options)) {
+        filterDef.options.forEach(function (opt) {
+            const label = $create("label", { className: "gl-filter-panel__checkbox-label" });
+            const checkbox = $create("input", {
+                type: "checkbox",
+                className: "gl-filter-panel__checkbox",
+                name: filterDef.id,
+                value: opt.id,
+                checked: !!opt.checked,
+                attributes: { "data-filter-option-id": opt.id },
+            });
+            const text = $create("span", {
+                className: "gl-filter-panel__checkbox-text",
+                textContent: opt.label || opt.id,
+            });
+            label.appendChild(checkbox);
+            label.appendChild(text);
+            groupContainer.appendChild(label);
+        });
+    }
+    return groupContainer;
+}
+
+function _buildSearchControl(filterDef, _labelEl, wrapper) {
+    const searchInput = $create("input", {
+        type: "text",
+        className: "gl-filter-panel__control gl-filter-panel__control--search",
+        name: filterDef.id,
+        placeholder: filterDef.placeholder || "Filtrer...",
+    });
+    if (Array.isArray(filterDef.searchFields)) {
+        searchInput.setAttribute("data-search-fields", filterDef.searchFields.join(","));
+    }
+    wrapper.classList.add("gl-filter-group--search");
+    return searchInput;
+}
+
+function _createProximityRangeSection(filterDef) {
+    const rangeWrapper = $create("div", {
+        className: "gl-filter-panel__proximity-range",
+        style: { display: "none" },
+    });
+    rangeWrapper.appendChild(
+        $create("label", {
+            className: "gl-filter-panel__label",
+            textContent: "Rayon (km)",
+            attributes: { for: "gl-filter-proximity-radius" },
+        })
+    );
+    const rangeContainer = $create("div", { className: "gl-filter-panel__range-wrapper" });
+    const { minRadius, maxRadius, stepRadius, defaultRadius } = _resolveProximityRadius();
+    const rangeInput = $create("input", {
+        type: "range",
+        className: "gl-filter-panel__control gl-filter-panel__control--range",
+        id: "gl-filter-proximity-radius",
+        name: filterDef.id + "_radius",
+        min: String(minRadius),
+        max: String(maxRadius),
+        step: String(stepRadius),
+        value: String(defaultRadius),
+        attributes: {
+            "data-filter-proximity-radius": "true",
+            "data-proximity-radius-default": String(defaultRadius),
+        },
+    });
+    const rangeValue = $create("span", {
+        className: "gl-filter-panel__range-value",
+        textContent: String(defaultRadius),
+    });
+    rangeInput.addEventListener("input", function () {
+        rangeValue.textContent = rangeInput.value;
+    });
+    rangeContainer.appendChild(rangeInput);
+    rangeContainer.appendChild(rangeValue);
+    rangeWrapper.appendChild(rangeContainer);
+    rangeWrapper.appendChild(
+        $create("p", {
+            className: "gl-filter-panel__proximity-instruction",
+            textContent: filterDef.instructionText || "Cliquez sur la carte",
+            style: { display: "none" },
+        })
+    );
+    return rangeWrapper;
+}
+
+function _buildProximityControl(filterDef) {
+    const proximityContainer = $create("div", { className: "gl-filter-panel__proximity" });
+    if (filterDef.label) {
+        proximityContainer.appendChild(
+            $create("h3", {
+                className: "gl-filter-panel__proximity-title",
+                textContent: filterDef.label,
+            })
+        );
+    }
+    const button = $create("button", {
+        type: "button",
+        className: "gl-btn gl-btn--secondary gl-filter-panel__proximity-btn",
+        attributes: { "data-filter-proximity-btn": "true" },
+        textContent: filterDef.buttonLabel || "Activer",
+    });
+    proximityContainer.appendChild(button);
+    proximityContainer.appendChild(_createProximityRangeSection(filterDef));
+    return proximityContainer;
+}
+
+function _buildTagsControl(filterDef) {
+    return $create("div", {
+        className: "gl-filter-panel__tags-container",
+        attributes: { "data-lazy-type": "tags", "data-filter-id": filterDef.id },
+    });
+}
+
+const _FILTER_BUILDERS: Record<string, (def: any, lab: any, wr: any) => any> = {
+    select: _buildSelectControl,
+    multiselect: _buildSelectControl,
+    range: _buildRangeControl,
+    tree: _buildTreeControl,
+    "tree-category": _buildTreeControl,
+    categoryTree: _buildTreeControl,
+    "checkbox-group": _buildCheckboxGroupControl,
+    search: _buildSearchControl,
+    proximity: _buildProximityControl,
+    "multiselect-tags": _buildTagsControl,
+};
+
+function _dispatchFilterControl(filterDef, labelEl, wrapper) {
+    const builderFn = _FILTER_BUILDERS[filterDef.type];
+    if (builderFn) return builderFn(filterDef, labelEl, wrapper);
+    if (filterDef.id === "tags") return _buildTagsControl(filterDef);
+    return null;
+}
 
 /**
- * Construit un contrôle de filtre individuel
- * @param {Object} filterDef - Définition du filtre
- * @param {Object} profile - Configuration du profil
- * @param {boolean} skipLabel - Sauter la création du label (défaut: false)
+ * Builds a controle de filters individuel
+ * @param {Object} filterDef - Definition du filters
+ * @param {Object} profile - Configuration of the profile
+ * @param {boolean} skipLabel - Sauter la creation du label (defaut: false)
  * @returns {HTMLElement|null}
  */
 const _buildFilterControl = function (filterDef, profile, skipLabel) {
-    if (!filterDef || !filterDef.id || !filterDef.type) return null;
-
+    const fid = filterDef?.id;
+    const ftype = filterDef?.type;
+    if (!fid || !ftype) return null;
     const wrapper = $create("div", {
         className: "gl-filter-panel__group",
-        attributes: { "data-gl-filter-id": filterDef.id },
+        attributes: { "data-gl-filter-id": fid },
     });
-
     let labelEl = null;
-    // Ne pas créer de label si skipLabel est true (pour les accordéons qui ont leur propre titre)
     if (filterDef.label && !skipLabel) {
         labelEl = $create("label", {
             className: "gl-filter-panel__label",
@@ -43,279 +255,13 @@ const _buildFilterControl = function (filterDef, profile, skipLabel) {
         });
         wrapper.appendChild(labelEl);
     }
-
-    let control = null;
-
-    // 1) SELECT / MULTISELECT classiques
-    if (filterDef.type === "select" || filterDef.type === "multiselect") {
-        const selectEl = $create("select", {
-            className: "gl-filter-panel__control gl-filter-panel__control--select",
-            name: filterDef.id,
-            id: "gl-filter-" + filterDef.id,
-        });
-
-        if (labelEl) {
-            labelEl.setAttribute("for", selectEl.id);
-        }
-
-        if (filterDef.type === "multiselect") {
-            selectEl.multiple = true;
-        }
-
-        if (filterDef.optionsFrom) {
-            // TODO P3-DEAD-01: _populateSelectOptionsFromTaxonomy not implemented
-            // Placeholder — taxonomy-based select population is not yet available.
-        }
-
-        control = selectEl;
-    }
-
-    // 2) SLIDER (range)
-    else if (filterDef.type === "range") {
-        const container = $create("div", { className: "gl-filter-panel__range-wrapper" });
-
-        const input = $create("input", {
-            type: "range",
-            className: "gl-filter-panel__control gl-filter-panel__control--range",
-            id: "gl-filter-" + filterDef.id,
-            name: filterDef.id,
-        });
-
-        if (labelEl) {
-            labelEl.setAttribute("for", input.id);
-        }
-
-        if (typeof filterDef.min === "number") input.min = String(filterDef.min);
-        if (typeof filterDef.max === "number") input.max = String(filterDef.max);
-        if (typeof filterDef.step === "number") input.step = String(filterDef.step);
-
-        const valueLabel = $create("span", { className: "gl-filter-panel__range-value" });
-
-        let initialValue;
-        if (typeof filterDef.default === "number") {
-            initialValue = filterDef.default;
-        } else if (input.min && input.max) {
-            const min = parseFloat(input.min);
-            const max = parseFloat(input.max);
-            initialValue = (min + max) / 2;
-        } else {
-            initialValue = input.min ? parseFloat(input.min) : 0;
-        }
-
-        if (!isNaN(initialValue)) {
-            input.value = String(initialValue);
-            valueLabel.textContent = initialValue.toString().replace(".", ",");
-        }
-
-        input.addEventListener("input", function () {
-            const val = parseFloat(input.value);
-            if (!isNaN(val)) {
-                valueLabel.textContent = val.toString().replace(".", ",");
-            }
-        });
-
-        container.appendChild(input);
-        container.appendChild(valueLabel);
-        control = container;
-    }
-
-    // 3) TREE-VIEW catégories / sous-catégories
-    else if (
-        filterDef.type === "tree" ||
-        filterDef.type === "tree-category" ||
-        filterDef.type === "categoryTree"
-    ) {
-        // LAZY LOADING: Retourner un container vide avec marqueur
-        const treeContainer = $create("div", {
-            className: "gl-filter-panel__tree gl-filter-panel__tree--lazy",
-            attributes: {
-                "data-lazy-type": "categories",
-                "data-filter-id": filterDef.id,
-            },
-        });
-
-        control = treeContainer;
-    }
-
-    // 4) CHECKBOX GROUP
-    else if (filterDef.type === "checkbox-group") {
-        const groupContainer = $create("div", { className: "gl-filter-panel__checkbox-group" });
-
-        if (Array.isArray(filterDef.options)) {
-            filterDef.options.forEach(function (opt) {
-                const label = $create("label", { className: "gl-filter-panel__checkbox-label" });
-
-                const checkbox = $create("input", {
-                    type: "checkbox",
-                    className: "gl-filter-panel__checkbox",
-                    name: filterDef.id,
-                    value: opt.id,
-                    checked: !!opt.checked,
-                    attributes: { "data-filter-option-id": opt.id },
-                });
-
-                const text = $create("span", {
-                    className: "gl-filter-panel__checkbox-text",
-                    textContent: opt.label || opt.id,
-                });
-
-                label.appendChild(checkbox);
-                label.appendChild(text);
-                groupContainer.appendChild(label);
-            });
-        }
-        control = groupContainer;
-    }
-
-    // 5) SEARCH
-    else if (filterDef.type === "search") {
-        const searchInput = $create("input", {
-            type: "text",
-            className: "gl-filter-panel__control gl-filter-panel__control--search",
-            name: filterDef.id,
-            placeholder: filterDef.placeholder || "Filtrer...",
-        });
-
-        if (Array.isArray(filterDef.searchFields)) {
-            searchInput.setAttribute("data-search-fields", filterDef.searchFields.join(","));
-        }
-
-        /* Marqueur : permet de masquer ce groupe sur mobile (la barre loupe le remplace) */
-        wrapper.classList.add("gl-filter-group--search");
-        control = searchInput;
-    }
-
-    // 6) PROXIMITY
-    else if (filterDef.type === "proximity") {
-        const proximityContainer = $create("div", { className: "gl-filter-panel__proximity" });
-
-        if (filterDef.label) {
-            const title = $create("h3", {
-                className: "gl-filter-panel__proximity-title",
-                textContent: filterDef.label,
-            });
-            proximityContainer.appendChild(title);
-        }
-
-        const button = $create("button", {
-            type: "button",
-            className: "gl-btn gl-btn--secondary gl-filter-panel__proximity-btn",
-            attributes: { "data-filter-proximity-btn": "true" },
-            textContent: filterDef.buttonLabel || "Activer",
-        });
-        proximityContainer.appendChild(button);
-
-        const rangeWrapper = $create("div", {
-            className: "gl-filter-panel__proximity-range",
-            style: { display: "none" },
-        });
-
-        const rangeLabel = $create("label", {
-            className: "gl-filter-panel__label",
-            textContent: "Rayon (km)",
-            attributes: { for: "gl-filter-proximity-radius" },
-        });
-        rangeWrapper.appendChild(rangeLabel);
-
-        const rangeContainer = $create("div", { className: "gl-filter-panel__range-wrapper" });
-
-        let minRadius = 1;
-        let maxRadius = 50;
-        let stepRadius = 1;
-        let defaultRadius = 10;
-        try {
-            const activeProfile = Config?.getActiveProfile?.();
-            if (activeProfile) {
-                const searchConfig =
-                    (activeProfile.panels && activeProfile.panels.search) || activeProfile.search;
-                if (searchConfig) {
-                    if (typeof searchConfig.radiusMin === "number" && searchConfig.radiusMin > 0) {
-                        minRadius = searchConfig.radiusMin;
-                    }
-                    if (typeof searchConfig.radiusMax === "number" && searchConfig.radiusMax > 0) {
-                        maxRadius = searchConfig.radiusMax;
-                    }
-                    if (
-                        typeof searchConfig.radiusStep === "number" &&
-                        searchConfig.radiusStep > 0
-                    ) {
-                        stepRadius = searchConfig.radiusStep;
-                    }
-                    if (
-                        typeof searchConfig.radiusDefault === "number" &&
-                        searchConfig.radiusDefault > 0
-                    ) {
-                        defaultRadius = searchConfig.radiusDefault;
-                    }
-                    defaultRadius = Math.max(minRadius, Math.min(defaultRadius, maxRadius));
-                }
-            }
-        } catch (err) {
-            Log?.warn?.("[GeoLeaf.UI] Erreur lecture radius config:", err);
-        }
-
-        const rangeInput = $create("input", {
-            type: "range",
-            className: "gl-filter-panel__control gl-filter-panel__control--range",
-            id: "gl-filter-proximity-radius",
-            name: filterDef.id + "_radius",
-            min: String(minRadius),
-            max: String(maxRadius),
-            step: String(stepRadius),
-            value: String(defaultRadius),
-            attributes: {
-                "data-filter-proximity-radius": "true",
-                "data-proximity-radius-default": String(defaultRadius),
-            },
-        });
-
-        const rangeValue = $create("span", {
-            className: "gl-filter-panel__range-value",
-            textContent: String(defaultRadius),
-        });
-
-        rangeInput.addEventListener("input", function () {
-            rangeValue.textContent = rangeInput.value;
-        });
-
-        rangeContainer.appendChild(rangeInput);
-        rangeContainer.appendChild(rangeValue);
-        rangeWrapper.appendChild(rangeContainer);
-
-        const instruction = $create("p", {
-            className: "gl-filter-panel__proximity-instruction",
-            textContent: filterDef.instructionText || "Cliquez sur la carte",
-            style: { display: "none" },
-        });
-        rangeWrapper.appendChild(instruction);
-
-        proximityContainer.appendChild(rangeWrapper);
-        control = proximityContainer;
-    }
-
-    // 7) TAGS
-    else if (filterDef.type === "multiselect-tags" || filterDef.id === "tags") {
-        const tagsContainer = $create("div", {
-            className: "gl-filter-panel__tags-container",
-            attributes: {
-                "data-lazy-type": "tags",
-                "data-filter-id": filterDef.id,
-            },
-        });
-        control = tagsContainer;
-    }
-
-    // Aucun type reconnu
-    if (!control) {
-        return null;
-    }
-
+    const control = _dispatchFilterControl(filterDef, labelEl, wrapper);
+    if (!control) return null;
     if (labelEl && control instanceof HTMLElement && !control.id) {
-        const controlId = "gl-filter-" + filterDef.id;
+        const controlId = "gl-filter-" + fid;
         control.id = controlId;
         labelEl.setAttribute("for", controlId);
     }
-
     wrapper.appendChild(control);
     return wrapper;
 };
@@ -323,27 +269,66 @@ const _buildFilterControl = function (filterDef, profile, skipLabel) {
 export { _buildFilterControl };
 
 /**
- * Fonctions globales pour le chargement lazy des filtres
- * Utilisées par le lazy-loader pour construire le contenu à la demande
+ * Fonctions globales for the loading lazy des filtres
+ * Used by the lazy-loader to build content on demand
  */
 
 /**
- * Construit le contenu HTML de l'arbre de catégories
- * @param {Object} scanResult - Résultat du scan ({usedIds: Set, visibleLayerIds: Array})
+ * Builds the contenu HTML of the tree de categories
+ * @param {Object} scanResult - Result du scan ({usedIds: Set, visibleLayerIds: Array})
  * @returns {string} HTML string
  */
+function _buildCategoryItemHtml(catId, cat, subKeys, esc) {
+    let html = '<li class="gl-filter-tree__item gl-filter-tree__item--category">';
+    html += '<div class="gl-filter-tree__row">';
+    if (subKeys.length > 0) {
+        html +=
+            '<span class="gl-filter-tree__arrow" data-category-id="' + esc(catId) + '">▶</span>';
+    } else {
+        html += '<span class="gl-filter-tree__spacer"></span>';
+    }
+    html += '<label class="gl-filter-tree__label gl-filter-tree__label--category">';
+    html +=
+        '<input type="checkbox" class="gl-filter-tree__checkbox gl-filter-tree__checkbox--category" ';
+    html += 'name="categories_category" value="' + esc(catId) + '" ';
+    html += 'data-gl-filter-category-id="' + esc(catId) + '">';
+    html += '<span class="gl-filter-tree__text">' + esc(cat.label || catId) + "</span>";
+    html += "</label>";
+    html += "</div>";
+    if (subKeys.length > 0) {
+        const subs = cat.subcategories || {};
+        html += '<ul class="gl-filter-tree gl-filter-tree--subcategories">';
+        subKeys.forEach(function (subId) {
+            const sub = subs[subId] || {};
+            html += '<li class="gl-filter-tree__item gl-filter-tree__item--subcategory">';
+            html += '<label class="gl-filter-tree__label gl-filter-tree__label--subcategory">';
+            html +=
+                '<input type="checkbox" class="gl-filter-tree__checkbox gl-filter-tree__checkbox--subcategory" ';
+            html += 'name="categories_subcategory" value="' + esc(subId) + '" ';
+            html += 'data-gl-filter-category-id="' + esc(catId) + '" ';
+            html += 'data-gl-filter-subcategory-id="' + esc(subId) + '">';
+            html += '<span class="gl-filter-tree__text">' + esc(sub.label || subId) + "</span>";
+            html += "</label>";
+            html += "</li>";
+        });
+        html += "</ul>";
+    }
+    html += "</li>";
+    return html;
+}
+
 export function buildCategoryTreeContent(scanResult) {
-    // Récupérer le profil actif via l'API Config (enrichedProfile contient taxonomy)
+    // Retrieve the profile active via l'API Config (enrichedProfile contient taxonomy)
     const profile =
         Config && typeof Config.getActiveProfile === "function" ? Config.getActiveProfile() : null;
     if (!profile || !profile.taxonomy || !profile.taxonomy.categories) {
-        return '<div class="gl-empty-state">Aucune catégorie disponible</div>';
+        return '<div class="gl-empty-state">Aucune category disponible</div>';
     }
 
     const categories = profile.taxonomy.categories;
     const usedCategoryIds = scanResult.usedIds;
 
-    // Sécurité : échapper les valeurs dynamiques injectées dans le HTML
+    // Security: escape dynamic values injected in HTML
     const esc =
         Security && typeof Security.escapeHtml === "function"
             ? function (s) {
@@ -357,13 +342,13 @@ export function buildCategoryTreeContent(scanResult) {
                       .replace(/"/g, "&quot;");
               };
 
-    // Comparaison insensible à la casse : normaliser les IDs scannés
+    // Case-insensitive comparison: normalize scanned IDs
     const usedLower = new Set();
     usedCategoryIds.forEach(function (id) {
         usedLower.add(id.toLowerCase());
     });
 
-    // Filtrer les catégories pour afficher celles utilisées (comparaison case-insensitive)
+    // Filtrer les categories pour display celles used (comparaison casee-insensitive)
     const catIds = Object.keys(categories).filter((catId) => usedLower.has(catId.toLowerCase()));
 
     if (catIds.length === 0) {
@@ -374,54 +359,9 @@ export function buildCategoryTreeContent(scanResult) {
 
     catIds.forEach(function (catId) {
         const cat = categories[catId] || {};
-
-        // Filtrer aussi les sous-catégories (comparaison case-insensitive)
         const subs = cat.subcategories || {};
         const subKeys = Object.keys(subs).filter((subId) => usedLower.has(subId.toLowerCase()));
-        const hasSubcategories = subKeys.length > 0;
-
-        html += '<li class="gl-filter-tree__item gl-filter-tree__item--category">';
-        html += '<div class="gl-filter-tree__row">';
-
-        if (hasSubcategories) {
-            html +=
-                '<span class="gl-filter-tree__arrow" data-category-id="' +
-                esc(catId) +
-                '">▶</span>';
-        } else {
-            html += '<span class="gl-filter-tree__spacer"></span>';
-        }
-
-        html += '<label class="gl-filter-tree__label gl-filter-tree__label--category">';
-        html +=
-            '<input type="checkbox" class="gl-filter-tree__checkbox gl-filter-tree__checkbox--category" ';
-        html += 'name="categories_category" value="' + esc(catId) + '" ';
-        html += 'data-gl-filter-category-id="' + esc(catId) + '">';
-        html += '<span class="gl-filter-tree__text">' + esc(cat.label || catId) + "</span>";
-        html += "</label>";
-        html += "</div>";
-
-        if (hasSubcategories) {
-            html += '<ul class="gl-filter-tree gl-filter-tree--subcategories">';
-
-            subKeys.forEach(function (subId) {
-                const sub = subs[subId] || {};
-                html += '<li class="gl-filter-tree__item gl-filter-tree__item--subcategory">';
-                html += '<label class="gl-filter-tree__label gl-filter-tree__label--subcategory">';
-                html +=
-                    '<input type="checkbox" class="gl-filter-tree__checkbox gl-filter-tree__checkbox--subcategory" ';
-                html += 'name="categories_subcategory" value="' + esc(subId) + '" ';
-                html += 'data-gl-filter-category-id="' + esc(catId) + '" ';
-                html += 'data-gl-filter-subcategory-id="' + esc(subId) + '">';
-                html += '<span class="gl-filter-tree__text">' + esc(sub.label || subId) + "</span>";
-                html += "</label>";
-                html += "</li>";
-            });
-
-            html += "</ul>";
-        }
-
-        html += "</li>";
+        html += _buildCategoryItemHtml(catId, cat, subKeys, esc);
     });
 
     html += "</ul>";
@@ -429,8 +369,8 @@ export function buildCategoryTreeContent(scanResult) {
 }
 
 /**
- * Construit le contenu HTML de la liste de tags
- * @param {Array} tags - Array de tags uniques triés
+ * Builds the contenu HTML de the list de tags
+ * @param {Array} tags - Array de tags uniques sorted
  * @returns {string} HTML string
  */
 export function buildTagsListContent(tags) {
@@ -438,7 +378,7 @@ export function buildTagsListContent(tags) {
         return '<div class="gl-empty-state">ND - Non disponible</div>';
     }
 
-    // Sécurité : échapper les valeurs dynamiques
+    // Security: escape dynamic values
     const esc =
         Security && typeof Security.escapeHtml === "function"
             ? function (s) {
@@ -466,12 +406,12 @@ export function buildTagsListContent(tags) {
 }
 
 /**
- * Attache les event listeners pour l'arbre de catégories après rendering
- * Perf 6.2.2: Délégation d'événements — 3 listeners sur le container au lieu de N listeners individuels
- * @param {HTMLElement} container - Container de l'arbre
+ * Attache les event listners pour l'tree de categories after rendering
+ * Perf 6.2.2: Delegation d'events — 3 listners sur le container au lieu de N listners individuels
+ * @param {HTMLElement} container - Container of the tree
  */
 export function attachCategoryTreeListeners(container) {
-    // Délégation: 1 seul listener 'click' pour toutes les flèches
+    // Delegation: 1 seul listner 'clickk' pour toutes les arrows
     container.addEventListener("click", function (e) {
         const arrow = e.target.closest(".gl-filter-tree__arrow");
         if (!arrow) return;
@@ -491,13 +431,13 @@ export function attachCategoryTreeListeners(container) {
         }
     });
 
-    // Délégation: 1 seul listener 'change' pour toutes les checkboxes (catégories + sous-catégories)
+    // Delegation: 1 seul listner 'change' pour toutes les checkboxes (categories + sous-categories)
     container.addEventListener("change", function (e) {
         const target = e.target;
         if (!target.matches(".gl-filter-tree__checkbox")) return;
 
         if (target.classList.contains("gl-filter-tree__checkbox--category")) {
-            // Checkbox catégorie cochée → propager aux sous-catégories
+            // Category checkbox checked → propagate to sub-categories
             const li = target.closest(".gl-filter-tree__item--category");
             if (!li) return;
             const subCheckboxes = li.querySelectorAll(".gl-filter-tree__checkbox--subcategory");
@@ -506,7 +446,7 @@ export function attachCategoryTreeListeners(container) {
             });
             target.indeterminate = false;
         } else if (target.classList.contains("gl-filter-tree__checkbox--subcategory")) {
-            // Checkbox sous-catégorie cochée → mettre à jour l'état parent
+            // Sub-category checkbox checked → update parent state
             const liCat = target.closest(".gl-filter-tree__item--category");
             if (!liCat) return;
             const categoryCheckbox = liCat.querySelector(".gl-filter-tree__checkbox--category");
@@ -530,8 +470,8 @@ export function attachCategoryTreeListeners(container) {
 }
 
 /**
- * Attache les event listeners pour les tags après rendering
- * Perf 6.2.2: Délégation d'événements — 1 listener sur le container au lieu de N badges
+ * Attache les event listners for thes tags after rendering
+ * Perf 6.2.2: Delegation d'events — 1 listner sur le container au lieu de N badges
  * @param {HTMLElement} container - Container des tags
  */
 export function attachTagsListeners(container) {

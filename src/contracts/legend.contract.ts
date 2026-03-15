@@ -1,7 +1,7 @@
-﻿/**
+/**
  * GeoLeaf Contract — Legend (lazy-chunk boundary)
  *
- * Interface ESM pure pour accéder au module Legend depuis les modules core
+ * Interface ESM pure pour access au module Legend from the modules core
  * sans couplage runtime — interface ESM pure.
  *
  * Phase 10-D — Pattern C : contrat de chunk Legend.
@@ -14,21 +14,21 @@
  *   }
  *
  * POURQUOI un contrat ?
- * Legend (geoleaf.legend.js) est une façade qui dépend de l'init runtime
- * (map + profil). Le contrat encapsule la garde d'initialisation et fournit
- * un point d'entrée typé, sans exposer le namespace global.
+ * Legend (geoleaf.legend.js) est une facade qui depends of the init runtime
+ * (map + profile). Le contrat encapsule la garde d'initialization et fournit
+ * un point d'input typed, sans exposer le namespace global.
  */
 "use strict";
 
 import { Legend } from "../modules/geoleaf.legend.js";
 
 /**
- * Contrat d'interface pour le module Legend.
+ * Contrat d'interface pour the module Legend.
  * @namespace LegendContract
  */
 const LegendContract = {
     /**
-     * Retourne true si Legend est initialisé (carte chargée).
+     * Returns true si Legend est initialized (carte loadede).
      * @returns {boolean}
      */
     isAvailable() {
@@ -36,7 +36,7 @@ const LegendContract = {
     },
 
     /**
-     * Charge et affiche la légende pour une couche et un style donnés.
+     * Loads and displays the legend for a layer with given styles.
      * @param {string} layerId
      * @param {string} styleId
      * @param {Object} layerConfig
@@ -48,7 +48,7 @@ const LegendContract = {
     },
 
     /**
-     * Met à jour la visibilité d'une couche dans la légende.
+     * Updates the visibility d'a layer dans the legend.
      * @param {string} layerId
      * @param {boolean} visible
      */

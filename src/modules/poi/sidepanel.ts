@@ -7,13 +7,14 @@
 
 /**
  * GeoLeaf POI Module - Side Panel
- * Gestion du panneau latéral d'affichage détaillé des POI
- * TODO Phase 4: Découper fonctions complexes en sous-fonctions <80 lignes
+ * Management of the detailed display side panel for POI
+ * TODO Phase 4: Split complex functions into sub-functions <80 lines
  */
 import { Log } from "../log/index.js";
 import { POIShared } from "./shared.ts";
 import { POIRenderers } from "./renderers.ts";
 import { createElement } from "../utils/dom-helpers.js";
+import { getLabel } from "../i18n/i18n.js";
 
 /**
  * Shorthand for createElement
@@ -22,24 +23,24 @@ const $create = (tag: any, props: any, ...children: any[]) => {
     return createElement(tag, props, ...children);
 };
 
-// Référence au module shared
+// Reference au module shared
 
 /**
- * Crée l'élément DOM du panneau latéral si non existant.
+ * Creates the element DOM du panel side si non existing.
  */
 function createSidePanel() {
     const shared = POIShared;
     if (!shared) return;
     const state = shared.state;
 
-    if (state.sidePanelElement) return; // Déjà créé
+    if (state.sidePanelElement) return; // Already created
 
-    // Créer l'overlay
+    // Createsr l'overlay
     const overlay = $create("div", {
         className: "gl-poi-sidepanel-overlay",
         attributes: { "aria-hidden": "true" },
     });
-    // Ajouter à .gl-main pour support du mode plein écran
+    // Add to .gl-main for fullscreen mode support
     const glMain = document.querySelector(".gl-main");
     if (glMain) {
         glMain.appendChild(overlay);
@@ -48,31 +49,32 @@ function createSidePanel() {
     }
     state.sidePanelOverlay = overlay;
 
-    // Créer le panneau
+    // Createsr the panel
     const panel = $create("aside", {
         className: "gl-poi-sidepanel",
         attributes: {
             "aria-hidden": "true",
             role: "complementary",
+            "aria-label": getLabel("aria.sidepanel.landmark"), // F2
         },
     });
 
-    // Créer le header avec bouton fermer
+    // Createsr le header avec button fermer
     const header = $create("div", { className: "gl-poi-sidepanel__header" });
     const closeBtn = $create("button", {
         className: "gl-poi-sidepanel__close",
-        attributes: { "aria-label": "Fermer" },
+        attributes: { "aria-label": getLabel("aria.sidepanel.close") }, // i18n
         textContent: "×",
         onClick: closeSidePanel,
     });
     header.appendChild(closeBtn);
 
-    // Créer le content
+    // Createsr le content
     const content = $create("div", { className: "gl-poi-sidepanel__content" });
 
     panel.appendChild(header);
     panel.appendChild(content);
-    // Ajouter à .gl-main pour support du mode plein écran
+    // Add to .gl-main for fullscreen mode support
     if (glMain) {
         glMain.appendChild(panel);
     } else {
@@ -81,77 +83,93 @@ function createSidePanel() {
     state.sidePanelElement = panel;
     state.sidePanelContent = content;
 
-    // Event listeners
+    // Event listners
     overlay.addEventListener("click", closeSidePanel);
 
-    if (Log) Log.info("[POI] Side panel créé.");
+    if (Log) Log.info("[POI] Side panel created.");
 }
 
 /**
- * Ouvre le panneau latéral avec les infos complètes du POI.
+ * Ouvre the panel side with thes infos completes du POI.
  *
- * @param {object} poi - Données complètes du POI.
- * @param {object} customLayout - Layout personnalisé (optionnel).
+ * @param {object} poi - Data completes du POI.
+ * @param {object} customLayout - Layout custom (optional).
  * @returns {Promise<void>}
  */
+async function _populatePanel(poi: any, customLayout: any): Promise<void> {
+    const renderers = POIRenderers;
+    if (typeof renderers?.populateSidePanel === "function") {
+        try {
+            await renderers.populateSidePanel(poi, customLayout);
+        } catch (err: any) {
+            Log?.error("[POI] Erreur lors du peuplement du side panel :", err);
+        }
+    } else {
+        Log?.warn("[POI] openSidePanel() : renderers.populateSidePanel non disponible");
+    }
+}
+
 async function openSidePanel(poi: any, customLayout?: any) {
     if (!poi) {
-        if (Log) Log.warn("[POI] openSidePanel() : POI invalide.");
+        Log?.warn("[POI] openSidePanel() : POI invalide.");
         return;
     }
 
-    if (Log) {
-        Log.debug("[POI] openSidePanel:", poi.id || poi.name);
-    }
+    Log?.debug("[POI] openSidePanel:", poi.id ?? poi.name);
 
     const shared = POIShared;
     if (!shared) {
-        if (Log) Log.error("[POI] openSidePanel() : POIShared is null");
+        Log?.error("[POI] openSidePanel() : POIShared is null");
         return;
     }
     const state = shared.state;
 
-    // S'assurer que le panneau existe
+    // S'assurer que the panel existe
     if (!state.sidePanelElement) {
         createSidePanel();
     }
 
     if (!state.sidePanelElement) {
-        if (Log) Log.error("[POI] openSidePanel() : Impossible de créer le panneau latéral.");
+        Log?.error("[POI] openSidePanel() : Unable to create the side panel.");
         return;
     }
 
     state.currentPoiInPanel = poi;
     state.currentGalleryIndex = 0;
 
-    // Peupler le panneau (la lightbox sera créée par renderers.js si nécessaire)
-    const renderers = POIRenderers;
-    if (renderers && typeof renderers.populateSidePanel === "function") {
-        try {
-            await renderers.populateSidePanel(poi, customLayout);
-        } catch (err: any) {
-            // Une erreur de rendu ne doit pas bloquer l'ouverture du panneau
-            if (Log) Log.error("[POI] Erreur lors du peuplement du side panel :", err);
-        }
-    } else {
-        if (Log) Log.warn("[POI] openSidePanel() : renderers.populateSidePanel non disponible");
-    }
+    await _populatePanel(poi, customLayout);
 
-    // Afficher l'overlay et le panneau avec animation
+    // Displaysr l'overlay et the panel avec animation
     if (state.sidePanelOverlay) {
         state.sidePanelOverlay.classList.add("open");
     }
     state.sidePanelElement.classList.add("open");
     state.sidePanelElement.setAttribute("aria-hidden", "false");
 
-    // Ajouter classe au body pour décaler la carte
+    // F3: move focus to close button on panel open
+    const closeBtnEl = state.sidePanelElement.querySelector(
+        ".gl-poi-sidepanel__close"
+    ) as HTMLElement | null;
+    if (closeBtnEl) closeBtnEl.focus();
+
+    // F4: Escape key closes the panel
+    const _escapeHandler = (e: any) => {
+        if (e.key === "Escape") {
+            closeSidePanel();
+            document.removeEventListener("keydown", _escapeHandler);
+        }
+    };
+    document.addEventListener("keydown", _escapeHandler);
+    (state as any)._escapeHandler = _escapeHandler;
+
+    // Add class to body to shift the map
     document.body.classList.add("gl-poi-sidepanel-open");
 
-    if (Log) Log.info("[POI] Panneau latéral ouvert pour :", poi.title || poi.name || poi.label);
+    Log?.info("[POI] Side panel opened for:", poi.title ?? poi.name ?? poi.label);
 }
 
 /**
- * Ferme le panneau latéral.
+ * Ferme the panel side.
  */
 function closeSidePanel() {
     const shared = POIShared;
@@ -163,11 +181,17 @@ function closeSidePanel() {
     state.sidePanelElement.classList.remove("open");
     state.sidePanelElement.setAttribute("aria-hidden", "true");
 
+    // F4: remove Escape listner
+    if ((state as any)._escapeHandler) {
+        document.removeEventListener("keydown", (state as any)._escapeHandler);
+        (state as any)._escapeHandler = null;
+    }
+
     if (state.sidePanelOverlay) {
         state.sidePanelOverlay.classList.remove("open");
     }
 
-    // Retirer classe du body
+    // Retirer class du body
     document.body.classList.remove("gl-poi-sidepanel-open");
 
     // Nettoyer la lightbox globale
@@ -178,11 +202,11 @@ function closeSidePanel() {
 
     state.currentPoiInPanel = null;
 
-    if (Log) Log.info("[POI] Panneau latéral fermé.");
+    if (Log) Log.info("[POI] Side panel closed.");
 }
 
 /**
- * Alias pour fermer le panneau (API publique).
+ * Alias pour fermer the panel (API public).
  */
 function hideSidePanel() {
     closeSidePanel();

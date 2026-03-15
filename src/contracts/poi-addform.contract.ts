@@ -1,8 +1,8 @@
-﻿/**
+/**
  * GeoLeaf Contract — POI AddForm (lazy-chunk boundary)
  *
- * Interface ESM pure pour accéder à AddFormOrchestrator et POIPlacementMode
- * depuis les modules UI (controls.js, fields-manager.js) sans couplage runtime.
+ * Interface ESM pure pour access to AddFormOrchestrator et POIPlacementMode
+ * from the modules UI (controls.js, fields-manager.js) sans couplage runtime.
  *
  * Phase 10-D — Pattern C : contrat de chunk POI AddForm.
  *
@@ -36,12 +36,12 @@ function _getPlacementMode() {
 }
 
 /**
- * Contrat d'interface pour le module POI AddForm + PlacementMode.
+ * Contrat d'interface pour the module POI AddForm + PlacementMode.
  * @namespace POIAddFormContract
  */
 const POIAddFormContract = {
     /**
-     * Retourne true si AddFormOrchestrator est disponible.
+     * Returns true si AddFormOrchestrator est available.
      * @returns {boolean}
      */
     isAddFormAvailable() {
@@ -50,7 +50,7 @@ const POIAddFormContract = {
     },
 
     /**
-     * Retourne true si PlacementMode est disponible.
+     * Returns true si PlacementMode est available.
      * @returns {boolean}
      */
     isPlacementModeAvailable() {
@@ -59,9 +59,9 @@ const POIAddFormContract = {
     },
 
     /**
-     * Ouvre le formulaire d'ajout de POI.
-     * @param {L.LatLng} latlng - Position initiale (optionnelle)
-     * @param {Object|null} options - Options supplémentaires
+     * Ouvre le form d'ajout de POI.
+     * @param {L.LatLng} latlng - Position initial (optionalle)
+     * @param {Object|null} options - Additional options
      * @returns {Promise<void>}
      */
     async openAddForm(latlng: any, options?: any) {
@@ -69,8 +69,8 @@ const POIAddFormContract = {
     },
 
     /**
-     * Active le mode placement pour choisir une position sur la carte.
-     * @param {L.Map} map - Instance de la carte Leaflet
+     * Active le mode placement pour choisir une position sur the map.
+     * @param {L.Map} map - Instance de the map Leaflet
      * @param {Function} callback - callback(result) avec result.latlng
      */
     activatePlacementMode(map: any, callback: any) {
@@ -81,7 +81,7 @@ const POIAddFormContract = {
     },
 
     /**
-     * Accès direct à AddFormOrchestrator (pour les cas où l'API complète est nécessaire).
+     * Direct access to AddFormOrchestrator (for cases where the complete API is required).
      * @type {Object}
      */
     get orchestrator() {
@@ -89,7 +89,7 @@ const POIAddFormContract = {
     },
 
     /**
-     * Accès direct à POIPlacementMode.
+     * Direct access to POIPlacementMode.
      * @type {Object}
      */
     get placementMode() {

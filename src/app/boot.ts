@@ -7,8 +7,8 @@
 
 /**
  * GeoLeaf Application Boot
- * Chargement de la configuration et lancement de l'initialisation.
- * Expose l'API publique GeoLeaf.boot().
+ * Loads the configuration and launches initialization.
+ * Exposess the public API GeoLeaf.boot().
  *
  * Usage : <script>GeoLeaf.boot();</script>
  *
@@ -20,7 +20,7 @@ const GeoLeaf = _g.GeoLeaf;
 const _app = (GeoLeaf._app = GeoLeaf._app || {});
 
 // ============================================================
-// Fonction startApp : chargement config + lancement initApp
+// Fonction startApp : loading config + lancement initApp
 // ============================================================
 /* eslint-disable complexity, max-lines-per-function -- boot sequence */
 _app.startApp = async function () {
@@ -28,22 +28,20 @@ _app.startApp = async function () {
 
     if (!GeoLeaf) {
         AppLog.error(
-            "GeoLeaf global introuvable. Le bundle core doit être chargé avant GeoLeaf.boot()."
+            "GeoLeaf global not found. The core bundle must be loaded before GeoLeaf.boot()."
         );
         return;
     }
 
     if (typeof GeoLeaf.loadConfig !== "function") {
-        AppLog.error(
-            "GeoLeaf.loadConfig() est introuvable. Vérifiez que le bundle core est complet."
-        );
+        AppLog.error("GeoLeaf.loadConfig() not found. Check that the core bundle is complete.");
         return;
     }
 
-    AppLog.info("Démarrage de l'application...");
+    AppLog.info("Starting application...");
 
-    // Écouter l'événement de fin d'initialisation pour afficher le boot toast
-    // (après que l'UI soit prête — sinon GeoLeaf.UI.notify n'existe pas encore)
+    // Listen for app ready event to show boot toast
+    // (after UI is ready — GeoLeaf.UI.notify may not be available yet)
     document.addEventListener(
         "geoleaf:app:ready",
         function _onAppReady() {
@@ -60,21 +58,21 @@ _app.startApp = async function () {
         // Validate profile ID: alphanumeric, hyphens, underscores, max 50 chars
         if (rawProfile && /^[a-zA-Z0-9_-]{1,50}$/.test(rawProfile)) {
             selectedProfile = rawProfile;
-            AppLog.log("Profil sélectionné depuis sessionStorage:", selectedProfile);
+            AppLog.log("Profile selected from sessionStorage:", selectedProfile);
         } else if (rawProfile) {
             AppLog.warn(
-                "Profil sessionStorage rejeté (format invalide):",
+                "sessionStorage profile rejected (invalid format):",
                 rawProfile.substring(0, 20)
             );
         }
         sessionStorage.removeItem("gl-selected-profile");
     } catch (e) {
-        AppLog.warn("Impossible de lire sessionStorage:", e);
+        AppLog.warn("Unable to read sessionStorage:", e);
     }
 
     const profilesPath = _app.getProfilesBasePath();
 
-    // perf 5.4 : wrapper loadConfig (callback) en Promise pour pouvoir chaîner
+    // perf 5.4: wrap loadConfig (callback) in a Promise to enable chaining
     const configPromise = new Promise((resolve, reject) => {
         GeoLeaf.loadConfig({
             url: profilesPath + "geoleaf.config.json",
@@ -88,9 +86,9 @@ _app.startApp = async function () {
     let cfg;
     try {
         cfg = await configPromise;
-        AppLog.log("Configuration chargée via GeoLeaf.loadConfig :", cfg || {});
+        AppLog.log("Config loaded via GeoLeaf.loadConfig:", cfg || {});
     } catch (err) {
-        AppLog.error("Erreur chargement config via GeoLeaf.loadConfig :", err);
+        AppLog.error("Error loading config via GeoLeaf.loadConfig:", err);
         return;
     }
 
@@ -98,7 +96,7 @@ _app.startApp = async function () {
         try {
             GeoLeaf.Config.getCategories();
         } catch (e) {
-            AppLog.warn("Erreur lors de la lecture du mapping catégories :", e);
+            AppLog.warn("Error reading category mapping:", e);
         }
     }
 
@@ -107,10 +105,10 @@ _app.startApp = async function () {
     if (GeoLeaf.Config && typeof GeoLeaf.Config.loadActiveProfileResources === "function") {
         try {
             const profileCfg = await GeoLeaf.Config.loadActiveProfileResources();
-            AppLog.info("Ressources du profil actif chargées.");
+            AppLog.info("Active profile resources loaded.");
             _app.initApp(profileCfg || baseCfg);
         } catch (err) {
-            AppLog.warn("Erreur lors du chargement des ressources de profil :", err);
+            AppLog.warn("Error loading profile resources:", err);
             _app.initApp(baseCfg);
         }
     } else {
@@ -120,18 +118,18 @@ _app.startApp = async function () {
 /* eslint-enable complexity, max-lines-per-function */
 
 // ============================================================
-// Exposer GeoLeaf.boot() — API publique
+// Exposesr GeoLeaf.boot() — API public
 // ============================================================
 
 /**
- * Démarre l'application GeoLeaf.
- * Charge la configuration, initialise la carte et tous les modules.
- * Les plugins optionnels (Storage, AddPOI) doivent être chargés avant cet appel.
+ * Starts the GeoLeaf application.
+ * Loads the configuration, initializes the map and all modules.
+ * Optional plugins (Storage, AddPOI) must be loaded before this call.
  *
- * @param options - Optionnel. { onPerformanceMetrics: (metrics) => void } pour recevoir les métriques runtime après geoleaf:app:ready.
+ * @param options - Optional. { onPerformanceMetrics: (metrics) => void } to receive runtime metrics after geoleaf:app:ready.
  * @example
  * GeoLeaf.boot();
- * // ou avec callback métriques (prod / analytics)
+ * // or with metrics callback (prod / analytics)
  * GeoLeaf.boot({ onPerformanceMetrics: (m) => console.log(m.timeToMapReadyMs) });
  */
 GeoLeaf.boot = function (options?: {
@@ -145,7 +143,7 @@ GeoLeaf.boot = function (options?: {
     if (options?.onPerformanceMetrics) {
         GeoLeaf._perfCallback = options.onPerformanceMetrics;
     }
-    // Rapport plugins premium — silencieux si aucun chargé (core seul)
+    // Premium plugin report — silent if none loaded (core only)
     GeoLeaf.plugins?.reportPremiumPlugins?.();
 
     if (document.readyState === "loading") {

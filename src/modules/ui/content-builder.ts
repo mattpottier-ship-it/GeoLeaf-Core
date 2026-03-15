@@ -1,4 +1,4 @@
-﻿/*!
+/*!
  * GeoLeaf Core
  * © 2026 Mattieu Pottier
  * Released under the MIT License
@@ -8,9 +8,9 @@
 /**
  * GeoLeaf UI Module - Content Builder
  *
- * # SHIM LEGACY — rétrocompatibilité chemins plats
- * Re-exporte les sous-modules du dossier content-builder/ depuis
- * le chemin plat ui/content-builder.js (ancienne structure).
+ * # SHIM LEGACY — backward compatibility paths plats
+ * Re-exporte les sous-modules du folder content-builder/ depuis
+ * le path plat ui/content-builder.js (ancienne structure).
  *
  * @module ui/content-builder
  * @see src/modules/ui/content-builder/

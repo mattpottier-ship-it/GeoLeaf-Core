@@ -17,9 +17,9 @@ const getState = () => GeoJSONShared.state;
 const LayerManager: any = {};
 
 /**
- * Récupère une couche spécifique par son ID.
+ * Retrieves a layer specific par son ID.
  *
- * @param {string} layerId - ID de la couche
+ * @param {string} layerId - ID de the layer
  * @returns {Object|null} - { id, label, layer, visible, config, clusterGroup } ou null
  */
 LayerManager.getLayerById = function (layerId: any) {
@@ -28,10 +28,10 @@ LayerManager.getLayerById = function (layerId: any) {
 };
 
 /**
- * Récupère les données d'une couche (geojson, geometryType, config).
- * Utilisé par le module Themes pour appliquer les styles.
+ * Retrieves thes data d'a layer (geojson, geometryType, config).
+ * Used by the Themes module to apply styles.
  *
- * @param {string} layerId - ID de la couche
+ * @param {string} layerId - ID de the layer
  * @returns {Object|null} - { geojson, geometryType, config } ou null
  */
 LayerManager.getLayerData = function (layerId: any) {
@@ -49,20 +49,20 @@ LayerManager.getLayerData = function (layerId: any) {
 };
 
 /**
- * Récupère toutes les couches chargées.
+ * Retrieves toutes the layers loadedes.
  *
- * @returns {Array<Object>} - Tableau de { id, label, visible, type, featureCount }
+ * @returns {Array<Object>} - Array de { id, label, visible, type, featureCount }
  *
- * Note: 'visible' retourne l'état LOGIQUE de la couche (activée/désactivée par l'utilisateur ou le thème),
- * pas l'état physique sur la carte (qui peut être masquée par le zoom).
- * C'est l'état qui doit être reflété par le bouton ON/OFF du gestionnaire de couches.
+ * Note: 'visible' returnne the state LOGIQUE de the layer (activatede/deactivatede par l'user ou the theme),
+ * pas the state physical sur the map (qui can be hidden par le zoom).
+ * This is the state that must be reflected by the ON/OFF toggle button.
  */
 LayerManager.getAllLayers = function () {
     const state = getState();
     const _Log = getLog();
     const layers: any[] = [];
     state.layers.forEach((layerData, id) => {
-        // Utiliser logicalState qui est indépendant du zoom
+        // Utiliser logicalState qui est independent du zoom
         const meta = layerData._visibility;
         const logicalVisible =
             meta && typeof meta.logicalState === "boolean"
@@ -86,7 +86,7 @@ LayerManager.getAllLayers = function () {
 };
 
 /**
- * Détecte le type de géométrie dominant d'une couche.
+ * Detects the type of geometry dominant d'a layer.
  *
  * @param {L.GeoJSON} layer
  * @returns {string} - "poi", "route", "area", ou "mixed"
@@ -114,9 +114,9 @@ LayerManager.detectLayerType = function (layer: any) {
 };
 
 /**
- * Supprime une couche.
+ * Removes ae layer.
  *
- * @param {string} layerId - ID de la couche
+ * @param {string} layerId - ID de the layer
  */
 LayerManager.removeLayer = function (layerId: any) {
     const state = getState();
@@ -124,16 +124,16 @@ LayerManager.removeLayer = function (layerId: any) {
     const layerData = state.layers.get(layerId);
 
     if (!layerData) {
-        Log.warn("[GeoLeaf.GeoJSON] removeLayer: couche introuvable :", layerId);
+        Log.warn("[GeoLeaf.GeoJSON] removeLayer: layer not found:", layerId);
         return;
     }
 
-    // Retirer de la carte
+    // Retirer de the map
     if (layerData.visible) {
         LayerManager.hideLayer(layerId);
     }
 
-    // Détruire les objets Leaflet
+    // Destroy Leaflet objects
     if (layerData.clusterGroup) {
         layerData.clusterGroup.clearLayers();
     }
@@ -145,117 +145,91 @@ LayerManager.removeLayer = function (layerId: any) {
     state.layers.delete(layerId);
     // featureCache removed (Sprint 1)
 
-    Log.debug("[GeoLeaf.GeoJSON] Couche supprimée :", layerId);
+    Log.debug("[GeoLeaf.GeoJSON] Layer removed:", layerId);
 };
 
 /**
- * Met à jour le zIndex d'une couche (ordre d'empilement sur la carte).
- * Recréée la couche avec le nouveau pane si elle est visible.
- *
- * @param {string} layerId - ID de la couche
- * @param {number} newZIndex - Nouveau zIndex (0-99)
- * @returns {boolean} - true si la mise à jour a réussi
+ * Updates the zIndex d'a layer (ordre d'emstackment sur the map).
  */
+function _removeLayerOrCluster(state: any, layerData: any): void {
+    if (layerData.clusterGroup) {
+        state.map.removeLayer(layerData.clusterGroup);
+    } else {
+        state.map.removeLayer(layerData.layer);
+    }
+}
+
+function _addLayerOrCluster(state: any, layerData: any): void {
+    if (layerData.clusterGroup) {
+        state.map.addLayer(layerData.clusterGroup);
+    } else {
+        state.map.addLayer(layerData.layer);
+    }
+}
+
+function _moveLayerToPane(state: any, layerData: any, newPaneName: string): void {
+    if (!layerData.layer?.options) return;
+    layerData.layer.options.pane = newPaneName;
+    layerData.layer.eachLayer((subLayer: any) => {
+        if (subLayer.options) subLayer.options.pane = newPaneName;
+        if (subLayer._path?.parentNode) {
+            state.map.getPane(newPaneName)?.appendChild(subLayer._path);
+        }
+    });
+    if (layerData.clusterGroup?.options) {
+        layerData.clusterGroup.options.pane = newPaneName;
+    }
+}
+
 LayerManager.updateLayerZIndex = function (layerId: any, newZIndex: any) {
     const state = getState();
     const Log = getLog();
     const layerData = state.layers.get(layerId);
 
     if (!layerData) {
-        Log.warn("[GeoLeaf.GeoJSON] updateLayerZIndex: couche introuvable :", layerId);
+        Log.warn("[GeoLeaf.GeoJSON] updateLayerZIndex: layer not found:", layerId);
         return false;
     }
 
-    // Validation et clamping 0-99
     const PaneHelpers = GeoJSONShared.PaneHelpers;
     newZIndex = PaneHelpers.validateZIndex(newZIndex);
 
     const oldZIndex = layerData.config.zIndex || 0;
     if (oldZIndex === newZIndex) {
-        Log.debug(
-            "[GeoLeaf.GeoJSON] updateLayerZIndex: zIndex identique, aucun changement :",
-            layerId
-        );
+        Log.debug("[GeoLeaf.GeoJSON] updateLayerZIndex: identical zIndex, no change:", layerId);
         return true;
     }
 
-    Log.info(`[GeoLeaf.GeoJSON] Changement zIndex pour ${layerId}: ${oldZIndex} → ${newZIndex}`);
-
-    // Mettre à jour la config
+    Log.info(`[GeoLeaf.GeoJSON] zIndex change for ${layerId}: ${oldZIndex} → ${newZIndex}`);
     layerData.config.zIndex = newZIndex;
 
-    // Si la couche n'est pas visible, juste mettre à jour la config
-    const VisibilityManager = _g.GeoLeaf && _g.GeoLeaf._LayerVisibilityManager;
-    const visState = VisibilityManager ? VisibilityManager.getVisibilityState(layerId) : null;
+    const VisPool = _g.GeoLeaf?._LayerVisibilityManager;
+    const visState = VisPool ? VisPool.getVisibilityState(layerId) : null;
     const isVisible = visState ? visState.current : layerData.visible;
 
     if (!isVisible) {
-        Log.debug("[GeoLeaf.GeoJSON] Couche non visible, zIndex mis à jour dans config uniquement");
+        Log.debug("[GeoLeaf.GeoJSON] Layer not visible, zIndex updated in config only");
         return true;
     }
 
-    // Couche visible : besoin de changer le pane
     const newPaneName = PaneHelpers.getPaneName(newZIndex);
     const newPane = state.map.getPane(newPaneName);
-
     if (!newPane) {
-        Log.error(`[GeoLeaf.GeoJSON] Pane ${newPaneName} introuvable`);
+        Log.error(`[GeoLeaf.GeoJSON] Pane ${newPaneName} not found`);
         return false;
     }
 
     try {
-        // Retirer temporairement de la carte
-        if (layerData.clusterGroup) {
-            state.map.removeLayer(layerData.clusterGroup);
-        } else {
-            state.map.removeLayer(layerData.layer);
-        }
-
-        // Changer le pane du layer Leaflet
-        if (layerData.layer && layerData.layer.options) {
-            layerData.layer.options.pane = newPaneName;
-
-            // Mettre à jour chaque feature/layer individuelle
-            layerData.layer.eachLayer(function (subLayer: any) {
-                if (subLayer.options) {
-                    subLayer.options.pane = newPaneName;
-                }
-                // Forcer le re-rendu en changeant le pane du path SVG
-                if (subLayer._path && subLayer._path.parentNode) {
-                    const newPaneElement = state.map.getPane(newPaneName);
-                    if (newPaneElement) {
-                        newPaneElement.appendChild(subLayer._path);
-                    }
-                }
-            });
-        }
-
-        // Changer le pane du clusterGroup si présent
-        if (layerData.clusterGroup && layerData.clusterGroup.options) {
-            layerData.clusterGroup.options.pane = newPaneName;
-        }
-
-        // Remettre sur la carte directement
-        if (layerData.clusterGroup) {
-            state.map.addLayer(layerData.clusterGroup);
-        } else {
-            state.map.addLayer(layerData.layer);
-        }
-
-        Log.debug(`[GeoLeaf.GeoJSON] Couche ${layerId} déplacée vers pane ${newPaneName}`);
-
-        // Déclencher événement de changement
+        _removeLayerOrCluster(state, layerData);
+        _moveLayerToPane(state, layerData, newPaneName);
+        _addLayerOrCluster(state, layerData);
+        Log.debug(`[GeoLeaf.GeoJSON] Layer ${layerId} moved to pane ${newPaneName}`);
         if (state.map) {
-            state.map.fire("geoleaf:geojson:zindex-changed", {
-                layerId: layerId,
-                oldZIndex: oldZIndex,
-                newZIndex: newZIndex,
-            });
+            state.map.fire("geoleaf:geojson:zindex-changed", { layerId, oldZIndex, newZIndex });
         }
-
         return true;
     } catch (error) {
-        Log.error(`[GeoLeaf.GeoJSON] Erreur lors du changement de zIndex pour ${layerId}:`, error);
+        Log.error(`[GeoLeaf.GeoJSON] Error changing zIndex for ${layerId}:`, error);
         return false;
     }
 };

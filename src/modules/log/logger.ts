@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-object-injection */
 /*!
  * GeoLeaf Core
  * © 2026 Mattieu Pottier
@@ -7,13 +8,15 @@
 
 /**
  * @module log/logger
- * @description GeoLeaf.Log — gestion centralisée des logs
+ * @description GeoLeaf.Log — gestion centralizede des logs
  *
  * Objectif :
  * - remplacer tous les console.log/console.warn/... du projet
- * - fournir un niveau de verbosité configurable via la config JSON
- * - s'assurer que chaque message possède un préfixe normalisé [GeoLeaf.X]
+ * - provide a configurable verbosity level via JSON config
+ * - ensure each message has a normalized prefix [GeoLeaf.X]
  */
+
+/* eslint-disable no-console */ // This module IS the logger — console calls are intentional
 
 export type LogLevelName = "debug" | "info" | "warn" | "error" | "production";
 
@@ -24,29 +27,29 @@ export const LEVELS = {
     ERROR: 3,
 } as const;
 
-let currentLevel: number = LEVELS.INFO; // niveau par défaut
-let quietMode = false; // mode silencieux pour les logs répétitifs
-const _suppressedMessages = new Set<string>(); // pour éviter les répétitions
-const groupedMessageCounts = new Map<string, number>(); // pour grouper les messages similaires
+let currentLevel: number = LEVELS.INFO; // niveau by default
+let quietMode = false; // silent mode for repetitive logs
+const _suppressedMessages = new Set<string>(); // to avoid repetitions
+const groupedMessageCounts = new Map<string, number>(); // pour groupr les messages similaires
 const MAX_GROUPED_ENTRIES = 200; // cap to prevent unbounded growth
 
 const formatPrefix = (type: string): string => `[GeoLeaf.${type}]`;
 
-// Détecte si un message est répétitif ou informatif non critique
+// Detects if a message is repetitive or non-critical informational
 const isRepetitiveMessage = (message: string): boolean => {
     const patterns = [
         /Chargement du sprite SVG/,
-        /Sprite SVG détecté/,
-        /IconsConfig récupéré/,
-        /Module.*chargé/,
-        /Module.*initialisé/,
-        /Contrôle.*ajouté/,
-        /Bouton.*ajouté/,
-        /Panneau.*créé/,
+        /Sprite SVG detected/,
+        /IconsConfig retrieved/,
+        /Module.*loaded/,
+        /Module.*initialized/,
+        /Control.*added/,
+        /Button.*added/,
+        /Panel.*created/,
         /Section.*remplie/,
-        /Profil.*chargé/,
-        /Couche.*chargée/,
-        /Style.*appliqué/,
+        /Profile.*loaded/,
+        /Layer.*loaded/,
+        /Style.*applied/,
         /ThemeApplier/,
         /LayerManager/,
         /Storage/,
@@ -62,7 +65,7 @@ const isRepetitiveMessage = (message: string): boolean => {
     return patterns.some((pattern) => pattern.test(message));
 };
 
-// Messages critiques qui doivent toujours être affichés
+// Critical messages that must always be displayed
 const isCriticalMessage = (message: string): boolean => {
     const criticalPatterns = [
         /ERROR/,
@@ -70,14 +73,14 @@ const isCriticalMessage = (message: string): boolean => {
         /Failed/,
         /Error/,
         /Exception/,
-        /Carte initialisée avec succès/,
+        /Map initialized successfully/,
         /All.*modules loaded/,
-        /Mode.*activé/,
+        /Mode.*activated/,
     ];
     return criticalPatterns.some((pattern) => pattern.test(message));
 };
 
-// Gère les messages groupés
+// Manages grouped messages
 const handleGroupedMessage = (message: string, _args: unknown[]): boolean => {
     const key = message.replace(/\d+/g, "X").replace(/[{}:,]/g, ""); // normalise
     const count = (groupedMessageCounts.get(key) || 0) + 1;
@@ -90,16 +93,16 @@ const handleGroupedMessage = (message: string, _args: unknown[]): boolean => {
     }
 
     if (count === 1) {
-        return true; // affiche le premier
+        return true; // displays le premier
     } else if (count === 3 && !isCriticalMessage(message)) {
         console.info(
-            `${formatPrefix("INFO")} [Groupé] Message répété - suite masquée: ${message.substring(0, 60)}...`
+            `${formatPrefix("INFO")} [Grouped] Repeated message - continuation hidden: ${message.substring(0, 60)}...`
         );
         return false;
     } else if (count > 3) {
-        return false; // supprime après 3 occurrences pour les non-critiques
+        return false; // suppressed after 3 occurrences for non-critical messages
     }
-    return count <= 2; // affiche max 2 fois les messages non critiques
+    return count <= 2; // displays max 2 fois les messages non critiques
 };
 
 export interface LogImplInterface {
@@ -115,7 +118,7 @@ export interface LogImplInterface {
 }
 
 /**
- * Logger centralisé GeoLeaf (implementation)
+ * Logger centralized GeoLeaf (implementation)
  */
 const _LogImpl: LogImplInterface = {
     setLevel(level: string): void {
@@ -134,7 +137,7 @@ const _LogImpl: LogImplInterface = {
                 currentLevel = LEVELS.ERROR;
                 break;
             case "production":
-                currentLevel = LEVELS.WARN; // En production, seulement WARN et ERROR
+                currentLevel = LEVELS.WARN; // En production, only WARN et ERROR
                 quietMode = true;
                 break;
             default:
@@ -154,18 +157,16 @@ const _LogImpl: LogImplInterface = {
     },
 
     setQuietMode(enabled: boolean): void {
-        if (quietMode === enabled) return; // éviter les répétitions
+        if (quietMode === enabled) return; // avoid repetitions
         quietMode = enabled;
         if (enabled) {
-            console.info(
-                `${formatPrefix("INFO")} Mode silencieux activé - logs répétitifs réduits`
-            );
+            console.info(`${formatPrefix("INFO")} Silent mode activated - repetitive logs reduced`);
         }
     },
 
     showSummary(): void {
         if (groupedMessageCounts.size > 0) {
-            console.group(`${formatPrefix("INFO")} Résumé des logs groupés:`);
+            console.group(`${formatPrefix("INFO")} Grouped log summary`);
             for (const [message, count] of groupedMessageCounts) {
                 if (count > 3) {
                     console.info(`• ${count}x: ${message.substring(0, 60)}...`);
@@ -189,15 +190,15 @@ const _LogImpl: LogImplInterface = {
         if (currentLevel <= LEVELS.INFO) {
             const message = args.map((a) => String(a)).join(" ");
 
-            // En mode silencieux, filtrer plus agressivement
+            // In mode silencieux, filter plus agressivement
             if (quietMode) {
-                // Toujours afficher les messages critiques
+                // Always display les messages critiques
                 if (isCriticalMessage(message)) {
                     console.info(formatPrefix("INFO"), ...args);
                     return;
                 }
 
-                // Grouper/masquer les messages répétitifs
+                // Group/hide repetitive messages
                 if (isRepetitiveMessage(message)) {
                     if (!handleGroupedMessage(message, args)) return;
                 }
@@ -232,9 +233,9 @@ const _g: GeoLeafGlobal =
           : {};
 
 /**
- * Exported Log proxy — delegates to LogImpl; provides CJS test override surface
+ * Exported Log proxy — delegates to LogImpl; provides CJS test override area
  * (global.GeoLeaf.Log = mock)
- * while modules use the standard `import { Log }` pattern.
+ * whithe modules use the standard `import { Log }` pattern.
  */
 export const Log: LogImplInterface = new Proxy(_LogImpl, {
     get(_target, prop: string, receiver) {

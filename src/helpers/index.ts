@@ -1,16 +1,16 @@
-﻿/*!
+/*!
  * GeoLeaf Core — © 2026 Mattieu Pottier — MIT License — https://geoleaf.dev
  */
 /**
  * src/helpers/index.js — SHIM LEGACY
- * Rétrocompatibilité : expose les helpers depuis src/helpers/ (ancienne structure)
+ * Backward compatibility : expose les helpers from src/helpers/ (old structure)
  * → src/modules/geoleaf.helpers.js + src/modules/utils/general-utils.js
  * @module src/helpers
  */
 import { Helpers as HelpersBase } from "../modules/geoleaf.helpers.js";
 import { debounce, throttle } from "../modules/utils/general-utils.js";
 
-// Fonctions disponibles dans l'objet Helpers
+// Fonctions availables dans the object Helpers
 export const {
     getElementById,
     querySelector,
@@ -37,12 +37,12 @@ export const {
     retryWithBackoff,
 } = HelpersBase;
 
-// Fonctions disponibles dans utils
+// Fonctions availables dans utils
 export { debounce, throttle };
 
-// Fonctions absentes — stubs minimaux pour ne pas bloquer le chargement
+// Fonctions absentes — stubs minimaux pour ne pas bloquer le loading
 /**
- * @stub fetchWithTimeout — ancienne API, remplacée par FetchHelper
+ * @stub fetchWithTimeout — old API, replaced by FetchHelper
  */
 export function fetchWithTimeout(url: any, options: any = {}, timeout: any = 5000) {
     const controller = new AbortController();
@@ -51,7 +51,7 @@ export function fetchWithTimeout(url: any, options: any = {}, timeout: any = 500
 }
 
 /**
- * @stub batchDomOperations — accepte un callback unique ou un tableau de fonctions
+ * @stub batchDomOperations — accepte un callback unique ou un array de fonctions
  */
 export function batchDomOperations(operations: any) {
     if (typeof operations === "function") {
@@ -63,7 +63,7 @@ export function batchDomOperations(operations: any) {
     return null;
 }
 
-// Helpers étendu pour compatibilité tests/consommateurs (debounce, throttle, stubs)
+// Extended helpers for test/consumer compatibility (debounce, throttle, stubs)
 export const Helpers = {
     ...HelpersBase,
     debounce,

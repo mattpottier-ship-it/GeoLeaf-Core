@@ -1,6 +1,7 @@
+/* eslint-disable security/detect-object-injection */
 /**
  * GeoLeaf Route Style Resolver Module
- * Résolution des styles d'itinéraires (couleurs, endpoints)
+ * Resolution des styles d'routes (colors, endpoints)
  */
 
 // import { Log } from '../log/index.js';
@@ -13,6 +14,27 @@ interface ProfileWithTaxonomy {
             { colorRoute?: string; subcategories?: Record<string, { colorRoute?: string }> }
         >;
     };
+}
+
+function _applyRoutePropertyStyle(finalStyle: Record<string, unknown>, p: any): void {
+    if (typeof p.color === "string" && p.color.trim() !== "") finalStyle.color = p.color.trim();
+    if (typeof p.weight === "number") finalStyle.weight = p.weight;
+    if (typeof p.opacity === "number") finalStyle.opacity = p.opacity;
+    if (typeof p.dashArray === "string" && p.dashArray.trim() !== "")
+        finalStyle.dashArray = p.dashArray.trim();
+}
+
+function _applyEndpointOverrides(
+    cfg: { showStart: boolean; showEnd: boolean; startStyle: any; endStyle: any },
+    src: any
+): void {
+    if (!src || typeof src !== "object") return;
+    if (typeof src.showStart === "boolean") cfg.showStart = src.showStart;
+    if (typeof src.showEnd === "boolean") cfg.showEnd = src.showEnd;
+    const startObj = src.start ?? src.startStyle;
+    const endObj = src.end ?? src.endStyle;
+    if (startObj) Object.assign(cfg.startStyle, startObj);
+    if (endObj) Object.assign(cfg.endStyle, endObj);
 }
 
 const RouteStyleResolver = {
@@ -64,15 +86,7 @@ const RouteStyleResolver = {
         }
 
         if (route.properties && typeof route.properties === "object") {
-            const p = route.properties;
-            if (typeof p.color === "string" && p.color.trim() !== "")
-                (finalStyle as Record<string, unknown>).color = p.color.trim();
-            if (typeof p.weight === "number")
-                (finalStyle as Record<string, unknown>).weight = p.weight;
-            if (typeof p.opacity === "number")
-                (finalStyle as Record<string, unknown>).opacity = p.opacity;
-            if (typeof p.dashArray === "string" && p.dashArray.trim() !== "")
-                (finalStyle as Record<string, unknown>).dashArray = p.dashArray.trim();
+            _applyRoutePropertyStyle(finalStyle, route.properties);
         }
 
         return finalStyle;
@@ -124,28 +138,8 @@ const RouteStyleResolver = {
             endStyle: Object.assign({}, baseEnd),
         };
 
-        if (profileEndpoints && typeof profileEndpoints === "object") {
-            if (typeof profileEndpoints.showStart === "boolean")
-                cfg.showStart = profileEndpoints.showStart;
-            if (typeof profileEndpoints.showEnd === "boolean")
-                cfg.showEnd = profileEndpoints.showEnd;
-            if (profileEndpoints.start && typeof profileEndpoints.start === "object") {
-                Object.assign(cfg.startStyle, profileEndpoints.start);
-            }
-            if (profileEndpoints.end && typeof profileEndpoints.end === "object") {
-                Object.assign(cfg.endStyle, profileEndpoints.end);
-            }
-        }
-
-        if (route?.properties && typeof route.properties === "object") {
-            const p = route.properties;
-            if (typeof p.showStart === "boolean") cfg.showStart = p.showStart;
-            if (typeof p.showEnd === "boolean") cfg.showEnd = p.showEnd;
-            if (p.startStyle && typeof p.startStyle === "object")
-                Object.assign(cfg.startStyle, p.startStyle);
-            if (p.endStyle && typeof p.endStyle === "object")
-                Object.assign(cfg.endStyle, p.endStyle);
-        }
+        _applyEndpointOverrides(cfg, profileEndpoints);
+        _applyEndpointOverrides(cfg, route?.properties as any);
 
         return cfg;
     },

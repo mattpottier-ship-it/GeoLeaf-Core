@@ -1,4 +1,4 @@
-﻿/**
+/**
  * src/ui/index.js — Shim: aggregates UI + Notifications for legacy test paths
  * @see src/modules/geoleaf.ui.js
  * @see src/modules/ui/notifications.js

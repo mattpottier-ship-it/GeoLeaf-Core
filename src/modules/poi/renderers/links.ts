@@ -1,6 +1,6 @@
 /**
  * Module Renderers/Links pour POI
- * Rendu des liens
+ * Rendu des links
  */
 
 /**
@@ -10,9 +10,9 @@
  */
 const _POIRendererLinks = {
     /**
-     * Rend un lien (website, etc.)
+     * Rend un link (website, etc.)
      * @param {Object} section - Configuration de la section
-     * @param {string} url - URL du lien
+     * @param {string} url - URL du link
      * @returns {HTMLElement|null}
      */
     renderLink(section: any, url: any) {

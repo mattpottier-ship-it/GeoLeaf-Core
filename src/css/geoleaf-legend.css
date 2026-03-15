@@ -259,6 +259,10 @@
 }
 
 .gl-legend__accordion-header {
+    border: none;
+    width: 100%;
+    font: inherit;
+    text-align: left;
     display: flex;
     justify-content: space-between;
     align-items: center;

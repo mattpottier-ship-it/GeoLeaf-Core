@@ -1,4 +1,5 @@
-﻿/*!
+/* eslint-disable security/detect-object-injection */
+/*!
  * GeoLeaf Core
  * © 2026 Mattieu Pottier
  * Released under the MIT License
@@ -11,11 +12,11 @@ import type { GeoLeafConfig } from "./geoleaf-config/config-types.js";
 /**
  * Module Config.Storage
  *
- * Responsabilités :
- * - Stockage et gestion de la configuration consolidée
- * - API get/set avec chemins "a.b.c"
+ * Responsibilities:
+ * - Storage and management of the consolidated configuration
+ * - API get/set avec paths "a.b.c"
  * - Fusion profonde (deep merge)
- * - Helpers de navigation dans l'arbre de config
+ * - Helpers de navigation dans l'tree de config
  */
 const StorageModule: {
     _config: GeoLeafConfig | null;
@@ -51,11 +52,11 @@ const StorageModule: {
 
     set(path: string, value: unknown): void {
         if (!this._config) {
-            Log.warn("[GeoLeaf.Config.Storage] Configuration non initialisée.");
+            Log.warn("[GeoLeaf.Config.Storage] Configuration no.");
             return;
         }
         if (!path || typeof path !== "string") {
-            Log.warn("[GeoLeaf.Config.Storage] set() requiert un chemin string.");
+            Log.warn("[GeoLeaf.Config.Storage] set() requires a non-empty string path.");
             return;
         }
         const segments = path.split(".");

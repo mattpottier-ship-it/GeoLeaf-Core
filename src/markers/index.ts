@@ -1,5 +1,5 @@
 /**
- * src/markers/index.js � Shim: aggregates marker functions for legacy test paths
+ * src/markers/index.js — Shim: aggregates marker functions for legacy test paths
  * Tests expect: Markers, createMarker, createMarkerCluster, batchAddMarkers,
  *               removeMarkers, updateMarkerPosition, updateMarkerStyle, getMarkerData
  * @see src/modules/poi/markers.js
@@ -9,7 +9,7 @@ import { POIMarkers } from "../modules/poi/markers.js";
 /** Proxy onto POIMarkers.createMarker */
 export const createMarker = (...args: any[]) => (POIMarkers.createMarker as any)(...args);
 
-/** Create a marker cluster group (leaflet.markercluster) � stub when unavailable */
+/** Create a marker cluster group (leaflet.markercluster) — stub when unavailable */
 export const createMarkerCluster = (options: any = {}) => {
     if (
         typeof window !== "undefined" &&
@@ -100,6 +100,6 @@ export const Markers = {
     updateMarkerPosition,
     updateMarkerStyle,
     getMarkerData,
-    // Expose internals from POIMarkers for advanced usage
+    // Exposes internals from POIMarkers for advanced usage
     ...POIMarkers,
 };

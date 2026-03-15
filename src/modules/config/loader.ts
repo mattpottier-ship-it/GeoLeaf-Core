@@ -1,4 +1,4 @@
-﻿/*!
+/*!
  * GeoLeaf Core
  * © 2026 Mattieu Pottier
  * Released under the MIT License
@@ -16,156 +16,125 @@ function _getSecurity(): typeof Security | null {
     return _cachedSecurity;
 }
 
+function _validateUrl(url: string): string | Error {
+    const Security = _getSecurity();
+    const isRelative = /^\.{0,2}\//.test(url) || /^\/[^/]/.test(url);
+    if (isRelative) return url;
+    if (Security && typeof Security.validateUrl === "function") {
+        try {
+            return Security.validateUrl(url);
+        } catch (e) {
+            return new Error(
+                "[GeoLeaf.Config.Loader] " + (e instanceof Error ? e.message : String(e))
+            );
+        }
+    }
+    if (!/^https?:\/\//i.test(url))
+        return new Error(
+            "[GeoLeaf.Config.Loader] URL doit \u00eatre relative ou commencer par http:// ou https://"
+        );
+    return url;
+}
+
+function _checkContentType(
+    contentType: string | null,
+    strictContentType: boolean,
+    ctx: string
+): Error | null {
+    if (strictContentType && (!contentType || !contentType.includes("application/json"))) {
+        return new Error(
+            "[GeoLeaf.Config.Loader] Content-Type invalide" +
+                ctx +
+                ": expected 'application/json', re\u00e7u '" +
+                (contentType || "null") +
+                "'."
+        );
+    }
+    if (!strictContentType && contentType && !contentType.includes("application/json"))
+        Log.warn("[GeoLeaf.Config.Loader] Unexpected Content-Type:", contentType);
+    return null;
+}
+
+function _doFetch(
+    url: string,
+    hdrs: Record<string, string>,
+    strictContentType: boolean,
+    ctx: string
+): Promise<Record<string, unknown>> {
+    return fetch(url, { method: "GET", headers: { Accept: "application/json", ...hdrs } })
+        .then((response) => {
+            if (!response.ok) throw new Error("HTTP " + response.status + " pour " + url);
+            const ctErr = _checkContentType(
+                response.headers.get("content-type"),
+                strictContentType,
+                ctx
+            );
+            if (ctErr) throw ctErr;
+            return response.json().catch((parseErr: Error) => {
+                throw new Error(
+                    "[GeoLeaf.Config.Loader] Erreur de parsing JSON pour " +
+                        url +
+                        ": " +
+                        parseErr.message
+                );
+            });
+        })
+        .then((json: unknown) => {
+            if (typeof json !== "object" || json === null)
+                throw new Error("Le JSON de configuration n'est pas un object valide.");
+            return json as Record<string, unknown>;
+        });
+}
+
 /**
  * Module Config.Loader
  *
- * Responsabilités :
- * - Chargement HTTP via fetch() avec validation CSRF/XSS
+ * Responsibilities:
+ * - Loadsment HTTP via fetch() avec validation CSRF/XSS
  * - Validation Content-Type stricte
- * - Gestion des headers personnalisés
- * - Helper générique _fetchJson()
+ * - Gestion des headers customs
+ * - Helper generic _fetchJson()
  */
 const LoaderModule = {
     loadUrl(url: string, options: LoadUrlOptions = {}): Promise<Record<string, unknown>> {
         if (!url) {
-            Log.warn("[GeoLeaf.Config.Loader] URL JSON manquante dans loadUrl().");
+            Log.warn("[GeoLeaf.Config.Loader] Missing JSON URL in loadUrl().");
             return Promise.resolve({});
         }
         const { headers = {}, strictContentType = true } = options;
-        const Security = _getSecurity();
-        const isRelative = /^\.{0,2}\//.test(url) || /^\/[^/]/.test(url);
-        if (!isRelative) {
-            if (Security && typeof Security.validateUrl === "function") {
-                try {
-                    url = Security.validateUrl(url);
-                } catch (e) {
-                    const errMsg =
-                        "[GeoLeaf.Config.Loader] " + (e instanceof Error ? e.message : String(e));
-                    Log.error(errMsg);
-                    return Promise.reject(new Error(errMsg));
-                }
-            } else {
-                if (!/^https?:\/\//i.test(url)) {
-                    const errMsg =
-                        "[GeoLeaf.Config.Loader] URL doit être relative ou commencer par http:// ou https://";
-                    Log.error(errMsg);
-                    return Promise.reject(new Error(errMsg));
-                }
-            }
+        const validUrl = _validateUrl(url);
+        if (validUrl instanceof Error) {
+            Log.error(validUrl.message);
+            return Promise.reject(validUrl);
         }
-        const fetchOptions: RequestInit = {
-            method: "GET",
-            headers: { Accept: "application/json", ...headers },
-        };
-        return fetch(url, fetchOptions)
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error("HTTP " + response.status + " pour " + url);
-                }
-                const contentType = response.headers.get("content-type");
-                if (strictContentType) {
-                    if (!contentType || !contentType.includes("application/json")) {
-                        throw new Error(
-                            "[GeoLeaf.Config.Loader] Content-Type invalide: attendu 'application/json', reçu '" +
-                                (contentType || "null") +
-                                "'. Cela peut indiquer une attaque XSS ou un serveur mal configuré."
-                        );
-                    }
-                } else if (contentType && !contentType.includes("application/json")) {
-                    Log.warn("[GeoLeaf.Config.Loader] Content-Type inattendu:", contentType);
-                }
-                return response.json().catch((parseErr: Error) => {
-                    const errMsg =
-                        "[GeoLeaf.Config.Loader] Erreur de parsing JSON pour " +
-                        url +
-                        ": " +
-                        parseErr.message;
-                    Log.error(errMsg);
-                    throw new Error(errMsg);
-                });
-            })
-            .then((jsonCfg: unknown) => {
-                if (typeof jsonCfg !== "object" || jsonCfg === null) {
-                    throw new Error("Le JSON de configuration n'est pas un objet valide.");
-                }
-                return jsonCfg as Record<string, unknown>;
-            })
-            .catch((err: Error) => {
-                Log.error("[GeoLeaf.Config.Loader] Erreur lors du chargement JSON :", err);
+        return _doFetch(validUrl, headers as Record<string, string>, strictContentType, "").catch(
+            (err: Error) => {
+                Log.error("[GeoLeaf.Config.Loader] Error loading JSON:", err);
                 throw err;
-            });
+            }
+        );
     },
 
     fetchJson(url: string, options: LoadUrlOptions = {}): Promise<Record<string, unknown> | null> {
         if (!url) {
-            Log.warn("[GeoLeaf.Config.Loader] fetchJson() appelé sans URL.");
+            Log.warn("[GeoLeaf.Config.Loader] fetchJson() called without URL.");
             return Promise.resolve(null);
         }
         const { headers = {}, strictContentType = true } = options;
-        const Security = _getSecurity();
-        const isRelative = /^\.{0,2}\//.test(url) || /^\/[^/]/.test(url);
-        if (!isRelative) {
-            if (Security && typeof Security.validateUrl === "function") {
-                try {
-                    url = Security.validateUrl(url);
-                } catch (e) {
-                    const errMsg =
-                        "[GeoLeaf.Config.Loader] " + (e instanceof Error ? e.message : String(e));
-                    Log.error(errMsg);
-                    return Promise.reject(new Error(errMsg));
-                }
-            } else {
-                if (!/^https?:\/\//i.test(url)) {
-                    const errMsg =
-                        "[GeoLeaf.Config.Loader] URL doit être relative ou commencer par http:// ou https://";
-                    Log.error(errMsg);
-                    return Promise.reject(new Error(errMsg));
-                }
-            }
+        const validUrl = _validateUrl(url);
+        if (validUrl instanceof Error) {
+            Log.error(validUrl.message);
+            return Promise.reject(validUrl);
         }
-        const fetchOptions: RequestInit = {
-            method: "GET",
-            headers: { Accept: "application/json", ...headers },
-        };
-        return fetch(url, fetchOptions)
-            .then((response) => {
-                if (!response.ok) throw new Error("HTTP " + response.status + " pour " + url);
-                const contentType = response.headers.get("content-type");
-                if (strictContentType) {
-                    if (!contentType || !contentType.includes("application/json")) {
-                        throw new Error(
-                            "[GeoLeaf.Config.Loader] Content-Type invalide dans fetchJson: attendu 'application/json', reçu '" +
-                                (contentType || "null") +
-                                "'."
-                        );
-                    }
-                } else if (contentType && !contentType.includes("application/json")) {
-                    Log.warn(
-                        "[GeoLeaf.Config.Loader] fetchJson() Content-Type inattendu:",
-                        contentType
-                    );
-                }
-                return response.json().catch((parseErr: Error) => {
-                    const errMsg =
-                        "[GeoLeaf.Config.Loader] Erreur de parsing JSON dans fetchJson pour " +
-                        url +
-                        ": " +
-                        parseErr.message;
-                    Log.error(errMsg);
-                    throw new Error(errMsg);
-                });
-            })
-            .then((json: unknown) => {
-                if (typeof json !== "object" || json === null) {
-                    Log.warn(
-                        "[GeoLeaf.Config.Loader] fetchJson() a reçu un JSON non-objet pour l'URL :",
-                        url
-                    );
-                }
-                return json as Record<string, unknown> | null;
-            })
+        return _doFetch(
+            validUrl,
+            headers as Record<string, string>,
+            strictContentType,
+            " dans fetchJson"
+        )
+            .then((json) => json as Record<string, unknown> | null)
             .catch((err: Error) => {
-                Log.error("[GeoLeaf.Config.Loader] Erreur fetchJson() pour " + url + " :", err);
+                Log.error("[GeoLeaf.Config.Loader] Error in fetchJson() for " + url + ":", err);
                 throw err;
             });
     },

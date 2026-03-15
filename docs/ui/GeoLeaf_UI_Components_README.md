@@ -1,9 +1,9 @@
-# 🎨 GeoLeaf UI Components - Documentation Détaillée
+﻿# 🎨 GeoLeaf UI Components - Documentation Détaillée
 
 Product Version: GeoLeaf Platform V1
 
 **Modules** : `GeoLeaf._UIComponents`, `GeoLeaf._UIDomUtils`, `GeoLeaf.UI.Notifications`, et composants UI  
-**Version** : 1.1.0  
+**Version** : 1.1.1  
 **Fichiers source (monorepo)** : `src/modules/ui/`  
 **Dernière mise à jour** : 19 janvier 2026
 
@@ -885,6 +885,6 @@ GeoLeaf.GeoJSON.load({
 
 ---
 
-**Version** : 1.1.0  
+**Version** : 1.1.1  
 **Dernière mise à jour** : 19 janvier 2026  
 **Sprint 3** : Documentation complète des composants UI ✅

@@ -1,5 +1,5 @@
-﻿/*!
- * GeoLeaf Core – Baselayers / Index (barrel)
+/*!
+ * GeoLeaf Core – Baselayers / Index (barl)
  * © 2026 Mattieu Pottier
  * Released under the MIT License
  */

@@ -1,7 +1,23 @@
-﻿/**
- * globals.geojson.js — Bridge UMD/ESM : B5 — geojson, route
+/**
+ * @module globals.geojson
  *
- * @see globals.js (orchestrateur)
+ * @description
+ * UMD/ESM bridge — B5 — GeoJSON layers and Route module initialization.
+ *
+ * This runtime initialization module registers all GeoJSON and Route internals
+ * on `globalThis.GeoLeaf`. It is imported as a side-effect by `globals.ts`.
+ *
+ * Registers:
+ *   - `GeoJSON` core (`GeoJSONCore`, clustering, shared, feature validator)
+ *   - Style utilities (`_StyleUtils`, `_GeoJSONStyleResolver`, `_StyleRules`)
+ *   - Vector tiles (`_VectorTiles`), visibility manager, worker manager
+ *   - Layer config manager, popup/tooltip, layer manager sub-modules (store,
+ *     visibility, style, integration), loader sub-modules (config, data, profile, single-layer)
+ *   - Route internals (`_RouteLayerManager`, `_RouteLoaders`, `_RoutePopupBuilder`,
+ *     `_RouteStyleResolver`)
+ *
+ * @see globals for the orchestrator and import order
+ * @see globals-lite.geojson for the Lite variant (route excluded)
  */
 
 // B5 : geojson, route
@@ -49,8 +65,8 @@ const _GeoJSONLoader: any = Object.assign(
     LoaderProfile,
     LoaderSingleLayer
 );
-// Délégation manquante : _resolveDataFilePath n'est défini dans aucun sous-module du Loader.
-// LayerConfigManager.resolveDataFilePath résout le chemin d'un fichier de données GeoJSON.
+// Missing delegation: _resolveDataFilePath is not defined in any Loader sub-module.
+// LayerConfigManager.resolveDataFilePath resolves le path of a file de data GeoJSON.
 _GeoJSONLoader._resolveDataFilePath = (LayerConfigManager as any).resolveDataFilePath?.bind(
     LayerConfigManager
 );

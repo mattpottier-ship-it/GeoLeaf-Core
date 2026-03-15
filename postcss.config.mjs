@@ -1,6 +1,6 @@
 // postcss.config.mjs
-// Pipeline CSS GeoLeaf – Phase 3.3 / Phase 8.5.4
-// Gestion des @import + minification agressive
+// GeoLeaf CSS Pipeline – Phase 3.3 / Phase 8.5.4
+// Handles @import + aggressive minification
 
 import postcssImport from "postcss-import";
 import cssnano from "cssnano";
@@ -12,25 +12,25 @@ export default {
       preset: [
         "default",
         {
-          // Normaliser les whitespaces et valeurs
+          // Normalize whitespace and values
           normalizeWhitespace: true,
-          // Dédupliquer les règles (réduit les répétitions)
+          // Deduplicate rules (reduces repetitions)
           discardDuplicates: true,
-          // Supprimer les commentaires
+          // Remove comments
           discardComments: { removeAll: true },
-          // Optimiser les valeurs numériques
+          // Optimize numeric values
           convertValues: true,
-          // Minifier les sélecteurs
+          // Minify selectors
           minifySelectors: true,
-          // Minifier les déclarations de police
+          // Minify font declarations
           minifyFontValues: true,
-          // Minifier les dégradés
+          // Minify gradients
           minifyGradients: true,
-          // Réduire les propriétés de transformation
+          // Reduce transform properties
           minifyParams: true,
-          // SVG inline: minifier
+          // Inline SVG: minify
           svgo: true,
-          // Réduire les URLs
+          // Reduce URLs
           normalizeUrl: true
         }
       ]

@@ -6,41 +6,51 @@
  */
 
 /**
- * GeoLeaf Bundle Entry Point — Phase 7 UMD Build
- * Point d'entrée pour la génération du bundle UMD via Rollup.
+ * @module bundle-entry
  *
- * Ce fichier est le point d'entrée EXCLUSIF pour les builds UMD (umdConfig, umdMinConfig).
- * Il ne doit PAS contenir de named ESM exports — ceux-ci sont dans bundle-esm-entry.js.
+ * @description
+ * GeoLeaf Bundle Entry Point — UMD Build (Phase 7).
  *
- * Responsabilités :
- *   - Bootstrap applicatif (T12 : src/app/)
- *   - Module loader pour code splitting lazy
- *   - globals.js en DERNIER (side-effects (window as any).GeoLeaf.* après tous les modules)
+ * This is the **exclusive entry point for UMD bundle generation** via Rollup
+ * (configs: `umdConfig`, `umdMinConfig`). It must NOT contain named ESM exports —
+ * those are declared in `bundle-esm-entry.ts`.
+ *
+ * Responsibilities:
+ *   - Application bootstrap via `app/` (helpers → init → boot)
+ *   - Lazy module resolver Map (replaces static switch-case — C8)
+ *   - `globals.js` imported LAST to assign `window.GeoLeaf.*` side-effects
+ *     after all sub-modules are registered
+ *
+ * The `export default` at the bottom is the single UMD export: it re-exports
+ * the existing `window.GeoLeaf` object assembled by `globals.js`, so that
+ * Rollup assigns it as `window.GeoLeaf = GeoLeaf` without creating a wrapper.
  *
  * @version 1.1.0
- * @see src/bundle-esm-entry.js pour les named exports ESM
+ * @see bundle-esm-entry for named ESM exports consumed by third-party bundlers
+ * @see app/init for the application initialization sequence
+ * @see modules/globals for the UMD/ESM bridge orchestrator
  */
 
 // ── T12: Application bootstrap (ESM) ──
-// Ces modules importent directement leurs dépendances via ESM (Pattern A pur).
+// These modules directly import their dependencies via ESM (pure Pattern A).
 import "./app/helpers.js";
 import "./app/init.js";
 import "./app/boot.js";
 
-// ── Sprint 6 / Phase 7: Module loader pour code splitting ──
-// En mode ESM, ces import() produisent des chunks séparés dans dist/chunks/.
-// En mode UMD, Rollup les inline (bundle unique, compatible backward).
+// ── Sprint 6 / Phase 7: Module loader for code splitting ──
+// In ESM mode, these import() produce separate chunks in dist/chunks/.
+// In UMD mode, Rollup inlines them (single bundle, backward compatible).
 const _gl: any = typeof globalThis !== "undefined" ? globalThis : window;
 _gl.GeoLeaf = _gl.GeoLeaf || {};
 
 /**
- * Table des resolvers lazy — Map extensible des modules GeoLeaf.
- * Remplace le switch-case statique (C8).
- * En mode UMD le code est déjà inliné → résolution immédiate.
- * En mode ESM → chunk réseau séparé.
+ * Lazy resolver lookup table — extensible Map of GeoLeaf modules.
+ * Replaces the static switch-casee (C8).
+ * In UMD mode the code is already inlined → immediate resolution.
+ * In ESM mode → separate network chunk.
  */
 const _lazyModuleResolvers = new Map<string, any>([
-    // POI : chargement complet (core → renderers + extras en parallèle)
+    // POI: full loading (core → renderers + extras in parallel)
     [
         "poi",
         async () => {
@@ -48,7 +58,7 @@ const _lazyModuleResolvers = new Map<string, any>([
             await Promise.all([import("./lazy/poi-renderers.js"), import("./lazy/poi-extras.js")]);
         },
     ],
-    // POI sub-chunks (chargement granulaire)
+    // POI sub-chunks (granular loading)
     ["poiCore", () => import("./lazy/poi-core.js")],
     ["poiRenderers", () => import("./lazy/poi-renderers.js")],
     ["poiExtras", () => import("./lazy/poi-extras.js")],
@@ -61,7 +71,7 @@ const _lazyModuleResolvers = new Map<string, any>([
     ["table", () => import("./lazy/table.js")],
 ]);
 
-// Enregistrer les resolvers dans PluginRegistry (après globals.js via ESM hoisting)
+// Register resolvers in PluginRegistry (after globals.js via ESM hoisting)
 if (_gl.GeoLeaf.plugins?.registerLazy) {
     for (const [name, resolver] of _lazyModuleResolvers) {
         _gl.GeoLeaf.plugins.registerLazy(name, resolver);
@@ -69,8 +79,8 @@ if (_gl.GeoLeaf.plugins?.registerLazy) {
 }
 
 /**
- * Charge un module secondaire à la demande.
- * @param {string} moduleName - Nom du module ('poi','route','table','legend','layerManager','labels','themes')
+ * Loads a module secondary to the demande.
+ * @param {string} moduleName - Nom of the module ('poi','route','table','legend','layerManager','labels','themes')
  * @returns {Promise<void>}
  */
 _gl.GeoLeaf._loadModule = async function (moduleName: any) {
@@ -85,18 +95,18 @@ _gl.GeoLeaf._loadModule = async function (moduleName: any) {
         await resolver();
         _gl.GeoLeaf.plugins?.register(moduleName, { version: _gl.GeoLeaf._version });
     } catch (err) {
-        console.error(`[GeoLeaf] Erreur lors du chargement du module "${moduleName}" :`, err);
+        console.error(`[GeoLeaf] Error loading module "${moduleName}":`, err);
         throw err;
     }
 };
 
 /**
- * Charge tous les modules secondaires en parallèle.
- * Appelé par init.js pour pré-charger avant l'initialisation.
+ * Loads tous the modules secondarys en parallel.
+ * Called by init.js to pre-load before initialization.
  * @returns {Promise<void>}
  */
 _gl.GeoLeaf._loadAllSecondaryModules = async function () {
-    // POI core en premier (poi-renderers/extras/add-form en dépendent)
+    // POI core first (poi-renderers/extras/add-form depend on it)
     await import("./lazy/poi-core.js");
     await Promise.all([
         import("./lazy/poi-renderers.js"),
@@ -111,15 +121,15 @@ _gl.GeoLeaf._loadAllSecondaryModules = async function () {
 };
 
 // Point unique compat UMD/CDN — DERNIER import (side-effects (window as any).GeoLeaf.*)
-// globals.js importe tous les modules T0–T11 et les assigne sur _g.GeoLeaf.
+// globals.js importe tous the modules T0–T11 et les assigne sur _g.GeoLeaf.
 import "./modules/globals.js";
-// geoleaf.api.js — façade ESM (named exports uniquement).
-// ⚠️ UMD : les méthodes publiques (loadConfig, init, setTheme, etc.) sont
-//    assignées directement dans globals.api.js (fin de fichier) pour éviter
-//    l'élimination par le DCE de Rollup (Object.assign sur objet dérivé de globalThis).
+// geoleaf.api.js — ESM facade (named exports only).
+// ⚠️ UMD: public methods (loadConfig, init, setTheme, etc.) are
+//    assigned directly in globals.api.js (end of file) to prevent
+//    elimination by Rollup DCE (Object.assign on an object derived from globalThis).
 import "./modules/geoleaf.api.js";
 
-// Export du namespace global GeoLeaf tel qu'assemblé par globals.js
-// ⚠️ Ce `export default` est le SEUL export — PAS de named exports ici.
-//    Ainsi le bundle UMD assigne (window as any).GeoLeaf = l'objet GeoLeaf existant (pas un wrapper).
+// Export of the global GeoLeaf namespace as assembled by globals.js
+// ⚠️ This `export default` is the ONLY export — NO named exports here.
+//    This way the UMD bundle assigns (window as any).GeoLeaf = the existing GeoLeaf object (not a wrapper).
 export default typeof window !== "undefined" ? (window as any).GeoLeaf : {};

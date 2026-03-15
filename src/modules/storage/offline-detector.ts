@@ -1,6 +1,6 @@
 /*!
  * GeoLeaf Core
- * � 2026 Mattieu Pottier
+ * © 2026 Mattieu Pottier
  * Released under the MIT License
  * https://geoleaf.dev
  */
@@ -8,8 +8,8 @@
 /**
  * GeoLeaf Storage - Offline Detector Module
  *
- * D�tecte et g�re les transitions online/offline.
- * Affiche un badge UI et �met des �v�nements personnalis�s.
+ * Détecte et gère les transitions online/offline.
+ * Displays un badge UI et émet des événements personnalisés.
  *
  * @module GeoLeaf.OfflineDetector
  * @version 3.0.0
@@ -17,27 +17,55 @@
 "use strict";
 
 import { Log } from "../log/index.js";
+import { getLabel } from "../i18n/i18n.js";
 import { ensureMap } from "../utils/general-utils.js";
 import { events } from "../utils/event-listener-manager.js";
 
 /**
- * Module de d�tection online/offline
+ * Module de détection online/offline
  */
+function _createOfflineBadgeContainer(L: any): HTMLElement {
+    const container = L.DomUtil.create("div", "leaflet-bar geoleaf-offline-badge-control");
+    container.style.cssText = `
+        background: #ff6b6b;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-family: system-ui, -apple-system, sans-serif;
+        font-size: 13px;
+        font-weight: 500;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        cursor: default;
+        display: none;
+        white-space: nowrap;
+        position: absolute;
+        left: 54px;
+        top: 0;
+        margin: 0 !important;
+        border: none;
+    `;
+    container.textContent = getLabel("ui.offline.badge");
+    container.title = getLabel("aria.offline.badge_title");
+    L.DomEvent.disableClickPropagation(container);
+    L.DomEvent.disableScrollPropagation(container);
+    return container;
+}
+
 const OfflineDetector = {
     /**
-     * �tat de connexion actuel
+     * État de connexion current
      * @private
      */
     _isOnline: navigator.onLine,
 
     /**
-     * Badge UI (si activ�)
+     * Badge UI (si activé)
      * @private
      */
     _badge: null as HTMLElement | null,
 
     /**
-     * Contr�le Leaflet pour le badge
+     * Contrôle Leaflet for the badge
      * @private
      */
     _badgeControl: null as any,
@@ -54,7 +82,7 @@ const OfflineDetector = {
     } as any,
 
     /**
-     * Timer de v�rification p�riodique
+     * Timer de vérification périodique
      * @private
      */
     _checkTimer: null as ReturnType<typeof setInterval> | null,
@@ -66,12 +94,12 @@ const OfflineDetector = {
     _eventCleanups: [] as (number | null | (() => void))[],
 
     /**
-     * Initialise le d�tecteur
+     * Initialise le détecteur
      * @param {Object} options - Options de configuration
-     * @param {boolean} options.showBadge - Afficher le badge UI
+     * @param {boolean} options.showBadge - Displaysr le badge UI
      * @param {string} options.badgePosition - Position du badge (top-right, top-left, etc.)
-     * @param {number} options.checkInterval - Intervalle de v�rification en ms
-     * @param {string} options.pingUrl - URL pour ping de connectivit�
+     * @param {number} options.checkInterval - Interval de vérification en ms
+     * @param {string} options.pingUrl - URL pour ping de connectivité
      * @returns {void}
      */
     init(options: any = {}) {
@@ -82,30 +110,30 @@ const OfflineDetector = {
             `[OfflineDetector] Initializing (badge: ${this._config.showBadge ? "enabled" : "disabled"})`
         );
 
-        // �tat initial
+        // État initial
         this._isOnline = navigator.onLine;
         Log.info(`[OfflineDetector] Initial state: ${this._isOnline ? "ONLINE" : "OFFLINE"}`);
 
-        // Le badge sera cr�� de mani�re lazy :
-        // - Lors du premier �v�nement offline si showBadge=true
-        // - Ou via un appel manuel si la carte devient disponible plus tard
+        // Le badge sera créé de manière lazy :
+        // - During the premier événement offline si showBadge=true
+        // - Ou via un appel manuel si the map devient available plus tard
 
-        // �couter les �v�nements navigateur
+        // Écouter les événements navigateur
         this._attachEventListeners();
 
-        // V�rification p�riodique
+        // Vérification périodique
         this._startPeriodicCheck();
 
-        // V�rifier imm�diatement l'�tat r�el
+        // Vérifier immédiatement l'état réel
         this.checkConnectivity();
     },
 
     /**
-     * Cr�e le badge UI comme contr�le Leaflet
+     * Crée le badge UI comme contrôle Leaflet
      * @private
      */
     _createBadge() {
-        if (this._badge) return; // D�j� cr��
+        if (this._badge) return; // Déjà créé
 
         const map = ensureMap(undefined) as any;
         if (!map) {
@@ -113,7 +141,7 @@ const OfflineDetector = {
             return;
         }
 
-        // Cr�er un contr�le Leaflet personnalis�
+        // Créer un contrôle Leaflet personnalisé
         const L = (globalThis as any).L;
         if (!L || !L.Control) {
             Log.warn("[OfflineDetector] Leaflet not available");
@@ -126,36 +154,7 @@ const OfflineDetector = {
             },
 
             onAdd: function (_map: any) {
-                const container = L.DomUtil.create(
-                    "div",
-                    "leaflet-bar geoleaf-offline-badge-control"
-                );
-                container.style.cssText = `
-                    background: #ff6b6b;
-                    color: white;
-                    padding: 8px 16px;
-                    border-radius: 20px;
-                    font-family: system-ui, -apple-system, sans-serif;
-                    font-size: 13px;
-                    font-weight: 500;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-                    cursor: default;
-                    display: none;
-                    white-space: nowrap;
-                    position: absolute;
-                    left: 54px;
-                    top: 0;
-                    margin: 0 !important;
-                    border: none;
-                `;
-                container.textContent = "?? Hors ligne";
-                container.title = "Mode hors ligne actif";
-
-                // Emp�cher les �v�nements de propagation
-                L.DomEvent.disableClickPropagation(container);
-                L.DomEvent.disableScrollPropagation(container);
-
-                return container;
+                return _createOfflineBadgeContainer(L);
             },
         });
 
@@ -167,11 +166,11 @@ const OfflineDetector = {
     },
 
     /**
-     * Affiche le badge
+     * Displays le badge
      * @private
      */
     _showBadge() {
-        // Cr�er le badge si pas encore cr�� (lazy creation)
+        // Créer le badge si pas encore créé (lazy creation)
         if (!this._badge && this._config.showBadge) {
             this._createBadge();
         }
@@ -192,11 +191,11 @@ const OfflineDetector = {
     },
 
     /**
-     * Attache les event listeners
+     * Attache les event listners
      * @private
      */
     _attachEventListeners() {
-        // �v�nements natifs du navigateur - avec cleanup tracking
+        // événements natifs du navigateur - avec cleanup tracking
 
         if (events) {
             this._eventCleanups.push(
@@ -230,10 +229,10 @@ const OfflineDetector = {
     },
 
     /**
-     * Cleanup event listeners
+     * Cleanup event listners
      */
     destroy() {
-        // Cleanup event listeners
+        // Cleanup event listners
         if (this._eventCleanups && this._eventCleanups.length > 0) {
             this._eventCleanups.forEach((cleanup: number | null | (() => void)) => {
                 if (typeof cleanup === "function") cleanup();
@@ -258,11 +257,11 @@ const OfflineDetector = {
     },
 
     /**
-     * G�re le passage en ligne
+     * Gère le passage online
      * @private
      */
     _handleOnline() {
-        if (this._isOnline) return; // D�j� online
+        if (this._isOnline) return; // Déjà online
 
         Log.info("[OfflineDetector] Connection restored ? ONLINE");
         this._isOnline = true;
@@ -272,33 +271,33 @@ const OfflineDetector = {
             this._hideBadge();
         }
 
-        // �mettre �v�nement personnalis�
+        // Émettre événement personnalisé
         (document as any).dispatchEvent(
             new CustomEvent("geoleaf:online", {
                 detail: { timestamp: Date.now() },
             })
         );
 
-        // V�rifier avec ping si n�cessaire
+        // Vérifier avec ping si nécessaire
         this.checkConnectivity();
     },
 
     /**
-     * G�re le passage hors ligne
+     * Gère le passage hors line
      * @private
      */
     _handleOffline() {
-        if (!this._isOnline) return; // D�j� offline
+        if (!this._isOnline) return; // Déjà offline
 
         Log.warn("[OfflineDetector] Connection lost ? OFFLINE");
         this._isOnline = false;
 
-        // Afficher le badge
+        // Displaysr le badge
         if (this._config.showBadge) {
             this._showBadge();
         }
 
-        // �mettre �v�nement personnalis�
+        // Émettre événement personnalisé
         document.dispatchEvent(
             new CustomEvent("geoleaf:offline", {
                 detail: { timestamp: Date.now() },
@@ -307,20 +306,20 @@ const OfflineDetector = {
     },
 
     /**
-     * V�rifie la connectivit� r�elle (avec ping si configur�)
+     * Vérifie la connectivité réelle (avec ping si configuré)
      *
      * @returns {Promise<boolean>}
      * @example
      * const isOnline = await GeoLeaf.Storage.OfflineDetector.checkConnectivity();
      */
     async checkConnectivity() {
-        // Si pas d'URL de ping, utiliser l'�tat navigateur
+        // Si pas d'URL de ping, utiliser l'état navigateur
         if (!this._config.pingUrl) {
             return this._isOnline;
         }
 
         try {
-            // Tenter un ping vers l'URL configur�e
+            // Tenter un ping vers l'URL configurée
             const controller = new AbortController();
             const timeoutId: ReturnType<typeof setTimeout> = setTimeout(
                 () => controller.abort(),
@@ -337,7 +336,7 @@ const OfflineDetector = {
 
             const isOnline = response.ok;
 
-            // Mettre � jour l'�tat si diff�rent
+            // Mettre à jour l'état si différent
             if (isOnline !== this._isOnline) {
                 if (isOnline) {
                     this._handleOnline();
@@ -348,7 +347,7 @@ const OfflineDetector = {
 
             return isOnline;
         } catch (error: unknown) {
-            // Erreur = probablement offline
+            // Error = probablement offline
             Log.debug(`[OfflineDetector] Ping failed: ${(error as any)?.message ?? error}`);
 
             if (this._isOnline) {
@@ -360,7 +359,7 @@ const OfflineDetector = {
     },
 
     /**
-     * D�marre la v�rification p�riodique
+     * Démarre la vérification périodique
      * @private
      */
     _startPeriodicCheck() {
@@ -378,7 +377,7 @@ const OfflineDetector = {
     },
 
     /**
-     * Arr�te la v�rification p�riodique
+     * Arrête la vérification périodique
      */
     stopPeriodicCheck() {
         if (this._checkTimer) {
@@ -389,12 +388,12 @@ const OfflineDetector = {
     },
 
     /**
-     * Retourne l'�tat de connexion actuel
+     * Returns the État de connexion current
      *
      * @returns {boolean}
      * @example
      * if (GeoLeaf.Storage.OfflineDetector.isOnline()) {
-     *   // Effectuer requ�te r�seau
+     *   // Effectuer requête réseau
      * }
      */
     isOnline() {

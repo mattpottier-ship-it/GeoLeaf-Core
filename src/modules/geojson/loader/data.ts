@@ -1,6 +1,6 @@
-﻿/**
+/**
  * GeoLeaf GeoJSON Loader - Data
- * Chargement direct de données GeoJSON (URL ou objet JS)
+ * Loadsment direct de data GeoJSON (URL ou object JS)
  *
  * @module geojson/loader/data
  */
@@ -22,6 +22,24 @@ const Loader: {
     addData: (geojsonData: Record<string, unknown>, options?: Record<string, unknown>) => void;
 } = {} as any;
 
+function _resolveMergedOptions(state: any, options: any) {
+    return (_g as any).GeoLeaf &&
+        (_g as any).GeoLeaf.Utils &&
+        (_g as any).GeoLeaf.Utils.mergeOptions
+        ? (_g as any).GeoLeaf.Utils.mergeOptions(state.options, options)
+        : Object.assign({}, state.options, options);
+}
+
+async function _fetchGeoJsonData(url: string): Promise<unknown> {
+    const FetchHelper = (_g as any).GeoLeaf && (_g as any).GeoLeaf.Utils?.FetchHelper;
+    if (FetchHelper) {
+        return FetchHelper.get(url, { timeout: 20000, retries: 2 });
+    }
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("HTTP " + response.status + " pour " + url);
+    return response.json();
+}
+
 Loader.loadUrl = async function (
     url: string,
     options: Record<string, unknown> = {}
@@ -29,57 +47,28 @@ Loader.loadUrl = async function (
     const state = getState();
     const Log = getLog();
     if (!url) {
-        Log.warn("[GeoLeaf.GeoJSON] URL GeoJSON manquante.");
+        Log.warn("[GeoLeaf.GeoJSON] URL GeoJSON missing.");
         return state.geoJsonLayer;
     }
     if (!state.map) {
         Log.error(
-            "[GeoLeaf.GeoJSON] Module non initialisé. Appelle GeoLeaf.GeoJSON.init() avant loadUrl()."
+            "[GeoLeaf.GeoJSON] Module not initialized. Call GeoLeaf.GeoJSON.init() before loadUrl()."
         );
         return null;
     }
-    const mergedOptions =
-        (_g as any).GeoLeaf && (_g as any).GeoLeaf.Utils && (_g as any).GeoLeaf.Utils.mergeOptions
-            ? (_g as any).GeoLeaf.Utils.mergeOptions(state.options, options)
-            : Object.assign({}, state.options, options);
+    const mergedOptions = _resolveMergedOptions(state, options);
     try {
-        const FetchHelper = (_g as any).GeoLeaf && (_g as any).GeoLeaf.Utils?.FetchHelper;
-        let data: unknown;
-        if (FetchHelper) {
-            data = await FetchHelper.get(url, { timeout: 20000, retries: 2 });
-        } else {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error("HTTP " + response.status + " pour " + url);
-            data = await response.json();
-        }
+        const data = await _fetchGeoJsonData(url);
         (_g as any).GeoLeaf && Loader.addData(data as Record<string, unknown>, mergedOptions);
         return state.geoJsonLayer;
     } catch (err) {
-        Log.error("[GeoLeaf.GeoJSON] Erreur lors du chargement GeoJSON :", err);
+        Log.error("[GeoLeaf.GeoJSON] Error loading GeoJSON :", err);
         return state.geoJsonLayer;
     }
 };
 
-Loader.addData = function (
-    geojsonData: Record<string, unknown>,
-    options: Record<string, unknown> = {}
-): void {
-    const state = getState();
-    const Log = getLog();
-    if (!geojsonData) {
-        Log.warn("[GeoLeaf.GeoJSON] Aucune donnée GeoJSON fournie à addData().");
-        return;
-    }
-    if (!state.map || !state.geoJsonLayer) {
-        Log.error(
-            "[GeoLeaf.GeoJSON] Module non initialisé. Appelle GeoLeaf.GeoJSON.init() avant addData()."
-        );
-        return;
-    }
-    const mergedOptions =
-        (_g as any).GeoLeaf && (_g as any).GeoLeaf.Utils && (_g as any).GeoLeaf.Utils.mergeOptions
-            ? (_g as any).GeoLeaf.Utils.mergeOptions(state.options, options)
-            : Object.assign({}, state.options, options);
+function _resolveAddDataOptions(state: any, options: any) {
+    const mergedOptions = _resolveMergedOptions(state, options);
     if (
         (_g as any).GeoLeaf &&
         (_g as any).GeoLeaf._GeoJSONStyleResolver &&
@@ -89,30 +78,28 @@ Loader.addData = function (
             _g as any
         ).GeoLeaf._GeoJSONStyleResolver.buildLeafletOptions(mergedOptions);
     }
-    let dataToAdd: unknown = geojsonData;
-    const Validator = (_g as any).GeoLeaf && (_g as any).GeoLeaf._GeoJSONFeatureValidator;
-    if (Validator && typeof Validator.validateFeatureCollection === "function") {
-        const validationResult = Validator.validateFeatureCollection(geojsonData);
-        if (validationResult.errors.length > 0) {
-            Log.warn(
-                `[GeoLeaf.GeoJSON] Validation: ${validationResult.errors.length} feature(s) rejetée(s), ${validationResult.validFeatures.length} acceptée(s)`
-            );
-        }
-        if (validationResult.validFeatures.length > 0) {
-            if ((geojsonData as any).type === "FeatureCollection") {
-                dataToAdd = { type: "FeatureCollection", features: validationResult.validFeatures };
-            } else {
-                dataToAdd =
-                    validationResult.validFeatures.length === 1
-                        ? validationResult.validFeatures[0]
-                        : { type: "FeatureCollection", features: validationResult.validFeatures };
-            }
-        } else {
-            Log.warn("[GeoLeaf.GeoJSON] Aucune feature valide à ajouter après validation");
-            return;
-        }
+    return mergedOptions;
+}
+
+function _filterValidFeatures(geojsonData: any, Validator: any, Log: any) {
+    const validationResult = Validator.validateFeatureCollection(geojsonData);
+    if (validationResult.errors.length > 0) {
+        Log.warn(
+            `[GeoLeaf.GeoJSON] Validation: ${validationResult.errors.length} feature(s) rejected, ${validationResult.validFeatures.length} accepted`
+        );
     }
-    (state.geoJsonLayer as any).addData(dataToAdd);
+    if (validationResult.validFeatures.length > 0) {
+        if ((geojsonData as any).type === "FeatureCollection") {
+            return { type: "FeatureCollection", features: validationResult.validFeatures };
+        }
+        return validationResult.validFeatures.length === 1
+            ? validationResult.validFeatures[0]
+            : { type: "FeatureCollection", features: validationResult.validFeatures };
+    }
+    return null;
+}
+
+function _fitBoundsAfterLoad(state: any, mergedOptions: any) {
     if (mergedOptions.fitBoundsOnLoad && state.layerGroup) {
         const bounds = (state.layerGroup as any).getBounds();
         if (bounds.isValid()) {
@@ -122,6 +109,37 @@ Loader.addData = function (
             (state.map as any).fitBounds(bounds, fitOptions);
         }
     }
+}
+
+Loader.addData = function (
+    geojsonData: Record<string, unknown>,
+    options: Record<string, unknown> = {}
+): void {
+    const state = getState();
+    const Log = getLog();
+    if (!geojsonData) {
+        Log.warn("[GeoLeaf.GeoJSON] No GeoJSON data provided to addData().");
+        return;
+    }
+    if (!state.map || !state.geoJsonLayer) {
+        Log.error(
+            "[GeoLeaf.GeoJSON] Module not initialized. Call GeoLeaf.GeoJSON.init() before addData()."
+        );
+        return;
+    }
+    const mergedOptions = _resolveAddDataOptions(state, options);
+    let dataToAdd: unknown = geojsonData;
+    const Validator = (_g as any).GeoLeaf && (_g as any).GeoLeaf._GeoJSONFeatureValidator;
+    if (Validator && typeof Validator.validateFeatureCollection === "function") {
+        const filtered = _filterValidFeatures(geojsonData, Validator, Log);
+        if (filtered === null) {
+            Log.warn("[GeoLeaf.GeoJSON] No valid feature to add after validation");
+            return;
+        }
+        dataToAdd = filtered;
+    }
+    (state.geoJsonLayer as any).addData(dataToAdd);
+    _fitBoundsAfterLoad(state, mergedOptions);
     try {
         (state.map as any).fire("geoleaf:geojson:loaded", {
             data: geojsonData,

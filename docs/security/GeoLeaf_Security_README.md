@@ -1,7 +1,7 @@
-# GeoLeaf.Security – Documentation du module Security
+﻿# GeoLeaf.Security – Documentation du module Security
 
 Product Version: GeoLeaf Platform V1  
-**Version**: 1.1.0 (Phase 1 XSS hardening)  
+**Version**: 1.1.1 (Phase 1 XSS hardening)  
 **Fichier (monorepo)** : `src/modules/security/`  
 **Date**: Février 2026
 

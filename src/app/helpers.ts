@@ -7,11 +7,11 @@
 
 /**
  * GeoLeaf Application Helpers
- * Système de logs production, détection de chemin, vérification des plugins,
- * et helper de notification.
+ * Production logging, path detection, plugin verification,
+ * and notification helper.
  *
- * Ce fichier crée le namespace partagé GeoLeaf._app utilisé par
- * app/init.js et app/boot.js.
+ * This file creates the shared GeoLeaf._app namespace used by
+ * app/init.js and app/boot.js.
  *
  * @module app/helpers
  */
@@ -21,15 +21,15 @@ import { Log } from "../modules/log/index.js";
 const GeoLeaf = _g.GeoLeaf;
 
 /**
- * Namespace interne pour le module Application Bootstrap.
- * Partagé entre app/helpers.js, app/init.js et app/boot.js.
+ * Internal namespace for the Application Bootstrap module.
+ * Shared between app/helpers.js, app/init.js and app/boot.js.
  * @namespace GeoLeaf._app
  * @private
  */
 const _app = (GeoLeaf._app = GeoLeaf._app || {});
 
 // ============================================================
-// Système de logs production
+// Production logging system
 // ============================================================
 _app.AppLog = {
     log(...args: any[]) {
@@ -50,12 +50,12 @@ _app.AppLog = {
 };
 
 // ============================================================
-// Détection automatique du chemin vers profiles/
+// Automatic path detection for profiles/
 // ============================================================
 /**
- * Détecte automatiquement le chemin de base vers le dossier profiles/
- * en fonction de l'URL courante.
- * @returns {string} Chemin relatif vers profiles/
+ * Automatically detects the base path to the profiles/ folder
+ * based on the current URL.
+ * @returns {string} Relative path to profiles/
  */
 _app.getProfilesBasePath = function () {
     const currentPath = _g.location.pathname;
@@ -66,18 +66,18 @@ _app.getProfilesBasePath = function () {
 };
 
 // ============================================================
-// Vérification des plugins au boot
+// Plugin verification at boot
 // ============================================================
 /**
- * Vérifie que les plugins requis par la configuration sont bien chargés
- * et affiche des avertissements dans la console si ce n'est pas le cas.
- * @param {Object} cfg - Configuration du profil actif
+ * Verifies that required plugins for the configuration are loaded
+ * and prints console warnings if they are missing.
+ * @param {Object} cfg - Active profile configuration
  */
 /* eslint-disable complexity -- sequential plugin checks */
 _app.checkPlugins = function (cfg: any) {
     const AppLog = _app.AppLog;
 
-    // Avertissement si config attend AddPOI mais plugin non chargé
+    // Warning if config expects AddPOI but plugin is not loaded
     if (cfg && cfg.ui && cfg.ui.showAddPoi === true) {
         if (!GeoLeaf.POI || !GeoLeaf.POI.AddForm) {
             AppLog.warn(
@@ -87,7 +87,7 @@ _app.checkPlugins = function (cfg: any) {
         }
     }
 
-    // Avertissement si config attend Storage mais plugin non chargé
+    // Warning if config expects Storage but plugin is not loaded
     if (cfg && cfg.storage) {
         if (!GeoLeaf.Storage) {
             AppLog.warn(
@@ -108,7 +108,7 @@ _app.checkPlugins = function (cfg: any) {
         }
     }
 
-    // Avertissement si SyncHandler est chargé sans Storage
+    // Warning if SyncHandler is loaded without Storage
     if (GeoLeaf.POI && GeoLeaf.POI.SyncHandler && !GeoLeaf.Storage) {
         AppLog.warn(
             "⚠️ SyncHandler loaded without Storage plugin — sync operations will be disabled. " +
@@ -119,14 +119,14 @@ _app.checkPlugins = function (cfg: any) {
 /* eslint-enable complexity */
 
 // ============================================================
-// Helper : afficher une notification
+// Helper : display une notification
 // ============================================================
 /**
- * Affiche une notification via le système UI de GeoLeaf.
- * Tente d'abord GeoLeaf.UI.Notifications, puis GeoLeaf._UINotifications.
- * @param {string} message - Message à afficher
- * @param {number} [duration=3500] - Durée d'affichage en millisecondes
- * @returns {boolean} true si la notification a été affichée
+ * Displays a notification via the GeoLeaf UI system.
+ * Tries GeoLeaf.UI.Notifications first, then GeoLeaf._UINotifications.
+ * @param {string} message - Message to display
+ * @param {number} [duration=3500] - Display duration in milliseconds
+ * @returns {boolean} true if the notification was shown
  */
 /* eslint-disable complexity -- fallback notification paths */
 _app.showNotification = function (message: any, duration: any) {
@@ -162,17 +162,17 @@ _app.showNotification = function (message: any, duration: any) {
 // Sprint 6: Lazy module loader helper
 // ============================================================
 /**
- * S'assure qu'un module secondaire est chargé.
- * En mode UMD le module est déjà disponible (inliné) → résolution immédiate.
- * En mode ESM, déclenche le chargement du chunk réseau si nécessaire.
+ * Ensures a secondary module is loaded.
+ * In UMD mode the module is already available (inlined) → immediate resolution.
+ * In ESM mode, triggers network chunk loading if needed.
  *
- * @param {string} globalName - Nom sur window.GeoLeaf (ex: 'POI', 'Route')
- * @param {string} chunkName  - Identifiant du chunk (ex: 'poi', 'route')
+ * @param {string} globalName - Name on window.GeoLeaf (e.g. 'POI', 'Route')
+ * @param {string} chunkName  - Chunk identifier (e.g. 'poi', 'route')
  * @returns {Promise<void>}
  */
 /* eslint-disable security/detect-object-injection -- intentional GeoLeaf[globalName] lookup */
 _app._ensureModule = async function (globalName: any, chunkName: any) {
-    if (GeoLeaf[globalName]) return; // déjà chargé (UMD ou déjà importé)
+    if (GeoLeaf[globalName]) return; // already loaded (UMD or already imported)
     if (typeof GeoLeaf._loadModule === "function") {
         await GeoLeaf._loadModule(chunkName);
     }

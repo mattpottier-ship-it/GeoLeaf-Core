@@ -1,15 +1,15 @@
-﻿/*!
- * GeoLeaf Core � � 2026 Mattieu Pottier � MIT License � https://geoleaf.dev
+/*!
+ * GeoLeaf Core — © 2026 Mattieu Pottier — MIT License — https://geoleaf.dev
  */
 /**
- * src/table/index.js � SHIM LEGACY
- * R�trocompatibilit� : expose Table depuis src/table/ ? src/modules/geoleaf.table.js
+ * src/table/index.js — SHIM LEGACY
+ * Rétrocompatibilité : expose Table depuis src/table/ ? src/modules/geoleaf.table.js
  * @module src/table
  */
 import { Table as _Table } from "../modules/geoleaf.table.js";
 const Table: any = _Table;
 
-// M�thodes disponibles sur Table
+// Méthodes availables sur Table
 export const init = (...args: any[]) => Table.init?.(...(args as any));
 export const setLayer = (...args: any[]) => Table.setLayer?.(...(args as any));
 export const sortByField = (...args: any[]) => Table.sortByField?.(...(args as any));
@@ -19,7 +19,7 @@ export const clearSelection = (...args: any[]) => Table.clearSelection?.(...(arg
 export const getOptions = (...args: any[]) => Table.getOptions?.(...(args as any));
 export const setOptions = (...args: any[]) => Table.setOptions?.(...(args as any));
 
-// M�thodes absentes � stubs pour compatibilit�
+// Méthodes absentes — stubs pour compatibilité
 export function reset() {
     return undefined;
 }

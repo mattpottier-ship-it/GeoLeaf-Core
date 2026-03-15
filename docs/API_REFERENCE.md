@@ -1,7 +1,7 @@
-# GeoLeaf API Reference
+﻿# GeoLeaf API Reference
 
 **Product Version:** GeoLeaf Platform V1  
-**Version:** 1.1.0  
+**Version:** 1.1.1  
 **Last Updated:** February 21, 2026  
 **Audience:** Developers integrating GeoLeaf
 
@@ -38,10 +38,10 @@
 
 ```html
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<link rel="stylesheet" href="https://unpkg.com/@geoleaf/core@1.1.0/dist/geoleaf.min.css" />
+<link rel="stylesheet" href="https://unpkg.com/@geoleaf/core@1.1.1/dist/geoleaf.min.css" />
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/@geoleaf/core@1.1.0/dist/geoleaf.min.js"></script>
+<script src="https://unpkg.com/@geoleaf/core@1.1.1/dist/geoleaf.min.js"></script>
 ```
 
 **Via NPM:**
@@ -1804,4 +1804,4 @@ For API questions or issues:
 ---
 
 **Last Updated:** February 21, 2026  
-**GeoLeaf Version:** 1.1.0
+**GeoLeaf Version:** 1.1.1

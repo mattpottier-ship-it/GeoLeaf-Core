@@ -8,7 +8,7 @@
 /**
  * @module log/log-config
  * @description Configuration globale des logs pour GeoLeaf.
- * Applique automatiquement les bonnes configurations de log selon l'environnement.
+ * Applies automaticment les bonnes configurations de log selon l'environment.
  */
 
 import { Log } from "./logger.js";
@@ -18,11 +18,34 @@ export interface LogConfigOptions {
     quietMode?: boolean;
 }
 
+function _scheduleStartupSummary(isProduction: boolean, isDebug: boolean): void {
+    if (typeof setTimeout === "undefined" || typeof performance === "undefined") return;
+    setTimeout(() => {
+        if (Log.showSummary) {
+            Log.showSummary();
+        }
+
+        const endTime = performance.now();
+        const g =
+            typeof globalThis !== "undefined"
+                ? (globalThis as unknown as { GeoLeaf?: { _moduleCount?: number } })
+                : undefined;
+        const moduleCount =
+            g?.GeoLeaf && typeof g.GeoLeaf._moduleCount === "number" ? g.GeoLeaf._moduleCount : "?";
+        Log.info("🎯 [GeoLeaf] Startup complete:", {
+            "⏱️ Total time": Math.round(endTime) + "ms",
+            "📦 Modules": String(moduleCount) + " loaded",
+            "🔇 Logs": isProduction ? "production mode" : isDebug ? "debug mode" : "optimized mode",
+            "💡 Tip": isDebug ? "" : "Add ?debug=true for detailed logs",
+        });
+    }, 3000);
+}
+
 /**
- * Configure le logger selon l'environnement détecté ou les options fournies.
+ * Configures the logger based on the detected environment or provided options.
  */
 export function configureLogging(options: LogConfigOptions = {}): void {
-    // Si des options explicites sont fournies, les utiliser
+    // If explicit options are provided, use them
     if (options.level) {
         Log.setLevel(options.level);
         if (typeof options.quietMode === "boolean") {
@@ -31,7 +54,7 @@ export function configureLogging(options: LogConfigOptions = {}): void {
         return;
     }
 
-    // Auto-détection de l'environnement (browser only)
+    // Auto-detect environment (browser only)
     if (typeof location === "undefined") return;
 
     const isProduction =
@@ -42,53 +65,27 @@ export function configureLogging(options: LogConfigOptions = {}): void {
         location.search.includes("debug=true") || location.search.includes("verbose=true");
 
     if (isProduction) {
-        // Production: seulement warnings et erreurs + mode silencieux
+        // Production: warnings and errors only + quiet mode
         Log.setLevel("production");
-        Log.info("🔧 [GeoLeaf] Mode production activé - logs réduits");
+        Log.info("🔧 [GeoLeaf] Production mode enabled - reduced logs");
     } else if (isDebug) {
-        // Debug explicite: tous les logs
+        // Explicit debug mode: all logs
         Log.setLevel("debug");
         Log.setQuietMode(false);
-        Log.info("🔧 [GeoLeaf] Mode debug activé - tous les logs visibles");
+        Log.info("🔧 [GeoLeaf] Debug mode enabled - all logs visible");
     } else {
-        // Développement: logs informatifs avec mode silencieux
+        // Development: informational logs with quiet mode
         Log.setLevel("info");
         Log.setQuietMode(true);
-        Log.info("🔧 [GeoLeaf] Mode développement - logs optimisés");
+        Log.info("🔧 [GeoLeaf] Development mode - optimized logs");
     }
 
-    // Afficher un résumé après chargement complet
-    if (typeof setTimeout !== "undefined" && typeof performance !== "undefined") {
-        setTimeout(() => {
-            if (Log.showSummary) {
-                Log.showSummary();
-            }
-
-            const endTime = performance.now();
-            const g =
-                typeof globalThis !== "undefined"
-                    ? (globalThis as unknown as { GeoLeaf?: { _moduleCount?: number } })
-                    : undefined;
-            const moduleCount =
-                g?.GeoLeaf && typeof g.GeoLeaf._moduleCount === "number"
-                    ? g.GeoLeaf._moduleCount
-                    : "?";
-            Log.info("🎯 [GeoLeaf] Démarrage terminé:", {
-                "⏱️ Temps total": Math.round(endTime) + "ms",
-                "📦 Modules": String(moduleCount) + " chargés",
-                "🔇 Logs": isProduction
-                    ? "mode production"
-                    : isDebug
-                      ? "mode debug"
-                      : "mode optimisé",
-                "💡 Conseil": isDebug ? "" : "Ajoutez ?debug=true pour les logs détaillés",
-            });
-        }, 3000);
-    }
+    // Show startup summary after full load
+    _scheduleStartupSummary(isProduction, isDebug);
 }
 
-// ── Auto-configuration au chargement (side-effect, backward compat) ──
-// En mode browser, configure automatiquement au chargement du module.
+// ── Auto-configuration au loading (side-effect, backward compat) ──
+// In mode browser, configure automaticment au loading of the module.
 if (typeof document !== "undefined") {
     if (document.readyState === "loading") {
         document.addEventListener("DOMContentLoaded", () => configureLogging());

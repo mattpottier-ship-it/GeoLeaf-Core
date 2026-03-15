@@ -6,8 +6,8 @@
  */
 
 /**
- * GeoLeaf POI Module - État Partagé
- * Variables et constantes partagées entre tous les sous-modules POI
+ * GeoLeaf POI Module - STATE Shared
+ * Variables et constantes sharedes entre tous les sous-modules POI
  */
 import { CONSTANTS } from "../constants/index.js";
 
@@ -18,62 +18,62 @@ import { CONSTANTS } from "../constants/index.js";
 const POI_MARKER_SIZE = CONSTANTS.POI_MARKER_SIZE || 16;
 const POI_MAX_ZOOM = CONSTANTS.POI_MAX_ZOOM || 18;
 
-// Icône par défaut (cercle bleu SVG en base64)
+// Icon by default (circle bleu SVG en base64)
 const defaultIconUrl =
     "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSI4IiBmaWxsPSIjNGE5MGU1IiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMiIvPjwvc3ZnPg==";
 
 // ========================================
-//   ÉTAT PARTAGÉ
+//   SHARED STATE
 // ========================================
 
 /**
- * État mutable partagé entre tous les sous-modules POI
+ * STATE mutable shared entre tous les sous-modules POI
  */
 const state: any = {
-    // LayerGroup Leaflet contenant tous les marqueurs POI
+    // LayerGroup Leaflet contenant tous the markers POI
     poiLayerGroup: null,
 
-    // Cluster group (si activé)
+    // Cluster group (si activated)
     poiClusterGroup: null,
 
-    // Tableau des données POI chargées
+    // Array des data POI loadedes
     allPois: [],
 
-    // Map pour stocker les marqueurs Leaflet par ID de POI
+    // Map pour stocker the markers Leaflet par ID de POI
     poiMarkers: new Map(),
 
-    // Configuration du module POI
+    // Configuration of the module POI
     poiConfig: {},
 
-    // Référence vers la carte Leaflet
+    // Reference vers the map Leaflet
     mapInstance: null,
 
-    // Indicateur de chargement en cours
+    // Indicator de loading en cours
     isLoading: false,
 
-    // Élément DOM pour le panneau latéral POI
+    // Element DOM pour the panel side POI
     sidePanelElement: null,
 
-    // POI actuellement affiché dans le panneau
+    // POI currentlement displayed dans the panel
     currentPoiInPanel: null,
 
-    // Overlay de fond sombre pour le side panel
+    // Overlay de fond sombre for the side panel
     sidePanelOverlay: null,
 
-    // Index de l'image courante dans la galerie
+    // Index of the image currente in the gallery
     currentGalleryIndex: 0,
 };
 
 // ========================================
-//   UTILITAIRES PARTAGÉS
+//   SHARED UTILITIES
 // ========================================
 
 /**
- * Helper interne : garantit qu'un maxZoom numérique est défini sur la carte.
- * Utilisé pour éviter les erreurs du plugin de clustering ("Map has no maxZoom specified").
+ * Helper internal : garantit qu'un maxZoom numeric est defined sur the map.
+ * Used to avoid errors from the clustering plugin ("Map has no maxZoom specified").
  *
- * @param {L.Map} map - Instance de la carte Leaflet
- * @param {number} [fallback=18] - Valeur par défaut si map.options.maxZoom n'existe pas
+ * @param {L.Map} map - Instance de the map Leaflet
+ * @param {number} [fallback=18] - Value by default si map.options.maxZoom n'existe pas
  */
 function ensureMapMaxZoom(map: any, fallback: any = 18) {
     if (!map || !map.options) return;
@@ -87,36 +87,36 @@ function ensureMapMaxZoom(map: any, fallback: any = 18) {
 // ========================================
 
 const POIShared = {
-    // Constantes (lecture seule)
+    // Constantes (read seule)
     constants: Object.freeze({
         POI_MARKER_SIZE,
         POI_MAX_ZOOM,
         defaultIconUrl,
     }),
 
-    // État mutable (accessible en lecture/écriture par sous-modules)
+    // STATE mutable (accessible en read/write par sous-modules)
     state,
 
     // Utilitaires
     ensureMapMaxZoom,
 
     // ── Getters publics (8.3.1) ────────────────────────────────────────────
-    /** @public Retourne le tableau de tous les POI chargés */
+    /** @public Returns the array de tous les POI loadeds */
     getAllPois() {
         return state.allPois;
     },
 
-    /** @public Retourne la couche Leaflet active pour les marqueurs POI */
+    /** @public Returns the layer Leaflet active pour the markers POI */
     getMarkerLayer() {
         return (state as any).markerLayer || state.poiClusterGroup || state.poiLayerGroup;
     },
 
-    /** @public Retourne l'instance de la carte Leaflet */
+    /** @public Returns the instance de the map Leaflet */
     getMapInstance() {
         return state.mapInstance;
     },
 
-    /** @public Retourne la Map des marqueurs par ID */
+    /** @public Returns the Map des markers par ID */
     getPoiMarkers() {
         return state.poiMarkers;
     },

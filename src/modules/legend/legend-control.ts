@@ -1,10 +1,10 @@
-﻿/**
+/**
  * Module Legend Control
- * Contrôle Leaflet pour afficher une légende cartographique
+ * Controle Leaflet pour display une legend cartographical
  *
- * DÉPENDANCES:
+ * DEPENDENCIES:
  * - Leaflet (L.Control, L.DomUtil, L.DomEvent)
- * - GeoLeaf.Log (optionnel)
+ * - GeoLeaf.Log (optional)
  * - GeoLeaf._LegendRenderer
  *
  * EXPOSE:
@@ -16,8 +16,12 @@ import { DOMSecurity } from "../utils/dom-security.js";
 import { POIMarkers } from "../poi/markers.js";
 import { LegendRenderer } from "./legend-renderer.js";
 import type { LegendSection, LegendFooter } from "./legend-renderer.js";
+import { getLabel } from "../i18n/i18n.js";
 
-const L = typeof globalThis !== "undefined" ? (globalThis as unknown as { L?: LeafletGlobal }).L : undefined;
+const L =
+    typeof globalThis !== "undefined"
+        ? (globalThis as unknown as { L?: LeafletGlobal }).L
+        : undefined;
 
 interface LeafletGlobal {
     Control: { extend: (props: Record<string, unknown>) => new (opts: unknown) => unknown };
@@ -35,12 +39,12 @@ let _alreadyLogged = false;
 let _spriteDetected = false;
 
 /**
- * S'assure que le sprite SVG des icônes est chargé avec vérification robuste
+ * S'assure que le sprite SVG des icons est loaded avec verification robuste
  */
 async function ensureSpriteLoaded(callback?: (loaded: boolean) => void): Promise<void> {
     if (POIMarkers && typeof POIMarkers.ensureProfileSpriteInjectedSync === "function") {
         if (!_alreadyLogged) {
-            if (Log) Log.debug("[Legend] Chargement du sprite SVG pour les icônes...");
+            Log?.debug("[Legend] Loading SVG sprite for icons...");
             _alreadyLogged = true;
         }
 
@@ -49,7 +53,7 @@ async function ensureSpriteLoaded(callback?: (loaded: boolean) => void): Promise
         const spriteEl = document.querySelector('svg[data-geoleaf-sprite="profile"]');
         if (spriteEl) {
             if (!_spriteDetected) {
-                if (Log) Log.info("[Legend] Sprite SVG détecté et prêt pour utilisation");
+                Log?.info("[Legend] SVG sprite detected and ready for use");
                 _spriteDetected = true;
             }
             if (typeof callback === "function") callback(true);
@@ -63,7 +67,7 @@ async function ensureSpriteLoaded(callback?: (loaded: boolean) => void): Promise
                     obs.disconnect();
                     clearTimeout(timerId);
                     if (!_spriteDetected) {
-                        if (Log) Log.info("[Legend] Sprite SVG détecté via MutationObserver");
+                        if (Log) Log.info("[Legend] SVG sprite detected via MutationObserver");
                         _spriteDetected = true;
                     }
                     resolve(true);
@@ -76,17 +80,14 @@ async function ensureSpriteLoaded(callback?: (loaded: boolean) => void): Promise
 
             const timerId = setTimeout(() => {
                 observer.disconnect();
-                if (Log) Log.warn("[Legend] Sprite SVG non trouvé après 2s");
+                if (Log) Log.warn("[Legend] SVG sprite not found after 2s");
                 resolve(false);
             }, 2000);
         }).then((found) => {
             if (typeof callback === "function") callback(found);
         });
     } else {
-        if (Log)
-            Log.debug(
-                "[Legend] GeoLeaf._POIMarkers.ensureProfileSpriteInjectedSync non disponible"
-            );
+        Log?.debug("[Legend] GeoLeaf._POIMarkers.ensureProfileSpriteInjectedSync non disponible");
         if (typeof callback === "function") callback(false);
     }
 }
@@ -118,143 +119,126 @@ interface LegendControlInstance {
     _renderContent(): void;
     _toggleCollapsed(): void;
     updateMultiLayerContent(legendsArray: LegendAccordionEntry[]): void;
-    updateContent(legendData: { title?: string; sections?: LegendSection[]; footer?: LegendFooter }): void;
+    updateContent(legendData: {
+        title?: string;
+        sections?: LegendSection[];
+        footer?: LegendFooter;
+    }): void;
     show(): void;
     hide(): void;
 }
 
-/**
- * Crée un contrôle Leaflet pour la légende cartographique
- */
-function createLegendControl(options: LegendControlOptions): unknown {
-    if (!L || !L.Control) {
-        if (Log) Log.error("[Legend] Leaflet L.Control non disponible");
-        return null;
+function _buildLegendHeader(
+    opts: LegendControlOptions,
+    wrapper: HTMLElement,
+    self: LegendControlInstance
+): void {
+    if (!opts.title) return;
+    const header = L!.DomUtil.create("div", "gl-map-legend__header", wrapper);
+    const titleEl = L!.DomUtil.create("h2", "gl-map-legend__title", header);
+    titleEl.textContent = opts.title ?? "";
+    if (opts.collapsible) {
+        const toggleEl = L!.DomUtil.create(
+            "button",
+            "gl-map-legend__toggle",
+            header
+        ) as HTMLButtonElement;
+        toggleEl.type = "button";
+        toggleEl.setAttribute("aria-label", getLabel("aria.legend.toggle"));
+        toggleEl.textContent = "⟱";
+        L!.DomEvent.on(toggleEl, "click", function (ev) {
+            L!.DomEvent.stopPropagation(ev);
+            self._toggleCollapsed();
+        });
     }
+}
 
-    const LegendControlClass = L.Control.extend({
-        options: {
-            position: options.position || "bottomleft",
-        },
+function _renderLegendContent(bodyEl: HTMLElement, opts: LegendControlOptions): void {
+    DOMSecurity.clearElementFast(bodyEl);
+    if (!LegendRenderer) {
+        if (Log) Log.error("[Legend] LegendRenderer not available");
+        return;
+    }
+    ensureSpriteLoaded();
+    if (Array.isArray(opts.sections))
+        opts.sections.forEach((section) => LegendRenderer.renderSection(bodyEl, section));
+    if (opts.footer) LegendRenderer.renderFooter(bodyEl, opts.footer);
+}
 
-        initialize(this: LegendControlInstance, controlOptions: { _glOptions?: LegendControlOptions }) {
+function _doLegendOnAdd(instance: LegendControlInstance, mapInstance: unknown): HTMLElement | null {
+    instance._map = mapInstance;
+    instance._container = L!.DomUtil.create("div", "gl-map-legend") as HTMLElement;
+    if (L!.DomEvent) {
+        L!.DomEvent.disableClickPropagation(instance._container);
+        L!.DomEvent.disableScrollPropagation(instance._container);
+    }
+    instance._buildStructure();
+    return instance._container;
+}
+
+function _updateMultiLayerLegendContent(
+    instance: LegendControlInstance,
+    legendsArray: LegendAccordionEntry[]
+): void {
+    if (!instance._bodyEl) return;
+    DOMSecurity.clearElementFast(instance._bodyEl);
+    if (!LegendRenderer || typeof LegendRenderer.renderAccordion !== "function") {
+        if (Log) Log.error("[Legend] Renderer.renderAccordion not available");
+        return;
+    }
+    ensureSpriteLoaded(function (spriteLoaded) {
+        if (Log) Log.debug("[Legend] Sprite loaded:", spriteLoaded, "- Rendering accordions");
+        if (Array.isArray(legendsArray))
+            legendsArray.forEach((accordionData) =>
+                LegendRenderer.renderAccordion(instance._bodyEl, accordionData)
+            );
+        if (!spriteLoaded) {
+            setTimeout(function () {
+                const spriteEl = document.querySelector('svg[data-geoleaf-sprite="profile"]');
+                if (spriteEl && Log) {
+                    Log.info("[Legend] Sprite loaded late - Re-rendering accordions");
+                    instance.updateMultiLayerContent(legendsArray);
+                }
+            }, 1000);
+        }
+    });
+}
+
+function _doLegendBuildStructure(self: LegendControlInstance): void {
+    const opts = self._glOptions;
+    const wrapper = L!.DomUtil.create("div", "gl-map-legend__wrapper", self._container!);
+    _buildLegendHeader(opts, wrapper, self);
+    self._bodyEl = L!.DomUtil.create("div", "gl-map-legend__body", wrapper);
+    if (opts.collapsed) self._container!.classList.add("gl-map-legend--collapsed");
+    self._renderContent();
+}
+
+function _buildLegendControlClass(options: LegendControlOptions) {
+    return L!.Control.extend({
+        options: { position: options.position || "bottomleft" },
+        initialize(
+            this: LegendControlInstance,
+            controlOptions: { _glOptions?: LegendControlOptions }
+        ) {
             L!.setOptions(this, controlOptions || {});
             this._glOptions = controlOptions?._glOptions ?? options;
         },
-
         onAdd(this: LegendControlInstance, mapInstance: unknown) {
-            this._map = mapInstance;
-            this._container = L!.DomUtil.create("div", "gl-map-legend") as HTMLElement;
-
-            if (L!.DomEvent) {
-                L!.DomEvent.disableClickPropagation(this._container);
-                L!.DomEvent.disableScrollPropagation(this._container);
-            }
-
-            this._buildStructure();
-            return this._container;
+            return _doLegendOnAdd(this, mapInstance);
         },
-
         onRemove(this: LegendControlInstance) {
             this._map = null;
             this._container = null;
         },
-
         _buildStructure(this: LegendControlInstance) {
-            const opts = this._glOptions;
-
-            const wrapper = L!.DomUtil.create("div", "gl-map-legend__wrapper", this._container!);
-
-            if (opts.title) {
-                const header = L!.DomUtil.create("div", "gl-map-legend__header", wrapper);
-
-                const titleEl = L!.DomUtil.create("h2", "gl-map-legend__title", header);
-                titleEl.textContent = opts.title ?? "";
-
-                if (opts.collapsible) {
-                    const toggleEl = L!.DomUtil.create("button", "gl-map-legend__toggle", header) as HTMLButtonElement;
-                    toggleEl.type = "button";
-                    toggleEl.setAttribute("aria-label", "Basculer la légende");
-                    toggleEl.textContent = "⟱";
-
-                    const self = this;
-                    L!.DomEvent.on(toggleEl, "click", function (ev) {
-                        L!.DomEvent.stopPropagation(ev);
-                        self._toggleCollapsed();
-                    });
-                }
-            }
-
-            this._bodyEl = L!.DomUtil.create("div", "gl-map-legend__body", wrapper);
-
-            if (opts.collapsed) {
-                this._container!.classList.add("gl-map-legend--collapsed");
-            }
-
-            this._renderContent();
+            _doLegendBuildStructure(this);
         },
-
         _renderContent(this: LegendControlInstance) {
-            if (!this._bodyEl) return;
-            const opts = this._glOptions;
-
-            DOMSecurity.clearElementFast(this._bodyEl);
-
-            if (!LegendRenderer) {
-                if (Log) Log.error("[Legend] LegendRenderer non disponible");
-                return;
-            }
-
-            ensureSpriteLoaded();
-
-            if (Array.isArray(opts.sections)) {
-                opts.sections.forEach((section) => {
-                    LegendRenderer.renderSection(this._bodyEl, section);
-                });
-            }
-
-            if (opts.footer) {
-                LegendRenderer.renderFooter(this._bodyEl, opts.footer);
-            }
+            if (this._bodyEl) _renderLegendContent(this._bodyEl, this._glOptions);
         },
-
         updateMultiLayerContent(this: LegendControlInstance, legendsArray: LegendAccordionEntry[]) {
-            if (!this._bodyEl) return;
-
-            DOMSecurity.clearElementFast(this._bodyEl);
-
-            if (!LegendRenderer || typeof LegendRenderer.renderAccordion !== "function") {
-                if (Log) Log.error("[Legend] Renderer.renderAccordion non disponible");
-                return;
-            }
-
-            const self = this;
-            ensureSpriteLoaded(function (spriteLoaded) {
-                if (Log)
-                    Log.debug("[Legend] Sprite chargé:", spriteLoaded, "- Rendu des accordéons");
-
-                if (Array.isArray(legendsArray)) {
-                    legendsArray.forEach((accordionData) => {
-                        LegendRenderer.renderAccordion(self._bodyEl, accordionData);
-                    });
-                }
-
-                if (!spriteLoaded) {
-                    setTimeout(function () {
-                        const spriteEl = document.querySelector(
-                            'svg[data-geoleaf-sprite="profile"]'
-                        );
-                        if (spriteEl && Log) {
-                            Log.info(
-                                "[Legend] Sprite chargé tardivement - Re-rendu des accordéons"
-                            );
-                            self.updateMultiLayerContent(legendsArray);
-                        }
-                    }, 1000);
-                }
-            });
+            _updateMultiLayerLegendContent(this, legendsArray);
         },
-
         updateContent(
             this: LegendControlInstance,
             legendData: { title?: string; sections?: LegendSection[]; footer?: LegendFooter }
@@ -264,29 +248,29 @@ function createLegendControl(options: LegendControlOptions): unknown {
             if (legendData.footer) this._glOptions.footer = legendData.footer;
             this._renderContent();
         },
-
         _toggleCollapsed(this: LegendControlInstance) {
             const isCollapsed = this._container!.classList.toggle("gl-map-legend--collapsed");
             this._glOptions.collapsed = isCollapsed;
         },
-
         show(this: LegendControlInstance) {
-            if (this._container) {
-                this._container.style.display = "block";
-            }
+            if (this._container) this._container.style.display = "block";
         },
-
         hide(this: LegendControlInstance) {
-            if (this._container) {
-                this._container.style.display = "none";
-            }
+            if (this._container) this._container.style.display = "none";
         },
     });
+}
 
-    return new LegendControlClass({
-        position: options.position,
-        _glOptions: options,
-    });
+/**
+ * Creates a controle Leaflet pour the legend cartographical
+ */
+function createLegendControl(options: LegendControlOptions): unknown {
+    if (!L || !L.Control) {
+        if (Log) Log.error("[Legend] Leaflet L.Control not available");
+        return null;
+    }
+    const LegendControlClass = _buildLegendControlClass(options);
+    return new LegendControlClass({ position: options.position, _glOptions: options });
 }
 
 const LegendControl = {

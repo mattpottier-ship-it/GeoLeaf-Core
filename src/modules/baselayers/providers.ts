@@ -5,7 +5,7 @@
  */
 
 /**
- * Définitions des couches tuiles par défaut (100 % utilisables sans clé API).
+ * Setsions des layers tiles by default (100 % utilisables sans key API).
  * @type {Object.<string, {label: string, url: string, options: object}>}
  */
 export const DEFAULT_BASELAYERS: Record<string, any> = {
@@ -38,9 +38,9 @@ export const DEFAULT_BASELAYERS: Record<string, any> = {
 };
 
 /**
- * Normalise les options Leaflet pour une définition de couche.
+ * Normalizes Leaflet options for a layer definition.
  * @param {object} definition
- * @returns {object} Options normalisées
+ * @returns {object} Normalized options
  */
 export function normalizeOptions(definition: any) {
     const opts = Object.assign({}, definition.options || {});
@@ -59,7 +59,7 @@ export function normalizeOptions(definition: any) {
 /**
  * Silence MapLibre GL v5 "Expected value to be of type number, but found null"
  * warnings emitted by the Liberty (OpenFreeMap) basemap style.
- * Applique des filtres corrigés via setFilter() — aucun rechargement de tuiles.
+ * Applies des filtres fixeds via setFilter() — aucun reloading de tiles.
  * @param {object} glMap - Instance live MapLibre Map
  */
 export function applyLibertyFilters(glMap: any) {

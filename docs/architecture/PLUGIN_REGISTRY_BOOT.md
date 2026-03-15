@@ -1,8 +1,8 @@
 # Schéma d’architecture — Core, Plugins, Registry, Boot Sequence
 
 **Version produit :** GeoLeaf Platform V1  
-**Version :** 1.1.0  
-**Date :** 2026-02-21
+**Version :** 1.1.1  
+**Date :** 2026-03-15
 
 > Convention de versioning : **Platform V1** est le label produit ; le SemVer technique des packages/releases reste en **1.1.x**. Voir [../VERSIONING_POLICY.md](../VERSIONING_POLICY.md).
 

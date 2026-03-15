@@ -9,13 +9,13 @@ import { Log } from "../log/index.js";
 let _theme = "light";
 
 /**
- * Applique une classe de thème sur document.body.
+ * Applies ae class de theme sur document.body.
  * @param {string} theme - "light" | "dark"
  */
 function _applyThemeToBody(theme: any) {
     const body = document.body;
     if (!body) {
-        Log.warn("[GeoLeaf.Core] Impossible d'appliquer le thème : document.body introuvable.");
+        Log.warn("[GeoLeaf.Core] document.body not found");
         return;
     }
     body.classList.remove("gl-theme-light", "gl-theme-dark");
@@ -23,12 +23,12 @@ function _applyThemeToBody(theme: any) {
 }
 
 /**
- * Définit et applique le thème actif.
+ * Sets et applique the theme active.
  * @param {string} theme - "light" | "dark"
  */
 export function setTheme(theme: any) {
     if (!theme || (theme !== "light" && theme !== "dark")) {
-        Log.warn("[GeoLeaf.Core] setTheme() : thème invalide →", theme);
+        Log.warn("[GeoLeaf.Core] setTheme()→", theme);
         return;
     }
     _theme = theme;
@@ -36,7 +36,7 @@ export function setTheme(theme: any) {
 }
 
 /**
- * Retourne le thème actif.
+ * Returns the theme active.
  * @returns {string}
  */
 export function getTheme() {

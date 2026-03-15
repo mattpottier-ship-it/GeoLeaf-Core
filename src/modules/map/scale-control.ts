@@ -1,6 +1,6 @@
 /**
  * GeoLeaf Scale Control
- * Gère l'affichage de l'échelle graphique, numérique et du niveau de zoom
+ * Manages the display of graphical scale, numeric scale and zoom level
  *
  * @module map/scale-control
  */
@@ -15,7 +15,7 @@ const _gl: any =
     typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : {};
 
 /**
- * Contrôle d'échelle personnalisé
+ * Custom scale control
  */
 const ScaleControl: any = {
     _map: null as any,
@@ -30,36 +30,36 @@ const ScaleControl: any = {
     _eventHandlers: {} as Record<string, any>,
 
     /**
-     * Initialise le contrôle d'échelle
-     * @param {L.Map} map - Instance de la carte Leaflet
-     * @param {Object} config - Configuration depuis scaleConfig
+     * Initializes the scale control
+     * @param {L.Map} map - Leaflet map instance
+     * @param {Object} config - Configuration from scaleConfig
      */
     init(map: any, config: any) {
         if (!map) {
-            Log.error("[GeoLeaf.ScaleControl] Carte non fournie");
+            Log.error("[GeoLeaf.ScaleControl] Map not provided");
             return;
         }
 
         this._map = map;
         this._config = config || {};
 
-        // Créer un conteneur unique pour tout
+        // Create a single container for everything
         this._createMainContainer();
 
-        Log.info("[GeoLeaf.ScaleControl] Contrôle d'échelle initialisé");
+        Log.info("[GeoLeaf.ScaleControl] Scale control initialized");
     },
 
     /**
-     * Crée le conteneur principal avec échelle graphique et bloc personnalisé
+     * Creates the main container with graphical scale and custom block
      * @private
      */
     _createMainContainer() {
         const position = this._config.position || "bottomleft";
 
-        // Conteneur principal - disposition horizontale
+        // Conteneur main - disposition horizontale
         this._mainWrapper = L.DomUtil.create("div", "gl-scale-main-wrapper");
 
-        // 1. Échelle graphique
+        // 1. Graphical scale
         if (this._config.scaleGraphic !== false) {
             const graphicWrapper = L.DomUtil.create(
                 "div",
@@ -69,12 +69,12 @@ const ScaleControl: any = {
             this._addGraphicScaleToContainer(graphicWrapper);
         }
 
-        // 2. Bloc personnalisé (échelle numérique + zoom) sur la même ligne
+        // 2. Custom block (numeric scale + zoom) on the same line
         if (this._config.scaleNumeric || this._config.scaleNivel) {
             this._createCustomScaleBlock(this._mainWrapper);
         }
 
-        // Ajouter le conteneur principal à la carte
+        // Add main container to the map
         const CustomControl = L.Control.extend({
             options: {
                 position: position,
@@ -88,12 +88,12 @@ const ScaleControl: any = {
     },
 
     /**
-     * Ajoute l'échelle graphique Leaflet dans un conteneur
-     * @param {HTMLElement} container - Conteneur cible
+     * Adds the Leaflet graphical scale into a container
+     * @param {HTMLElement} container - Target container
      * @private
      */
     _addGraphicScaleToContainer(container: any) {
-        // Créer l'échelle graphique manuellement (pas via L.control.scale)
+        // Create graphical scale manually (not via L.control.scale)
         const scaleDiv = L.DomUtil.create(
             "div",
             "leaflet-control-scale leaflet-control",
@@ -103,7 +103,7 @@ const ScaleControl: any = {
         const scaleLineMetric = L.DomUtil.create("div", "leaflet-control-scale-line", scaleDiv);
         this._scaleLineMetric = scaleLineMetric;
 
-        // Fonction de mise à jour de l'échelle graphique
+        // Update function for the graphical scale
         const updateScale = () => {
             const y = this._map.getSize().y / 2;
             const maxMeters = this._map.distance(
@@ -117,13 +117,13 @@ const ScaleControl: any = {
         this._map.on("zoomend moveend", updateScale);
         updateScale();
 
-        Log.info("[GeoLeaf.ScaleControl] Échelle graphique ajoutée");
+        Log.info("[GeoLeaf.ScaleControl] Graphical scale added");
     },
 
     /**
-     * Met à jour la ligne d'échelle graphique
-     * @param {HTMLElement} scaleLine - Élément de la ligne d'échelle
-     * @param {number} maxMeters - Distance maximale en mètres
+     * Updates the graphical scale line
+     * @param {HTMLElement} scaleLine - Scale line element
+     * @param {number} maxMeters - Maximum distance in meters
      * @private
      */
     _updateScaleLine(scaleLine: any, maxMeters: any) {
@@ -145,9 +145,9 @@ const ScaleControl: any = {
     },
 
     /**
-     * Arrondit un nombre à une valeur "propre" (1, 2, 5, 10, 20, 50, etc.)
-     * @param {number} num - Nombre à arrondir
-     * @returns {number} Nombre arrondi
+     * Rounds a number to a "clean" value (1, 2, 5, 10, 20, 50, etc.)
+     * @param {number} num - Number to round
+     * @returns {number} Rounded number
      * @private
      */
     _getRoundNum(num: any) {
@@ -160,15 +160,15 @@ const ScaleControl: any = {
     },
 
     /**
-     * Crée le bloc personnalisé (échelle numérique + niveau de zoom)
-     * @param {HTMLElement} parentContainer - Conteneur parent
+     * Creates the custom block (numeric scale + zoom level)
+     * @param {HTMLElement} parentContainer - Parent container
      * @private
      */
     _createCustomScaleBlock(parentContainer: any) {
-        // Créer le conteneur - disposition horizontale
+        // Create container — horizontal layout
         this._container = L.DomUtil.create("div", "gl-scale-control", parentContainer);
 
-        // Échelle numérique
+        // Numeric scale
         if (this._config.scaleNumeric) {
             if (this._config.scaleNumericEditable) {
                 this._createEditableScale();
@@ -177,22 +177,22 @@ const ScaleControl: any = {
             }
         }
 
-        // Niveau de zoom
+        // Zoom level
         if (this._config.scaleNivel) {
             this._createZoomLevel();
         }
 
-        // Événements de mise à jour
+        // Update events
         const updateHandler = () => this._updateScale();
         this._eventHandlers.numericScaleUpdate = updateHandler;
         this._map.on("zoomend moveend", updateHandler);
-        this._updateScale(); // Mise à jour initiale
+        this._updateScale(); // Initial update
 
-        Log.info("[GeoLeaf.ScaleControl] Bloc personnalisé ajouté");
+        Log.info("[GeoLeaf.ScaleControl] Custom block added");
     },
 
     /**
-     * Crée l'échelle numérique en lecture seule
+     * Creates read-only numeric scale
      * @private
      */
     _createReadOnlyScale() {
@@ -200,37 +200,37 @@ const ScaleControl: any = {
     },
 
     /**
-     * Crée l'échelle numérique éditable avec input
+     * Creates editable numeric scale with input
      * @private
      */
     _createEditableScale() {
-        // Créer un conteneur pour l'échelle éditable
+        // Create container for editable scale
         const wrapper = L.DomUtil.create("div", "gl-scale-numeric-editable", this._container);
 
-        // Créer le préfixe "1:" (toujours visible)
+        // Create "1:" prefix (always visible)
         this._scalePrefix = L.DomUtil.create("span", "gl-scale-prefix", wrapper);
         this._scalePrefix.textContent = "1:";
 
-        // Créer le span affiché initialement (souligné et cliquable) - contient uniquement le dénominateur
+        // Create the initially displayed span (underlined and clickkable) - contains only the denominator
         this._numericElement = L.DomUtil.create("span", "gl-scale-numeric-clickable", wrapper);
         this._numericElement.textContent = "0";
 
-        // Créer l'input (caché initialement) - contient uniquement le dénominateur
+        // Create the input (hidden initially) - contains only the denominator
         this._inputElement = L.DomUtil.create("input", "gl-scale-numeric-input", wrapper);
         this._inputElement.type = "text";
         this._inputElement.placeholder = "250000";
         this._inputElement.style.display = "none";
 
-        // Empêcher les interactions de la carte lors de l'édition
+        // Prevent map interactions during editing
         L.DomEvent.disableClickPropagation(wrapper);
         L.DomEvent.disableScrollPropagation(wrapper);
 
-        // Clic sur le span : passer en mode édition
+        // Span clickk: switch to edit mode
         this._numericElement.addEventListener("click", () => {
             this._switchToEditMode();
         });
 
-        // Validation avec Enter
+        // Validate with Enter
         this._inputElement.addEventListener("keypress", (e: any) => {
             if (e.key === "Enter") {
                 this._onScaleInputChange();
@@ -238,7 +238,7 @@ const ScaleControl: any = {
             }
         });
 
-        // Validation en cliquant à l'extérieur (blur)
+        // Validation en cliquant to the outer (blur)
         this._inputElement.addEventListener("blur", () => {
             this._onScaleInputChange();
             this._switchToDisplayMode();
@@ -246,7 +246,7 @@ const ScaleControl: any = {
     },
 
     /**
-     * Crée l'affichage du niveau de zoom
+     * Creates zoom level display
      * @private
      */
     _createZoomLevel() {
@@ -254,74 +254,74 @@ const ScaleControl: any = {
     },
 
     /**
-     * Bascule en mode édition (affiche l'input)
+     * Switches to edit mode (shows input)
      * @private
      */
     _switchToEditMode() {
         if (!this._numericElement || !this._inputElement) return;
 
-        // Copier la valeur actuelle dans l'input
+        // Copy current value into the input
         this._inputElement.value = this._numericElement.textContent;
 
-        // Cacher le span, afficher l'input
+        // Hide the span, show the input
         this._numericElement.style.display = "none";
         this._inputElement.style.display = "inline-block";
 
-        // Focus et sélection du texte
+        // Focus and select text
         this._inputElement.focus();
         this._inputElement.select();
     },
 
     /**
-     * Bascule en mode affichage (affiche le span)
+     * Switches to display mode (shows span)
      * @private
      */
     _switchToDisplayMode() {
         if (!this._numericElement || !this._inputElement) return;
 
-        // Cacher l'input, afficher le span
+        // Hide the input, show the span
         this._inputElement.style.display = "none";
         this._numericElement.style.display = "inline";
     },
 
     /**
-     * Met à jour l'affichage de l'échelle et du zoom
+     * Updates the scale and zoom display
      * @private
      */
     _updateScale() {
         const zoom = this._map.getZoom();
         const scale = this._calculateScale(zoom);
 
-        // Mettre à jour l'échelle numérique
+        // Update numeric scale
         if (this._numericElement) {
             if (this._config.scaleNumericEditable) {
-                // Mettre à jour uniquement le dénominateur (sans '1:')
+                // Update only the denominator (without '1:')
                 if (this._inputElement.style.display === "none") {
                     this._numericElement.textContent = this._formatNumber(scale);
                 }
             } else {
-                // Mode non éditable : afficher "1:" + dénominateur
+                // Non-editable mode: display "1:" + denominator
                 this._numericElement.textContent = `1:${this._formatNumber(scale)}`;
             }
         }
 
-        // Mettre à jour le niveau de zoom
+        // Update zoom level
         if (this._zoomElement) {
             this._zoomElement.textContent = `Zoom: ${Number(zoom).toFixed(2)}`;
         }
     },
 
     /**
-     * Calcule l'échelle approximative en fonction du niveau de zoom
-     * @param {number} zoom - Niveau de zoom Leaflet
-     * @param {number} [lat] - Latitude optionnelle (utilise le centre de la carte si non fournie)
-     * @returns {number} Échelle (ex: 250000 pour 1:250000)
+     * Calculates approximate scale based on zoom level
+     * @param {number} zoom - Leaflet zoom level
+     * @param {number} [lat] - Optional latitude (uses map center if not provided)
+     * @returns {number} Scale (e.g. 250000 for 1:250000)
      * @private
      */
     _calculateScale(zoom: any, lat: any) {
-        // Utiliser la latitude fournie ou celle du centre de la carte
+        // Use provided latitude or map center latitude
         const latitude = lat !== undefined ? lat : this._map.getCenter().lat;
-        // Formule approximative basée sur la taille des tuiles Web Mercator
+        // Approximate formula based on Web Mercator tile size
         const metersPerPixel =
             (156543.03392 * Math.cos((latitude * Math.PI) / 180)) / Math.pow(2, zoom);
         const scale = (metersPerPixel * 96) / 0.0254; // 96 DPI
@@ -329,9 +329,9 @@ const ScaleControl: any = {
     },
 
     /**
-     * Formate un nombre avec des espaces comme séparateurs de milliers
-     * @param {number} num - Nombre à formater
-     * @returns {string} Nombre formaté
+     * Formats a number with spaces as thousands separators
+     * @param {number} num - Number to format
+     * @returns {string} Formatted number
      * @private
      */
     _formatNumber(num: any) {
@@ -340,14 +340,14 @@ const ScaleControl: any = {
     },
 
     /**
-     * Gère le changement manuel de l'échelle
+     * Handles manual scale change
      * @private
      */
     _onScaleInputChange() {
         if (!this._inputElement) return;
 
         const input = this._inputElement.value.trim();
-        // Parser uniquement le dénominateur (nombre avec espaces optionnels)
+        // Parse only the denominator (number with optional spaces)
         const cleanedInput = input.replace(/\s/g, "");
         const targetScale = parseInt(cleanedInput, 10);
 
@@ -359,18 +359,18 @@ const ScaleControl: any = {
                 zoomSnap: 0,
             });
             Log.info(
-                `[GeoLeaf.ScaleControl] Zoom ajusté à ${targetZoom} pour échelle 1:${targetScale}`
+                `[GeoLeaf.ScaleControl] Zoom adjusted to ${targetZoom} for scale 1:${targetScale}`
             );
         } else {
-            Log.warn("[GeoLeaf.ScaleControl] Format d'échelle invalide:", input);
-            this._updateScale(); // Réinitialiser la valeur
+            Log.warn("[GeoLeaf.ScaleControl] Invalid scale format:", input);
+            this._updateScale(); // Reset value
         }
     },
 
     /**
-     * Calcule le niveau de zoom pour atteindre une échelle donnée
-     * @param {number} targetScale - Échelle cible (ex: 250000)
-     * @returns {number} Niveau de zoom (peut être décimal pour plus de précision)
+     * Calculates the zoom level to reach a given scale
+     * @param {number} targetScale - Target scale (e.g. 250000)
+     * @returns {number} Zoom level (may be fractional for precision)
      * @private
      */
     _calculateZoomFromScale(targetScale: any) {
@@ -378,33 +378,33 @@ const ScaleControl: any = {
         const metersPerPixel = (targetScale * 0.0254) / 96;
         let zoom = Math.log2((156543.03392 * Math.cos((lat * Math.PI) / 180)) / metersPerPixel);
 
-        // Affiner le zoom par itération pour obtenir l'échelle exacte
-        // Utiliser une méthode de convergence précise
+        // Refine zoom by iteration to get the exact scale
+        // Use a precise convergence method
         for (let i = 0; i < 20; i++) {
-            const currentScale = this._calculateScale(zoom, lat); // Passer lat pour éviter recalcul
+            const currentScale = this._calculateScale(zoom, lat); // Passer lat pour avoid recalcul
             const diff = targetScale - currentScale;
 
-            // Si l'erreur est inférieure à 1 (pratiquement identique), on arrête
+            // Stop if error is less than 1 (essentially identical)
             if (Math.abs(diff) < 1) {
                 break;
             }
 
-            // Ajuster le zoom proportionnellement à l'erreur
-            // Plus l'échelle est grande, plus on doit dézoomer (zoom plus petit)
+            // Adjust zoom proportionally to the error
+            // The larger the scale, the more we need to zoom out
             const adjustment = Math.log2(targetScale / currentScale);
-            zoom -= adjustment * 0.95; // Facteur d'amortissement pour éviter les oscillations
+            zoom -= adjustment * 0.95; // Damping factor to avoid oscillations
         }
 
-        // Arrondir à 4 décimales pour une précision maximale
+        // Round to 4 decimal places for maximum precision
         const preciseZoom = Math.round(zoom * 10000) / 10000;
         return Math.max(0, Math.min(22, preciseZoom));
     },
 
     /**
-     * Détruit le contrôle et nettoie les ressources
+     * Destroys the control and cleans up resources
      */
     destroy() {
-        // Retirer les event listeners de la carte
+        // Remove event listners from the map
         if (this._map && this._eventHandlers) {
             if (this._eventHandlers.graphicScaleUpdate) {
                 this._map.off("zoomend moveend", this._eventHandlers.graphicScaleUpdate);
@@ -414,12 +414,12 @@ const ScaleControl: any = {
             }
         }
 
-        // Supprimer le conteneur principal du DOM
+        // Remove main container from the DOM
         if (this._mainWrapper && this._mainWrapper.parentNode) {
             this._mainWrapper.parentNode.removeChild(this._mainWrapper);
         }
 
-        // Nettoyer toutes les références
+        // Clean up all references
         this._map = null;
         this._config = null;
         this._container = null;
@@ -431,18 +431,18 @@ const ScaleControl: any = {
         this._mainWrapper = null;
         this._eventHandlers = {};
 
-        Log.info("[GeoLeaf.ScaleControl] Contrôle détruit et ressources nettoyées");
+        Log.info("[GeoLeaf.ScaleControl] Control destroyed and resources cleaned up");
     },
 };
 
-// Exposer le module (removed: migrated to globals.js in B3)
+// Exposesr the module (removed: migrated to globals.js in B3)
 
 /**
- * Initialise automatiquement le contrôle d'échelle si la configuration est présente
+ * Initialise automaticment the control d'scale si la configuration est presents
  */
 function initScaleControl(map: any) {
     if (!map) {
-        Log.warn("[GeoLeaf.ScaleControl] Impossible d'initialiser : carte non fournie");
+        Log.warn("[GeoLeaf.ScaleControl] Cannot initialize: map not provided");
         return;
     }
 

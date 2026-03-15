@@ -1,4 +1,4 @@
-﻿/**
+/**
  * GeoLeaf Table – Sort Utilities
  * Pure sort helpers extracted from geoleaf.table.js (Phase 8.2.2)
  *
@@ -11,7 +11,7 @@ export interface SortState {
 }
 
 /**
- * Trie le tableau `cachedData` en place selon `sortState`.
+ * Trie the table `cachedData` en place selon `sortState`.
  */
 export function sortInPlace(
     cachedData: unknown[],
@@ -42,7 +42,7 @@ export function sortInPlace(
 }
 
 /**
- * Calcule le prochain état de tri d'après un clic sur une colonne.
+ * Calculates the prochain state de tri d'after un click sur une column.
  * Cycle : (aucun) → asc → desc → (aucun).
  */
 export function nextSortState(sortState: SortState, field: string): SortState {

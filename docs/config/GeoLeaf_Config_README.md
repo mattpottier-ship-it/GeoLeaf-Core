@@ -1,7 +1,7 @@
-# GeoLeaf.Config – Documentation du module Config (Chargement JSON)
+﻿# GeoLeaf.Config – Documentation du module Config (Chargement JSON)
 
 Product Version: GeoLeaf Platform V1  
-**Version**: 1.1.0  
+**Version**: 1.1.1  
 **Fichiers (monorepo)** : `src/modules/config/` (sous-modules config, validation, loaders, accessors)  
 **Dernière mise à jour**: 14 février 2026
 

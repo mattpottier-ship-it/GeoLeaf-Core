@@ -1,4 +1,4 @@
-﻿/*!
+/*!
  * GeoLeaf Core
  * © 2026 Mattieu Pottier
  * Released under the MIT License
@@ -7,11 +7,11 @@
 
 /**
  * @module constants
- * @description Constantes globales GeoLeaf — valeurs numériques centralisées.
+ * @description Constantes globales GeoLeaf — values numerics centralizedes.
  */
 
 export const CONSTANTS = Object.freeze({
-    // Carte — vue neutre, le fitBounds positionne après chargement des couches
+    // Carte — vue neutre, le fitBounds positionne after loading des layers
     DEFAULT_ZOOM: 3,
     DEFAULT_CENTER: [0, 0] as [number, number],
     MAX_ZOOM_ON_FIT: 15,
@@ -32,5 +32,5 @@ export const CONSTANTS = Object.freeze({
     GEOJSON_POINT_RADIUS: 6,
 
     // UI
-    FULLSCREEN_TRANSITION_MS: 10
+    FULLSCREEN_TRANSITION_MS: 10,
 });

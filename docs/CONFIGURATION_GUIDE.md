@@ -1,8 +1,8 @@
 # GeoLeaf Configuration Guide
 
 **Product Version:** GeoLeaf Platform V1  
-**Version:** 1.1.0  
-**Last Updated:** January 2026  
+**Version:** 1.1.1  
+**Last Updated:** March 2026  
 **Level:** Intermediate to Advanced
 
 > Versioning convention: **Platform V1** is the product label; technical package/release SemVer remains **1.1.x**. See [VERSIONING_POLICY.md](VERSIONING_POLICY.md).
@@ -23,6 +23,7 @@ This comprehensive guide documents all JSON configuration files used by GeoLeaf 
 8. [Style Files - Layer Styling](#8-style-files---layer-styling)
 9. [POI Configuration](#9-poi-configuration)
 10. [Route Configuration](#10-route-configuration)
+11. [POI Add Feature — showAddPoi vs poiAddConfig.enabled](#11-poi-add-feature--showaddpoi-vs-poiaddconfigenabled)
 
 ---
 
@@ -1481,6 +1482,76 @@ Legend configuration for this style.
 | `latlng`       | [number, number] | ✅       | Coordinates                                |
 | `title`        | string           | ✅       | Waypoint name                              |
 | `stopDuration` | number           | ❌       | Recommended stop duration in seconds       |
+
+---
+
+## 11. POI Add Feature — showAddPoi vs poiAddConfig.enabled
+
+The POI-add feature is governed by **two complementary parameters** that operate at different levels.
+
+### Difference in Usage
+
+| Parameter              | Location in profile.json | Role                                            |
+| ---------------------- | ------------------------ | ----------------------------------------------- |
+| `ui.showAddPoi`        | `ui` section             | Controls **button visibility** in the toolbar   |
+| `poiAddConfig.enabled` | `poiAddConfig` section   | Enables/disables the **AddPOI plugin** behavior |
+
+### Priority Order
+
+`ui.showAddPoi` is evaluated **first**. If `false`, the AddPOI control is not created and `poiAddConfig` is never read.
+
+```javascript
+// control-poi-add.ts
+if (!config?.ui?.showAddPoi) return; // primary gate — control not created
+
+// poiAddConfig is only read after the gate passes
+const defaultPosition = config?.poiAddConfig?.defaultPosition || "placement-mode";
+```
+
+### JSON Examples
+
+**Show the add-POI button (minimum config):**
+
+```json
+{
+    "ui": {
+        "showAddPoi": true
+    }
+}
+```
+
+**Full configuration with plugin behavior:**
+
+```json
+{
+    "ui": {
+        "showAddPoi": true
+    },
+    "poiAddConfig": {
+        "enabled": true,
+        "defaultPosition": "placement-mode"
+    }
+}
+```
+
+**Disable the button without changing plugin config:**
+
+```json
+{
+    "ui": {
+        "showAddPoi": false
+    }
+}
+```
+
+### Recommendation
+
+- **To show or hide the button**: use `ui.showAddPoi` only.
+- **To configure behavior**: use `poiAddConfig` (`defaultPosition`, `enabled`).
+- If `ui.showAddPoi` is `false`, `poiAddConfig.enabled` has **no effect** — the control is never built.
+- The AddPOI plugin must be loaded for the feature to be operational. If `showAddPoi: true` but the plugin is not loaded, a warning is emitted: `⚠️ Config has showAddPoi=true but AddPOI plugin is not loaded`.
+
+> **See also:** [Identifiant utilisateur pour l'édition POI](#identifiant-utilisateur-pour-lédition-poi)
 
 ---
 

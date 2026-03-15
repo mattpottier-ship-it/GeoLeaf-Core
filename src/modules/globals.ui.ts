@@ -1,7 +1,24 @@
 /**
- * globals.ui.js � Bridge UMD/ESM : B6 + B7 + B9 � labels, legend, layer-manager, themes, ui
+ * @module globals.ui
  *
- * @see globals.js (orchestrateur)
+ * @description
+ * UMD/ESM bridge — B6 + B7 + B9 — Labels, Legend, Layer Manager, Themes, and UI.
+ *
+ * This runtime initialization module registers all UI-related services on
+ * `globalThis.GeoLeaf`. It is imported as a side-effect by `globals.ts`.
+ *
+ * Registers:
+ *   - **B6** — Labels (`LabelButtonManager`, `LabelRenderer`, `Labels`),
+ *     Legend (`LegendControl`, `LegendGenerator`, `LegendRenderer`),
+ *     Layer Manager (`BasemapSelector`, `CacheSection`, `LMControl`, `LMRenderer`,
+ *     `LMShared`, `StyleSelector`)
+ *   - **B7** — Themes (`ThemeCache`, `ThemeLoader`, `ThemeSelector`, `ThemeApplier*`)
+ *   - **B9** — UI components (`Branding`, `CoordinatesDisplay`, `NotificationSystem`,
+ *     `PanelBuilder`, `ScaleControl`), content builder sub-modules, filter panel
+ *     sub-modules, mobile/desktop toolbar
+ *
+ * @see globals for the orchestrator and import order
+ * @see globals.ui-lite for the Lite variant (Labels excluded)
  */
 
 // B6 : labels, legend, layer-manager
@@ -25,7 +42,7 @@ import { ThemeApplierCore } from "./themes/theme-applier/core.js";
 import { ThemeApplierDeferred } from "./themes/theme-applier/deferred.js";
 import { ThemeApplierUISync } from "./themes/theme-applier/ui-sync.js";
 import { ThemeApplierVisibility } from "./themes/theme-applier/visibility.js";
-// B9 : ui � fichiers directs
+// B9 : ui — files directs
 import { Branding } from "./ui/branding.js";
 import { _UIComponents } from "./ui/components.js";
 import { _UIControls } from "./ui/controls.js";
@@ -99,8 +116,8 @@ _g.GeoLeaf.UI._buildFilterControl = _buildFilterControl;
 _g.GeoLeaf._UIFilterStateManager = _UIFilterStateManager;
 _g.GeoLeaf._UINotifications = _UINotifications;
 _g.GeoLeaf.NotificationSystem = NotificationSystem;
-// Alias UI.notify ? _UINotifications (utilis� par boot-info.js et les int�grateurs)
-// GeoLeaf.UI est d�j� initialis� plus haut, on compl�te sans �craser
+// Alias UI.notify ? _UINotifications (utilisé par boot-info.js et les intégrateurs)
+// GeoLeaf.UI est déjà initialisé plus haut, on complète sans écraser
 if (!_g.GeoLeaf.UI) _g.GeoLeaf.UI = {};
 _g.GeoLeaf.UI.notify = {
     info: (msg: any, opts: any) => _UINotifications?.info?.(msg, opts),
@@ -114,7 +131,7 @@ _g.GeoLeaf.UI.ScaleControl = UIScaleControl;
 _g.GeoLeaf._UITheme = _UITheme;
 // Wire theme methods directly onto UI (geoleaf.ui.js body runs at import time,
 // before globals.js body assigns _g.GeoLeaf._UITheme, so its conditional block
-// was skipped � we re-apply here to ensure applyTheme/setTheme exist at boot)
+// was skipped — we re-apply here to ensure applyTheme/setTheme exist at boot)
 _g.GeoLeaf.UI.applyTheme = _UITheme.applyTheme;
 _g.GeoLeaf.UI.setTheme = _UITheme.applyTheme;
 _g.GeoLeaf.UI.toggleTheme = _UITheme.toggleTheme;

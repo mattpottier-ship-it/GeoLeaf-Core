@@ -206,8 +206,8 @@
 /* Mode plein écran : seuls le bouton sortie et la géoloc restent visibles     */
 /* ========================================================================== */
 
-/* Masquer tous les boutons sauf fullscreen-exit et geoloc */
-.gl-map-toolbar--fullscreen .gl-map-toolbar__btn:not([data-gl-toolbar-action="fullscreen"]):not([data-gl-sheet="geoloc"]) {
+/* Masquer tous les boutons sauf fullscreen-exit, geoloc et poi-add */
+.gl-map-toolbar--fullscreen .gl-map-toolbar__btn:not([data-gl-toolbar-action="fullscreen"]):not([data-gl-sheet="geoloc"]):not([data-gl-toolbar-action="poi-add"]):not([data-gl-sheet="poi-add"]) {
     display: none !important;
 }
 

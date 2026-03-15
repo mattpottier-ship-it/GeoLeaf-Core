@@ -1,6 +1,6 @@
-﻿/**
+/**
  * GeoLeaf Theme Cache
- * Cache léger pour les couches GeoJSON utilisées par les thèmes.
+ * Cache lightweight for thes GeoJSON layers used par the themes.
  */
 "use strict";
 
@@ -17,6 +17,11 @@ function _getIndexedDB() {
 
 const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 jours
 
+function _isCachedEntryValid(cached: any, profileId: any, maxAge: number): boolean {
+    if (profileId && cached.profileId && cached.profileId !== profileId) return false;
+    return Date.now() - cached.timestamp <= maxAge;
+}
+
 const ThemeCache = {
     _config: {
         enabled: true,
@@ -24,7 +29,7 @@ const ThemeCache = {
     },
 
     /**
-     * Récupère une couche depuis le cache si elle est encore valide.
+     * Retrieves a layer from the cache si elle est encore valide.
      * @param {string} layerId
      * @param {string} [profileId]
      * @returns {Promise<Object|null>}
@@ -45,28 +50,21 @@ const ThemeCache = {
                 return null;
             }
 
-            if (profileId && cached.profileId && cached.profileId !== profileId) {
-                if (Log) Log.debug(`[ThemeCache] Cache mismatch profil pour ${layerId}`);
+            if (!_isCachedEntryValid(cached, profileId, this._config.maxAge)) {
+                Log?.debug(`[ThemeCache] Cache invalide pour ${layerId}`);
                 return null;
             }
 
-            const age = Date.now() - cached.timestamp;
-            if (age > this._config.maxAge) {
-                if (Log) Log.debug(`[ThemeCache] Cache expiré pour ${layerId}`);
-                return null;
-            }
-
-            if (Log) Log.info(`[ThemeCache] Cache hit pour ${layerId}`);
+            Log?.info(`[ThemeCache] Cache hit pour ${layerId}`);
             return cached.data;
         } catch (err: any) {
-            if (Log)
-                Log.warn(`[ThemeCache] Lecture cache impossible pour ${layerId}: ${err.message}`);
+            Log?.warn(`[ThemeCache] Lecture cache impossible pour ${layerId}: ${err.message}`);
             return null;
         }
     },
 
     /**
-     * Stocke une couche dans le cache.
+     * Stocke a layer in the cache.
      * @param {string} layerId
      * @param {string} [profileId]
      * @param {Object} data
@@ -87,12 +85,12 @@ const ThemeCache = {
             await StorageDB.cacheLayer(layerId, data, profileId || null, metadata);
             if (Log) Log.debug(`[ThemeCache] Couche mise en cache: ${layerId}`);
         } catch (err: any) {
-            if (Log) Log.warn(`[ThemeCache] Échec mise en cache ${layerId}: ${err.message}`);
+            if (Log) Log.warn(`[ThemeCache] Cache write failed ${layerId}: ${err.message}`);
         }
     },
 
     /**
-     * Invalide une couche en cache.
+     * Invalid a layer en cache.
      * @param {string} layerId
      * @returns {Promise<void>}
      */
@@ -104,7 +102,7 @@ const ThemeCache = {
 
         try {
             await StorageDB.removeLayer(layerId);
-            if (Log) Log.info(`[ThemeCache] Cache invalidé pour ${layerId}`);
+            if (Log) Log.info(`[ThemeCache] Cache invalidated for ${layerId}`);
         } catch (err: any) {
             if (Log) Log.warn(`[ThemeCache] Impossible d'invalider ${layerId}: ${err.message}`);
         }

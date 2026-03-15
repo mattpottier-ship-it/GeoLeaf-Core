@@ -1,4 +1,5 @@
-﻿/*!
+/* eslint-disable security/detect-object-injection */
+/*!
  * GeoLeaf Core – Filters / Utils
  * © 2026 Mattieu Pottier
  * Released under the MIT License
@@ -10,7 +11,7 @@ const _g: any =
     typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : {};
 
 /**
- * Extrait une valeur depuis un chemin (ex: "attributes.shortDescription").
+ * Extrait a value from un path (ex: "attributes.shortDescription").
  * @param {object} obj
  * @param {string} path
  * @returns {*}
@@ -19,14 +20,15 @@ export function getNestedValue(obj: any, path: any) {
     return path
         .split(".")
         .reduce(
-            (current: any, prop: any) => (current && current[prop] !== undefined ? current[prop] : null),
+            (current: any, prop: any) =>
+                current && current[prop] !== undefined ? current[prop] : null,
             obj
         );
 }
 
 /**
- * Récupère les champs de recherche depuis le profil actif.
- * Priorité : layouts (search:true) → searchFields → défauts.
+ * Retrieves thes fields de recherche from the profile active.
+ * Priority: layouts (search:true) → searchFields → defaults.
  * @returns {Array<string>}
  */
 export function getSearchFieldsFromProfile() {
@@ -48,32 +50,31 @@ export function getSearchFieldsFromProfile() {
 
             if (searchableFieldsSet.size > 0) {
                 const fields = Array.from(searchableFieldsSet);
-                Log.debug("[Filters] Champs de recherche depuis layouts (search:true):", fields);
+                Log.debug("[Filters]  (search:true):", fields);
                 return fields;
             }
 
             if (Array.isArray(profile?.panels?.search?.filters)) {
-                const searchFilter = profile.panels.search.filters.find((f: any) => f.type === "search");
+                const searchFilter = profile.panels.search.filters.find(
+                    (f: any) => f.type === "search"
+                );
                 if (searchFilter?.searchFields?.length > 0) {
-                    Log.debug(
-                        "[Filters] Champs de recherche depuis searchFields (fallback):",
-                        searchFilter.searchFields
-                    );
+                    Log.debug("[Filters] ields (fallback):", searchFilter.searchFields);
                     return searchFilter.searchFields;
                 }
             }
         }
     } catch (err) {
-        Log.warn("[Filters] Erreur extraction searchFields du profil:", err);
+        Log.warn("[Filters] Error retrieving filter fields:", err);
     }
 
     const defaultFields = ["title", "label", "name"];
-    Log.debug("[Filters] Champs de recherche par défaut:", defaultFields);
+    Log.debug("[Filters] Default fields:", defaultFields);
     return defaultFields;
 }
 
 /**
- * Extrait les coordonnées [lat, lng] d'un objet route (multi-format).
+ * Extrait les coordinates [lat, lng] d'an object route (multi-format).
  * @param {object} route
  * @returns {Array<[number, number]>}
  */

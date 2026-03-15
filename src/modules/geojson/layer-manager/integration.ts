@@ -16,8 +16,73 @@ const getState = () => GeoJSONShared.state;
 
 const LayerManager: any = {};
 
+function _resolveLegendType(type: string): string {
+    if (type === "poi") return "circle";
+    if (type === "route") return "line";
+    return "fill";
+}
+
+function _resolveLayerColor(layerData: any): string {
+    const defaultColor = "#3388ff";
+    if (layerData.config.style) {
+        return layerData.config.style.fillColor || layerData.config.style.color || defaultColor;
+    }
+    if (layerData.config.pointStyle) return layerData.config.pointStyle.fillColor || defaultColor;
+    return defaultColor;
+}
+
+function _resolveLayerLabels(layerData: any): { hasLabels: boolean; labelsConfig: any } {
+    if (layerData.config.labels && layerData.config.labels.enabled) {
+        return { hasLabels: true, labelsConfig: layerData.config.labels };
+    }
+    if (layerData.currentStyle?.label?.enabled) {
+        return { hasLabels: true, labelsConfig: { enabled: true } };
+    }
+    return { hasLabels: false, labelsConfig: null };
+}
+
+function _logLayerPreparation(id: string, layerData: any, Log: any): void {
+    if (!Log) return;
+    Log.info(`[GeoJSON LayerManager] Preparing layer item ${id}:`, {
+        hasConfig: !!layerData.config,
+        hasStyles: !!(layerData.config && layerData.config.styles),
+        styles: layerData.config ? layerData.config.styles : "NO CONFIG",
+        configKeys: layerData.config ? Object.keys(layerData.config).sort() : [],
+    });
+}
+
+function _processLayerForSection(
+    layerData: any,
+    id: string,
+    sectionMap: Map<string, any>,
+    Log: any
+): void {
+    const sectionId = layerData.config.layerManagerId || "geojson-default";
+    if (!sectionMap.has(sectionId)) {
+        sectionMap.set(sectionId, { id: sectionId, order: 99, items: [] });
+    }
+    const type = LayerManager.detectLayerType(layerData.layer);
+    const legendType = _resolveLegendType(type);
+    const color = _resolveLayerColor(layerData);
+    const { hasLabels, labelsConfig } = _resolveLayerLabels(layerData);
+    _logLayerPreparation(id, layerData, Log);
+    sectionMap.get(sectionId).items.push({
+        id: id,
+        label: layerData.label,
+        type: legendType,
+        color: color,
+        visible: layerData.visible,
+        toggleable: true,
+        order: 0,
+        zIndex: layerData.config.zIndex || 0,
+        themes: layerData.config.themes || null,
+        labels: hasLabels ? labelsConfig : null,
+        styles: layerData.config.styles || null,
+    });
+}
+
 /**
- * Enregistre les couches dans le module LayerManager.
+ * Registers thes layers dans the module LayerManager.
  */
 LayerManager.registerWithLayerManager = function () {
     const state = getState();
@@ -25,101 +90,30 @@ LayerManager.registerWithLayerManager = function () {
     const LMgr = _g.GeoLeaf && _g.GeoLeaf.LayerManager;
 
     Log.info(
-        `[GeoLeaf.GeoJSON] registerWithLayerManager() appel� avec ${state.layers.size} couche(s)`
+        `[GeoLeaf.GeoJSON] registerWithLayerManager() called with ${state.layers.size} layer(s)`
     );
 
     if (!LMgr || typeof LMgr._registerGeoJsonLayer !== "function") {
-        Log.warn(
-            "[GeoLeaf.GeoJSON] Module LayerManager non disponible, pas d'int�gration gestionnaire de couches"
-        );
+        Log.warn("[GeoLeaf.GeoJSON] Module LayerManager unavailable, no layer manager integration");
         return;
     }
 
-    // Grouper les layers par idSection
+    // Groupr les layers par idSection
     const sectionMap = new Map();
 
     state.layers.forEach((layerData, id) => {
-        // Log pour debug - VOIR TOUTES LES COUCHES
-        // Utiliser layerManagerId d�fini dans layer.json
-        const sectionId = layerData.config.layerManagerId || "geojson-default";
-
-        if (!sectionMap.has(sectionId)) {
-            sectionMap.set(sectionId, {
-                id: sectionId,
-                order: 99,
-                items: [],
-            });
-        }
-
-        const type = LayerManager.detectLayerType(layerData.layer);
-        let legendType = "fill";
-        if (type === "poi") legendType = "circle";
-        else if (type === "route") legendType = "line";
-        else if (type === "area") legendType = "fill";
-
-        let color = "#3388ff";
-        if (layerData.config.style) {
-            color = layerData.config.style.fillColor || layerData.config.style.color || color;
-        } else if (layerData.config.pointStyle) {
-            color = layerData.config.pointStyle.fillColor || color;
-        }
-
-        // D�tecter si la couche a des labels (dans la config OU dans le style courant)
-        let hasLabels = false;
-        let labelsConfig = null;
-
-        // V�rifier d'abord dans la config de la couche
-        if (layerData.config.labels && layerData.config.labels.enabled) {
-            hasLabels = true;
-            labelsConfig = layerData.config.labels;
-        }
-
-        // V�rifier ensuite dans le style actuel (currentStyle)
-        if (
-            !hasLabels &&
-            layerData.currentStyle &&
-            layerData.currentStyle.label &&
-            layerData.currentStyle.label.enabled
-        ) {
-            hasLabels = true;
-            // Cr�er une config de labels minimale bas�e sur le style
-            labelsConfig = { enabled: true };
-        }
-
-        // Log pour TOUTES les couches pour comprendre le probl�me
-        if (Log) {
-            Log.info(`[GeoJSON LayerManager] ?? Pr�paration item ${id}:`, {
-                hasConfig: !!layerData.config,
-                hasStyles: !!(layerData.config && layerData.config.styles),
-                styles: layerData.config ? layerData.config.styles : "NO CONFIG",
-                configKeys: layerData.config ? Object.keys(layerData.config).sort() : [],
-            });
-        }
-
-        sectionMap.get(sectionId).items.push({
-            id: id,
-            label: layerData.label,
-            type: legendType,
-            color: color,
-            visible: layerData.visible,
-            toggleable: true,
-            order: 0,
-            zIndex: layerData.config.zIndex || 0,
-            themes: layerData.config.themes || null,
-            labels: hasLabels ? labelsConfig : null,
-            styles: layerData.config.styles || null,
-        });
+        _processLayerForSection(layerData, id, sectionMap, Log);
     });
 
-    // Ajouter chaque section au gestionnaire de couches
+    // Addsr chaque section au manager for layers
     sectionMap.forEach((section) => {
-        // Trier les items par zIndex d�croissant (zIndex �lev� = en haut = affich� au-dessus)
+        // Sort items by descending zIndex (high zIndex = on top = displayed above)
         section.items.sort((a: any, b: any) => (b.zIndex || 0) - (a.zIndex || 0));
 
-        // Enregistrer chaque couche dans le LayerManager
+        // Registersr chaque layer in the LayerManager
         section.items.forEach((item: any) => {
             Log.debug(
-                `[GeoLeaf.GeoJSON] Enregistrement couche "${item.id}" dans section "${section.id}"`
+                `[GeoLeaf.GeoJSON] Registering layer "${item.id}" in section "${section.id}"`
             );
             LMgr._registerGeoJsonLayer(item.id, {
                 layerManagerId: section.id,
@@ -131,130 +125,89 @@ LayerManager.registerWithLayerManager = function () {
         });
 
         Log.debug(
-            "[GeoLeaf.GeoJSON] Section couche '" +
+            "[GeoLeaf.GeoJSON] Layer section '" +
                 section.id +
-                "' cr��e avec " +
+                "' créée avec " +
                 section.items.length +
-                " couche(s)"
+                " layer(s)"
         );
     });
 };
 
 /**
- * Charge la l�gende d'une couche si disponible
- * @param {string} layerId - ID de la couche
- * @param {Object} layerData - Donn�es de la couche
+ * Loads the légende d'a layer si available
+ * @param {string} layerId - ID de the layer
+ * @param {Object} layerData - Données de the layer
  * @private
  */
-LayerManager._loadLayerLegend = function (layerId: any, layerData: any) {
-    const _Log = getLog();
+function _resolveStyleIdFromAvailable(config: any): string | null {
+    if (!config.styles) return null;
+    if (!Array.isArray(config.styles.available)) return null;
+    const available = config.styles.available;
+    const defaultFile = config.styles.default;
+    const defaultByFile = defaultFile ? available.find((s: any) => s.file === defaultFile) : null;
+    if (defaultByFile && defaultByFile.id) return defaultByFile.id;
+    if (available[0] && available[0].id) return available[0].id;
+    return "default";
+}
 
-    const config = layerData.config || {};
-
-    // Nouveau flux : g�n�rer la l�gende depuis le style JSON
-    if (
-        _g.GeoLeaf &&
-        _g.GeoLeaf.Legend &&
-        typeof _g.GeoLeaf.Legend.loadLayerLegend === "function"
-    ) {
-        // D�terminer le style courant
-        const styleSelector = _g.GeoLeaf._LayerManagerStyleSelector;
-        let styleId = null;
-
-        if (styleSelector && typeof styleSelector.getCurrentStyle === "function") {
-            styleId = styleSelector.getCurrentStyle(layerId) || null;
-        }
-
-        // Fallback depuis metadata �ventuelle
-        if (!styleId && layerData.currentStyleMetadata && layerData.currentStyleMetadata.id) {
-            styleId = layerData.currentStyleMetadata.id;
-        }
-
-        // Fallback depuis la config de styles
-        if (!styleId && config.styles && Array.isArray(config.styles.available)) {
-            const available = config.styles.available;
-            // Essayer de trouver l'ID correspondant au fichier default
-            const defaultFile = config.styles.default;
-            const defaultByFile = defaultFile
-                ? available.find((s: any) => s.file === defaultFile)
-                : null;
-            styleId =
-                (defaultByFile && defaultByFile.id) ||
-                (available[0] && available[0].id) ||
-                "default";
-        }
-
-        if (!styleId) {
-            styleId = "default";
-        }
-
-        _g.GeoLeaf.Legend.loadLayerLegend(layerId, styleId, config);
-        return;
+function _resolveStyleId(layerId: any, layerData: any, config: any): string {
+    const styleSelector = _g.GeoLeaf && _g.GeoLeaf._LayerManagerStyleSelector;
+    if (styleSelector && typeof styleSelector.getCurrentStyle === "function") {
+        const sid = styleSelector.getCurrentStyle(layerId);
+        if (sid) return sid;
     }
+    if (layerData.currentStyleMetadata && layerData.currentStyleMetadata.id) {
+        return layerData.currentStyleMetadata.id;
+    }
+    return _resolveStyleIdFromAvailable(config) || "default";
+}
+
+LayerManager._loadLayerLegend = function (layerId: any, layerData: any) {
+    const config = layerData.config || {};
+    const GeoLeaf = _g.GeoLeaf;
+    if (!GeoLeaf) return;
+    if (!GeoLeaf.Legend) return;
+    if (typeof GeoLeaf.Legend.loadLayerLegend !== "function") return;
+    const styleId = _resolveStyleId(layerId, layerData, config);
+    GeoLeaf.Legend.loadLayerLegend(layerId, styleId, config);
 };
 
 /**
- * Peuple le LayerManager avec TOUTES les configurations de couches disponibles.
- * Contrairement � registerWithLayerManager() qui ne montre que les couches charg�es (th�me actif),
- * cette fonction affiche TOUTES les couches et met � jour l'�tat coch� selon le th�me actif.
+ * Peuple le LayerManager avec TOUTES les configurations de layers availables.
+ * Contrairement — registerWithLayerManager() qui ne montre que the layers chargées (thème active),
+ * cette fonction displays TOUTES the layers et met à jour l'état coché based on the thème active.
  *
- * @param {Object} activeThemeConfig - Configuration du th�me actif (contient liste des layers visibles)
+ * @param {Object} activeThemeConfig - Configuration du thème active (contient list des layers visibles)
  * @returns {void}
  */
-LayerManager.populateLayerManagerWithAllConfigs = function (activeThemeConfig: any) {
-    // ...logs nettoy�s...
-    const Log = getLog();
-    const LMgr = _g.GeoLeaf && _g.GeoLeaf.LayerManager;
+function _getActiveThemeLayers(activeThemeConfig: any): string[] {
+    if (!activeThemeConfig) return [];
+    if (!Array.isArray(activeThemeConfig.layers)) return [];
+    return activeThemeConfig.layers.map((l: any) => l.id || l);
+}
 
-    if (!LMgr || typeof LMgr._registerGeoJsonLayer !== "function") {
-        Log.warn(
-            "[GeoLeaf.GeoJSON] populateLayerManagerWithAllConfigs: Module LayerManager non disponible"
-        );
-        return;
-    }
+function _triggerLayerManagerUIUpdate(LMgr: any, Log: any): void {
+    if (!LMgr._updateUI) return;
+    if (typeof LMgr._updateUI !== "function") return;
+    Log.debug("[GeoLeaf.GeoJSON] Calling LayerManager._updateUI()");
+    LMgr._updateUI();
+}
 
-    if (
-        !_g.GeoLeaf ||
-        !_g.GeoLeaf._allLayerConfigs ||
-        !Array.isArray(_g.GeoLeaf._allLayerConfigs)
-    ) {
-        Log.warn(
-            "[GeoLeaf.GeoJSON] populateLayerManagerWithAllConfigs: GeoLeaf._allLayerConfigs non disponible"
-        );
-        return;
-    }
+function _buildPopulateConfigSectionMap(
+    allConfigs: any[],
+    activeThemeLayers: string[]
+): Map<string, any> {
+    const sectionMap = new Map<string, any>();
 
-    Log.info(
-        `[GeoLeaf.GeoJSON] Peuplement LayerManager avec ${_g.GeoLeaf._allLayerConfigs.length} configs de couches...`
-    );
-    // ...log debug supprim�...
-
-    // Obtenir la liste des couches actives du th�me
-    // Les layers peuvent �tre des objets {id, visible, style} ou des strings simples
-    let activeThemeLayers = [];
-    if (activeThemeConfig && Array.isArray(activeThemeConfig.layers)) {
-        activeThemeLayers = activeThemeConfig.layers.map((l: any) => l.id || l);
-    }
-    Log.debug(`[GeoLeaf.GeoJSON] Couches actives du th�me: ${activeThemeLayers.join(", ")}`);
-
-    // Grouper les configs par sectionId (layerManagerId)
-    const sectionMap = new Map();
-
-    _g.GeoLeaf._allLayerConfigs.forEach((config: any) => {
+    allConfigs.forEach((config: any) => {
         const sectionId = config.layerManagerId || "geojson-default";
 
         if (!sectionMap.has(sectionId)) {
-            sectionMap.set(sectionId, {
-                id: sectionId,
-                items: [],
-            });
+            sectionMap.set(sectionId, { id: sectionId, items: [] });
         }
 
-        // D�terminer si la couche est active dans le th�me courant
         const isActive = activeThemeLayers.includes(config.id);
-
-        // Log pour debug - VOIR CE QUI EST DANS config POUR TOUTES LES COUCHES
-        // ...logs supprim�s ([GeoJSON LayerManager] config debug)...
 
         sectionMap.get(sectionId).items.push({
             id: config.id,
@@ -268,14 +221,16 @@ LayerManager.populateLayerManagerWithAllConfigs = function (activeThemeConfig: a
         });
     });
 
-    // Enregistrer chaque couche avec le LayerManager
+    return sectionMap;
+}
+
+function _registerPopulateSectionMap(sectionMap: Map<string, any>, LMgr: any, Log: any): void {
     sectionMap.forEach((section) => {
-        // Trier par zIndex d�croissant
         section.items.sort((a: any, b: any) => (b.zIndex || 0) - (a.zIndex || 0));
 
         section.items.forEach((item: any) => {
             Log.debug(
-                `[GeoLeaf.GeoJSON] Enregistrement couche "${item.id}" dans section "${section.id}" (actif: ${item.isActive})`
+                `[GeoLeaf.GeoJSON] Registering layer "${item.id}" in section "${section.id}" (active: ${item.isActive})`
             );
             LMgr._registerGeoJsonLayer(item.id, {
                 layerManagerId: section.id,
@@ -288,17 +243,50 @@ LayerManager.populateLayerManagerWithAllConfigs = function (activeThemeConfig: a
         });
 
         Log.debug(
-            `[GeoLeaf.GeoJSON] Section "${section.id}" peupl�e avec ${section.items.length} couche(s)`
+            `[GeoLeaf.GeoJSON] Section "${section.id}" populated with ${section.items.length} layer(s)`
         );
     });
+}
 
-    Log.info(`[GeoLeaf.GeoJSON] LayerManager peupl� avec succ�s`);
+LayerManager.populateLayerManagerWithAllConfigs = function (activeThemeConfig: any) {
+    const Log = getLog();
+    const LMgr = _g.GeoLeaf && _g.GeoLeaf.LayerManager;
 
-    // Mettre � jour l'UI du LayerManager si n�cessaire
-    if (LMgr._updateUI && typeof LMgr._updateUI === "function") {
-        Log.debug("[GeoLeaf.GeoJSON] Appel LayerManager._updateUI()");
-        LMgr._updateUI();
+    if (!LMgr || typeof LMgr._registerGeoJsonLayer !== "function") {
+        Log.warn(
+            "[GeoLeaf.GeoJSON] populateLayerManagerWithAllConfigs: LayerManager module unavailable"
+        );
+        return;
     }
-};
 
+    if (
+        !_g.GeoLeaf ||
+        !_g.GeoLeaf._allLayerConfigs ||
+        !Array.isArray(_g.GeoLeaf._allLayerConfigs)
+    ) {
+        Log.warn(
+            "[GeoLeaf.GeoJSON] populateLayerManagerWithAllConfigs: GeoLeaf._allLayerConfigs unavailable"
+        );
+        return;
+    }
+
+    Log.info(
+        `[GeoLeaf.GeoJSON] Populating LayerManager with ${_g.GeoLeaf._allLayerConfigs.length} layer configs...`
+    );
+
+    const activeThemeLayers = _getActiveThemeLayers(activeThemeConfig);
+
+    Log.debug(`[GeoLeaf.GeoJSON] Active layers for theme: ${activeThemeLayers.join(", ")}`);
+
+    const sectionMap = _buildPopulateConfigSectionMap(
+        _g.GeoLeaf._allLayerConfigs,
+        activeThemeLayers
+    );
+
+    _registerPopulateSectionMap(sectionMap, LMgr, Log);
+
+    Log.info(`[GeoLeaf.GeoJSON] LayerManager populated successfully`);
+
+    _triggerLayerManagerUIUpdate(LMgr, Log);
+};
 export { LayerManager as LayerManagerIntegration };

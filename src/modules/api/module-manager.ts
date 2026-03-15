@@ -1,18 +1,19 @@
-// @ts-nocheck — migration TS, typage progressif
+/* eslint-disable security/detect-object-injection */
+// @ts-nocheck â€” migration TS, typage progressif
 /**
  * API Module Manager - Sprint 4.3 (Version Robuste)
- * Gestionnaire centralisé d'accès aux modules GeoLeaf
+ * Manager centralisÃ© d'accÃ¨s aux modules GeoLeaf
  * @module APIModuleManager
  */
 "use strict";
 
-import { Log } from '../log/index.js';
-const _g = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : {};
+import { Log } from "../log/index.js";
+const _g =
+    typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : {};
 _g.GeoLeaf = _g.GeoLeaf || {};
 
-
 /**
- * Gestionnaire d'accès aux modules GeoLeaf
+ * Manager d'accÃ¨s aux modules GeoLeaf
  */
 class APIModuleManager {
     constructor() {
@@ -22,65 +23,79 @@ class APIModuleManager {
         this.stats = {
             totalModules: 0,
             accessCount: 0,
-            errors: 0
+            errors: 0,
         };
     }
 
     /**
-     * Initialise le gestionnaire avec les modules existants
-     * @returns {boolean} Succès de l'initialisation
+     * Initialise le manager avec the modules existants
+     * @returns {boolean} SuccÃ¨s of the initialization
      */
     init() {
         try {
             if (this.isInitialized) {
-                if (Log) Log.debug('[APIModuleManager] Already initialized');
+                if (Log) Log.debug("[APIModuleManager] Already initialized");
                 return true;
             }
 
-            if (Log) Log.info('[APIModuleManager] Initializing module manager');
+            if (Log) Log.info("[APIModuleManager] Initializing module manager");
 
-            // Scanner tous les modules disponibles dans le namespace GeoLeaf
+            // Scanner tous the modules availables in the namespace GeoLeaf
             this._scanExistingModules();
 
-            // Configurer les alias pour compatibilité
+            // Configurer les alias pour compatibilitÃ©
             this._setupAliases();
 
             this.isInitialized = true;
 
-            if (Log) Log.info(`[APIModuleManager] Initialized with ${this.stats.totalModules} modules`);
+            if (Log)
+                Log.info(`[APIModuleManager] Initialized with ${this.stats.totalModules} modules`);
             return true;
-
         } catch (error) {
             this.stats.errors++;
-            if (Log) Log.error('[APIModuleManager] Initialization failed:', error);
+            if (Log) Log.error("[APIModuleManager] Initialization failed:", error);
             return false;
         }
     }
 
     /**
-     * Scanner les modules existants dans GeoLeaf
+     * Scanner the modules existants dans GeoLeaf
      * @private
      */
     _scanExistingModules() {
         if (!_g.GeoLeaf) return;
 
         const moduleList = [
-            'Core', 'UI', 'Config', 'Baselayers', 'BaseLayers',
-            'POI', 'GeoJSON', 'Route', 'Legend', 'LayerManager',
-            'Storage', 'Filters', 'Log', 'Security', 'Utils',
-            'Constants', 'Validators', 'Errors'
+            "Core",
+            "UI",
+            "Config",
+            "Baselayers",
+            "BaseLayers",
+            "POI",
+            "GeoJSON",
+            "Route",
+            "Legend",
+            "LayerManager",
+            "Storage",
+            "Filters",
+            "Log",
+            "Security",
+            "Utils",
+            "Constants",
+            "Validators",
+            "Errors",
         ];
 
-        moduleList.forEach(name => {
+        moduleList.forEach((name) => {
             if (_g.GeoLeaf[name]) {
                 this.modules.set(name, _g.GeoLeaf[name]);
                 this.stats.totalModules++;
             }
         });
 
-        // Scanner les modules privés (préfixe _)
-        Object.keys(_g.GeoLeaf).forEach(key => {
-            if (key.startsWith('_') && !this.modules.has(key)) {
+        // Scanner the modules privÃ©s (prÃ©fixe _)
+        Object.keys(_g.GeoLeaf).forEach((key) => {
+            if (key.startsWith("_") && !this.modules.has(key)) {
                 this.modules.set(key, _g.GeoLeaf[key]);
                 this.stats.totalModules++;
             }
@@ -88,15 +103,15 @@ class APIModuleManager {
     }
 
     /**
-     * Configure les alias pour compatibilité
+     * Configure les alias pour compatibilitÃ©
      * @private
      */
     _setupAliases() {
         const aliases = {
-            'Baselayers': 'BaseLayers',
-            'BaseLayers': 'Baselayers',
-            'Logger': 'Log',
-            'Log': 'Logger'
+            Baselayers: "BaseLayers",
+            BaseLayers: "Baselayers",
+            Logger: "Log",
+            Log: "Logger",
         };
 
         Object.entries(aliases).forEach(([alias, target]) => {
@@ -108,15 +123,15 @@ class APIModuleManager {
 
     /**
      * Obtient un module par nom
-     * @param {string} name - Nom du module
-     * @returns {*} Module ou null si non trouvé
+     * @param {string} name - Nom of the module
+     * @returns {*} Module ou null si non trouvÃ©
      */
     getModule(name) {
         try {
             this.stats.accessCount++;
 
-            if (!name || typeof name !== 'string') {
-                if (Log) Log.warn(`[APIModuleManager] Invalid module name:`, name);
+            if (!name || typeof name !== "string") {
+                Log?.warn(`[APIModuleManager] Invalid module name:`, name);
                 this.stats.errors++;
                 return null;
             }
@@ -132,38 +147,37 @@ class APIModuleManager {
                 return this.modules.get(targetName);
             }
 
-            // Fallback vers accès global direct
+            // Fallback vers accÃ¨s global direct
             if (_g.GeoLeaf && _g.GeoLeaf[name]) {
-                // Ajouter à notre cache pour les prochains accès
+                // Addsr â€” notre cache for thes prochains accÃ¨s
                 this.modules.set(name, _g.GeoLeaf[name]);
                 this.stats.totalModules++;
                 return _g.GeoLeaf[name];
             }
 
-            // Module non trouvé
-            if (Log) Log.debug(`[APIModuleManager] Module '${name}' not found`);
+            // Module non trouvÃ©
+            Log?.debug(`[APIModuleManager] Module '${name}' not found`);
             return null;
-
         } catch (error) {
             this.stats.errors++;
-            if (Log) Log.error(`[APIModuleManager] Error accessing module '${name}':`, error);
+            Log?.error(`[APIModuleManager] Error accessing module '${name}':`, error);
             return null;
         }
     }
 
     /**
-     * Enregistre manuellement un module
-     * @param {string} name - Nom du module
-     * @param {*} module - Instance du module
+     * Registers manually un module
+     * @param {string} name - Nom of the module
+     * @param {*} module - Instance of the module
      */
     registerModule(name, module) {
         try {
-            if (!name || typeof name !== 'string') {
-                throw new Error('Module name must be a non-empty string');
+            if (!name || typeof name !== "string") {
+                throw new Error("Module name must be a non-empty string");
             }
 
             if (!module) {
-                throw new Error('Module cannot be null or undefined');
+                throw new Error("Module cannot be null or undefined");
             }
 
             this.modules.set(name, module);
@@ -171,7 +185,6 @@ class APIModuleManager {
 
             if (Log) Log.debug(`[APIModuleManager] Module '${name}' registered`);
             return true;
-
         } catch (error) {
             this.stats.errors++;
             if (Log) Log.error(`[APIModuleManager] Failed to register module '${name}':`, error);
@@ -180,15 +193,17 @@ class APIModuleManager {
     }
 
     /**
-     * Vérifie si un module existe
-     * @param {string} name - Nom du module
+     * VÃ©rifie si un module existe
+     * @param {string} name - Nom of the module
      * @returns {boolean}
      */
     hasModule(name) {
         try {
-            return this.modules.has(name) ||
-                   this.aliases.has(name) ||
-                   !!(_g.GeoLeaf && _g.GeoLeaf[name]);
+            return (
+                this.modules.has(name) ||
+                this.aliases.has(name) ||
+                !!(_g.GeoLeaf && _g.GeoLeaf[name])
+            );
         } catch (error) {
             if (Log) Log.error(`[APIModuleManager] Error checking module '${name}':`, error);
             return false;
@@ -196,16 +211,16 @@ class APIModuleManager {
     }
 
     /**
-     * Obtient la liste des modules disponibles
+     * Obtient the list des modules availables
      * @returns {Array<string>}
      */
     getModuleList() {
-        // Perf 6.3.2: O(n) via Set instead of O(n²) via Array.includes() in forEach loop
+        // Perf 6.3.2: O(n) via Set instead of O(nÂ²) via Array.includes() in forEach loop
         const moduleNameSet = new Set(this.modules.keys());
 
-        // Ajouter les modules du namespace global non encore dans notre cache
+        // Addsr the modules du namespace global non encore dans notre cache
         if (_g.GeoLeaf) {
-            Object.keys(_g.GeoLeaf).forEach(key => {
+            Object.keys(_g.GeoLeaf).forEach((key) => {
                 moduleNameSet.add(key);
             });
         }
@@ -222,15 +237,15 @@ class APIModuleManager {
             ...this.stats,
             cachedModules: this.modules.size,
             aliases: this.aliases.size,
-            isInitialized: this.isInitialized
+            isInitialized: this.isInitialized,
         };
     }
 
     /**
-     * Rafraîchit le cache des modules
+     * RafraÃ®chit le cache des modules
      */
     refresh() {
-        if (Log) Log.info('[APIModuleManager] Refreshing module cache');
+        if (Log) Log.info("[APIModuleManager] Refreshing module cache");
 
         this.modules.clear();
         this.aliases.clear();
@@ -241,7 +256,7 @@ class APIModuleManager {
     }
 
     /**
-     * Réinitialise le gestionnaire
+     * RÃ©initializes le manager
      */
     reset() {
         this.modules.clear();
@@ -250,10 +265,10 @@ class APIModuleManager {
         this.stats = {
             totalModules: 0,
             accessCount: 0,
-            errors: 0
+            errors: 0,
         };
 
-        if (Log) Log.info('[APIModuleManager] Manager reset');
+        if (Log) Log.info("[APIModuleManager] Manager reset");
     }
 }
 

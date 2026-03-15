@@ -1,6 +1,6 @@
-# GeoLeaf.Core â€“ Documentation du module Core
+﻿# GeoLeaf.Core â€“ Documentation du module Core
 
-Product Version: GeoLeaf Platform V1 **Version**: 1.1.0  
+Product Version: GeoLeaf Platform V1 **Version**: 1.1.1  
 **Fichier (monorepo)** : `src/modules/core/` (et point d'entrée bundle)  
 **DerniÃ¨re mise Ã  jour**: 19 janvier 2026
 

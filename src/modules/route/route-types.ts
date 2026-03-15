@@ -1,4 +1,4 @@
-﻿/*!
+/*!
  * GeoLeaf Core – Route types
  * © 2026 Mattieu Pottier
  * Released under the MIT License
@@ -95,7 +95,7 @@ export interface GeoJSONRouteFeature {
     properties?: Record<string, unknown>;
 }
 
-/** Raw GPX document (parsed XML) — minimal shape for route extraction */
+/** Raw GPX document (parsed XML) — minimum shape for route extraction */
 export interface GPXData {
     getElementsByTagName(tagName: "trkpt"): HTMLCollectionOf<Element>;
     [key: string]: unknown;

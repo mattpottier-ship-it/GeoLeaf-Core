@@ -1,6 +1,12 @@
+/* eslint-disable security/detect-object-injection */
 /**
- * GeoLeaf Table - Renderer Module
- * Rendu des colonnes, lignes et pagination avec virtual scrolling
+ * GeoLeaf Table - Renderer Module (orchestrator)
+ * Rendu des columns, lines et pagination avec virtual scrolling.
+ *
+ * Sub-modules:
+ *  - table-renderer-utils.ts     — constants, getFeatureId, formatValue, _eventCleanups
+ *  - table-renderer-virtual-scroll.ts — virtual scrolling for large datasets
+ *  - table-selection-manager.ts  — row selection logic (single, multi, range, toggle-all)
  */
 "use strict";
 
@@ -11,26 +17,44 @@ import { DOMSecurity } from "../utils/dom-security.js";
 import { GeoJSONShared } from "../geojson/shared.js";
 import { events as _events } from "../utils/event-listener-manager.js";
 import { TableContract } from "../../contracts/table.contract.js";
+import {
+    VIRTUAL_THRESHOLD,
+    _eventCleanups,
+    resetSyntheticIdCounter,
+    getFeatureId,
+    formatValue,
+} from "./table-renderer-utils.js";
+import {
+    createTableBodyVirtual,
+    initVirtualState,
+    setupVirtualScroll,
+} from "./table-renderer-virtual-scroll.js";
+import {
+    handleRowSelection,
+    toggleAllRows,
+    updateToolbarButtonsState,
+} from "./table-selection-manager.js";
 
 const _TableRenderer: any = {};
-_TableRenderer._eventCleanups = [];
-
-// Virtual scrolling (Sprint 8.2): only render visible rows + buffer
-const VIRTUAL_ROW_HEIGHT = 32;
-const VIRTUAL_BUFFER = 20;
-const VIRTUAL_THRESHOLD = 150;
-/** @type {WeakMap<HTMLElement, { features: unknown[]; columns: unknown[]; selectedIds: Set<string>; layerConfig: unknown }>} */
-const _virtualState = new WeakMap();
+// Exposes the shared cleanup array on the object for backward compatibility
+_TableRenderer._eventCleanups = _eventCleanups;
 
 /**
- * Flush all tracked event cleanups (called before re-render and on destroy)
+ * Flush all tracked event cleanups (called before re-render and on destroy).
  */
 _TableRenderer._flushEventCleanups = function () {
-    const cleanups = this._eventCleanups;
+    const cleanups = _eventCleanups;
     for (let i = 0; i < cleanups.length; i++) {
-        if (typeof cleanups[i] === "function") {
+        const item = cleanups[i];
+        if (typeof item === "function") {
             try {
-                cleanups[i]();
+                item();
+            } catch (_e) {
+                /* ignore */
+            }
+        } else if (typeof item === "number") {
+            try {
+                _events?.off(item);
             } catch (_e) {
                 /* ignore */
             }
@@ -40,35 +64,58 @@ _TableRenderer._flushEventCleanups = function () {
 };
 
 /**
- * Destroy the table renderer and clean up all event listeners
+ * Destroy the table renderer and clean up all event listners.
  */
 _TableRenderer.destroy = function () {
     this._flushEventCleanups();
 };
 
+function _getLayerTableConfig(layerId: any): any {
+    const layerData = GeoJSONShared.getLayerById(layerId) as any;
+    return layerData?.config?.table ?? null;
+}
+
+function _renderTableBody(
+    container: any,
+    features: any[],
+    columns: any,
+    selectedIds: any,
+    layerConfig: any,
+    table: any
+): void {
+    if (features.length > VIRTUAL_THRESHOLD) {
+        const tbody = createTableBodyVirtual(features, columns, selectedIds, createTableRow);
+        table.appendChild(tbody);
+        initVirtualState(container, features, columns, selectedIds, layerConfig, createTableRow);
+        setupVirtualScroll(container);
+    } else {
+        const tbody = createTableBody(features, columns, selectedIds);
+        table.appendChild(tbody);
+    }
+}
+
 /**
- * Rend le tableau avec les donn�es fournies
- * @param {HTMLElement} container - Conteneur du tableau
+ * Rend the table with thes data fournies.
+ * @param {HTMLElement} container - Conteneur du array
  * @param {Object} options - Options de rendu
- * @param {string} options.layerId - ID de la couche
- * @param {Array} options.features - Features � afficher
- * @param {Set} options.selectedIds - IDs des entit�s s�lectionn�es
- * @param {Object} options.sortState - �tat du tri
- * @param {Object} options.config - Configuration du tableau
+ * @param {string} options.layerId - ID de the layer
+ * @param {Array} options.features - Features to display
+ * @param {Set} options.selectedIds - IDs des entities selected
+ * @param {Object} options.sortState - STATE du tri
  */
 _TableRenderer.render = function (container: any, options: any) {
-    Log.debug("[TableRenderer] render() - D�but, options:", options);
+    Log.debug("[TableRenderer] render() - Start, options:", options);
 
     if (!container) {
         Log.error("[TableRenderer] Conteneur invalide");
         return;
     }
 
-    // Phase 1 fix L4.4: flush previous event cleanups before re-render
+    // Flush previous event cleanups before re-render
     _TableRenderer._flushEventCleanups();
 
-    // R�initialiser le compteur d'IDs synth�tiques � chaque rendu
-    _syntheticIdCounter = 0;
+    // Reset le compteur d'IDs synthetic to chaque rendu
+    resetSyntheticIdCounter();
 
     const { layerId, features, selectedIds, sortState } = options;
     Log.debug(
@@ -80,170 +127,138 @@ _TableRenderer.render = function (container: any, options: any) {
 
     const table = container.querySelector(".gl-table-panel__table");
     if (!table) {
-        Log.error("[TableRenderer] Élément table introuvable");
+        Log.error("[TableRenderer] Table element not found");
         return;
     }
 
-    // Si pas de layerId, vider le tableau
+    // Si pas de layerId, emptyr the table
     if (!layerId) {
-        // SAFE: Chaîne vide pour nettoyer le contenu
+        // SAFE: Empty string to clear the content
         DOMSecurity.clearElementFast(table);
-        Log.debug("[TableRenderer] Tableau vidé (aucune couche sélectionnée)");
+        Log.debug("[TableRenderer] Table cleared (no layer selected)");
         return;
     }
 
-    // Récupérer la config du layer
-    const layerData = GeoJSONShared.getLayerById(layerId) as any;
-    const layerConfig =
-        layerData && layerData.config && layerData.config.table ? layerData.config.table : null;
+    // Retrieve la config du layer
+    const layerConfig = _getLayerTableConfig(layerId);
 
-    if (!layerConfig || !layerConfig.columns) {
-        Log.warn("[TableRenderer] Aucune configuration de colonne pour", layerId);
-        // SAFE: Cha�ne vide pour nettoyer le contenu
+    if (!layerConfig?.columns) {
+        Log.warn("[TableRenderer] No column configuration for", layerId);
+        // SAFE: Empty string to clear the content
         DOMSecurity.clearElementFast(table);
         return;
     }
 
     Log.debug("[TableRenderer] Colonnes:", layerConfig.columns);
 
-    // Vider le tableau
-    // SAFE: Cha�ne vide pour nettoyer le contenu avant reconstruction
+    // Emptyr the table avant rebuilding
     DOMSecurity.clearElementFast(table);
 
-    // Cr�er le thead
+    // Createsr le thead
     const thead = createTableHead(layerConfig.columns, sortState);
     table.appendChild(thead);
 
-    let tbody;
-    if (features.length > VIRTUAL_THRESHOLD) {
-        tbody = createTableBodyVirtual(features, layerConfig.columns, selectedIds);
-        table.appendChild(tbody);
-        _virtualState.set(container, {
-            features,
-            columns: layerConfig.columns,
-            selectedIds,
-            layerConfig,
-        });
-        setupVirtualScroll(container);
-    } else {
-        tbody = createTableBody(features, layerConfig.columns, selectedIds);
-        table.appendChild(tbody);
-    }
+    _renderTableBody(container, features, layerConfig.columns, selectedIds, layerConfig, table);
 
-    Log.debug(
-        "[TableRenderer] Tableau rendu:",
-        features.length,
-        "lignes",
-        features.length > VIRTUAL_THRESHOLD ? "(virtual)" : ""
-    );
+    Log.debug("[TableRenderer] Tableau rendu:", features.length, "lines");
 };
 
-/**
- * Cr�e l'en-t�te du tableau (thead)
- * @param {Array} columns - Configuration des colonnes
- * @param {Object} sortState - �tat du tri actuel
- * @returns {HTMLElement}
- * @private
- */
-function createTableHead(columns: any, sortState: any) {
-    const thead = $create("thead");
-    const tr = $create("tr");
-
-    // Colonne checkbox (s�lection)
+function _buildCheckboxTh(): HTMLElement {
     const thCheckbox = $create("th", {
         className: "gl-table-panel__th gl-table-panel__th--checkbox",
-    });
-
+    }) as HTMLElement;
     const checkboxAll = $create("input", {
         type: "checkbox",
         className: "gl-table-panel__checkbox-all",
-        title: "Tout s�lectionner / Tout d�s�lectionner",
-    });
-
+        title: "Select all / Deselect all",
+    }) as HTMLInputElement;
     const checkboxAllHandler = (e: any) => {
         toggleAllRows(e.target.checked);
     };
-
-    const events = _events;
-    if (events) {
-        _TableRenderer._eventCleanups.push(
-            events.on(checkboxAll, "change", checkboxAllHandler, false, "TableRenderer.checkboxAll")
+    if (_events) {
+        _eventCleanups.push(
+            _events.on(
+                checkboxAll,
+                "change",
+                checkboxAllHandler,
+                false,
+                "TableRenderer.checkboxAll"
+            )
         );
     } else {
         checkboxAll.addEventListener("change", checkboxAllHandler);
     }
-
     thCheckbox.appendChild(checkboxAll);
-    tr.appendChild(thCheckbox);
+    return thCheckbox;
+}
 
-    // Colonnes de donn�es
+function _buildSortableTh(col: any, sortState: any): HTMLElement {
+    const th = $create("th", { className: "gl-table-panel__th" }) as HTMLElement;
+    th.textContent = col.label || col.field;
+    if (col.width) {
+        th.style.width = col.width;
+    }
+    const isSortable = col.sortable !== false;
+    if (isSortable) {
+        th.classList.add("gl-table-panel__th--sortable");
+        th.setAttribute("data-field", col.field);
+        const sortIcon = $create("span", { className: "gl-table-panel__sort-icon" }) as HTMLElement;
+        if (sortState.field === col.field) {
+            if (sortState.direction === "asc") {
+                sortIcon.textContent = " \u25b2"; // ▲
+                th.classList.add("is-sorted-asc");
+            } else if (sortState.direction === "desc") {
+                sortIcon.textContent = " \u25bc"; // ▼
+                th.classList.add("is-sorted-desc");
+            }
+        } else {
+            sortIcon.textContent = " \u2195"; // ↕
+        }
+        th.appendChild(sortIcon);
+        const sortHandler = () => {
+            TableContract.sortByField(col.field);
+        };
+        if (_events) {
+            _eventCleanups.push(_events.on(th, "click", sortHandler, false, "TableRenderer.sort"));
+        } else {
+            th.addEventListener("click", sortHandler);
+        }
+    }
+    return th;
+}
+
+/**
+ * Creates the header du array (thead).
+ * @param {Array} columns - Configuration des columns
+ * @param {Object} sortState - STATE du tri current
+ * @returns {HTMLElement}
+ * @private
+ */
+function createTableHead(columns: any, sortState: any): HTMLElement {
+    const thead = $create("thead") as HTMLElement;
+    const tr = $create("tr") as HTMLElement;
+    tr.appendChild(_buildCheckboxTh());
     columns.forEach((col: any) => {
-        const th = $create("th", { className: "gl-table-panel__th" });
-        th.textContent = col.label || col.field;
-
-        if (col.width) {
-            th.style.width = col.width;
-        }
-
-        // Rendre la colonne triable (par d�faut toutes les colonnes sont triables)
-        const isSortable = col.sortable !== false;
-        if (isSortable) {
-            th.classList.add("gl-table-panel__th--sortable");
-            th.setAttribute("data-field", col.field);
-
-            // Ajouter les indicateurs de tri
-            const sortIcon = $create("span", { className: "gl-table-panel__sort-icon" });
-
-            if (sortState.field === col.field) {
-                if (sortState.direction === "asc") {
-                    sortIcon.textContent = " \u25b2"; // ▲
-                    th.classList.add("is-sorted-asc");
-                } else if (sortState.direction === "desc") {
-                    sortIcon.textContent = " \u25bc"; // ▼
-                    th.classList.add("is-sorted-desc");
-                }
-            } else {
-                sortIcon.textContent = " \u2195"; // ↕
-            }
-
-            th.appendChild(sortIcon);
-
-            // �v�nement de tri - avec cleanup tracking
-            const sortHandler = () => {
-                TableContract.sortByField(col.field);
-            };
-
-            const events = _events;
-            if (events) {
-                _TableRenderer._eventCleanups.push(
-                    events.on(th, "click", sortHandler, false, "TableRenderer.sort")
-                );
-            } else {
-                th.addEventListener("click", sortHandler);
-            }
-        }
-
-        tr.appendChild(th);
+        tr.appendChild(_buildSortableTh(col, sortState));
     });
-
     thead.appendChild(tr);
     return thead;
 }
 
 /**
- * Cr�e le corps du tableau (tbody)
- * @param {Array} features - Features � afficher
- * @param {Array} columns - Configuration des colonnes
- * @param {Set} selectedIds - IDs s�lectionn�s
+ * Creates the corps du array (tbody).
+ * @param {Array} features - Features to display
+ * @param {Array} columns - Configuration des columns
+ * @param {Set} selectedIds - IDs selected
  * @returns {HTMLElement}
  * @private
  */
-function createTableBody(features: any, columns: any, selectedIds: any) {
+function createTableBody(features: any, columns: any, selectedIds: any): HTMLElement {
     Log.debug("[TableRenderer] createTableBody() - features:", features.length);
 
-    const tbody = $create("tbody");
+    const tbody = $create("tbody") as HTMLElement;
 
-    // Sprint 3.2: Use DocumentFragment for batch DOM operations
+    // Use DocumentFragment for batch DOM operations
     const fragment = document.createDocumentFragment();
 
     features.forEach((feature: any) => {
@@ -253,304 +268,83 @@ function createTableBody(features: any, columns: any, selectedIds: any) {
 
     tbody.appendChild(fragment);
 
-    Log.debug("[TableRenderer] tbody cr�� avec", tbody.children.length, "lignes");
+    Log.debug("[TableRenderer] tbody created with", tbody.children.length, "rows");
     return tbody;
 }
 
-/**
- * Creates tbody for virtual scrolling: fixed height, only visible window filled on first paint.
- */
-function createTableBodyVirtual(features: any, columns: any, selectedIds: any) {
-    const tbody = $create("tbody");
-    tbody.setAttribute("data-virtual", "true");
-    tbody.style.height = features.length * VIRTUAL_ROW_HEIGHT + "px";
-    updateVirtualRows(tbody, features, columns, selectedIds, 0);
-    return tbody;
-}
-
-/**
- * Fills tbody with spacer + visible rows + spacer based on scrollTop.
- */
-function updateVirtualRows(
-    tbody: any,
-    features: any,
-    columns: any,
-    selectedIds: any,
-    scrollTop: any
-) {
-    const wrapper = tbody.closest(".gl-table-panel__wrapper");
-    const clientHeight = wrapper ? wrapper.clientHeight : 400;
-    const total = features.length;
-    const startIndex = Math.max(0, Math.floor(scrollTop / VIRTUAL_ROW_HEIGHT) - VIRTUAL_BUFFER);
-    const endIndex = Math.min(
-        total,
-        Math.ceil((scrollTop + clientHeight) / VIRTUAL_ROW_HEIGHT) + VIRTUAL_BUFFER
-    );
-    const visibleFeatures = features.slice(startIndex, endIndex);
-    const colCount = columns && columns.length ? columns.length + 1 : 2;
-
-    DOMSecurity.clearElementFast(tbody);
-
-    const fragment = document.createDocumentFragment();
-    if (startIndex > 0) {
-        const spacerTop = $create("tr", { className: "gl-table-panel__spacer" });
-        const tdTop = $create("td", { colSpan: colCount });
-        tdTop.style.height = startIndex * VIRTUAL_ROW_HEIGHT + "px";
-        spacerTop.appendChild(tdTop);
-        fragment.appendChild(spacerTop);
-    }
-    visibleFeatures.forEach((feature: any) => {
-        const tr = createTableRow(feature, columns, selectedIds);
-        tr.style.height = VIRTUAL_ROW_HEIGHT + "px";
-        fragment.appendChild(tr);
-    });
-    if (endIndex < total) {
-        const spacerBottom = $create("tr", { className: "gl-table-panel__spacer" });
-        const tdBottom = $create("td", { colSpan: colCount });
-        tdBottom.style.height = (total - endIndex) * VIRTUAL_ROW_HEIGHT + "px";
-        spacerBottom.appendChild(tdBottom);
-        fragment.appendChild(spacerBottom);
-    }
-    tbody.appendChild(fragment);
-}
-
-/**
- * Attaches scroll listener to table wrapper to update visible rows.
- */
-function setupVirtualScroll(container: any) {
-    const wrapper = container.querySelector(".gl-table-panel__wrapper");
-    const table = container.querySelector(".gl-table-panel__table");
-    if (!wrapper || !table) return;
-    const tbody = table.querySelector("tbody[data-virtual=true]");
-    if (!tbody) return;
-
-    const onScroll = () => {
-        const state = _virtualState.get(container);
-        if (!state) return;
-        updateVirtualRows(
-            tbody,
-            state.features,
-            state.columns,
-            state.selectedIds,
-            wrapper.scrollTop
-        );
-    };
-
-    if (_events) {
-        _TableRenderer._eventCleanups.push(
-            _events.on(
-                wrapper,
-                "scroll",
-                onScroll,
-                { passive: true },
-                "TableRenderer.virtualScroll"
-            )
-        );
-    } else {
-        wrapper.addEventListener("scroll", onScroll, { passive: true });
-    }
-}
-
-/**
- * Cr�e une ligne du tableau
- * @param {Object} feature - Feature GeoJSON
- * @param {Array} columns - Configuration des colonnes
- * @param {Set} selectedIds - IDs s�lectionn�s
- * @returns {HTMLElement}
- * @private
- */
-function createTableRow(feature: any, columns: any, selectedIds: any) {
-    const tr = $create("tr");
-    const featureId = getFeatureId(feature);
-    tr.setAttribute("data-feature-id", featureId);
-
-    const isSelected = selectedIds.has(String(featureId));
-    if (isSelected) {
-        tr.classList.add("is-selected");
-    }
-
-    // Cellule checkbox
+function _buildRowCheckboxTd(featureId: any): HTMLElement {
     const tdCheckbox = $create("td", {
         className: "gl-table-panel__td gl-table-panel__td--checkbox",
-    });
-
+    }) as HTMLElement;
     const checkbox = $create("input", {
         type: "checkbox",
         className: "gl-table-panel__checkbox",
-        checked: isSelected,
-    });
-
+    }) as HTMLInputElement;
     const checkboxHandler = (e: any) => {
         handleRowSelection(featureId, (e.target as HTMLInputElement).checked, false, true, true);
     };
-
-    const events = _events;
-    if (events) {
-        _TableRenderer._eventCleanups.push(
-            events.on(checkbox, "change", checkboxHandler, false, "TableRenderer.checkbox")
+    if (_events) {
+        _eventCleanups.push(
+            _events.on(checkbox, "change", checkboxHandler, false, "TableRenderer.checkbox")
         );
     } else {
         checkbox.addEventListener("change", checkboxHandler);
     }
-
     tdCheckbox.appendChild(checkbox);
-    tr.appendChild(tdCheckbox);
+    return tdCheckbox;
+}
 
-    // Cellules de donn�es
-    columns.forEach((col: any) => {
-        const td = $create("td", { className: "gl-table-panel__td" });
-
-        const value = getNestedValue(feature, col.field);
-        const formattedValue = formatValue(value, col.type);
-
-        td.textContent = formattedValue;
-
-        // Aligner les nombres � droite
-        if (col.type === "number") {
-            td.classList.add("gl-table-panel__td--number");
-        }
-
-        tr.appendChild(td);
-    });
-
-    // �v�nement clic sur la ligne (s�lection simple) - avec cleanup tracking
+function _attachRowClickEvent(tr: HTMLElement, featureId: any): void {
     const rowClickHandler = (e: any) => {
         if ((e.target as HTMLElement).getAttribute?.("type") === "checkbox") return;
         const currentState = tr.classList.contains("is-selected");
         handleRowSelection(featureId, !currentState, e.shiftKey, e.ctrlKey || e.metaKey);
     };
-
-    // Reuse EventListenerManager from outer scope
     if (_events) {
-        _TableRenderer._eventCleanups.push(
+        _eventCleanups.push(
             _events.on(tr, "click", rowClickHandler, false, "TableRenderer.rowClick")
         );
     } else {
         tr.addEventListener("click", rowClickHandler);
     }
+}
 
+/**
+ * Creates ae line du array.
+ * @param {Object} feature - Feature GeoJSON
+ * @param {Array} columns - Configuration des columns
+ * @param {Set} selectedIds - IDs selected
+ * @returns {HTMLElement}
+ * @private
+ */
+function createTableRow(feature: any, columns: any, selectedIds: any): HTMLElement {
+    const tr = $create("tr") as HTMLElement;
+    const featureId = getFeatureId(feature);
+    tr.setAttribute("data-feature-id", featureId);
+    if (selectedIds.has(String(featureId))) {
+        tr.classList.add("is-selected");
+    }
+    const tdCheckbox = _buildRowCheckboxTd(featureId);
+    const checkbox = tdCheckbox.querySelector(".gl-table-panel__checkbox") as HTMLInputElement;
+    if (checkbox) checkbox.checked = selectedIds.has(String(featureId));
+    tr.appendChild(tdCheckbox);
+    columns.forEach((col: any) => {
+        const td = $create("td", { className: "gl-table-panel__td" }) as HTMLElement;
+        const value = getNestedValue(feature, col.field);
+        td.textContent = formatValue(value, col.type);
+        if (col.type === "number") {
+            td.classList.add("gl-table-panel__td--number");
+        }
+        tr.appendChild(td);
+    });
+    _attachRowClickEvent(tr, featureId);
     return tr;
 }
 
 /**
- * G�re la s�lection d'une ligne
- * @param {string} featureId - ID de la feature
- * @param {boolean} selected - S�lectionn� ou non
- * @param {boolean} shiftKey - Touche Shift enfonc�e
- * @param {boolean} ctrlKey - Touche Ctrl/Cmd enfonc�e
- * @param {boolean} isCheckbox - Si l'action vient d'une checkbox
- * @private
- */
-function handleRowSelection(
-    featureId: any,
-    selected: any,
-    shiftKey: any,
-    ctrlKey: any,
-    isCheckbox = false
-) {
-    Log.debug("[TableRenderer] handleRowSelection - featureId:", featureId, "selected:", selected);
-
-    const currentSelection = TableContract.getSelectedIds();
-
-    if (shiftKey && currentSelection.length > 0) {
-        // S�lection par plage (Shift+clic)
-        Log.debug("[TableRenderer] Mode SHIFT - S�lection par plage");
-        selectRange(featureId);
-    } else if (ctrlKey || isCheckbox) {
-        // Multi-s�lection (Ctrl+clic ou checkbox)
-        Log.debug(
-            "[TableRenderer] Mode MULTI - Multi-s�lection" +
-                (isCheckbox ? " (checkbox)" : " (Ctrl)")
-        );
-        if (selected) {
-            const newSelection = [...currentSelection, featureId];
-            TableContract.setSelection(newSelection, false);
-        } else {
-            const newSelection = currentSelection.filter((id: any) => id !== featureId);
-            TableContract.setSelection(newSelection, false);
-        }
-    } else {
-        // S�lection simple
-        Log.debug("[TableRenderer] Mode SIMPLE - S�lection unique");
-        if (selected) {
-            TableContract.setSelection([featureId], false);
-        } else {
-            TableContract.clearSelection();
-        }
-    }
-
-    // Mettre � jour l'�tat des boutons
-    updateToolbarButtonsState();
-}
-
-/**
- * S�lectionne une plage de lignes (Shift+clic)
- * @param {string} targetId - ID de la feature cible
- * @private
- */
-function selectRange(targetId: any) {
-    const tbody = document.querySelector(".gl-table-panel__table tbody");
-    if (!tbody) return;
-
-    const rows = Array.from(tbody.querySelectorAll("tr"));
-    const currentSelection = TableContract.getSelectedIds();
-    const lastSelected = currentSelection[currentSelection.length - 1];
-
-    const targetIndex = rows.findIndex((r) => r.getAttribute("data-feature-id") === targetId);
-    const lastIndex = rows.findIndex((r) => r.getAttribute("data-feature-id") === lastSelected);
-
-    if (targetIndex === -1 || lastIndex === -1) return;
-
-    const start = Math.min(targetIndex, lastIndex);
-    const end = Math.max(targetIndex, lastIndex);
-
-    const rangeIds = [];
-    for (let i = start; i <= end; i++) {
-        const id = rows[i].getAttribute("data-feature-id");
-        if (id) rangeIds.push(id);
-    }
-
-    TableContract.setSelection(rangeIds, false);
-    updateToolbarButtonsState();
-}
-
-/**
- * Toggle toutes les lignes (checkbox "tout s�lectionner")
- * @param {boolean} checked - �tat du checkbox
- * @private
- */
-function toggleAllRows(checked: any) {
-    const tbody = document.querySelector(".gl-table-panel__table tbody");
-    if (!tbody) return;
-
-    const rows = tbody.querySelectorAll("tr");
-    const ids: string[] = [];
-
-    rows.forEach((row: any) => {
-        const id = row.getAttribute("data-feature-id");
-        if (id) {
-            ids.push(id);
-            row.classList.toggle("is-selected", checked);
-            const checkbox = row.querySelector(
-                ".gl-table-panel__checkbox"
-            ) as HTMLInputElement | null;
-            if (checkbox) checkbox.checked = checked;
-        }
-    });
-
-    if (checked) {
-        TableContract.setSelection(ids, false);
-    } else {
-        TableContract.clearSelection();
-    }
-
-    updateToolbarButtonsState();
-}
-
-/**
- * Met � jour la s�lection visuelle dans le tableau
- * @param {HTMLElement} container - Conteneur du tableau
- * @param {Set} selectedIds - IDs s�lectionn�s
+ * Met a jour la selection visuelle dans the table sans re-rendre toutes les lines.
+ * @param {HTMLElement} container - Conteneur du array
+ * @param {Set} selectedIds - IDs selectionnes
  */
 _TableRenderer.updateSelection = function (container: any, selectedIds: any) {
     const tbody = container.querySelector(".gl-table-panel__table tbody");
@@ -570,10 +364,11 @@ _TableRenderer.updateSelection = function (container: any, selectedIds: any) {
         }
     });
 
-    // Mettre � jour le checkbox "tout s�lectionner"
+    // Mettre a jour le checkbox "tout selectionner"
     const checkboxAll = container.querySelector(".gl-table-panel__checkbox-all");
     if (checkboxAll) {
-        const totalRows = rows.length;
+        // Count only feature rows (rows with data-feature-id) to exclude virtual-scroll spacers
+        const totalRows = tbody.querySelectorAll("tr[data-feature-id]").length;
         const selectedCount = selectedIds.size;
         checkboxAll.checked = totalRows > 0 && selectedCount === totalRows;
         checkboxAll.indeterminate = selectedCount > 0 && selectedCount < totalRows;
@@ -581,78 +376,6 @@ _TableRenderer.updateSelection = function (container: any, selectedIds: any) {
 
     updateToolbarButtonsState();
 };
-
-// Virtual scrolling supprim� � la pagination dans renderTable() est suffisante.
-// TODO(v5): R�impl�menter si les datasets > 10 000 lignes deviennent courants.
-
-/**
- * Met � jour l'�tat des boutons de la toolbar
- * @private
- */
-function updateToolbarButtonsState() {
-    const selectedCount = TableContract.getSelectedIds().length;
-    TableContract.updateToolbarButtons(selectedCount);
-}
-
-/**
- * Compteur interne pour g�n�rer des IDs synth�tiques
- * @type {number}
- * @private
- */
-let _syntheticIdCounter = 0;
-
-/**
- * R�cup�re l'ID d'une feature de mani�re fiable
- * Parcourt plusieurs propri�t�s candidates puis g�n�re un ID synth�tique si n�cessaire
- * @param {Object} feature - Feature GeoJSON
- * @returns {string}
- * @private
- */
-function getFeatureId(feature: any) {
-    // 1. ID standard GeoJSON
-    if (feature.id != null && feature.id !== "") return String(feature.id);
-
-    const p = feature.properties;
-    if (!p) return "__gl_row_" + _syntheticIdCounter++;
-
-    // 2. Propri�t�s d'identifiant courantes
-    if (p.id != null && p.id !== "") return String(p.id);
-    if (p.fid != null && p.fid !== "") return String(p.fid);
-    if (p.osm_id != null && p.osm_id !== "") return String(p.osm_id);
-    if (p.OBJECTID != null && p.OBJECTID !== "") return String(p.OBJECTID);
-    if (p.SITE_ID != null && p.SITE_ID !== "") return String(p.SITE_ID);
-    if (p.code != null && p.code !== "") return String(p.code);
-    if (p.IN1 != null && p.IN1 !== "") return String(p.IN1);
-
-    // 3. Fallback : ID synth�tique bas� sur un compteur
-    return "__gl_row_" + _syntheticIdCounter++;
-}
-
-/**
- * Formate une valeur selon son type
- * @param {*} value - Valeur � formater
- * @param {string} type - Type de donn�es (string, number, date)
- * @returns {string}
- * @private
- */
-function formatValue(value: any, type: any) {
-    if (value == null || value === "") return "�";
-
-    if (type === "number") {
-        const num = Number(value);
-        if (isNaN(num)) return String(value);
-        // Formater avec s�parateurs de milliers
-        return num.toLocaleString("fr-FR");
-    }
-
-    if (type === "date") {
-        const date = new Date(value);
-        if (isNaN(date.getTime())) return String(value);
-        return date.toLocaleDateString("fr-FR");
-    }
-
-    return String(value);
-}
 
 const TableRenderer = _TableRenderer;
 export { TableRenderer };

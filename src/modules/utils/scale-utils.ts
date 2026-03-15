@@ -27,8 +27,8 @@ const _scaleCache: ScaleCache = {
 };
 
 /**
- * Calcule l'échelle (1:X) de la carte pour le zoom et la latitude actuels.
- * Retourne la valeur mise en cache si zoom/latitude inchangés.
+ * Calculates the scale (1:X) de the map for the zoom et la latitude currents.
+ * Returns the cached value if zoom/latitude unchanged.
  */
 export function calculateMapScale(
     map: MapLike | null | undefined,
@@ -64,7 +64,7 @@ export function calculateMapScale(
 
     if (logger && typeof logger.debug === "function") {
         logger.debug(
-            `[ScaleUtils] Calcul échelle: zoom=${zoom}, lat=${center.lat.toFixed(2)}, échelle=1:${scale.toLocaleString()}`
+            `[ScaleUtils] Scale calculation: zoom=${zoom}, lat=${center.lat.toFixed(2)}, scale=1:${scale.toLocaleString()}`
         );
     }
 
@@ -72,40 +72,45 @@ export function calculateMapScale(
 }
 
 /**
- * Vérifie si l'échelle courante est dans l'intervalle [maxScale ; minScale].
+ * Checks if l'scale currente est dans l'interval [maxScale ; minScale].
  */
+function _logScale(logger: { debug?: (msg: string) => void } | undefined, msg: string) {
+    logger?.debug?.(msg);
+}
+
+function _normalizeScaleBound(val: number | null | undefined): number | null {
+    return typeof val === "number" && val > 0 ? val : null;
+}
+
 export function isScaleInRange(
     currentScale: number,
     minScale: number | null | undefined,
     maxScale: number | null | undefined,
     logger?: { debug?: (msg: string) => void }
 ): boolean {
-    const normalizedMin = typeof minScale === "number" && minScale > 0 ? minScale : null;
-    const normalizedMax = typeof maxScale === "number" && maxScale > 0 ? maxScale : null;
+    const normalizedMin = _normalizeScaleBound(minScale);
+    const normalizedMax = _normalizeScaleBound(maxScale);
 
     if (normalizedMin !== null && currentScale > normalizedMin) {
-        if (logger?.debug) {
-            logger.debug(
-                `[ScaleUtils] ${currentScale} > minScale ${normalizedMin} → invisible (trop dézoomé)`
-            );
-        }
+        _logScale(
+            logger,
+            `[ScaleUtils] ${currentScale} > minScale ${normalizedMin} → invisible (too zoomed out)`
+        );
         return false;
     }
 
     if (normalizedMax !== null && currentScale < normalizedMax) {
-        if (logger?.debug) {
-            logger.debug(
-                `[ScaleUtils] ${currentScale} < maxScale ${normalizedMax} → invisible (trop zoomé)`
-            );
-        }
+        _logScale(
+            logger,
+            `[ScaleUtils] ${currentScale} < maxScale ${normalizedMax} → invisible (too zoomed in)`
+        );
         return false;
     }
 
-    if (logger?.debug) {
-        logger.debug(
-            `[ScaleUtils] ${currentScale} dans [${normalizedMax ?? "∞"} ; ${normalizedMin ?? "∞"}] → visible`
-        );
-    }
+    _logScale(
+        logger,
+        `[ScaleUtils] ${currentScale} dans [${normalizedMax ?? "∞"} ; ${normalizedMin ?? "∞"}] → visible`
+    );
 
     return true;
 }

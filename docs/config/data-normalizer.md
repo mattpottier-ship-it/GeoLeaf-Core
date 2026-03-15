@@ -1,9 +1,9 @@
-# 🔄 GeoLeaf - Système de Normalisation de Données
+﻿# 🔄 GeoLeaf - Système de Normalisation de Données
 
 Product Version: GeoLeaf Platform V1
 
 **Modules** : `GeoLeaf._Normalizer`, `GeoLeaf.Config.Normalization`, `GeoLeaf.Config.DataConverter`  
-**Version** : 1.1.0  
+**Version** : 1.1.1  
 **Fichiers source** :
 
 - `src/modules/data/normalizer.js`
@@ -797,6 +797,6 @@ const poi = GeoLeaf._Normalizer.normalizeFromGeoJSON(geoFeature);
 
 ---
 
-**Version** : 1.1.0  
+**Version** : 1.1.1  
 **Dernière mise à jour** : 19 janvier 2026  
 **Sprint 2** : Documentation complète du système de normalisation ✅

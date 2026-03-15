@@ -1,5 +1,5 @@
-﻿/**
- * Gestionnaire centralisé pour le bouton de label dans le Layer Manager
+/**
+ * Centralized manager for the button de label in the Layer Manager
  * @module labels/label-button-manager
  */
 
@@ -7,6 +7,7 @@ import { Log } from "../log/index.js";
 import { _UIComponents } from "../ui/components.js";
 import { GeoJSONCore } from "../geojson/core.js";
 import { Labels } from "./labels.js";
+import { getLabel } from "../i18n/i18n.js";
 
 interface SyncState {
     layerId: string;
@@ -14,6 +15,52 @@ interface SyncState {
     layerVisible: boolean;
     labelEnabled: boolean;
     areLabelsActive: boolean;
+}
+
+function _buildLabelToggleButton(L: any): HTMLButtonElement {
+    const labelToggle = L.DomUtil.create(
+        "button",
+        "gl-layer-manager__label-toggle"
+    ) as HTMLButtonElement;
+    labelToggle.type = "button";
+    labelToggle.setAttribute("aria-label", getLabel("aria.labels.toggle"));
+    labelToggle.disabled = true;
+    labelToggle.classList.add("gl-layer-manager__label-toggle--disabled");
+    const iconSpan = document.createElement("span");
+    iconSpan.className = "gl-layer-manager__label-toggle-icon";
+    iconSpan.textContent = "🏷️";
+    labelToggle.appendChild(iconSpan);
+    labelToggle.title = getLabel("aria.labels.toggle");
+    return labelToggle;
+}
+
+function _buildLabelToggleHandler(
+    labelToggle: HTMLButtonElement,
+    layerId: string,
+    L: any
+): (ev: Event) => void {
+    return function (ev: Event) {
+        if (L?.DomEvent) L.DomEvent.stopPropagation(ev);
+        ev.preventDefault();
+        if (labelToggle.disabled) return;
+        try {
+            const layerData = (GeoJSONCore as any)?.getLayerById?.(layerId);
+            const labelEnabled = (layerData as any)?.currentStyle?.label?.enabled === true;
+            if (!labelEnabled) return;
+            if (Labels?.toggleLabels) {
+                const newState = Labels.toggleLabels(layerId);
+                if (newState) {
+                    labelToggle.classList.add("gl-layer-manager__label-toggle--on");
+                    labelToggle.setAttribute("aria-pressed", "true");
+                } else {
+                    labelToggle.classList.remove("gl-layer-manager__label-toggle--on");
+                    labelToggle.setAttribute("aria-pressed", "false");
+                }
+            }
+        } catch (err) {
+            if (Log) Log.warn("[LabelButtonManager] Error toggling labels:", err);
+        }
+    };
 }
 
 const LabelButtonManager: {
@@ -28,7 +75,7 @@ const LabelButtonManager: {
     createButton(layerId: string, controlsContainer: HTMLElement): HTMLElement | null {
         if (!layerId || !controlsContainer) {
             if (Log)
-                Log.warn("[LabelButtonManager] createButton: paramètres manquants", {
+                Log.warn("[LabelButtonManager] createButton: missing parameters", {
                     layerId,
                     hasContainer: !!controlsContainer,
                 });
@@ -38,41 +85,8 @@ const LabelButtonManager: {
         if (existingButton) return existingButton as HTMLElement;
         const L = (globalThis as any).L;
         if (!L?.DomUtil) return null;
-        const labelToggle = L.DomUtil.create(
-            "button",
-            "gl-layer-manager__label-toggle"
-        ) as HTMLButtonElement;
-        labelToggle.type = "button";
-        labelToggle.setAttribute("aria-label", "Afficher/masquer les étiquettes");
-        labelToggle.disabled = true;
-        labelToggle.classList.add("gl-layer-manager__label-toggle--disabled");
-        const iconSpan = document.createElement("span");
-        iconSpan.className = "gl-layer-manager__label-toggle-icon";
-        iconSpan.textContent = "🏷️";
-        labelToggle.appendChild(iconSpan);
-        labelToggle.title = "Afficher/masquer les étiquettes";
-        const onLabelToggle = function (ev: Event) {
-            if (L?.DomEvent) L.DomEvent.stopPropagation(ev);
-            ev.preventDefault();
-            if (labelToggle.disabled) return;
-            try {
-                const layerData = (GeoJSONCore as any)?.getLayerById?.(layerId);
-                const labelEnabled = (layerData as any)?.currentStyle?.label?.enabled === true;
-                if (!labelEnabled) return;
-                if (Labels?.toggleLabels) {
-                    const newState = Labels.toggleLabels(layerId);
-                    if (newState) {
-                        labelToggle.classList.add("gl-layer-manager__label-toggle--on");
-                        labelToggle.setAttribute("aria-pressed", "true");
-                    } else {
-                        labelToggle.classList.remove("gl-layer-manager__label-toggle--on");
-                        labelToggle.setAttribute("aria-pressed", "false");
-                    }
-                }
-            } catch (err) {
-                if (Log) Log.warn("[LabelButtonManager] Erreur lors du toggle des labels:", err);
-            }
-        };
+        const labelToggle = _buildLabelToggleButton(L);
+        const onLabelToggle = _buildLabelToggleHandler(labelToggle, layerId, L);
         _UIComponents.attachEventHandler(labelToggle, "click", onLabelToggle);
         const visibilityToggle = controlsContainer.querySelector(".gl-layer-manager__item-toggle");
         if (visibilityToggle) controlsContainer.insertBefore(labelToggle, visibilityToggle);

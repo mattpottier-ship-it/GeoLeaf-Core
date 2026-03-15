@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @module ui/geolocation-state
  * @description ESM singleton store for geolocation UI state — Phase 10-B Pattern D
  *

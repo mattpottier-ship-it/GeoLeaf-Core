@@ -1,6 +1,7 @@
+/* eslint-disable security/detect-object-injection */
 /**
  * @module GeoLeaf.Utils.DomHelpers
- * Helpers pour cr�ation et manipulation d'�l�ments DOM
+ * Helpers pour création et manipulation d'éléments DOM
  *
  * @version 1.0.0
  * @requires GeoLeaf.Security (pour sanitization)
@@ -41,8 +42,90 @@ export interface CreateElementProps {
 }
 
 /**
- * Cr�e un �l�ment DOM avec propri�t�s et enfants de mani�re d�clarative
+ * Cr\u00e9e un \u00e9l\u00e9ment DOM avec propri\u00e9t\u00e9s et enfants de mani\u00e8re d\u00e9clarative
  */
+function _applyDataset(element: HTMLElement, dataAttrs: Record<string, string> | undefined): void {
+    if (!(dataAttrs && typeof dataAttrs === "object")) return;
+    for (const [key, value] of Object.entries(dataAttrs)) element.dataset[key] = value;
+}
+
+function _applyAttributes(
+    element: HTMLElement,
+    attributes: Record<string, string> | undefined
+): void {
+    if (!(attributes && typeof attributes === "object")) return;
+    for (const [key, value] of Object.entries(attributes)) element.setAttribute(key, String(value));
+}
+
+function _applyBaseProps(element: HTMLElement, props: CreateElementProps): void {
+    const { className, id, style, dataset: dataAttrs, attributes } = props;
+    if (className) element.className = String(className);
+    if (id) element.id = String(id);
+    if (style && typeof style === "object") Object.assign(element.style, style);
+    _applyDataset(element, dataAttrs);
+    _applyAttributes(element, attributes);
+}
+
+function _applyOtherProp(
+    element: HTMLElement,
+    key: string,
+    value: unknown,
+    events: GeoLeafUtilsEvents | undefined,
+    eventContext: string,
+    cleanupArray: (() => void)[] | undefined
+): void {
+    if (key.startsWith("on") && typeof value === "function") {
+        const event = key.substring(2).toLowerCase();
+        if (events) {
+            const id = events.on(element, event, value as EventListener, false, eventContext);
+            if (
+                cleanupArray &&
+                Array.isArray(cleanupArray) &&
+                typeof id === "number" &&
+                events.off
+            ) {
+                cleanupArray.push(() => events.off!(id));
+            }
+        } else {
+            element.addEventListener(event, value as EventListener);
+        }
+    } else if (key.startsWith("aria")) {
+        element.setAttribute("aria-" + key.substring(4).toLowerCase(), String(value));
+    } else if (key in element) {
+        (element as unknown as Record<string, unknown>)[key] = value;
+    } else {
+        element.setAttribute(key, String(value));
+    }
+}
+
+function _applyContent(
+    element: HTMLElement,
+    textContent: string | undefined,
+    innerHTML: string | undefined,
+    children: (Node | string | number | boolean | null | undefined)[]
+): void {
+    if (textContent !== undefined) {
+        element.textContent = String(textContent);
+        return;
+    }
+    if (innerHTML !== undefined) {
+        if (Log?.warn) {
+            Log.warn(
+                "[DomHelpers] createElement with innerHTML — content sanitized via DOMSecurity",
+                { tag: element.tagName, innerHTML: String(innerHTML).substring(0, 100) }
+            );
+        }
+        const domSec = typeof GeoLeaf !== "undefined" ? GeoLeaf?.DOMSecurity : undefined;
+        if (domSec?.setSafeHTML) {
+            domSec.setSafeHTML(element as HTMLElement, String(innerHTML));
+        } else {
+            element.textContent = String(innerHTML);
+        }
+        return;
+    }
+    appendChild(element, ...children);
+}
+
 export function createElement(
     tag: string,
     props: CreateElementProps = {},
@@ -51,101 +134,22 @@ export function createElement(
     if (typeof tag !== "string" || !tag.trim()) {
         throw new TypeError("[DomHelpers] createElement: tag must be a non-empty string");
     }
-
     const element = document.createElement(tag);
-
-    const {
-        className,
-        id,
-        style,
-        dataset: dataAttrs,
-        attributes,
-        textContent,
-        innerHTML,
-        _eventContext,
-        _cleanupArray,
-        ...otherProps
-    } = props;
-
-    if (className) element.className = String(className);
-    if (id) element.id = String(id);
-    if (style && typeof style === "object") {
-        Object.assign(element.style, style);
-    }
-    if (dataAttrs && typeof dataAttrs === "object") {
-        for (const [key, value] of Object.entries(dataAttrs)) {
-            element.dataset[key] = value;
-        }
-    }
-    if (attributes && typeof attributes === "object") {
-        for (const [key, value] of Object.entries(attributes)) {
-            element.setAttribute(key, String(value));
-        }
-    }
-
+    const { textContent, innerHTML, _eventContext, _cleanupArray, ...otherProps } = props;
+    _applyBaseProps(element, props);
     const events = typeof GeoLeaf !== "undefined" ? GeoLeaf.Utils?.events : undefined;
-
+    const evCtx = _eventContext ? _eventContext : "DomHelpers.createElement";
     for (const [key, value] of Object.entries(otherProps)) {
-        if (key.startsWith("on") && typeof value === "function") {
-            const event = key.substring(2).toLowerCase();
-            if (events) {
-                const id = events.on(
-                    element,
-                    event,
-                    value as EventListener,
-                    false,
-                    _eventContext || "DomHelpers.createElement"
-                );
-                if (
-                    _cleanupArray &&
-                    Array.isArray(_cleanupArray) &&
-                    typeof id === "number" &&
-                    events.off
-                ) {
-                    _cleanupArray.push(() => events.off!(id));
-                }
-            } else {
-                element.addEventListener(event, value as EventListener);
-            }
-        } else if (key.startsWith("aria")) {
-            const attrName = "aria-" + key.substring(4).toLowerCase();
-            element.setAttribute(attrName, String(value));
-        } else if (key in element) {
-            (element as unknown as Record<string, unknown>)[key] = value;
-        } else {
-            element.setAttribute(key, String(value));
+        if (!["className", "id", "style", "dataset", "attributes"].includes(key)) {
+            _applyOtherProp(element, key, value, events, evCtx, _cleanupArray);
         }
     }
-
-    if (textContent !== undefined) {
-        element.textContent = String(textContent);
-        return element;
-    }
-
-    if (innerHTML !== undefined) {
-        if (Log?.warn) {
-            Log.warn(
-                "[DomHelpers] createElement avec innerHTML - contenu sanitizé via DOMSecurity",
-                { tag, innerHTML: String(innerHTML).substring(0, 100) }
-            );
-        }
-        const domSec =
-            typeof GeoLeaf !== "undefined" ? GeoLeaf?.DOMSecurity : undefined;
-        if (domSec?.setSafeHTML) {
-            domSec.setSafeHTML(element as HTMLElement, String(innerHTML));
-        } else {
-            // GeoLeaf.DOMSecurity absent ou null → textContent (échappe le HTML)
-            element.textContent = String(innerHTML);
-        }
-        return element;
-    }
-
-    appendChild(element, ...children);
+    _applyContent(element, textContent, innerHTML, children);
     return element;
 }
 
 /**
- * Ajoute des enfants � un �l�ment parent
+ * Adds des enfants à un élément parent
  */
 export function appendChild(
     parent: HTMLElement,
@@ -175,7 +179,7 @@ export function appendChild(
 }
 
 /**
- * Vide un �l�ment de tous ses enfants
+ * Empty un élément de tous ses enfants
  */
 export function clearElement(
     element: HTMLElement | null | undefined

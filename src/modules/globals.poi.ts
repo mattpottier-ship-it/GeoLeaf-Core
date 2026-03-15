@@ -1,7 +1,22 @@
-﻿/**
- * globals.poi.js — Bridge UMD/ESM : B10 — poi, add-form, renderers
+/**
+ * @module globals.poi
  *
- * @see globals.js (orchestrateur)
+ * @description
+ * UMD/ESM bridge — B10 — POI, Add-Form, and Renderers initialization.
+ *
+ * This runtime initialization module registers all POI-related services on
+ * `globalThis.GeoLeaf`. It is imported as a side-effect by `globals.ts`
+ * (and `globals-lite.ts` — POI is included in both Full and Lite builds).
+ *
+ * Registers:
+ *   - POI core: `POIShared`, `POICore`, `POIMarkers`, `POINormalizers`, `POIAPI`,
+ *     `POIPopup`, `POISidePanel`
+ *   - Add-form: `AddFormFieldsManager`, `AddFormValidator`
+ *   - Renderers: `POIRenderers` (core, field renderers, media renderers,
+ *     component renderers, section orchestrator, lightbox manager, links, UI behaviors)
+ *   - Shared state: `LayerVisibilityState`, `POIState`
+ *
+ * @see globals for the orchestrator and import order
  */
 
 // B10 : poi — direct
@@ -46,8 +61,8 @@ _g.GeoLeaf._POIRendererLinks = RendererLinks;
 _g.GeoLeaf.SectionOrchestrator = SectionOrchestrator;
 _g.GeoLeaf._POIUIBehaviors = UIBehaviors;
 
-// ── Enregistrer showPoiDetails dans POICoreContract (utilisé par markers.js) ──
-// Permet à POICoreContract.showPoiDetails(poi) de déléguer vers le side panel.
+// ── Registersr showPoiDetails dans POICoreContract (used par markers.js) ──
+// Allows POICoreContract.showPoiDetails(poi) de delegate to the side panel.
 POICoreContract.register({
     showPoiDetails: (poi: any, customLayout: any) => POISidepanel.openSidePanel(poi, customLayout),
 });

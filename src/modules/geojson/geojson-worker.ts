@@ -1,6 +1,6 @@
-﻿/**
+/**
  * GeoLeaf GeoJSON Web Worker
- * Exécute le fetch + parse JSON hors du thread principal.
+ * Executes fetch + JSON parse off the main thread.
  *
  * Protocole de messages :
  *   → { type: "fetch", url, layerId, chunkSize }
@@ -8,8 +8,8 @@
  *   ← { type: "done",     layerId, featureCount }
  *   ← { type: "error",    layerId, message }
  *
- * Si le Service Worker (core ou complet) est enregistré, les requêtes
- * fetch() émises ici seront interceptées par la stratégie cache-first du SW.
+ * If the Service Worker (core ou complete) est registered, les requests
+ * fetch() requests here will be intercepted by the SW cache-first strategy.
  *
  * Version: __GEOLEAF_VERSION__
  * @module geojson/geojson-worker
@@ -17,19 +17,19 @@
 /* eslint-env worker */
 "use strict";
 
-/** Taille des chunks par défaut (nombre de features par message) */
+/** Size des chunks by default (nombre de features par message) */
 const DEFAULT_CHUNK_SIZE = 500;
 
-/** Protocoles autorisés pour les requêtes fetch */
+/** Allowed protocols for fetch requests */
 const ALLOWED_PROTOCOLS = new Set(["http:", "https:"]);
 
 /**
- * Valide une URL avant de l'utiliser dans fetch().
+ * Valide une URL avant of the utiliser dans fetch().
  * Bloque les protocoles dangereux (javascript:, data:, file:, blob:, etc.).
  *
- * @param {string} url - URL à valider
- * @returns {string} URL validée
- * @throws {Error} Si l'URL est invalide ou utilise un protocole interdit
+ * @param {string} url - URL to validate
+ * @returns {string} Validated URL
+ * @throws {Error} Si l'URL est invalid ou utilise un protocole interdit
  */
 function validateWorkerUrl(url: any) {
     if (!url || typeof url !== "string") {
@@ -60,10 +60,17 @@ function validateWorkerUrl(url: any) {
     }
 }
 
+function _normalizeFeatures(data: any): any[] {
+    if (data?.type === "FeatureCollection" && Array.isArray(data.features)) return data.features;
+    if (data?.type === "Feature") return [data];
+    if (Array.isArray(data)) return data;
+    return data?.features ?? [];
+}
+
 /**
- * Gère un message « fetch » : télécharge, parse et renvoie en chunks.
+ * Manages un message « fetch » : downloads, parse et returns en chunks.
  *
- * @param {Object} msg - Données du message reçu
+ * @param {Object} msg - Received message data
  */
 async function handleFetch(msg: any) {
     const { url, layerId, chunkSize } = msg;
@@ -79,17 +86,7 @@ async function handleFetch(msg: any) {
         const data = await response.json();
 
         // Normaliser en FeatureCollection
-        let features;
-        if (data && data.type === "FeatureCollection" && Array.isArray(data.features)) {
-            features = data.features;
-        } else if (data && data.type === "Feature") {
-            features = [data];
-        } else if (Array.isArray(data)) {
-            features = data;
-        } else {
-            // Objet inconnu — renvoyer tel quel dans un seul chunk
-            features = data && data.features ? data.features : [];
-        }
+        const features = _normalizeFeatures(data);
 
         const total = features.length;
 
@@ -121,10 +118,10 @@ async function handleFetch(msg: any) {
 }
 
 /**
- * Gère un message « fetch-text » : télécharge un fichier texte (ex: GPX) et le renvoie.
- * Perf 6.3.1: Off-load réseau GPX vers le Worker — le parsing DOMParser reste sur main thread.
+ * Manages un message « fetch-text » : downloads un file text (ex: GPX) et le returns.
+ * Perf 6.3.1: Off-load network GPX to the Worker — le parsing DOMParser reste sur main thread.
  *
- * @param {Object} msg - Données du message reçu
+ * @param {Object} msg - Received message data
  */
 async function handleFetchText(msg: any) {
     const { url, layerId } = msg;
@@ -153,7 +150,7 @@ async function handleFetchText(msg: any) {
 }
 
 /**
- * Écouteur de messages principal.
+ * Listnsur de messages main.
  */
 self.onmessage = function (event) {
     const msg = event.data;

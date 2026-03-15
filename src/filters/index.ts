@@ -3,16 +3,16 @@
  */
 /**
  * src/filters/index.js — SHIM LEGACY
- * Rétrocompatibilité : expose les filtres depuis src/filters/ (ancienne structure)
+ * Backward compatibility : expose the filters from src/filters/ (old structure)
  * → src/modules/geoleaf.filters.js
  * @module src/filters
  */
 import { Filters as _Filters } from "../modules/geoleaf.filters.js";
 
-// Fonctions principales déléguées au module core
+// Fonctions maines delegated au module core
 export const { filterPoiList, filterRouteList } = _Filters;
 
-// ── Helpers internes ──────────────────────────────────────────────────────────
+// ── Helpers internals ──────────────────────────────────────────────────────────
 
 function _getCatId(item: any) {
     return item?.attributes?.categoryId ?? item?.properties?.categoryId ?? null;
@@ -108,7 +108,7 @@ export function getRatingStats(items = []) {
     return { min, max, avg, count: items.length, withRating, withoutRating };
 }
 
-// ── Namespace re-export (rétrocompat) ─────────────────────────────────────────
+// ── Namespace re-export (retrocompat) ─────────────────────────────────────────
 export const Filters = {
     ..._Filters,
     getUniqueCategories,

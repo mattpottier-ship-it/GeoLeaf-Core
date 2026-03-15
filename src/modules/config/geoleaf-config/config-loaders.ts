@@ -1,4 +1,4 @@
-﻿/*!
+/*!
  * GeoLeaf Core – Config / Loaders
  * © 2026 Mattieu Pottier
  * Released under the MIT License
@@ -32,7 +32,7 @@ const C = Config as unknown as ConfigWithLoaders;
 C.loadUrl = function (url: string, options: LoadUrlOptions = {}): Promise<GeoLeafConfig> {
     const Loader = ConfigLoader;
     if (!Loader) {
-        Log.error("[GeoLeaf.Config] Module Loader non disponible.");
+        Log.error("[GeoLeaf.Config] Loader module not available.");
         return Promise.reject(new Error("Loader module not available"));
     }
     return Loader.loadUrl(url, options)
@@ -42,7 +42,7 @@ C.loadUrl = function (url: string, options: LoadUrlOptions = {}): Promise<GeoLea
             return this._config;
         })
         .catch((err) => {
-            Log.error("[GeoLeaf.Config] Erreur lors du chargement JSON :", err);
+            Log.error("[GeoLeaf.Config] Error loading config:", err);
             return this._config;
         });
 };
@@ -53,7 +53,7 @@ C.loadTaxonomy = function (
 ): Promise<Record<string, CategoryItem>> {
     const Taxonomy = TaxonomyManager;
     if (!Taxonomy) {
-        Log.error("[GeoLeaf.Config] Module Taxonomy non disponible.");
+        Log.error("[GeoLeaf.Config] Taxonomy module not available.");
         return Promise.reject(new Error("Taxonomy module not available"));
     }
     return Taxonomy.loadTaxonomy(url, options);
@@ -64,7 +64,7 @@ C.loadActiveProfileResources = function (
 ): Promise<GeoLeafConfig> {
     const Profile = ProfileManager;
     if (!Profile) {
-        Log.error("[GeoLeaf.Config] Module Profile non disponible.");
+        Log.error("[GeoLeaf.Config] Profile module not available.");
         return Promise.reject(new Error("Profile module not available"));
     }
     return Profile.loadActiveProfileResources(options);

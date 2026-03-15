@@ -1,7 +1,7 @@
-# GeoLeaf Developer Guide
+﻿# GeoLeaf Developer Guide
 
 **Product Version:** GeoLeaf Platform V1  
-**Version:** 1.1.0  
+**Version:** 1.1.1  
 **Last Updated:** February 2026  
 **Audience:** Contributors and advanced developers
 

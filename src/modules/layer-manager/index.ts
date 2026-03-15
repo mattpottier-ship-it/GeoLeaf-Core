@@ -1,9 +1,9 @@
-﻿/**
- * GeoLeaf LayerManager — Barrel export
- * Point d'entrée unique pour le sous-module layer-manager/
+/**
+ * GeoLeaf LayerManager — Barl export
+ * Point d'input unique for the sous-module layer-manager/
  *
- * Note : LayerManager (namespace assemblé, stateful) n'est PAS exporté ici.
- * Utiliser la façade geoleaf.layer-manager.js ou importer directement layer-manager/layer-manager-api.js.
+ * Note : LayerManager (namespace assembled, stateful) n'est PAS exported ici.
+ * Utiliser la facade geoleaf.layer-manager.js ou importer directly layer-manager/layer-manager-api.js.
  *
  * @module layer-manager
  */

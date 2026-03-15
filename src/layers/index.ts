@@ -1,4 +1,4 @@
-﻿/**
+/**
  * src/layers/index.js — Shim: aggregates layer management functions for legacy test paths
  * Tests expect: Layers, createGeoJSONLayer, createRouteLayer, getLayer, getAllLayers,
  *               showLayer, hideLayer, toggleLayer, removeLayer, fitLayerBounds,

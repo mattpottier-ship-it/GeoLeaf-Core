@@ -1,7 +1,8 @@
-// @ts-nocheck � migration TS, typage progressif
+/* eslint-disable security/detect-object-injection */
+// @ts-nocheck — migration TS, typage progressif
 /**
  * GeoLeaf UI Filter Panel - Lazy Loader
- * Chargement à la demande des filtres catégories et tags
+ * Loadsment to the demande des filtres categories et tags
  *
  * @module ui/filter-panel/lazy-loader
  */
@@ -17,67 +18,67 @@ const FilterPanelLazyLoader = {
     _openAccordions: new Set(),
 
     /**
-     * Charge les catégories pour le thème actif
-     * @param {string} themeId - ID du thème
-     * @returns {Array} - Array de catégories avec leurs sous-catégories
+     * Loads thes categories pour the theme active
+     * @param {string} themeId - ID of the theme
+     * @returns {Array} - Array de categories with theurs sous-categories
      */
     loadCategories(themeId) {
         const cacheKey = `categories_${themeId}`;
 
         if (this._cache[cacheKey]) {
-            Log.debug("[LazyLoader] Cache HIT pour catégories:", themeId);
+            Log.debug("[LazyLoader] Cache HIT for categories:", themeId);
             return this._cache[cacheKey];
         }
 
-        Log.debug("[LazyLoader] Cache MISS pour catégories, scan en cours...");
+        Log.debug("[LazyLoader] Cache MISS for categories, scanning...");
         const result = this._scanCategories(themeId);
         this._cache[cacheKey] = result;
         return result;
     },
 
     /**
-     * Charge les tags pour le thème actif
-     * @param {string} themeId - ID du thème
+     * Loads thes tags pour the theme active
+     * @param {string} themeId - ID of the theme
      * @returns {Array} - Array de tags uniques
      */
     loadTags(themeId) {
         const cacheKey = `tags_${themeId}`;
 
         if (this._cache[cacheKey]) {
-            Log.debug("[LazyLoader] Cache HIT pour tags:", themeId);
+            Log.debug("[LazyLoader] Cache HIT for tags:", themeId);
             return this._cache[cacheKey];
         }
 
-        Log.debug("[LazyLoader] Cache MISS pour tags, scan en cours...");
+        Log.debug("[LazyLoader] Cache MISS for tags, scanning...");
         const result = this._scanTags(themeId);
         this._cache[cacheKey] = result;
         return result;
     },
 
     /**
-     * Scanne les features pour extraire les catégories utilisées
+     * Scanne les features pour extraire les categories used
      * @private
-     * @param {string} themeId - ID du thème
+     * @param {string} themeId - ID of the theme
      * @returns {Object} - {categories: Map, usedIds: Set}
      */
     _scanCategories(themeId) {
         const startTime = performance.now();
 
-        // Récupérer les couches visibles du thème
+        // Retrieve the layers visibles of the theme
         const visibleLayerIds = this._getVisibleLayerIds(themeId);
 
-        // Récupérer toutes les features
+        // Retrieve toutes les features
         let allFeatures = [];
         try {
             if (GeoJSONCore && typeof GeoJSONCore.getFeatures === "function") {
                 allFeatures = GeoJSONCore.getFeatures() || [];
             }
         } catch (err) {
-            Log.warn("[LazyLoader] Erreur récupération features:", err);
+            Log.warn("[LazyLoader] Error fetching features:", err);
             return { categories: new Map(), usedIds: new Set() };
         }
 
-        // Filtrer par couches visibles
+        // Filtrer par layers visibles
         const visibleFeatures = allFeatures.filter((feature) => {
             const layerId =
                 feature.properties?._layerId || feature.properties?.layerId || feature._layerId;
@@ -85,10 +86,10 @@ const FilterPanelLazyLoader = {
         });
 
         Log.debug(
-            `[LazyLoader] Scan catégories: ${visibleFeatures.length} features sur ${visibleLayerIds.length} couches actives`
+            `[LazyLoader] Category scan: ${visibleFeatures.length} features on ${visibleLayerIds.length} active layers`
         );
 
-        // Extraire les catégories uniques (normalisation lowercase + variantes camelCase)
+        // Extraire les categories uniques (normalisation lowercasee + variantes camelCasee)
         const usedCategoryIds = new Set();
         visibleFeatures.forEach((feature) => {
             const props = feature.properties || {};
@@ -98,7 +99,7 @@ const FilterPanelLazyLoader = {
             if (props.subcategoryId) {
                 usedCategoryIds.add(props.subcategoryId);
             }
-            // Variante camelCase (subCategoryId) présente dans certains GeoJSON
+            // Variante camelCasee (subCategoryId) presents dans certains GeoJSON
             if (props.subCategoryId) {
                 usedCategoryIds.add(props.subCategoryId);
             }
@@ -106,7 +107,7 @@ const FilterPanelLazyLoader = {
 
         const elapsed = (performance.now() - startTime).toFixed(2);
         Log.info(
-            `[LazyLoader] Scan catégories terminé en ${elapsed}ms: ${usedCategoryIds.size} catégories trouvées`
+            `[LazyLoader] Category scan completed in ${elapsed}ms: ${usedCategoryIds.size} categories found`
         );
 
         return {
@@ -116,29 +117,29 @@ const FilterPanelLazyLoader = {
     },
 
     /**
-     * Scanne les features pour extraire les tags utilisés
+     * Scanne les features pour extraire les tags used
      * @private
-     * @param {string} themeId - ID du thème
-     * @returns {Array} - Array de tags triés
+     * @param {string} themeId - ID of the theme
+     * @returns {Array} - Array de tags sorted
      */
     _scanTags(themeId) {
         const startTime = performance.now();
 
-        // Récupérer les couches visibles du thème
+        // Retrieve the layers visibles of the theme
         const visibleLayerIds = this._getVisibleLayerIds(themeId);
 
-        // Récupérer toutes les features
+        // Retrieve toutes les features
         let allFeatures = [];
         try {
             if (GeoJSONCore && typeof GeoJSONCore.getFeatures === "function") {
                 allFeatures = GeoJSONCore.getFeatures() || [];
             }
         } catch (err) {
-            Log.warn("[LazyLoader] Erreur récupération features:", err);
+            Log.warn("[LazyLoader] Error retrieving features:", err);
             return [];
         }
 
-        // Filtrer par couches visibles
+        // Filtrer par layers visibles
         const visibleFeatures = allFeatures.filter((feature) => {
             const layerId =
                 feature.properties?._layerId || feature.properties?.layerId || feature._layerId;
@@ -164,7 +165,7 @@ const FilterPanelLazyLoader = {
         const tagsArray = Array.from(tagSet).sort();
         const elapsed = (performance.now() - startTime).toFixed(2);
 
-        Log.info(`[LazyLoader] Scan tags terminé en ${elapsed}ms:`, {
+        Log.info(`[LazyLoader] Tag scan completed in ${elapsed}ms:`, {
             totalFeatures: allFeatures.length,
             visibleFeatures: visibleFeatures.length,
             tagsFound: tagsArray.length,
@@ -174,10 +175,10 @@ const FilterPanelLazyLoader = {
     },
 
     /**
-     * Récupère les IDs des couches réellement visibles sur la carte
+     * Retrieves thes IDs des layers actually visibles sur the map
      * @private
-     * @param {string} _themeId - ID du thème (non utilisé, mais conservé pour compatibilité)
-     * @returns {Array} - Array d'IDs de couches avec visible: true
+     * @param {string} _themeId - ID of the theme (not used, but kept for compatibility)
+     * @returns {Array} - Array d'IDs de layers avec visible: true
      */
     _getVisibleLayerIds(_themeId) {
         let visibleLayerIds = [];
@@ -185,170 +186,168 @@ const FilterPanelLazyLoader = {
         try {
             if (GeoJSONCore && typeof GeoJSONCore.getAllLayers === "function") {
                 const allLayers = GeoJSONCore.getAllLayers();
-                // Filtrer uniquement celles qui sont visibles (ON dans layer manager)
+                // Filtrer only celles qui sont visibles (ON in theyer manager)
                 visibleLayerIds = allLayers
                     .filter((layer) => layer.visible === true)
                     .map((layer) => layer.id);
 
                 Log.debug(
-                    `[LazyLoader] ${visibleLayerIds.length} couches visibles trouvées:`,
+                    `[LazyLoader] ${visibleLayerIds.length} visible layers found:`,
                     visibleLayerIds
                 );
             }
         } catch (err) {
-            Log.warn("[LazyLoader] Erreur récupération couches visibles:", err);
+            Log.warn("[LazyLoader] Error retrieving visible layers:", err);
         }
 
         return visibleLayerIds;
     },
 
     /**
-     * Marque un accordéon comme ouvert
+     * Marque un accordion comme open
      * @param {string} type - 'categories' ou 'tags'
-     * @param {HTMLElement} element - Element de l'accordéon
+     * @param {HTMLElement} element - Element of the accordion
      */
     markAccordionOpen(type, element) {
         this._openAccordions.add({ type, element });
-        Log.debug(`[LazyLoader] Accordéon "${type}" marqué comme ouvert`);
+        Log.debug(`[LazyLoader] Accordion "${type}" marked as open`);
     },
 
     /**
-     * Marque un accordéon comme fermé
-     * @param {HTMLElement} element - Element de l'accordéon
+     * Marque un accordion comme closed
+     * @param {HTMLElement} element - Element of the accordion
      */
     markAccordionClosed(element) {
         this._openAccordions.forEach((item) => {
             if (item.element === element) {
                 this._openAccordions.delete(item);
-                Log.debug(`[LazyLoader] Accordéon "${item.type}" marqué comme fermé`);
+                Log.debug(`[LazyLoader] Accordion "${item.type}" marked as closed`);
             }
         });
     },
 
     /**
-     * Invalide le cache pour un thème spécifique
-     * @param {string} themeId - ID du thème
+     * Invalid le cache pour a theme specific
+     * @param {string} themeId - ID of the theme
      */
     invalidateCacheForTheme(themeId) {
         delete this._cache[`categories_${themeId}`];
         delete this._cache[`tags_${themeId}`];
-        Log.info(`[LazyLoader] Cache invalidé pour thème: ${themeId}`);
+        Log.info(`[LazyLoader] Cache invalidated for theme: ${themeId}`);
     },
 
     /**
-     * Invalide tout le cache (changement de thème)
+     * Invalid tout le cache (changement de theme)
      */
     clearCache() {
         this._cache = {};
-        Log.info("[LazyLoader] Cache complètement vidé");
+        Log.info("[LazyLoader] Cache completely cleared");
     },
 
     /**
-     * Rafraîchit les accordéons ouverts
-     * Utilisé après un changement de thème ou toggle de couche
+     * Refreshes les accordions opens
+     * Used after a theme change or layer toggle
      */
     refreshOpenAccordions() {
         if (this._openAccordions.size === 0) {
-            Log.debug("[LazyLoader] Aucun accordéon ouvert à rafraîchir");
+            Log.debug("[LazyLoader] No open accordion to refresh");
             return;
         }
 
-        Log.info(
-            `[LazyLoader] Rafraîchissement de ${this._openAccordions.size} accordéon(s) ouvert(s)`
-        );
+        Log.info(`[LazyLoader] Refreshing ${this._openAccordions.size} open accordion(s)`);
         const currentTheme = ThemeSelector.getCurrentTheme();
 
         if (!currentTheme) {
-            Log.warn("[LazyLoader] Impossible de récupérer le thème actif");
+            Log.warn("[LazyLoader] Unable to retrieve active theme");
             return;
         }
 
         this._openAccordions.forEach(({ type, element }) => {
-            // Sauvegarder l'état des checkboxes / tags sélectionnés
+            // Sauvegarder the state des checkboxes / tags selected
             const savedStates = this._saveCheckboxStates(element);
 
-            // Cibler la zone [data-lazy-type] qui reçoit le innerHTML
+            // Target the [data-lazy-type] area that receives innerHTML
             const contentArea = element.querySelector("[data-lazy-type]");
 
             if (!contentArea) {
-                Log.warn("[LazyLoader] Zone [data-lazy-type] introuvable dans l'accordéon");
+                Log.warn("[LazyLoader] Zone [data-lazy-type] not found in accordion");
                 return;
             }
 
-            // Réinitialiser le flag lazyLoaded pour permettre un futur rechargement
+            // Reset le flag lazyLoaded pour permettre un futur reloading
             element.dataset.lazyLoaded = "false";
 
-            // Appeler la fonction de render appropriée
+            // Appeler la fonction de render appropriate
             if (type === "categories") {
                 this._rerenderCategories(contentArea, currentTheme, savedStates);
             } else if (type === "tags") {
                 this._rerenderTags(contentArea, currentTheme, savedStates);
             }
 
-            // Re-marquer comme chargé après le re-render
+            // Re-marquer comme loaded after the re-render
             element.dataset.lazyLoaded = "true";
         });
     },
 
     /**
-     * Re-render les catégories dans un accordéon
+     * Re-render les categories dans un accordion
      * @private
      */
     _rerenderCategories(contentArea, themeId, savedStates) {
         const result = this.loadCategories(themeId);
 
-        // Construction du contenu via import ESM direct (P3-DEAD-02)
+        // Building du contenu via import ESM direct (P3-DEAD-02)
         const content = buildCategoryTreeContent(result);
-        // Les valeurs utilisateur sont échappées à la source par buildCategoryTreeContent.
-        // On utilise createContextualFragment (suppression scripts uniquement) pour préserver
-        // tous les attributs sûrs (class, data-*, type, value, name, checked) — la whitelist
-        // de sanitizeHTML supprimait <input> et <label>, cassant les checkboxes.
+        // User values are escaped at the source by buildCategoryTreeContent.
+        // We use createContextualFragment (remove scripts only) to preserve
+        // all safe attributes (class, data-*, type, value, name, checked) — the whitelist
+        // de sanitizeHTML supprimait <input> et <label>, casesant les checkboxes.
         contentArea.textContent = "";
         const catFrag = document
             .createRange()
             .createContextualFragment(content.replace(/<script[\s\S]*?<\/script>/gi, ""));
         contentArea.appendChild(catFrag);
 
-        // NE PAS réattacher attachCategoryTreeListeners ici :
-        // le listener sur contentArea (ajouté par _loadAccordionContentIfNeeded)
-        // survit au remplacement des enfants. Réattacher causerait des duplicatas
-        // qui annuleraient les toggles de checkbox (toggle pair = zéro net).
+        // NE PAS re-attach attachCategoryTreeListners ici :
+        // the listener on contentArea (added by _loadAccordionContentIfNeeded)
+        // survives child replacement. Re-attaching would cause duplicates
+        // that would cancel checkbox toggles (toggle pair = zero net).
 
-        // Restaurer les états des checkboxes
+        // Restaurer les states des checkboxes
         this._restoreCheckboxStates(contentArea, savedStates);
     },
 
     /**
-     * Re-render les tags dans un accordéon
+     * Re-render les tags dans un accordion
      * @private
      */
     _rerenderTags(contentArea, themeId, savedStates) {
         const tags = this.loadTags(themeId);
 
-        // Construction du contenu via import ESM direct (P3-DEAD-02)
+        // Building du contenu via import ESM direct (P3-DEAD-02)
         const content = buildTagsListContent(tags);
-        // Les valeurs utilisateur sont échappées à la source par buildTagsListContent.
-        // On utilise createContextualFragment (suppression scripts uniquement) pour préserver
-        // class et data-tag-value sur les <span> badges — la whitelist supprimait ces attributs,
-        // rendant les tags non sélectionnables.
+        // User values are escaped at the source by buildTagsListContent.
+        // We use createContextualFragment (remove scripts only) to preserve
+        // class et data-tag-value sur les <span> badges — la whitelist supprimait ces attributes,
+        // rendant les tags non selectionnables.
         contentArea.textContent = "";
         const tagFrag = document
             .createRange()
             .createContextualFragment(content.replace(/<script[\s\S]*?<\/script>/gi, ""));
         contentArea.appendChild(tagFrag);
 
-        // NE PAS réattacher attachTagsListeners ici :
-        // le listener sur contentArea (ajouté par _loadAccordionContentIfNeeded)
-        // survit au remplacement des enfants. Réattacher causerait des duplicatas
-        // qui annuleraient les toggles (toggle pair = zéro net, badge
-        // semblant inactif même après clic).
+        // NE PAS re-attach attachTagsListners ici :
+        // the listener on contentArea (added by _loadAccordionContentIfNeeded)
+        // survives child replacement. Re-attaching would cause duplicates
+        // that would cancel toggles (toggle pair = zero net, badge
+        // semblant inactive same after click).
 
-        // Restaurer les états des checkboxes
+        // Restaurer les states des checkboxes
         this._restoreCheckboxStates(contentArea, savedStates);
     },
 
     /**
-     * Sauvegarde l'état des checkboxes avant re-render
+     * Sauvegarde the state des checkboxes avant re-render
      * @private
      */
     _saveCheckboxStates(element) {
@@ -378,7 +377,7 @@ const FilterPanelLazyLoader = {
     },
 
     /**
-     * Restaure l'état des checkboxes après re-render
+     * Restaure the state des checkboxes after re-render
      * @private
      */
     _restoreCheckboxStates(element, savedStates) {
@@ -407,41 +406,41 @@ const FilterPanelLazyLoader = {
             }
         });
 
-        Log.debug(`[LazyLoader] ${restoredCount} états de checkbox restaurés`);
+        Log.debug(`[LazyLoader] ${restoredCount} checkbox states restored`);
     },
 };
 
-// Écouter les événements de changement de thème
+// Listnsr the events de changement de theme
 document.addEventListener("geoleaf:theme:applied", () => {
-    Log.info("[LazyLoader] Événement theme:applied détecté — invalidation complète");
+    Log.info("[LazyLoader] theme:applied event detected — full invalidation");
 
-    // 1. Vider le cache de données (scan catégories/tags)
+    // 1. Emptyr le cache de data (scan categories/tags)
     FilterPanelLazyLoader.clearCache();
 
-    // 2. Réinitialiser TOUS les flags data-lazy-loaded sur les accordéons
-    //    (fermés ou ouverts) pour forcer un rechargement au prochain expand
+    // 2. Reset TOUS les flags data-lazy-loaded sur les accordions
+    //    (closeds ou opens) pour forcer un reloading au prochain expand
     const allAccordions = document.querySelectorAll(
         ".gl-filter-panel__group--accordion[data-lazy-loaded]"
     );
     allAccordions.forEach((acc) => {
         acc.dataset.lazyLoaded = "false";
     });
-    Log.debug(`[LazyLoader] ${allAccordions.length} flag(s) data-lazy-loaded réinitialisé(s)`);
+    Log.debug(`[LazyLoader] ${allAccordions.length} data-lazy-loaded flag(s) reset`);
 
-    // 3. Rafraîchir les accordéons actuellement ouverts (re-render immédiat)
+    // 3. Refresh currently open accordions (immediate re-render)
     FilterPanelLazyLoader.refreshOpenAccordions();
 });
 
-// Écouter l'événement de changement de visibilité de couche
+// Listnsr l'event de changement de visibility de layer
 document.addEventListener("geoleaf:geojson:visibility-changed", (e) => {
     const detail = e.detail || {};
-    Log.info("[LazyLoader] Visibilité couche changée:", detail.layerId, detail.visible);
+    Log.info("[LazyLoader] Layer visibility changed:", detail.layerId, detail.visible);
 
-    // Invalider le cache du thème actif
+    // Invalidr le cache of the theme active
     const currentTheme = ThemeSelector.getCurrentTheme();
     if (currentTheme) {
         FilterPanelLazyLoader.invalidateCacheForTheme(currentTheme);
-        // Rafraîchir les accordéons ouverts
+        // Refresh open accordions
         FilterPanelLazyLoader.refreshOpenAccordions();
     }
 });

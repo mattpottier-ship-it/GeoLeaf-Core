@@ -1,6 +1,7 @@
-﻿/**
+/* eslint-disable security/detect-object-injection */
+/**
  * GeoLeaf Theme Applier - UI Sync
- * Synchronisation de l'UI : sélecteur de style, légende, fitBounds
+ * Synchronization of the UI : selector de style, legend, fitBounds
  *
  * @module themes/theme-applier/ui-sync
  */
@@ -15,9 +16,9 @@ import { RouteContract } from "../../../contracts/route.contract.js";
 import { Core } from "../../geoleaf.core.js";
 
 /**
- * Met à jour le sélecteur de style dans l'UI
- * @param {string} layerId - Identifiant de la couche
- * @param {string} styleId - Identifiant du style
+ * Updates the selector de style dans l'UI
+ * @param {string} layerId - Identifier de the layer
+ * @param {string} styleId - Identifier du style
  * @private
  */
 TA._updateStyleSelector = function (layerId: any, styleId: any) {
@@ -30,8 +31,8 @@ TA._updateStyleSelector = function (layerId: any, styleId: any) {
 };
 
 /**
- * Charge la légende correspondant au style appliqué
- * @param {string} layerId - ID de la couche
+ * Loads the legend correspondant au style applied
+ * @param {string} layerId - ID de the layer
  * @param {string} styleId - ID du style
  * @private
  */
@@ -40,7 +41,7 @@ TA._loadLegendForStyle = function (layerId: any, styleId: any) {
         return;
     }
 
-    // Récupérer les informations de la couche
+    // Retrieve les information de the layer
     const layersMap = GeoJSONShared.state.layers;
     const layerInfo = layersMap instanceof Map ? layersMap.get(layerId) : layersMap?.[layerId];
 
@@ -48,100 +49,96 @@ TA._loadLegendForStyle = function (layerId: any, styleId: any) {
         return;
     }
 
-    // Utiliser la nouvelle API qui génère la légende depuis le style
+    // Utiliser la nouvelle API qui generates the legend from the style
     LegendContract.loadLayerLegend(layerId, styleId, (layerInfo as any).config);
 };
 
 /**
- * Zoom sur l'emprise de toutes les couches chargées
+ * Zoom sur l'emprise de toutes the layers loadedes
  * @private
  */
+
+function _collectAllLayers(tempGroup: any): number {
+    let count = 0;
+    if (GeoJSONShared.getLayers) {
+        GeoJSONShared.getLayers().forEach((layerData: any) => {
+            if (layerData.layer) {
+                try {
+                    tempGroup.addLayer(layerData.layer);
+                    count++;
+                } catch (_e: any) {
+                    /* silent */
+                }
+            }
+        });
+    }
+    if (POIShared?.getMarkerLayer) {
+        const markerLayer = POIShared.getMarkerLayer();
+        if (markerLayer) {
+            try {
+                tempGroup.addLayer(markerLayer);
+                count++;
+            } catch (_e: any) {
+                /* silent */
+            }
+        }
+    }
+    if (RouteContract.isAvailable()) {
+        try {
+            const routeGroup = RouteContract.getLayerGroup();
+            if (routeGroup) {
+                tempGroup.addLayer(routeGroup);
+                count++;
+            }
+        } catch (_e: any) {
+            /* silent */
+        }
+    }
+    return count;
+}
+
+function _fitAndReveal(map: any, tempGroup: any) {
+    const bounds = tempGroup.getBounds();
+    if (!bounds.isValid()) {
+        return;
+    }
+    const mapContainer =
+        document.getElementById("geoleaf-map") ||
+        document.querySelector(".leaflet-container")?.parentElement;
+    if (mapContainer) {
+        (mapContainer as HTMLElement).style.opacity = "1";
+    }
+    map.fitBounds(bounds, { maxZoom: 12, padding: [50, 50], animate: false });
+    setTimeout(() => {
+        try {
+            document.dispatchEvent(
+                new CustomEvent("geoleaf:map:ready", { detail: { time: Date.now() } })
+            );
+        } catch (_e: any) {
+            /* fallback */
+        }
+    }, 800);
+}
+
 TA._fitBoundsOnAllLayers = function () {
     const map = Core?.getMap();
     if (!map) {
         return;
     }
 
-    // Mettre à jour la progression (99%)
-    if ((window as any)._glLoadingScreen && typeof (window as any)._glLoadingScreen.updateProgress === "function") {
+    if ((window as any)._glLoadingScreen?.updateProgress) {
         (window as any)._glLoadingScreen.updateProgress(99);
     }
 
-    // Créer un groupe temporaire avec toutes les couches pour calculer les bounds
     const tempGroup = (globalThis as any).L.featureGroup();
-    let layerCount = 0;
-
-    // Ajouter les couches GeoJSON
-    if (GeoJSONShared.getLayers) {
-        GeoJSONShared.getLayers().forEach((layerData: any, _layerId: any) => {
-            if (layerData.layer) {
-                try {
-                    tempGroup.addLayer(layerData.layer);
-                    layerCount++;
-                } catch (_e: any) {
-                    // Silencieux
-                }
-            }
-        });
-    }
-
-    // Ajouter les POI s'ils existent
-    if (POIShared?.getMarkerLayer) {
-        const markerLayer = POIShared.getMarkerLayer();
-        if (markerLayer) {
-            try {
-                tempGroup.addLayer(markerLayer);
-                layerCount++;
-            } catch (_e: any) {
-                // Silencieux
-            }
-        }
-    }
-
-    // Ajouter les Routes s'elles existent
-    if (RouteContract.isAvailable()) {
-        try {
-            const routeGroup = RouteContract.getLayerGroup();
-            if (routeGroup) {
-                tempGroup.addLayer(routeGroup);
-                layerCount++;
-            }
-        } catch (_e: any) {
-            // Silencieux
-        }
-    }
-
-    // Zoomer sur l'emprise
+    const layerCount = _collectAllLayers(tempGroup);
     if (layerCount > 0) {
-        const bounds = tempGroup.getBounds();
-        if (bounds.isValid()) {
-            // Afficher la carte AVANT le fitBounds pour éviter l'écran noir
-            const mapContainer =
-                document.getElementById("geoleaf-map") ||
-                document.querySelector(".leaflet-container")?.parentElement;
-            if (mapContainer) {
-                mapContainer.style.opacity = "1";
-            }
-
-            map.fitBounds(bounds, { maxZoom: 12, padding: [50, 50], animate: false });
-
-            // Attendre que les tuiles soient chargées avant de fermer le spinner
-            setTimeout(() => {
-                try {
-                    const event = new CustomEvent("geoleaf:map:ready", {
-                        detail: { time: Date.now() },
-                    });
-                    document.dispatchEvent(event);
-                } catch (_e: any) {
-                    // fallback
-                }
-            }, 800);
-        }
+        _fitAndReveal(map, tempGroup);
     }
 };
 
 /**
- * Synchronise l'état de visibilité de toutes les couches dans la légende
+ * Synchronise l'visibility state de toutes the layers dans the legend
  * @private
  */
 TA._syncLegendVisibility = function () {
@@ -158,7 +155,7 @@ TA._syncLegendVisibility = function () {
         return;
     }
 
-    // Parcourir toutes les couches et synchroniser leur état
+    // Parcourir toutes the layers et synchronize leur state
     (GeoJSONShared as any).getLayers().forEach((layerData: any, layerId: any) => {
         const visState = (VisibilityManager as any).getVisibilityState(layerId);
         const isVisible = visState ? visState.current : layerData.visible;

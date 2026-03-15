@@ -2,11 +2,11 @@
  * GeoLeaf GeoJSON Worker Manager
  * Orchestre le cycle de vie du Web Worker GeoJSON.
  *
- * Fonctionnalités :
- *   - Création lazy d'un Worker unique (singleton)
+ * Features :
+ *   - Creation lazy of a Worker unique (singleton)
  *   - Communication postMessage / onmessage
- *   - Fallback transparent vers fetch main-thread si Worker indisponible
- *   - Nettoyage automatique du Worker après un délai d'inactivité
+ *   - Fallback transparent vers fetch main-thread si Worker inavailable
+ *   - Nettoyage automatic du Worker after un delay d'inactivity
  *
  * @module geojson/worker-manager
  */
@@ -14,24 +14,24 @@
 
 import { getLog } from "../utils/general-utils.js";
 
-/** Délai avant terminaison du Worker inactif (ms) */
+/** Delay avant terminaison du Worker inactive (ms) */
 const IDLE_TIMEOUT = 30000;
 
-/** Chunk size envoyé au Worker */
+/** Chunk size sent to the Worker */
 const DEFAULT_CHUNK_SIZE = 500;
 
-/** Nom du fichier worker */
+/** Nom du file worker */
 const WORKER_FILENAME = "geojson-worker.js";
 
 /**
- * Détecte le répertoire de base du bundle GeoLeaf en scannant les balises <script>.
- * Permet de résoudre l'URL du Worker relativement au bundle, pas à la page HTML.
+ * Detects le directory de base du bundle GeoLeaf en scannant les balises <script>.
+ * Allows resolve l'URL du Worker relative to the bundle, pas to the page HTML.
  *
  * @returns {string} Base URL se terminant par '/' (ex. "../dist/" ou "/assets/js/")
  * @private
  */
 function _detectScriptBase() {
-    // Méthode 1 : document.currentScript (disponible uniquement pendant l'exécution synchrone du script)
+    // Method 1 : document.currentScript (available only pendant l'execution synchrone du script)
     if (
         typeof document !== "undefined" &&
         document.currentScript &&
@@ -43,7 +43,7 @@ function _detectScriptBase() {
         );
     }
 
-    // Méthode 2 : scanner les <script> pour trouver geoleaf*.js
+    // Method 2 : scanner les <script> pour trouver geoleaf*.js
     if (typeof document !== "undefined") {
         const scripts = document.getElementsByTagName("script");
         for (let i = scripts.length - 1; i >= 0; i--) {
@@ -55,15 +55,15 @@ function _detectScriptBase() {
         }
     }
 
-    // Méthode 3 : fallback — même répertoire que la page
+    // Method 3 : fallback — same directory que la page
     return "";
 }
 
-/** Base URL capturée au chargement du module */
+/** Base URL captured when the module loads */
 const _scriptBase = _detectScriptBase();
 
 /**
- * État interne du manager.
+ * STATE internal du manager.
  * @private
  */
 const _state: any = {
@@ -76,7 +76,7 @@ const _state: any = {
 // ─── Helpers ────────────────────────────────────────────────────
 
 /**
- * Tente de créer le Worker. Renvoie null si impossible.
+ * Tente de create le Worker. Renvoie null si impossible.
  * @returns {Worker|null}
  * @private
  */
@@ -85,7 +85,7 @@ function _createWorker() {
     if (_state.worker) return _state.worker;
 
     try {
-        // Résoudre l'URL du Worker relativement au script GeoLeaf (pas à la page HTML)
+        // Resolve the Worker URL relative to the GeoLeaf script (not the page HTML)
         const workerUrl = _scriptBase + WORKER_FILENAME;
         const worker = new Worker(workerUrl);
 
@@ -93,11 +93,11 @@ function _createWorker() {
         worker.onerror = _onError;
 
         _state.worker = worker;
-        getLog().debug("[WorkerManager] Web Worker GeoJSON créé :", workerUrl);
+        getLog().debug("[WorkerManager] Web Worker GeoJSON created:", workerUrl);
         return worker;
     } catch (err: any) {
         getLog().warn(
-            "[WorkerManager] Impossible de créer le Web Worker, fallback main-thread :",
+            "[WorkerManager] Unable to create Web Worker, main-thread fallback:",
             err.message
         );
         _state.workerAvailable = false;
@@ -106,7 +106,7 @@ function _createWorker() {
 }
 
 /**
- * Réinitialise le timer d'inactivité.
+ * Reinitializes le timer d'inactivity.
  * @private
  */
 function _resetIdleTimer() {
@@ -115,7 +115,7 @@ function _resetIdleTimer() {
         if (_state.pending.size === 0 && _state.worker) {
             _state.worker.terminate();
             _state.worker = null;
-            getLog().debug("[WorkerManager] Worker terminé après inactivité");
+            getLog().debug("[WorkerManager] Worker terminated after inactivity");
         }
     }, IDLE_TIMEOUT);
 }
@@ -123,7 +123,7 @@ function _resetIdleTimer() {
 // ─── Worker message handlers ────────────────────────────────────
 
 /**
- * Gestionnaire des messages reçus du Worker.
+ * Manager fors messages received from the Worker.
  * @param {MessageEvent} event
  * @private
  */
@@ -141,7 +141,7 @@ function _onMessage(event: any) {
                 if (msg.features && msg.features.length) {
                     entry.features.push(...msg.features);
                 }
-                // Callback optionnel par chunk (pour rendu progressif)
+                // Callback optional par chunk (pour rendu progressif)
                 if (typeof entry.onChunk === "function") {
                     entry.onChunk(msg.features, msg.index, msg.total);
                 }
@@ -160,7 +160,7 @@ function _onMessage(event: any) {
             break;
 
         case "text-done":
-            // Perf 6.3.1: GPX text fetch completed in Worker
+            // Perf 6.3.1: GPX text fetch completeed in Worker
             if (entry) {
                 _state.pending.delete(msg.layerId);
                 entry.resolve(msg.text || "");
@@ -174,18 +174,18 @@ function _onMessage(event: any) {
                 entry.reject(new Error(msg.message));
                 _resetIdleTimer();
             } else {
-                getLog().warn("[WorkerManager] Erreur Worker sans layerId :", msg.message);
+                getLog().warn("[WorkerManager] Worker error without layerId:", msg.message);
             }
             break;
 
         case "pong":
-            getLog().debug("[WorkerManager] Worker pong reçu");
+            getLog().debug("[WorkerManager] Worker pong received");
             break;
     }
 }
 
 /**
- * Gestionnaire d'erreur globale du Worker.
+ * Manager d'error globale du Worker.
  * @param {ErrorEvent} err
  * @private
  */
@@ -194,13 +194,13 @@ function _onError(err: any) {
         err.message ||
         err.filename ||
         "unknown (possible 404 on " + _scriptBase + WORKER_FILENAME + ")";
-    getLog().error("[WorkerManager] Erreur Worker :", details);
-    // Rejeter toutes les requêtes en cours → fallback main-thread
+    getLog().error("[WorkerManager] Worker error:", details);
+    // Rejeter toutes les requests en cours → fallback main-thread
     _state.pending.forEach(function (entry: any) {
         entry.reject(new Error("Worker error: " + details));
     });
     _state.pending.clear();
-    // Marquer le Worker comme indisponible → prochains appels utiliseront le fallback
+    // Marquer le Worker comme inavailable → prochains appels utiliseront le fallback
     _state.workerAvailable = false;
     if (_state.worker) {
         _state.worker.terminate();
@@ -212,7 +212,7 @@ function _onError(err: any) {
 // ─── Fallback main-thread ───────────────────────────────────────
 
 /**
- * Fallback : fetch + parse sur le thread principal.
+ * Fallback : fetch + parse sur le thread main.
  *
  * @param {string} url
  * @param {string} layerId
@@ -221,7 +221,7 @@ function _onError(err: any) {
  */
 function _mainThreadFetch(url: any, layerId: any) {
     const Log = getLog();
-    Log.debug("[WorkerManager] Fallback main-thread pour :", layerId);
+    Log.debug("[WorkerManager] Main-thread fallback for:", layerId);
 
     return fetch(url)
         .then(function (response) {
@@ -243,18 +243,18 @@ function _mainThreadFetch(url: any, layerId: any) {
         });
 }
 
-// ─── API publique ───────────────────────────────────────────────
+// ─── API public ───────────────────────────────────────────────
 
 const WorkerManager = {
     /**
-     * Récupère et parse un GeoJSON via le Web Worker (ou fallback main-thread).
+     * Retrieves et parse un GeoJSON via le Web Worker (ou fallback main-thread).
      *
      * @param {string} url - URL du GeoJSON
-     * @param {string} layerId - Identifiant unique de la couche
+     * @param {string} layerId - Identifier unique de the layer
      * @param {Object} [options={}]
      * @param {number} [options.chunkSize=500] - Nombre de features par chunk
      * @param {Function} [options.onChunk] - Callback(features[], chunkIndex, totalFeatures)
-     * @returns {Promise<Object>} - Résolu avec un FeatureCollection complet
+     * @returns {Promise<Object>} - Resolved with a complete FeatureCollection
      */
     fetchGeoJSON: function (url: any, layerId: any, options: any) {
         options = options || {};
@@ -297,13 +297,13 @@ const WorkerManager = {
     },
 
     /**
-     * Récupère le texte brut d'une URL via le Web Worker (ou fallback main-thread).
-     * Perf 6.3.1: Utilisé pour les fichiers GPX afin de décharger le réseau du thread principal.
-     * Note: le parsing DOMParser reste sur le main thread car non disponible dans tous les Workers.
+     * Retrieves the text brut of a URL via le Web Worker (ou fallback main-thread).
+     * Perf 6.3.1: Used for GPX files to offload network from the main thread.
+     * Note: le parsing DOMParser reste sur le main thread car non available dans tous les Workers.
      *
-     * @param {string} url - URL du fichier texte
-     * @param {string} layerId - Identifiant unique de la couche
-     * @returns {Promise<string>} - Résolu avec le texte brut
+     * @param {string} url - URL du file text
+     * @param {string} layerId - Identifier unique de the layer
+     * @returns {Promise<string>} - Resolved with raw text
      */
     fetchText: function (url: any, layerId: any) {
         // Resolve relative URLs to absolute (same reason as fetchGeoJSON)
@@ -346,7 +346,7 @@ const WorkerManager = {
     },
 
     /**
-     * Vérifie si le Web Worker est disponible.
+     * Checks if le Web Worker est available.
      * @returns {boolean}
      */
     isAvailable: function () {
@@ -354,8 +354,8 @@ const WorkerManager = {
     },
 
     /**
-     * Termine le Worker et nettoie l'état.
-     * Appelé lors du teardown de l'application.
+     * Termine le Worker et nettoie the state.
+     * Called during application teardown.
      */
     dispose: function () {
         if (_state.idleTimer) clearTimeout(_state.idleTimer);

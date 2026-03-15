@@ -12,7 +12,7 @@ const _g: any =
     typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : {};
 
 /**
- * Construit les options Leaflet à partir des options GeoLeaf.
+ * Builds thes options Leaflet froms options GeoLeaf.
  * @param {object} options
  * @returns {object} leafletMapOptions
  */
@@ -33,33 +33,33 @@ export function buildLeafletOptions(options: any) {
 }
 
 /**
- * Valide le DOM container et retourne l'élément cible.
+ * Valide le DOM container et returnne l'element cible.
  * @param {string} mapId
  * @returns {HTMLElement}
- * @throws {Error} si mapId manquant ou élément introuvable
+ * @throws {Error} si mapId manquant ou element introuvable
  */
 export function resolveMapContainer(mapId: any) {
     if (!mapId) throw new Error("L'option obligatoire 'mapId' est manquante.");
     const el = document.getElementById(mapId);
-    if (!el) throw new Error(`Aucun élément DOM trouvé pour mapId='${mapId}'.`);
+    if (!el) throw new Error(`No DOM element found for mapId='${mapId}'.`);
     return el;
 }
 
 /**
- * Crée une instance Leaflet Map.
+ * Creates ae instance Leaflet Map.
  * @param {HTMLElement} targetEl
  * @param {object} leafletOptions
  * @returns {L.Map}
  */
 export function createLeafletMap(targetEl: any, leafletOptions: any) {
     if (typeof L === "undefined") {
-        throw new Error("Leaflet (L) est introuvable. Assurez-vous d'avoir chargé Leaflet 1.9.x.");
+        throw new Error("Leaflet (L) not found. Make sure Leaflet 1.9.x is loaded.");
     }
     return L.map(targetEl, leafletOptions);
 }
 
 /**
- * Applique le thème via GeoLeaf.UI si disponible.
+ * Applies the theme via GeoLeaf.UI si available.
  * @param {string} theme
  */
 export function applyThemeSafe(theme: any) {
@@ -68,12 +68,12 @@ export function applyThemeSafe(theme: any) {
             _g.GeoLeaf.UI.applyTheme(theme);
         }
     } catch (err) {
-        Log.warn("[GeoLeaf.Core] Impossible d'appliquer le thème :", err);
+        Log.warn("[GeoLeaf.Core] Error applying theme:", err);
     }
 }
 
 /**
- * Initialise Legend si activé dans la config.
+ * Initialise Legend si activated in the config.
  * @param {L.Map} mapInstance
  */
 export function initLegendSafe(mapInstance: any) {
@@ -88,7 +88,7 @@ export function initLegendSafe(mapInstance: any) {
                 collapsed: false,
             });
         } catch (err) {
-            Log.warn("[GeoLeaf.Core] Impossible d'initialiser Legend :", err);
+            Log.warn("[GeoLeaf.Core] Error initializing legend:", err);
         }
     }
 }

@@ -1,35 +1,35 @@
+/* eslint-disable no-console */ // Service Worker context — Log module unavailable, console is required
+/* global __SW_DEBUG__ */ // build-time constant injected by Rollup replace plugin
 /**
  * GeoLeaf Service Worker — Core (Lite)
  *
- * Version allégée du Service Worker pour le bundle open-source (gratuit).
- * Gère le cache offline basique pour :
- * - Assets statiques (JS, CSS, fonts)
- * - Ressources profils (JSON, GeoJSON, SVG)
- * - Configurations (network-first avec fallback cache)
+ * Lightweight version of the Service Worker for the open-source (free) bundle.
+ * Handles basic offline cache for:
+ * - Static assets (JS, CSS, fonts)
+ * - Profile resources (JSON, GeoJSON, SVG)
+ * - Configurations (network-first with cache fallback)
  *
- * Stratégies :
- * - Cache-First : Assets statiques et profils (stale-while-revalidate)
- * - Network-First : Configurations avec fallback cache
+ * Strategies:
+ * - Cache-First: Static assets and profiles (stale-while-revalidate)
+ * - Network-First: Configurations with cache fallback
  *
- * ⚠️ Ne gère PAS (réservé au plugin Storage premium) :
- * - Tiles IndexedDB (tileCacheStrategy)
+ * ⚠️ Does NOT handle (reserved for the premium Storage plugin):
+ * - IndexedDB tiles (tileCacheStrategy)
  * - Background Sync (POI sync queue)
- * - Accès IndexedDB depuis le SW
+ * - IndexedDB access from the SW
  *
- * Pour le support complet offline (tiles, sync, IndexedDB),
- * utilisez le plugin Storage qui fournit sw.js (version complète).
+ * For full offline support (tiles, sync, IndexedDB),
+ * use the Storage plugin which provides sw.js (full version).
  *
  * @version __GEOLEAF_VERSION__
- * @see sw.js (version complète dans le plugin Storage)
+ * @see sw.js (full version in the Storage plugin)
  */
 
 "use strict";
 
-// Build-time constant injected by Rollup/Terser
-declare const __SW_DEBUG__: boolean | undefined;
-
-// Flag de debug SERVICE WORKER — mettre à true uniquement pour le développement
-// En production, tous les console.log SW sont supprimés au build via terser
+// __SW_DEBUG__ is a build-time constant — injected as a plain boolean by Rollup at build time
+// SERVICE WORKER debug flag — set to true only for development
+// In production, all SW console.log calls are removed at build time via terser
 const _SW_DEBUG = typeof __SW_DEBUG__ !== "undefined" ? __SW_DEBUG__ : false;
 
 const CACHE_VERSION = "geoleaf-v__GEOLEAF_VERSION__";
@@ -38,16 +38,16 @@ const CACHE_PROFILE_PREFIX = `${CACHE_VERSION}-profile-`;
 const CACHE_TILES = `${CACHE_VERSION}-tiles`;
 const CACHE_RUNTIME = `${CACHE_VERSION}-runtime`;
 
-// Assets core à pré-cacher (vide pour l'instant — dépend du déploiement)
-const STATIC_ASSETS: string[] = [];
+// Core assets to pre-cache (empty for now — depends on deployment)
+const STATIC_ASSETS = [];
 
-// URLs à ne jamais cacher
+// URLs to never cache
 const CACHE_BLACKLIST = [/\/api\//, /chrome-extension/, /\/__/];
 
 // ═══════════════════════════════════════════════
 // INSTALL EVENT
 // ═══════════════════════════════════════════════
-self.addEventListener("install", (event: any) => {
+self.addEventListener("install", (event) => {
     if (_SW_DEBUG) console.log("[SW-Core] Installing Service Worker v" + CACHE_VERSION);
 
     event.waitUntil(
@@ -59,11 +59,11 @@ self.addEventListener("install", (event: any) => {
                         STATIC_ASSETS.map((url) => new Request(url, { cache: "reload" }))
                     );
                 }
-                await (self as any).skipWaiting();
+                await self.skipWaiting();
                 if (_SW_DEBUG) console.log("[SW-Core] Installation complete");
             } catch (error) {
                 console.error("[SW-Core] Pre-cache failed:", error);
-                await (self as any).skipWaiting();
+                await self.skipWaiting();
             }
         })()
     );
@@ -72,7 +72,7 @@ self.addEventListener("install", (event: any) => {
 // ═══════════════════════════════════════════════
 // ACTIVATE EVENT
 // ═══════════════════════════════════════════════
-self.addEventListener("activate", (event: any) => {
+self.addEventListener("activate", (event) => {
     if (_SW_DEBUG) console.log("[SW-Core] Activating Service Worker v" + CACHE_VERSION);
 
     event.waitUntil(
@@ -94,7 +94,7 @@ self.addEventListener("activate", (event: any) => {
             })
             .then(() => {
                 if (_SW_DEBUG) console.log("[SW-Core] Old caches cleared");
-                return (self as any).clients.claim();
+                return self.clients.claim();
             })
     );
 });
@@ -102,21 +102,21 @@ self.addEventListener("activate", (event: any) => {
 // ═══════════════════════════════════════════════
 // FETCH EVENT
 // ═══════════════════════════════════════════════
-self.addEventListener("fetch", (event: any) => {
+self.addEventListener("fetch", (event) => {
     const { request } = event;
     const url = new URL(request.url);
 
-    // Ignorer les URLs blacklistées
+    // Ignore blacklisted URLs
     if (CACHE_BLACKLIST.some((pattern) => pattern.test(url.href))) {
         return;
     }
 
-    // Stratégie selon le type de ressource
+    // Strategy based on resource type
     if (isProfileResource(url)) {
         event.respondWith(cacheFirstStrategy(request, getCacheNameForProfile(url)));
     } else if (isTileRequest(url)) {
-        // Version core : les tuiles passent par le réseau avec cache API simple
-        // (pas de tileCacheStrategy IndexedDB — réservé au plugin Storage)
+        // Core version: tiles go through the network with simple Cache API
+        // (no tileCacheStrategy IndexedDB — reserved for the Storage plugin)
         event.respondWith(tileSimpleStrategy(request));
     } else if (isStaticAsset(url)) {
         event.respondWith(cacheFirstStrategy(request, CACHE_STATIC));
@@ -130,14 +130,14 @@ self.addEventListener("fetch", (event: any) => {
 // ═══════════════════════════════════════════════
 // MESSAGE EVENT
 // ═══════════════════════════════════════════════
-self.addEventListener("message", (event: any) => {
-    // Validate message source: only accept messages from controlled clients
+self.addEventListener("message", (event) => {
+    // Validate message source: only accept messages from controlled clinkts
     if (!event.source || (event.source.type !== "window" && event.source.type !== "worker")) {
         return;
     }
 
     if (event.data && event.data.type === "SKIP_WAITING") {
-        (self as any).skipWaiting();
+        self.skipWaiting();
     }
 
     if (event.data && event.data.type === "CLEAR_CACHE") {
@@ -167,15 +167,15 @@ self.addEventListener("message", (event: any) => {
 // ═══════════════════════════════════════════════
 
 /**
- * Cache-First avec stale-while-revalidate.
- * Sert depuis le cache immédiatement, met à jour en arrière-plan.
+ * Cache-First with stale-while-revalidate.
+ * Serves from cache immediately, updates in the background.
  */
-async function cacheFirstStrategy(request: any, cacheName: any) {
+async function cacheFirstStrategy(request, cacheName) {
     const cache = await caches.open(cacheName);
     const cachedResponse = await cache.match(request);
 
     if (cachedResponse) {
-        // Mise à jour en arrière-plan (stale-while-revalidate)
+        // Background update (stale-while-revalidate)
         fetch(request)
             .then((networkResponse) => {
                 if (networkResponse && networkResponse.status === 200) {
@@ -195,10 +195,10 @@ async function cacheFirstStrategy(request: any, cacheName: any) {
 }
 
 /**
- * Network-First avec fallback cache.
- * Essaie le réseau d'abord, sert depuis le cache si hors-ligne.
+ * Network-First with cache fallback.
+ * Tries the network first, serves from cache if offline.
  */
-async function networkFirstStrategy(request: any, cacheName: any) {
+async function networkFirstStrategy(request, cacheName) {
     const cache = await caches.open(cacheName);
 
     try {
@@ -215,11 +215,11 @@ async function networkFirstStrategy(request: any, cacheName: any) {
 }
 
 /**
- * Stratégie simplifiée pour les tuiles (version core).
- * Cache API uniquement — pas d'IndexedDB.
- * Retourne un placeholder SVG en dernier recours.
+ * Simplified strategy for tiles (core version).
+ * Cache API only — no IndexedDB.
+ * Returns an SVG placeholder as last resort.
  */
-async function tileSimpleStrategy(request: any) {
+async function tileSimpleStrategy(request) {
     const cache = await caches.open(CACHE_TILES);
     const cachedResponse = await cache.match(request);
 
@@ -249,50 +249,62 @@ async function tileSimpleStrategy(request: any) {
 // DETECTION HELPERS
 // ═══════════════════════════════════════════════
 
-function isProfileResource(url: any) {
+function isProfileResource(url) {
     return url.pathname.includes("/profiles/");
 }
 
-function isTileRequest(url: any) {
-    const hostname = url.hostname;
-    const path = url.pathname;
-
-    // 1. Providers vectoriels — uniquement les vrais fichiers tuiles (.pbf/.mvt/.png),
-    //    PAS les métadonnées (styles JSON, TileJSON) qui doivent passer par networkFirst.
-    //    Vérifié EN PREMIER car certains hostnames (tiles.openfreemap.org, api.maptiler.com)
-    //    contiennent "tile" et seraient captés par la règle raster générique.
-    if (
+function _isVectorTileProvider(hostname) {
+    return (
         hostname.includes("openfreemap") ||
         hostname.includes("maptiler") ||
         hostname.includes("protomaps") ||
         hostname.includes("versatiles")
-    ) {
-        return path.endsWith(".pbf") || path.endsWith(".mvt") || path.endsWith(".png");
-    }
+    );
+}
 
-    // 2. Providers raster — toujours acceptés (hostname suffit)
-    if (
+function _isRasterProvider(hostname) {
+    return (
         hostname.includes("tile") ||
         hostname.includes("openstreetmap") ||
         hostname.includes("arcgisonline") ||
         hostname.includes("opentopomap")
-    ) {
-        return true;
-    }
+    );
+}
 
-    // 3. Fallback : détection par extension de fichier
+function _isTileFile(path) {
     return path.endsWith(".pbf") || path.endsWith(".mvt");
 }
 
-function isStaticAsset(url: any) {
+function isTileRequest(url) {
+    const hostname = url.hostname;
+    const path = url.pathname;
+
+    // 1. Providers vectoriels — only les vrais files tiles (.pbf/.mvt/.png),
+    //    PAS les metadata (styles JSON, TileJSON) qui doivent passer par networkFirst.
+    //    Checked FIRST because some hostnames (tiles.openfreemap.org, api.maptiler.com)
+    //    contain "tile" and would be caught by the generic raster rule.
+    if (_isVectorTileProvider(hostname)) {
+        return _isTileFile(path) || path.endsWith(".png");
+    }
+
+    // 2. Raster providers — always accepted (hostname is enough)
+    if (_isRasterProvider(hostname)) {
+        return true;
+    }
+
+    // 3. Fallback : detection par extension de file
+    return _isTileFile(path);
+}
+
+function isStaticAsset(url) {
     return url.pathname.match(/\.(js|css|png|jpg|jpeg|svg|woff|woff2|ttf)$/);
 }
 
-function isConfigFile(url: any) {
+function isConfigFile(url) {
     return url.pathname.includes("config.json") || url.pathname.includes("profile.json");
 }
 
-function getCacheNameForProfile(url: any) {
+function getCacheNameForProfile(url) {
     const match = url.pathname.match(/\/profiles\/([^/]+)/);
     if (match && match[1]) {
         return `${CACHE_PROFILE_PREFIX}${match[1]}`;

@@ -1,9 +1,9 @@
 /**
  * GeoLeaf Contract — POI Renderers (lazy-chunk boundary)
  *
- * Interface ESM pure pour accéder aux sous-modules de rendu POI
+ * Interface ESM pure pour access aux sous-modules de rendu POI
  * (RendererCore, FieldRenderers, MediaRenderers, RendererLinks)
- * depuis la façade poi/renderers.js sans couplage runtime.
+ * from the facade poi/renderers.js sans couplage runtime.
  *
  * Phase 10-D — Pattern C : contrat de chunk POI Renderers.
  *
@@ -29,7 +29,7 @@ let _fieldRenderers: any = null;
 let _mediaRenderers: any = null;
 
 /**
- * Retourne l'instance singleton de FieldRenderers (lazy-init).
+ * Returns the instance singleton de FieldRenderers (lazy-init).
  * @returns {FieldRenderers}
  * @private
  */
@@ -41,7 +41,7 @@ function _getFieldRenderers() {
 }
 
 /**
- * Retourne l'instance singleton de MediaRenderers (lazy-init).
+ * Returns the instance singleton de MediaRenderers (lazy-init).
  * @returns {MediaRenderers}
  * @private
  */
@@ -53,14 +53,14 @@ function _getMediaRenderers() {
 }
 
 /**
- * Contrat d'interface pour les sous-modules POI Renderers.
+ * Contrat d'interface for thes sous-modules POI Renderers.
  * @namespace POIRenderersContract
  */
 const POIRenderersContract = {
     /**
-     * Peuple le side panel avec les données d'un POI.
-     * @param {Object} poi - POI normalisé
-     * @param {Object} customLayout - Layout personnalisé (optionnel)
+     * Peuple le side panel with thes data of a POI.
+     * @param {Object} poi - POI normalized
+     * @param {Object} customLayout - Layout custom (optional)
      * @returns {Promise<void>}
      */
     async populateSidePanel(poi: any, customLayout?: any) {
@@ -70,9 +70,9 @@ const POIRenderersContract = {
     },
 
     /**
-     * Rend le contenu complet d'un POI (side panel).
-     * @param {Object} poi - Données du POI
-     * @param {Object} state - État
+     * Rend le contenu complete of a POI (side panel).
+     * @param {Object} poi - Data du POI
+     * @param {Object} state - STATE
      * @returns {DocumentFragment}
      */
     renderContent(poi: any, state?: any) {
@@ -83,7 +83,7 @@ const POIRenderersContract = {
     },
 
     /**
-     * Rend un champ texte.
+     * Rend un field text.
      * @param {Object} section
      * @param {Object} poi
      * @param {string} value
@@ -115,7 +115,7 @@ const POIRenderersContract = {
     },
 
     /**
-     * Rend une galerie.
+     * Rend une gallery.
      * @param {Object} section
      * @param {Array<string>} gallery
      * @returns {HTMLElement|null}
@@ -125,7 +125,7 @@ const POIRenderersContract = {
     },
 
     /**
-     * Rend un lien.
+     * Rend un link.
      * @param {Object} section
      * @param {string} url
      * @returns {HTMLElement|null}

@@ -1,9 +1,9 @@
 /**
- * Module partagé pour LayerManager
- * État et utilitaires communs entre les sous-modules
+ * Module shared pour LayerManager
+ * STATE et utilitaires communs entre les sous-modules
  *
- * DÉPENDANCES:
- * - GeoLeaf.Log (optionnel)
+ * DEPENDENCIES:
+ * - GeoLeaf.Log (optional)
  *
  * EXPOSE:
  * - GeoLeaf._LayerManagerShared
@@ -18,14 +18,14 @@ export interface LMSharedOptions {
 }
 
 /**
- * État partagé pour LayerManager (privé interne)
+ * Shared state for LayerManager (private internal)
  */
 const _LayerManagerShared: any = {
     map: null,
     control: null,
     options: {
         position: "bottomright",
-        title: "Légende",
+        title: "Legend",
         collapsible: true,
         collapsed: false,
         sections: [],

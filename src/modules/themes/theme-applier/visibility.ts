@@ -1,6 +1,7 @@
+/* eslint-disable security/detect-object-injection */
 /**
  * GeoLeaf Theme Applier - Visibility
- * Gestion de la visibilité des couches et application des styles
+ * Gestion de la visibility des layers et application des styles
  *
  * @module themes/theme-applier/visibility
  */
@@ -20,7 +21,7 @@ import { StyleSelector } from "../../layer-manager/style-selector.js";
 const _Config: any = Config;
 
 /**
- * Désactive toutes les couches GeoJSON
+ * Deactivates all GeoJSON layers
  * @private
  */
 TA._hideAllLayers = function () {
@@ -33,17 +34,21 @@ TA._hideAllLayers = function () {
         return;
     }
 
-    // Réinitialiser tous les overrides utilisateur pour laisser le thème prendre le contrôle
+    // Reset tous les overrides user for theisser the theme prendre the control
     (VisibilityManager as any).resetAllUserOverrides();
 
-    // Parcourir toutes les couches enregistrées
+    // Iterate over all registered layers
     GeoJSONShared.getLayers().forEach((layerData: any, layerId: any) => {
-        (VisibilityManager as any).setVisibility(layerId, false, (VisibilityManager as any).VisibilitySource.THEME);
+        (VisibilityManager as any).setVisibility(
+            layerId,
+            false,
+            (VisibilityManager as any).VisibilitySource.THEME
+        );
     });
 };
 
 /**
- * Applique la configuration d'une couche (visible/masquée + style)
+ * Applies the configuration d'a layer (visible/hidden + style)
  * @param {Object} layerConfig - Configuration { id, visible, style }
  * @returns {Promise<void>}
  * @private
@@ -57,10 +62,10 @@ TA._applyLayerConfig = function (layerConfig: any) {
     const visible = layerConfig.visible !== false;
     const styleId = layerConfig.style ? String(layerConfig.style).trim() : undefined;
 
-    // Récupérer la couche depuis le registre
+    // Retrieve the layer from the registre
     const layerData = GeoJSONShared.state.layers?.get(layerId);
 
-    // Si la couche n'existe pas, essayer de la charger automatiquement
+    // Si the layer n'existe pas, essayer de la load automaticment
     if (!layerData) {
         return TA._loadLayerFromProfile(layerId).then((loadedLayer: any) => {
             if (loadedLayer) {
@@ -71,137 +76,114 @@ TA._applyLayerConfig = function (layerConfig: any) {
         });
     }
 
-    // La couche existe déjà, appliquer directement la visibilité
+    // The layer existe already, appliquer directly la visibility
     return TA._setLayerVisibilityAndStyle(layerId, visible, styleId);
 };
 
+function _resolveEffectiveStyleId(
+    styleId: string,
+    availableStyles: any[]
+): { styleId: string; exists: boolean } {
+    const styleExists = availableStyles.some((s: any) => s.id === styleId);
+    if (styleExists) return { styleId, exists: true };
+    const fallbackMap: Record<string, string> = { default: "default", defaut: "default" };
+    const fallbackStyleId = fallbackMap[styleId];
+    if (fallbackStyleId) {
+        const fallbackExists = availableStyles.some((s: any) => s.id === fallbackStyleId);
+        if (fallbackExists) return { styleId: fallbackStyleId, exists: true };
+    }
+    return { styleId, exists: false };
+}
+
+function _getProfileId(): string {
+    if (_Config && typeof _Config.getActiveProfile === "function") {
+        const activeProfile = _Config.getActiveProfile();
+        return activeProfile?.id || "default";
+    }
+    return "default";
+}
+
+function _applyLayerHidden(layerId: string): void {
+    (LayerVisibilityManager as any).setVisibility(
+        layerId,
+        false,
+        (LayerVisibilityManager as any).VisibilitySource.THEME
+    );
+    if (Labels) Labels.disableLabels(layerId);
+    if (LabelButtonManager) LabelButtonManager.syncImmediate(layerId);
+}
+
+function _onStyleLoaded(layerId: string, styleId: string | undefined, result: any): void {
+    const styleConfig = result.styleData;
+    (LayerManagerStyle as any).setLayerStyle(layerId, styleConfig);
+    const layerDataForStyle = GeoJSONShared.state.layers?.get(layerId);
+    if (layerDataForStyle) (layerDataForStyle as any).currentStyle = styleConfig;
+    if (Labels && typeof Labels.initializeLayerLabels === "function")
+        Labels.initializeLayerLabels(layerId);
+    if (LabelButtonManager) LabelButtonManager.syncImmediate(layerId);
+    if (LayerManager && typeof LayerManager.refresh === "function") LayerManager.refresh();
+    if (StyleSelector) StyleSelector.setCurrentStyle(layerId, styleId!);
+    TA._updateStyleSelector(layerId, styleId);
+    TA._loadLegendForStyle(layerId, styleId);
+}
+
+function _applyLayerVisible(
+    layerId: string,
+    styleId: string | undefined,
+    layerData: any
+): Promise<any> {
+    (LayerVisibilityManager as any).setVisibility(
+        layerId,
+        true,
+        (LayerVisibilityManager as any).VisibilitySource.THEME
+    );
+    if (!styleId || !(LayerManagerStyle as any)?.setLayerStyle) return Promise.resolve();
+    const availableStyles = (layerData as any).config?.styles?.available || [];
+    const { styleId: effectiveStyleId, exists } = _resolveEffectiveStyleId(
+        styleId,
+        availableStyles
+    );
+    if (!exists) return Promise.resolve();
+    const styleFile = availableStyles.find((s: any) => s.id === effectiveStyleId)?.file;
+    if (!styleFile) return Promise.resolve();
+    const profileId = _getProfileId();
+    const layerDirectory = (layerData as any)._layerDirectory || layerId;
+    const localStyleLoader = StyleLoader;
+    if (!localStyleLoader) {
+        Log?.error(`[ThemeApplier] StyleLoader non disponible`);
+        return Promise.resolve();
+    }
+    return localStyleLoader
+        .loadAndValidateStyle(
+            profileId,
+            layerId,
+            effectiveStyleId,
+            styleFile,
+            `layers/${layerDirectory}`
+        )
+        .then((result) => {
+            _onStyleLoaded(layerId, styleId, result);
+            return result;
+        })
+        .catch((_err: any) => {
+            // Silent — error already logged by StyleLoader
+        });
+}
+
 /**
- * Définit la visibilité et le style d'une couche
- * @param {string} layerId - ID de la couche
- * @param {boolean} visible - Visibilité souhaitée
- * @param {string} styleId - ID du style à appliquer
+ * Sets the visibility et le style d'a layer
+ * @param {string} layerId - ID de the layer
+ * @param {boolean} visible - Desired visibility
+ * @param {string} styleId - ID du style to appliquer
  * @returns {Promise<void>}
  * @private
  */
 TA._setLayerVisibilityAndStyle = function (layerId: any, visible: any, styleId: any) {
     const layerData = GeoJSONShared.state.layers?.get(layerId);
-    if (!layerData) {
-        return Promise.resolve();
-    }
-
-    const VisibilityManager: any = LayerVisibilityManager;
-    if (!(VisibilityManager as any)) {
-        return Promise.resolve();
-    }
-
-    if (visible) {
-        // Utiliser le gestionnaire centralisé avec source THEME
-        (VisibilityManager as any).setVisibility(layerId, true, (VisibilityManager as any).VisibilitySource.THEME);
-
-        // Appliquer le style si spécifié
-        if (styleId && (LayerManagerStyle as any)?.setLayerStyle) {
-            const availableStyles = (layerData as any).config?.styles?.available || [];
-            let effectiveStyleId = styleId;
-            let styleExists = availableStyles.some((s: any) => s.id === styleId);
-
-            // Fallback: si 'default' n'existe pas, essayer 'défaut' (et vice-versa)
-            if (!styleExists) {
-                const fallbackMap: Record<string,string> = {
-                    default: "défaut",
-                    défaut: "default",
-                };
-                const fallbackStyleId = fallbackMap[styleId];
-                if (fallbackStyleId) {
-                    const fallbackExists = availableStyles.some((s: any) => s.id === fallbackStyleId);
-                    if (fallbackExists) {
-                        effectiveStyleId = fallbackStyleId;
-                        styleExists = true;
-                    }
-                }
-            }
-
-            if (styleExists) {
-                const styleFile = availableStyles.find((s: any) => s.id === effectiveStyleId)?.file;
-                if (styleFile) {
-                    let profileId = "default";
-                    if (Config && typeof (Config as any).getActiveProfile === "function") {
-                        const activeProfile = (Config as any).getActiveProfile();
-                        profileId = activeProfile?.id || "default";
-                    }
-
-                    const layerDirectory = (layerData as any)._layerDirectory || layerId;
-
-                    const localStyleLoader = StyleLoader;
-                    if (!localStyleLoader) {
-                        if (Log) Log.error(`[ThemeApplier] StyleLoader non disponible`);
-                        return Promise.resolve();
-                    }
-
-                    return localStyleLoader
-                        .loadAndValidateStyle(
-                            profileId,
-                            layerId,
-                            effectiveStyleId,
-                            styleFile,
-                            `layers/${layerDirectory}`
-                        )
-                        .then((result) => {
-                            const styleConfig = result.styleData;
-                            (LayerManagerStyle as any).setLayerStyle(layerId, styleConfig);
-
-                            // Stocker currentStyle pour les labels
-                            const layerDataForStyle = GeoJSONShared.state.layers?.get(layerId);
-                            if (layerDataForStyle) {
-                                (layerDataForStyle as any).currentStyle = styleConfig;
-                            }
-
-                            // Initialiser les labels si configurés
-                            if (Labels && typeof Labels.initializeLayerLabels === "function") {
-                                Labels.initializeLayerLabels(layerId);
-                            }
-
-                            // Mettre à jour l'état du bouton des labels
-                            if (LabelButtonManager) {
-                                LabelButtonManager.syncImmediate(layerId);
-                            }
-
-                            // Synchroniser l'UI du Layer Manager
-                            if (LayerManager && typeof LayerManager.refresh === "function") {
-                                LayerManager.refresh();
-                            }
-
-                            // Mettre à jour le style actuel dans le sélecteur
-                            if (StyleSelector) {
-                                StyleSelector.setCurrentStyle(layerId, styleId);
-                            }
-
-                            // Rafraîchir le sélecteur dans l'UI
-                            TA._updateStyleSelector(layerId, styleId);
-
-                            // Charger la légende correspondante
-                            TA._loadLegendForStyle(layerId, styleId);
-
-                            return result;
-                        })
-                        .catch((_err) => {
-                            // Silencieux — erreur déjà loguée par StyleLoader
-                        });
-                }
-            }
-        }
-    } else {
-        // Masquer la couche avec source THEME
-        (VisibilityManager as any).setVisibility(layerId, false, (VisibilityManager as any).VisibilitySource.THEME);
-
-        // Désactiver les labels et mettre à jour le bouton
-        if (Labels) {
-            Labels.disableLabels(layerId);
-        }
-        if (LabelButtonManager) {
-            LabelButtonManager.syncImmediate(layerId);
-        }
-    }
-
+    if (!layerData) return Promise.resolve();
+    if (!LayerVisibilityManager) return Promise.resolve();
+    if (visible) return _applyLayerVisible(layerId, styleId, layerData);
+    _applyLayerHidden(layerId);
     return Promise.resolve();
 };
 

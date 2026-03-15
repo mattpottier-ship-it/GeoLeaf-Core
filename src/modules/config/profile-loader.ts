@@ -1,11 +1,11 @@
-﻿/**
- * @fileoverview Chargeur de profil modulaire pour GeoLeaf
+/**
+ * @fileoverview Loadsur de profile modulaire pour GeoLeaf
  * @module config/profile-loader
  */
 
-import { Log } from '../log/index.js';
-import { ProfileLoader as ConfigLoader } from './loader.js';
-import type { LoadUrlOptions } from './geoleaf-config/config-types.js';
+import { Log } from "../log/index.js";
+import { ProfileLoader as ConfigLoader } from "./loader.js";
+import type { LoadUrlOptions } from "./geoleaf-config/config-types.js";
 
 interface ProfileWithFiles {
     Files?: { taxonomyFile?: string; themesFile?: string; layersFile?: string };
@@ -50,8 +50,8 @@ const ProfileLoader = {
         fetchOptions: LoadUrlOptions = {}
     ): Promise<Record<string, unknown>> {
         const Loader = ConfigLoader;
-        if (!Loader) throw new Error('GeoLeaf._ConfigLoader non disponible');
-        Log.info(`[ProfileLoader] Chargement profil modulaire: ${profileId}`);
+        if (!Loader) throw new Error("GeoLeaf._ConfigLoader not available");
+        Log.info(`[ProfileLoader] ${profileId}`);
         try {
             const [taxonomyData, themesData, layersFileData] = await Promise.all([
                 this._loadTaxonomy(profile, baseUrl, timestamp, fetchOptions),
@@ -59,7 +59,9 @@ const ProfileLoader = {
                 this._loadLayersFile(profile, baseUrl, timestamp, fetchOptions),
             ]);
             const rawLayers =
-                layersFileData && typeof layersFileData === 'object' && Array.isArray((layersFileData as { layers?: unknown[] }).layers)
+                layersFileData &&
+                typeof layersFileData === "object" &&
+                Array.isArray((layersFileData as { layers?: unknown[] }).layers)
                     ? (layersFileData as { layers: unknown[] }).layers
                     : Array.isArray(layersFileData)
                       ? layersFileData
@@ -80,7 +82,7 @@ const ProfileLoader = {
                 layersSource,
                 layersConfigs,
             });
-            Log.info('[ProfileLoader] Profil modulaire chargé avec succès', {
+            Log.info("[ProfileLoader] ", {
                 profileId,
                 hasTaxonomy: !!enrichedProfile.taxonomy,
                 hasThemes: !!enrichedProfile.themes,
@@ -88,7 +90,7 @@ const ProfileLoader = {
             });
             return enrichedProfile;
         } catch (error) {
-            Log.error('[ProfileLoader] Erreur chargement profil modulaire:', error);
+            Log.error("[ProfileLoader] Error loading modular profile:", error);
             throw error;
         }
     },
@@ -108,10 +110,10 @@ const ProfileLoader = {
                     `${baseUrl}/${taxonomyFile}?t=${timestamp}`,
                     fetchOptions
                 );
-                Log.info('[ProfileLoader] Taxonomy.json chargé avec succès');
+                Log.info("[ProfileLoader] Taxonomy.json y");
                 return taxonomy;
             } catch (err) {
-                Log.warn('[ProfileLoader] Erreur chargement taxonomy.json:', err);
+                Log.warn("[ProfileLoader] Erronomy.json:", err);
                 return null;
             }
         }
@@ -128,9 +130,14 @@ const ProfileLoader = {
         const themesFile = profile.Files?.themesFile ?? profile.themesFile;
         if (themesFile) {
             try {
-                return (await Loader.fetchJson(`${baseUrl}/${themesFile}?t=${timestamp}`, fetchOptions)) ?? null;
+                return (
+                    (await Loader.fetchJson(
+                        `${baseUrl}/${themesFile}?t=${timestamp}`,
+                        fetchOptions
+                    )) ?? null
+                );
             } catch (err) {
-                Log.warn('[ProfileLoader] Erreur chargement themes.json:', err);
+                Log.warn("[ProfileLoader] Errmes.json:", err);
                 return null;
             }
         }
@@ -147,9 +154,14 @@ const ProfileLoader = {
         const layersFile = profile.Files?.layersFile;
         if (layersFile) {
             try {
-                return (await Loader.fetchJson(`${baseUrl}/${layersFile}?t=${timestamp}`, fetchOptions)) ?? null;
+                return (
+                    (await Loader.fetchJson(
+                        `${baseUrl}/${layersFile}?t=${timestamp}`,
+                        fetchOptions
+                    )) ?? null
+                );
             } catch (err) {
-                Log.warn('[ProfileLoader] Erreur chargement layers.json:', err);
+                Log.warn("[ProfileLoader] Errers.json:", err);
                 return null;
             }
         }
@@ -173,7 +185,7 @@ const ProfileLoader = {
                     layerManagerId: layerRef.layerManagerId ?? null,
                 };
             }
-            const layerDirectory = layerRef.configFile.replace(/\/[^/]+$/, '');
+            const layerDirectory = layerRef.configFile.replace(/\/[^/]+$/, "");
             try {
                 const layerConfig = await Loader.fetchJson(
                     `${baseUrl}/${layerRef.configFile}?t=${timestamp}`,
@@ -186,7 +198,7 @@ const ProfileLoader = {
                     layerManagerId: layerRef.layerManagerId ?? null,
                 };
             } catch (err) {
-                Log.error(`[ProfileLoader] Erreur chargement ${layerRef.configFile}:`, err);
+                Log.error(`[ProfileLoader] Error loading ${layerRef.configFile}:`, err);
                 return {
                     id: layerRef.id,
                     config: null,
@@ -199,7 +211,8 @@ const ProfileLoader = {
     },
 
     _buildEnrichedProfile(params: EnrichedProfileParams): Record<string, unknown> {
-        const { profile, baseUrl, profileId, taxonomy, themes, layersSource, layersConfigs } = params;
+        const { profile, baseUrl, profileId, taxonomy, themes, layersSource, layersConfigs } =
+            params;
         const enrichedProfile: Record<string, unknown> = { ...profile };
         enrichedProfile.basePath = baseUrl;
         enrichedProfile._profileId = profileId;
@@ -215,26 +228,28 @@ const ProfileLoader = {
                         layerManagerId:
                             layerData.layerManagerId ||
                             (layerData.config.layerManagerId as string) ||
-                            'geojson-default',
+                            "geojson-default",
                     } as Record<string, unknown>;
-                    const data = normalized.data as { file?: string; directory?: string } | undefined;
+                    const data = normalized.data as
+                        | { file?: string; directory?: string }
+                        | undefined;
                     if (data?.file && !normalized.dataFile) {
-                        const dataDir = data.directory || 'data';
+                        const dataDir = data.directory || "data";
                         normalized.dataFile = `${dataDir}/${data.file}`;
                     }
                     return normalized;
                 }
                 const original = (layersSource as LayerRef[]).find((l) => l.id === layerData.id);
-                return original ?? { id: layerData.id, error: 'Failed to load config' };
+                return original ?? { id: layerData.id, error: "Failed to load config" };
             });
         }
         return enrichedProfile;
     },
 
     isModularProfile(profile: unknown): boolean {
-        if (!profile || typeof profile !== 'object') return false;
+        if (!profile || typeof profile !== "object") return false;
         const p = profile as ProfileWithFiles;
-        if (p.Files && typeof p.Files === 'object') return true;
+        if (p.Files && typeof p.Files === "object") return true;
         if (p.version) {
             const versionMatch = String(p.version).match(/^(\d+)\.(\d+)/);
             if (versionMatch) return parseInt(versionMatch[1], 10) >= 3;

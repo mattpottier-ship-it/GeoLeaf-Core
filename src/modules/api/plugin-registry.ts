@@ -4,14 +4,14 @@
  */
 
 /**
- * Registre léger des plugins et modules GeoLeaf chargés.
- * Permet aux intégrateurs d'interroger les capacités disponibles.
+ * Lightweight registry of loaded GeoLeaf plugins and modules.
+ * Allows integrators to query available capabilities.
  *
  * @module api/plugin-registry
  * @example
  * GeoLeaf.plugins.isLoaded('storage')      // → true/false
  * GeoLeaf.plugins.getLoadedPlugins()        // → ['core', 'storage', 'labels']
- * GeoLeaf.plugins.canActivate('addpoi')     // → true si dépendances OK
+ * GeoLeaf.plugins.canActivate('addpoi')     // → true if dependencies OK
  */
 
 const _registry = new Map(); // name → { name, version, loaded, loadedAt, metadata }
@@ -20,10 +20,10 @@ const _lazyResolvers = new Map(); // name → () => Promise<void>
 
 export const PluginRegistry = {
     /**
-     * Enregistre un plugin comme chargé.
-     * Appelé automatiquement par globals.js et les fichiers plugins.
-     * @param {string} name - Identifiant du plugin (ex: 'storage', 'addpoi', 'labels')
-     * @param {object} [metadata] - Métadonnées optionnelles { version, requires, optional }
+     * Registers a plugin as loaded.
+     * Called automatically by globals.js and plugin files.
+     * @param {string} name - Plugin identifier (e.g. 'storage', 'addpoi', 'labels')
+     * @param {object} [metadata] - Optional metadata { version, requires, optional }
      */
     register(name: any, metadata: any = {}) {
         _registry.set(name, {
@@ -39,7 +39,7 @@ export const PluginRegistry = {
     },
 
     /**
-     * Enregistre un resolver lazy (appelé par bundle-entry.js).
+     * Registers a lazy resolver (called by bundle-entry.js).
      * @param {string} name
      * @param {Function} resolver - () => Promise<void>
      */
@@ -48,7 +48,7 @@ export const PluginRegistry = {
     },
 
     /**
-     * Vérifie si un plugin est actuellement chargé.
+     * Checks if a plugin is currently loaded.
      * @param {string} name
      * @returns {boolean}
      */
@@ -57,7 +57,7 @@ export const PluginRegistry = {
     },
 
     /**
-     * Vérifie si un plugin peut être activé (ses dépendances `requires` sont chargées).
+     * Checks if a plugin can be activated (its `requires` dependencies are loaded).
      * @param {string} name
      * @returns {boolean}
      */
@@ -68,7 +68,7 @@ export const PluginRegistry = {
     },
 
     /**
-     * Charge un plugin lazy par son nom.
+     * Loads a plugin lazy par son nom.
      * @param {string} name
      * @returns {Promise<void>}
      */
@@ -83,7 +83,7 @@ export const PluginRegistry = {
     },
 
     /**
-     * Retourne la liste des noms de plugins chargés.
+     * Returns the list of loaded plugin names.
      * @returns {string[]}
      */
     getLoadedPlugins() {
@@ -91,7 +91,7 @@ export const PluginRegistry = {
     },
 
     /**
-     * Retourne la liste de tous les modules disponibles (chargés + lazy disponibles).
+     * Returns the list of all availabthe modules (loaded + lazy available).
      * @returns {string[]}
      */
     getAvailableModules() {
@@ -99,7 +99,7 @@ export const PluginRegistry = {
     },
 
     /**
-     * Retourne les métadonnées d'un plugin.
+     * Returns the metadata of a plugin.
      * @param {string} name
      * @returns {object|null}
      */
@@ -108,8 +108,8 @@ export const PluginRegistry = {
     },
 
     /**
-     * Affiche dans la console un rapport des plugins premium chargés.
-     * Silencieux si aucun plugin premium n'est chargé (core seul).
+     * Prints a console report of loaded premium plugins.
+     * Silent if no premium plugin is loaded (core only).
      */
     reportPremiumPlugins() {
         const CORE_MODULES = new Set([
@@ -132,15 +132,15 @@ export const PluginRegistry = {
         );
         if (premium.length === 0) {
             console.info(
-                "%c[PLUGINS] Core MIT — 0 plugin premium chargé",
+                "%c[PLUGINS] Core MIT — 0 premium plugin loaded",
                 "color:#6b7280;font-style:italic"
             );
             return;
         }
 
+        // eslint-disable-next-line no-console
         console.groupCollapsed(
-            // eslint-disable-line no-console
-            `%c[PLUGINS] ${premium.length} plugin(s) premium chargé(s)`,
+            `%c[PLUGINS] ${premium.length} premium plugin(s) loaded`,
             "color:#7c3aed;font-weight:bold"
         );
         for (const entry of premium) {
@@ -154,14 +154,14 @@ export const PluginRegistry = {
             if (!healthy) {
                 console.warn(
                     // eslint-disable-line no-console
-                    `     [PLUGINS] ${entry.name} : healthCheck échoué — vérifiez le chargement du plugin.`
+                    `     [PLUGINS] ${entry.name} : healthCheck failed — check plugin loading.`
                 );
             }
         }
         console.groupEnd(); // eslint-disable-line no-console
     },
 
-    // Accès interne — ne pas utiliser en dehors de GeoLeaf
+    // Internal access — do not use outside GeoLeaf
     _registry,
     _lazyResolvers,
 };

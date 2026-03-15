@@ -1,4 +1,4 @@
-﻿/*!
+/*!
  * GeoLeaf Core – GeoJSON types
  * © 2026 Mattieu Pottier
  * Released under the MIT License
@@ -13,7 +13,7 @@ export interface GeoJSONFeature {
     properties?: Record<string, unknown> | null;
 }
 
-/** GeoJSON geometry (minimal union for layer handling) */
+/** GeoJSON geometry (minimum union for layer handling) */
 export type GeoJSONGeometry =
     | { type: "Point"; coordinates: [number, number] | [number, number, number] }
     | { type: "LineString"; coordinates: [number, number][] | [number, number, number][] }

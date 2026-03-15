@@ -1,4 +1,4 @@
-﻿/**
+/**
  * GeoLeaf GeoJSON Layer Manager - Style
  * Style normalization, hatch patterns, style application
  *
@@ -18,79 +18,334 @@ const getState = () => GeoJSONShared.state;
 
 const LayerManager: any = {};
 
+// ── _normalizeStyleToLeaflet helpers ─────────────────────────────────────
+
+function _buildNormalizedCasing(style: any, normalized: any): void {
+    if (!style.casing?.enabled) return;
+    normalized._casing = {
+        enabled: true,
+        color: style.casing.color || "#000000",
+        opacity: typeof style.casing.opacity === "number" ? style.casing.opacity : 1.0,
+        weight: typeof style.casing.widthPx === "number" ? style.casing.widthPx : 1.0,
+        dashArray: style.casing.dashArray || null,
+        lineCap: style.casing.lineCap || null,
+        lineJoin: style.casing.lineJoin || null,
+    };
+}
+
+function _buildNormalizedHatch(style: any, layerId: any, normalized: any): void {
+    if (!style.hatch) return;
+    normalized.hatch = { ...style.hatch };
+    if (style.hatch.stroke) {
+        const hs: any = {};
+        if (style.hatch.stroke.color) hs.color = style.hatch.stroke.color;
+        if (typeof style.hatch.stroke.opacity === "number") hs.opacity = style.hatch.stroke.opacity;
+        if (typeof style.hatch.stroke.widthPx === "number") hs.widthPx = style.hatch.stroke.widthPx;
+        normalized.hatch.stroke = hs;
+    }
+    if (!style.hatch.enabled || !layerId) return;
+    const patternId = _createHatchPattern(layerId, style.hatch);
+    if (!patternId) return;
+    normalized._hatchPatternId = patternId;
+    if (style.hatch.renderMode === "pattern_only") {
+        normalized.fillColor = "transparent";
+        normalized.fillOpacity = 1;
+    }
+}
+
+// ── eachLayer callback helpers ────────────────────────────────────────────
+
+function _applyPointerEvents(layer: any, isInteractive: boolean): void {
+    if (layer._path) {
+        layer._path.style.pointerEvents = isInteractive ? "auto" : "none";
+        return;
+    }
+    if (layer._renderer && typeof layer.redraw === "function") layer.redraw();
+}
+
+function _applyInteractiveState(layer: any, layerData: any, _g2: any): void {
+    const cfg = layerData.config;
+    const isInteractive =
+        typeof cfg.interactiveShape === "boolean"
+            ? cfg.interactiveShape
+            : _g2.GeoLeaf?.Config?.get
+              ? _g2.GeoLeaf.Config.get("ui.interactiveShapes", false)
+              : false;
+    if (layer.options) layer.options.interactive = isInteractive;
+    _applyPointerEvents(layer, isInteractive);
+}
+
+function _createCasingLayer(layer: any, casingConfig: any, leafletLayer: any, _g2: any): void {
+    const cs = {
+        color: casingConfig.color,
+        opacity: casingConfig.opacity,
+        weight: casingConfig.weight,
+        dashArray: casingConfig.dashArray,
+        lineCap: casingConfig.lineCap || "butt",
+        lineJoin: casingConfig.lineJoin || "miter",
+        fill: false,
+    };
+    layer._casingLayer = _g2.L.polyline(layer.getLatLngs(), cs);
+    if (leafletLayer?.addLayer) leafletLayer.addLayer(layer._casingLayer);
+    else if (layer._map) layer._map.addLayer(layer._casingLayer);
+    if (layer._casingLayer.setZIndex) layer._casingLayer.setZIndex((layer.options.zIndex || 0) - 1);
+}
+
+function _applyLayerCasing(layer: any, style: any, leafletLayer: any, _g2: any): void {
+    if (!style._casing?.enabled) {
+        if (layer._casingLayer && leafletLayer?.removeLayer) {
+            leafletLayer.removeLayer(layer._casingLayer);
+            layer._casingLayer = null;
+        }
+        return;
+    }
+    if (!(layer instanceof _g2.L.Polyline) || layer instanceof _g2.L.Polygon) return;
+    const cc = style._casing;
+    if (!layer._casingLayer) {
+        _createCasingLayer(layer, cc, leafletLayer, _g2);
+    } else {
+        layer._casingLayer.setStyle({
+            color: cc.color,
+            opacity: cc.opacity,
+            weight: cc.weight,
+            dashArray: cc.dashArray,
+            lineCap: cc.lineCap || "butt",
+            lineJoin: cc.lineJoin || "miter",
+        });
+    }
+}
+
+function _applyLayerHatch(layer: any, style: any): void {
+    if (!style._hatchPatternId || !style.hatch) return;
+    const patternId = style._hatchPatternId;
+    const hatchConfig = style.hatch;
+    setTimeout(() => {
+        _applyHatchToLayer(layer, patternId, hatchConfig);
+    }, 0);
+    if (layer._hatchPatternId === patternId) return;
+    layer._hatchPatternId = patternId;
+    if (layer._hatchListener) layer.off("add", layer._hatchListener);
+    layer._hatchListener = function () {
+        _applyHatchToLayer(this, patternId, hatchConfig);
+    };
+    layer.on("add", layer._hatchListener);
+    if (!layer._hatchCleanupBound) {
+        layer._hatchCleanupBound = true;
+        layer.on("remove", function (this: any) {
+            if (this._hatchListener) {
+                this.off("add", this._hatchListener);
+                this._hatchListener = null;
+            }
+        });
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
- * Normalise le format de style vers le format Leaflet
+ * Normalise le format de style to the format Leaflet
  * Phase 4 dedup: delegates base fill/stroke to shared normalizeStyleToLeaflet,
- * then layers on hatch patterns and casing extensions.
+ * then layers on hatch patterns and caseing extensions.
  * @private
- * @param {Object} style - Style source (format imbriqué ou plat)
- * @param {string} layerId - ID de la couche (pour les patterns SVG)
- * @returns {Object} - Style normalisé au format Leaflet
+ * @param {Object} style - Style source (format nested ou plat)
+ * @param {string} layerId - ID de the layer (for thes patterns SVG)
+ * @returns {Object} - Style normalized au format Leaflet
  */
 function _normalizeStyleToLeaflet(style: any, layerId: any) {
-    if (!style || typeof style !== "object") {
-        return {};
-    }
-
-    // Base normalization (fill/stroke → flat Leaflet props)
+    if (!style || typeof style !== "object") return {};
     const normalized = normalizeStyleToLeaflet(style);
-
-    // ── Extended: hatch pattern_only override ──
     if (style.fill || style.stroke) {
-        if (style.hatch && style.hatch.enabled && style.hatch.renderMode === "pattern_only") {
+        if (style.hatch?.enabled && style.hatch.renderMode === "pattern_only") {
             normalized.fillColor = "transparent";
             normalized.fillOpacity = 1;
         }
-
-        // ── Extended: Casing (bordure/contour pour polylines) ──
-        if (style.casing && style.casing.enabled) {
-            normalized._casing = {
-                enabled: true,
-                color: style.casing.color || "#000000",
-                opacity: typeof style.casing.opacity === "number" ? style.casing.opacity : 1.0,
-                weight: typeof style.casing.widthPx === "number" ? style.casing.widthPx : 1.0,
-                dashArray: style.casing.dashArray || null,
-                lineCap: style.casing.lineCap || null,
-                lineJoin: style.casing.lineJoin || null,
-            };
-        }
-
-        // ── Extended: Hatch normalization + SVG pattern creation ──
-        if (style.hatch) {
-            normalized.hatch = { ...style.hatch };
-            if (style.hatch.stroke) {
-                const hatchStroke: any = {};
-                if (style.hatch.stroke.color) hatchStroke.color = style.hatch.stroke.color;
-                if (typeof style.hatch.stroke.opacity === "number")
-                    hatchStroke.opacity = style.hatch.stroke.opacity;
-                if (typeof style.hatch.stroke.widthPx === "number")
-                    hatchStroke.widthPx = style.hatch.stroke.widthPx;
-                (normalized.hatch as any).stroke = hatchStroke;
-            }
-
-            if (style.hatch.enabled && layerId) {
-                const patternId = _createHatchPattern(layerId, style.hatch);
-                if (patternId) {
-                    normalized._hatchPatternId = patternId;
-                    if (style.hatch.renderMode === "pattern_only") {
-                        normalized.fillColor = "transparent";
-                        normalized.fillOpacity = 1;
-                    }
-                }
-            }
-        }
+        _buildNormalizedCasing(style, normalized);
+        _buildNormalizedHatch(style, layerId, normalized);
     }
-
     return normalized;
 }
 
+function _getRawStyle(styleConfig: any): any {
+    if (styleConfig.defaultStyle) return styleConfig.defaultStyle;
+    return styleConfig.style ?? {};
+}
+
+function _buildMarkerDisplayConfig(style: any, poiData: any, POIMarkers: any): any {
+    let displayConfig: any = {};
+    if (typeof POIMarkers.resolveCategoryDisplay === "function") {
+        displayConfig = POIMarkers.resolveCategoryDisplay(poiData);
+    }
+    if (style.fillColor) displayConfig.colorFill = style.fillColor;
+    if (style.color) displayConfig.colorStroke = style.color;
+    if (typeof style.radius === "number") displayConfig.radius = style.radius;
+    if (typeof style.weight === "number") displayConfig.weight = style.weight;
+    if (typeof style.fillOpacity === "number") displayConfig.fillOpacity = style.fillOpacity;
+    if (typeof style.opacity === "number") displayConfig.opacity = style.opacity;
+    return displayConfig;
+}
+
+function _recreateMarkerLayers(layersToRecreate: any[], leafletLayer: any, _g2: any): number {
+    if (layersToRecreate.length === 0) return 0;
+    const POIMarkers = _g2.GeoLeaf?._POIMarkers;
+    let markersRecreated = 0;
+    layersToRecreate.forEach(({ layer, feature, style }) => {
+        const latlng = layer.getLatLng();
+        if (POIMarkers && typeof POIMarkers.buildMarkerIcon === "function") {
+            const poiData = {
+                ...feature.properties,
+                latlng: [latlng.lat, latlng.lng],
+                attributes: feature.properties.attributes ?? {},
+                _layerConfig: { style: style },
+            };
+            const displayConfig = _buildMarkerDisplayConfig(style, poiData, POIMarkers);
+            const newIcon = POIMarkers.buildMarkerIcon(displayConfig);
+            layer.setIcon(newIcon);
+            markersRecreated++;
+        } else {
+            const newMarker = _g2.L.circleMarker(latlng, style);
+            newMarker.feature = feature;
+            leafletLayer.removeLayer(layer);
+            leafletLayer.addLayer(newMarker);
+            markersRecreated++;
+        }
+    });
+    return markersRecreated;
+}
+
+function _buildStyleFn(defaultStyle: any, styleRules: any[], layerId: any): (feature: any) => any {
+    return function _styleFn(feature: any): any {
+        let finalStyle = Object.assign({}, defaultStyle);
+        if (styleRules.length > 0 && _g.GeoLeaf && _g.GeoLeaf._GeoJSONStyleResolver) {
+            const matchedStyle = _g.GeoLeaf._GeoJSONStyleResolver.evaluateStyleRules(
+                feature,
+                styleRules
+            );
+            if (matchedStyle) {
+                const normalizedRuleStyle = _normalizeStyleToLeaflet(matchedStyle, layerId);
+                finalStyle = Object.assign({}, finalStyle, normalizedRuleStyle);
+            }
+        }
+        return finalStyle;
+    };
+}
+
+function _setupHatchListeners(
+    layerData: any,
+    leafletLayer: any,
+    defaultStyle: any,
+    styleRules: any[],
+    styled: number,
+    Log: any
+): void {
+    const hasHatchInRules = styleRules.some((rule: any) => rule.style?.hatch?.enabled);
+    if (!defaultStyle._hatchPatternId) return;
+    if (hasHatchInRules) return;
+    const patternId = defaultStyle._hatchPatternId;
+    const hatchConfig = defaultStyle.hatch;
+    _applyHatchToLayer(leafletLayer, patternId, hatchConfig);
+    Log.debug(`[GeoLeaf.GeoJSON] Hatching applied: pattern=${patternId}, features=${styled}`);
+    if (layerData._hatchListeners) {
+        leafletLayer.off("add", layerData._hatchListeners.onAdd);
+        if (_g.L && _g.L.DomEvent) {
+            leafletLayer.eachLayer(function (layer: any) {
+                if (layer._path) layer.off("add", layerData._hatchListeners.onLayerAdd);
+            });
+        }
+    }
+    const onAdd = function () {
+        setTimeout(function () {
+            _applyHatchToLayer(leafletLayer, patternId, hatchConfig);
+        }, 0);
+    };
+    const onLayerAdd = function (this: any) {
+        _applyHatchToLayer(this, patternId, hatchConfig);
+    };
+    leafletLayer.on("add", onAdd);
+    leafletLayer.eachLayer(function (layer: any) {
+        if (layer._path) layer.on("add", onLayerAdd);
+    });
+    layerData._hatchListeners = { onAdd, onLayerAdd };
+    layerData._hatchPatternId = patternId;
+}
+
+function _finalizeStyleConfig(
+    layerData: any,
+    layerId: any,
+    styleConfig: any,
+    styleRules: any[]
+): void {
+    layerData.config = Object.assign({}, layerData.config, {
+        style: styleConfig.defaultStyle || styleConfig.style,
+        styleRules: styleRules,
+    });
+    layerData.currentStyle = styleConfig;
+    const GeoLeaf = _g.GeoLeaf;
+    if (!GeoLeaf) return;
+    if (GeoLeaf._LabelButtonManager) GeoLeaf._LabelButtonManager.syncImmediate(layerId);
+    if (
+        GeoLeaf._GeoJSONLayerManager &&
+        typeof GeoLeaf._GeoJSONLayerManager.updateLayerVisibilityByZoom === "function"
+    ) {
+        GeoLeaf._GeoJSONLayerManager.updateLayerVisibilityByZoom();
+    }
+}
+
+function _buildDefaultStyleConfig(
+    styleConfig: any,
+    layerId: any
+): { defaultStyle: any; styleRules: any[]; styleFn: (feature: any) => any } {
+    const baseStyle = {
+        color: "#999999",
+        weight: 2,
+        opacity: 0.9,
+        fillColor: "#cccccc",
+        fillOpacity: 0.15,
+    };
+    const rawStyle = _getRawStyle(styleConfig);
+    const normalizedStyle = _normalizeStyleToLeaflet(rawStyle, layerId);
+    const defaultStyle = Object.assign({}, baseStyle, normalizedStyle);
+    const styleRules = Array.isArray(styleConfig.styleRules) ? styleConfig.styleRules : [];
+    const styleFn = _buildStyleFn(defaultStyle, styleRules, layerId);
+    return { defaultStyle, styleRules, styleFn };
+}
+
+function _applyStyleFirstPass(
+    leafletLayer: any,
+    styleFn: (feature: any) => any,
+    layerData: any
+): { styled: number; layersToRecreate: any[] } {
+    let styled = 0;
+    const layersToRecreate: any[] = [];
+
+    leafletLayer.eachLayer(function (layer: any) {
+        if (!layer.feature) return;
+        const style: any = styleFn(layer.feature);
+        if (layer.setStyle && typeof layer.setStyle === "function") {
+            layer.setStyle(style);
+            if (layer._geoleafFiltered) {
+                layer.setStyle({ opacity: 0, fillOpacity: 0 });
+                if (layer._casingLayer && typeof layer._casingLayer.setStyle === "function")
+                    layer._casingLayer.setStyle({ opacity: 0 });
+            }
+            _applyInteractiveState(layer, layerData, _g);
+            styled++;
+            _applyLayerCasing(layer, style, leafletLayer, _g);
+            _applyLayerHatch(layer, style);
+        } else if (_g.L && layer instanceof _g.L.Marker) {
+            layersToRecreate.push({ layer, feature: layer.feature, style });
+        }
+    });
+
+    return { styled, layersToRecreate };
+}
+
 /**
- * Applique un nouveau style à une couche existante.
- * Utilisé par le module Themes pour changer dynamiquement l'apparence.
+ * Applies a nouveau style to a layer existing.
+ * Used by the Themes module to dynamically change appearance.
  *
- * @param {string} layerId - ID de la couche
+ * @param {string} layerId - ID de the layer
  * @param {Object} styleConfig - Configuration du style { style, styleRules }
- * @returns {boolean} - true si le style a été appliqué avec succès
+ * @returns {boolean} - true si le style has been applied avec success
  */
 LayerManager.setLayerStyle = function (layerId: any, styleConfig: any) {
     const state = getState();
@@ -98,7 +353,7 @@ LayerManager.setLayerStyle = function (layerId: any, styleConfig: any) {
     const layerData = state.layers.get(layerId);
 
     if (!layerData) {
-        Log.warn("[GeoLeaf.GeoJSON] setLayerStyle: couche introuvable :", layerId);
+        Log.warn("[GeoLeaf.GeoJSON] setLayerStyle: layer not found:", layerId);
         return false;
     }
 
@@ -110,349 +365,29 @@ LayerManager.setLayerStyle = function (layerId: any, styleConfig: any) {
 
     const leafletLayer = layerData.layer;
     if (!leafletLayer || typeof leafletLayer.setStyle !== "function") {
-        Log.warn("[GeoLeaf.GeoJSON] setLayerStyle: couche sans méthode setStyle :", layerId);
+        Log.warn("[GeoLeaf.GeoJSON] setLayerStyle: layer has no setStyle method:", layerId);
         return false;
     }
 
-    // Préparer le style par défaut (ne pas utiliser defaultStyle qui peut contenir les anciennes valeurs)
-    const baseStyle = {
-        color: "#999999",
-        weight: 2,
-        opacity: 0.9,
-        fillColor: "#cccccc",
-        fillOpacity: 0.15,
-    };
+    const { defaultStyle, styleRules, styleFn } = _buildDefaultStyleConfig(styleConfig, layerId);
 
-    // Normaliser le style (defaultStyle ou style) vers format Leaflet
-    const rawStyle = styleConfig.defaultStyle || styleConfig.style || {};
-    const normalizedStyle = _normalizeStyleToLeaflet(rawStyle, layerId);
-    const defaultStyle = Object.assign({}, baseStyle, normalizedStyle);
-
-    // Préparer les styleRules
-    const styleRules = Array.isArray(styleConfig.styleRules) ? styleConfig.styleRules : [];
-
-    // Fonction de style dynamique
-    const styleFn = (feature: any) => {
-        // 1. Commencer avec le style par défaut
-        let finalStyle = Object.assign({}, defaultStyle);
-
-        // 2. Appliquer les styleRules (première règle correspondante gagne)
-        if (styleRules.length > 0 && _g.GeoLeaf && _g.GeoLeaf._GeoJSONStyleResolver) {
-            const matchedStyle = _g.GeoLeaf._GeoJSONStyleResolver.evaluateStyleRules(
-                feature,
-                styleRules
-            );
-            if (matchedStyle) {
-                // Normaliser le style de la règle vers format Leaflet
-                const normalizedRuleStyle = _normalizeStyleToLeaflet(matchedStyle, layerId);
-                finalStyle = Object.assign({}, finalStyle, normalizedRuleStyle);
-            }
-        }
-
-        // 3. NE PAS appliquer properties.style ou properties.color pour permettre aux règles de s'appliquer
-        // Commenté car cela écrase les règles de style
-        // const featureStyle = feature && feature.properties && feature.properties.style
-        //     ? feature.properties.style
-        //     : null;
-        // if (featureStyle) {
-        //     finalStyle = Object.assign({}, finalStyle, featureStyle);
-        // }
-
-        return finalStyle;
-    };
-
-    // Appliquer le style à toutes les features de la couche
     try {
-        let styled = 0;
-        let _skipped = 0;
-        let markersRecreated = 0;
-        const layersToRecreate: any[] = [];
+        const { styled, layersToRecreate } = _applyStyleFirstPass(leafletLayer, styleFn, layerData);
 
-        // Première passe : identifier et styler ou marquer pour recréation
-        leafletLayer.eachLayer(function (layer: any) {
-            if (!layer.feature) {
-                _skipped++;
-                return;
-            }
-
-            const style: any = styleFn(layer.feature);
-
-            // Cas 1: Layers avec setStyle (Path, CircleMarker, Polyline, etc.)
-            if (layer.setStyle && typeof layer.setStyle === "function") {
-                layer.setStyle(style);
-
-                // If this feature is currently filtered out (opacity=0), re-apply the
-                // hidden state so the theme's opacity doesn't un-hide it.
-                if (layer._geoleafFiltered) {
-                    layer.setStyle({ opacity: 0, fillOpacity: 0 });
-                    if (layer._casingLayer && typeof layer._casingLayer.setStyle === "function") {
-                        layer._casingLayer.setStyle({ opacity: 0 });
-                    }
-                }
-
-                // Préserver/restaurer l'état interactive depuis la config de la couche.
-                // setStyle() de Leaflet ne touche pas 'interactive', mais certaines
-                // recréations de path peuvent le perdre.
-                const isInteractive =
-                    typeof layerData.config.interactiveShape === "boolean"
-                        ? layerData.config.interactiveShape
-                        : _g.GeoLeaf && _g.GeoLeaf.Config && _g.GeoLeaf.Config.get
-                          ? _g.GeoLeaf.Config.get("ui.interactiveShapes", false)
-                          : false;
-                if (layer.options) {
-                    layer.options.interactive = isInteractive;
-                }
-                // S'assurer que le path SVG a le bon pointer-events
-                if (layer._path) {
-                    layer._path.style.pointerEvents = isInteractive ? "auto" : "none";
-                }
-                // Pour les layers Canvas : forcer Leaflet à recalculer le
-                // hit-area en cas de changement d'interactive. Canvas n'a pas
-                // de _path mais utilise _renderer pour le hit-testing.
-                if (!layer._path && layer._renderer && typeof layer.redraw === "function") {
-                    layer.redraw();
-                }
-
-                styled++;
-
-                // Gérer le casing (bordure pour polylines)
-                if (
-                    style._casing &&
-                    style._casing.enabled &&
-                    layer instanceof _g.L.Polyline &&
-                    !(layer instanceof _g.L.Polygon)
-                ) {
-                    const casingConfig = style._casing;
-
-                    // Créer ou mettre à jour la polyline de casing (dessous, plus large)
-                    if (!layer._casingLayer) {
-                        // Créer une nouvelle couche de casing
-                        const casingStyle = {
-                            color: casingConfig.color,
-                            opacity: casingConfig.opacity,
-                            weight: casingConfig.weight,
-                            dashArray: casingConfig.dashArray,
-                            lineCap: casingConfig.lineCap || "butt",
-                            lineJoin: casingConfig.lineJoin || "miter",
-                            fill: false,
-                        };
-
-                        layer._casingLayer = _g.L.polyline(layer.getLatLngs(), casingStyle);
-                        // Ajouter la couche de casing au même parent (group ou map)
-                        if (leafletLayer && leafletLayer.addLayer) {
-                            leafletLayer.addLayer(layer._casingLayer);
-                        } else if (layer._map) {
-                            layer._map.addLayer(layer._casingLayer);
-                        }
-                        // Mettre la couche de casing derrière la couche principale
-                        if (layer._casingLayer.setZIndex) {
-                            layer._casingLayer.setZIndex((layer.options.zIndex || 0) - 1);
-                        }
-                    } else {
-                        // Mettre à jour le style existant
-                        layer._casingLayer.setStyle({
-                            color: casingConfig.color,
-                            opacity: casingConfig.opacity,
-                            weight: casingConfig.weight,
-                            dashArray: casingConfig.dashArray,
-                            lineCap: casingConfig.lineCap || "butt",
-                            lineJoin: casingConfig.lineJoin || "miter",
-                        });
-                    }
-                } else if (!style._casing || !style._casing.enabled) {
-                    // Supprimer la couche de casing si elle existe mais n'est plus nécessaire
-                    if (layer._casingLayer && leafletLayer && leafletLayer.removeLayer) {
-                        leafletLayer.removeLayer(layer._casingLayer);
-                        layer._casingLayer = null;
-                    }
-                }
-
-                // Appliquer le hachurage si présent dans ce style
-                if (style._hatchPatternId && style.hatch) {
-                    const patternId = style._hatchPatternId;
-                    const hatchConfig = style.hatch;
-
-                    // Appliquer immédiatement : fonctionne pour les layers avec _path
-                    // ET pour les FeatureGroups (MultiPolygon) via eachLayer récursif.
-                    setTimeout(() => {
-                        _applyHatchToLayer(layer, patternId, hatchConfig);
-                    }, 0);
-
-                    // Ajouter aussi un listener pour quand le layer est ajouté/re-ajouté
-                    if (!layer._hatchPatternId || layer._hatchPatternId !== patternId) {
-                        layer._hatchPatternId = patternId;
-
-                        // Supprimer l'ancien listener s'il existe
-                        if (layer._hatchListener) {
-                            layer.off("add", layer._hatchListener);
-                        }
-
-                        // Créer le nouveau listener
-                        // Ne PAS garder 'if (this._path)' : pour les FeatureGroups
-                        // (MultiPolygon), _path est null mais _applyHatchToLayer
-                        // gère les groupes via eachLayer.
-                        layer._hatchListener = function () {
-                            _applyHatchToLayer(this, patternId, hatchConfig);
-                        };
-
-                        layer.on("add", layer._hatchListener);
-
-                        // Phase 1 fix L2: cleanup hatch listener on remove to prevent leaks
-                        if (!layer._hatchCleanupBound) {
-                            layer._hatchCleanupBound = true;
-                            layer.on("remove", function (this: any) {
-                                if (this._hatchListener) {
-                                    this.off("add", this._hatchListener);
-                                    this._hatchListener = null;
-                                }
-                            });
-                        }
-                    }
-                }
-            }
-            // Cas 2: Markers avec icônes - besoin de recréer avec nouvelle icône
-            else if (_g.L && layer instanceof _g.L.Marker) {
-                layersToRecreate.push({ layer, feature: layer.feature, style });
-            } else {
-                _skipped++;
-            }
-        });
-
-        // Seconde passe : recréer les markers avec les nouvelles couleurs
-        if (layersToRecreate.length > 0) {
-            const POIMarkers = _g.GeoLeaf && _g.GeoLeaf._POIMarkers;
-
-            layersToRecreate.forEach(({ layer, feature, style }) => {
-                const latlng = layer.getLatLng();
-
-                // Utiliser le système POI pour créer une nouvelle icône colorée
-                if (POIMarkers && typeof POIMarkers.buildMarkerIcon === "function") {
-                    const poiData = {
-                        ...feature.properties,
-                        latlng: [latlng.lat, latlng.lng],
-                        attributes: feature.properties.attributes || {},
-                        _layerConfig: { style: style }, // Passer le style pour resolveCategoryColors
-                    };
-
-                    let displayConfig: any = {};
-                    if (typeof POIMarkers.resolveCategoryDisplay === "function") {
-                        displayConfig = POIMarkers.resolveCategoryDisplay(poiData);
-                    }
-
-                    // Override avec tous les paramètres du style
-                    if (style.fillColor) {
-                        displayConfig.colorFill = style.fillColor;
-                    }
-                    if (style.color) {
-                        displayConfig.colorStroke = style.color;
-                    }
-                    if (typeof style.radius === "number") {
-                        displayConfig.radius = style.radius;
-                    }
-                    if (typeof style.weight === "number") {
-                        displayConfig.weight = style.weight;
-                    }
-                    if (typeof style.fillOpacity === "number") {
-                        displayConfig.fillOpacity = style.fillOpacity;
-                    }
-                    if (typeof style.opacity === "number") {
-                        displayConfig.opacity = style.opacity;
-                    }
-
-                    const newIcon = POIMarkers.buildMarkerIcon(displayConfig);
-                    layer.setIcon(newIcon);
-                    markersRecreated++;
-                } else {
-                    // Fallback: remplacer par un CircleMarker
-                    const newMarker = _g.L.circleMarker(latlng, style);
-                    newMarker.feature = feature;
-                    leafletLayer.removeLayer(layer);
-                    leafletLayer.addLayer(newMarker);
-                    markersRecreated++;
-                }
-            });
-        }
+        const markersRecreated = _recreateMarkerLayers(layersToRecreate, leafletLayer, _g);
 
         Log.debug(
-            `[GeoLeaf.GeoJSON] Style appliqué: ${styled + markersRecreated} features (${styled} setStyle, ${markersRecreated} markers)`
+            `[GeoLeaf.GeoJSON] Style applied: ${styled + markersRecreated} features (${styled} setStyle, ${markersRecreated} markers)`
         );
 
-        // Appliquer le hachurage global uniquement si pas de styleRules avec hatch
-        const hasHatchInRules = styleRules.some((rule: any) => rule.style?.hatch?.enabled);
+        _setupHatchListeners(layerData, leafletLayer, defaultStyle, styleRules, styled, Log);
 
-        if (defaultStyle._hatchPatternId && !hasHatchInRules) {
-            const patternId = defaultStyle._hatchPatternId;
-            const hatchConfig = defaultStyle.hatch;
+        _finalizeStyleConfig(layerData, layerId, styleConfig, styleRules);
 
-            // Appliquer immédiatement (avec hatchConfig pour fill-opacity)
-            _applyHatchToLayer(leafletLayer, patternId, hatchConfig);
-
-            // Log résumé au lieu de logs individuels
-            Log.debug(
-                `[GeoLeaf.GeoJSON] Hachures appliquées: pattern=${patternId}, features=${styled}`
-            );
-
-            // Supprimer les anciens listeners pour éviter les doublons
-            if (layerData._hatchListeners) {
-                leafletLayer.off("add", layerData._hatchListeners.onAdd);
-                if (_g.L && _g.L.DomEvent) {
-                    leafletLayer.eachLayer((layer: any) => {
-                        if (layer._path) {
-                            layer.off("add", layerData._hatchListeners.onLayerAdd);
-                        }
-                    });
-                }
-            }
-
-            // Créer les listeners pour réappliquer le hachurage après les redraws
-            const onAdd = () => {
-                setTimeout(() => _applyHatchToLayer(leafletLayer, patternId, hatchConfig), 0);
-            };
-
-            const onLayerAdd = function (this: any) {
-                _applyHatchToLayer(this, patternId, hatchConfig);
-            };
-
-            // Ajouter les listeners
-            leafletLayer.on("add", onAdd);
-            leafletLayer.eachLayer((layer: any) => {
-                if (layer._path) {
-                    layer.on("add", onLayerAdd);
-                }
-            });
-
-            // Stocker les listeners pour nettoyage futur
-            layerData._hatchListeners = { onAdd, onLayerAdd };
-            layerData._hatchPatternId = patternId;
-        }
-
-        // Mettre à jour la config stockée pour que les futures évaluations utilisent le nouveau style
-        layerData.config = Object.assign({}, layerData.config, {
-            style: styleConfig.defaultStyle || styleConfig.style,
-            styleRules: styleRules,
-        });
-
-        // Stocker currentStyle pour les labels
-        layerData.currentStyle = styleConfig;
-
-        // Mettre à jour l'état du bouton des labels immédiatement
-        if (_g.GeoLeaf && _g.GeoLeaf._LabelButtonManager) {
-            _g.GeoLeaf._LabelButtonManager.syncImmediate(layerId);
-        }
-
-        // Réévaluer la visibilité après application du style (layerScale)
-        if (
-            _g.GeoLeaf &&
-            _g.GeoLeaf._GeoJSONLayerManager &&
-            typeof _g.GeoLeaf._GeoJSONLayerManager.updateLayerVisibilityByZoom === "function"
-        ) {
-            _g.GeoLeaf._GeoJSONLayerManager.updateLayerVisibilityByZoom();
-        }
-
-        Log.debug("[GeoLeaf.GeoJSON] Style appliqué avec succès :", layerId);
+        Log.debug("[GeoLeaf.GeoJSON] Style applied successfully:", layerId);
         return true;
     } catch (err) {
-        Log.error("[GeoLeaf.GeoJSON] Erreur setLayerStyle :", layerId, (err as any).message);
+        Log.error("[GeoLeaf.GeoJSON] Error in setLayerStyle:", layerId, (err as any).message);
         return false;
     }
 };

@@ -1,11 +1,11 @@
-﻿/**
+/**
  * Module Basemap Selector pour LayerManager
- * Gestion du sélecteur de fonds de carte
+ * Gestion du selector de base maps
  *
- * DÉPENDANCES:
+ * DEPENDENCIES:
  * - Leaflet (L.DomUtil, L.DomEvent)
- * - GeoLeaf.Log (optionnel)
- * - GeoLeaf.Baselayers (optionnel, pour getActiveId et setBaseLayer)
+ * - GeoLeaf.Log (optional)
+ * - GeoLeaf.Baselayers (optional, pour getActiveId et setBaseLayer)
  *
  * EXPOSE:
  * - GeoLeaf._LayerManagerBasemapSelector
@@ -104,7 +104,7 @@ const _LayerManagerBasemapSelector: BasemapSelectorInstance = {
                     Baselayers.setBaseLayer(val, {});
                 }
             } catch (err) {
-                if (Log) Log.warn("Erreur lors du changement de basemap depuis la légende:", err);
+                if (Log) Log.warn("Error during basemap change from legend:", err);
             }
         };
 

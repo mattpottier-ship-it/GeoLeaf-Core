@@ -1,6 +1,6 @@
 /**
  * API Factory Manager - Sprint 4.3 (Version Robuste)
- * Gestionnaire pour la cr�ation d'instances multi-cartes
+ * Manager for the création d'instances multi-cartes
  * @module APIFactoryManager
  */
 "use strict";
@@ -11,7 +11,7 @@ const _g: any =
 _g.GeoLeaf = _g.GeoLeaf || {};
 
 /**
- * Gestionnaire de factory pour multi-cartes
+ * Manager for factory pour multi-cartes
  */
 class APIFactoryManager {
     isReady: boolean;
@@ -30,9 +30,9 @@ class APIFactoryManager {
     }
 
     /**
-     * Initialise le gestionnaire avec la fonction d'acc�s aux modules
-     * @param {Function} getModule - Fonction d'acc�s aux modules
-     * @returns {boolean} Succ�s
+     * Initialise le manager with the fonction d'accès aux modules
+     * @param {Function} getModule - Fonction d'accès aux modules
+     * @returns {boolean} Succès
      */
     init(getModule: (name: string) => any) {
         try {
@@ -52,10 +52,10 @@ class APIFactoryManager {
     }
 
     /**
-     * Cr�e une nouvelle instance de carte
-     * @param {string} targetId - ID de l'�l�ment cible
+     * Créer une nouvelle instance de carte
+     * @param {string} targetId - ID of the élément cible
      * @param {Object} options - Options de configuration
-     * @param {Function} getModule - Fonction d'acc�s aux modules
+     * @param {Function} getModule - Fonction d'accès aux modules
      * @returns {*} Instance de carte ou null
      */
     createMap(targetId: any, options: any, getModule: (name: string) => any) {
@@ -71,7 +71,7 @@ class APIFactoryManager {
                 throw new Error("Core module not available for map creation");
             }
 
-            // Cr�er la carte avec les options fournies
+            // Créer the map with thes options fournies
             const mapOptions = {
                 target: targetId,
                 ...options,
@@ -93,8 +93,8 @@ class APIFactoryManager {
     }
 
     /**
-     * Obtient une instance de carte par ID
-     * @param {string} targetId - ID de l'�l�ment cible
+     * Obtient an instance de carte par ID
+     * @param {string} targetId - ID of the élément cible
      * @returns {*} Instance de carte ou null
      */
     getMapInstance(targetId: string) {
@@ -103,16 +103,16 @@ class APIFactoryManager {
 
     /**
      * Obtient toutes les instances de carte
-     * @returns {Array} Liste des instances
+     * @returns {Array} List des instances
      */
     getAllMapInstances() {
         return Array.from(this.mapInstances.values());
     }
 
     /**
-     * Supprime une instance de carte par ID
-     * @param {string} targetId - ID de l'�l�ment cible
-     * @returns {boolean} Succ�s de la suppression
+     * Removes ae instance de carte par ID
+     * @param {string} targetId - ID of the élément cible
+     * @returns {boolean} Succès de la removal
      */
     removeMapInstance(targetId: string) {
         if (!this.mapInstances.has(targetId)) {
@@ -136,7 +136,7 @@ class APIFactoryManager {
     }
 
     /**
-     * R�initialise le gestionnaire
+     * Réinitializes le manager
      */
     reset() {
         this.mapInstances.clear();

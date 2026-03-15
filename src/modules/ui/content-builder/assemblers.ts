@@ -1,7 +1,8 @@
-// @ts-nocheck � migration TS, typage progressif
+/* eslint-disable security/detect-object-injection */
+// @ts-nocheck — migration TS, typage progressif
 /*!
  * GeoLeaf Core
- * � 2026 Mattieu Pottier
+ * © 2026 Mattieu Pottier
  * Released under the MIT License
  * https://geoleaf.dev
  */
@@ -10,8 +11,8 @@
 /**
  * GeoLeaf Content Builder - Assemblers Module
  *
- * G�re l'assemblage des �l�ments de contenu en structures compl�tes
- * pour les popups (detailPopup), tooltips (contentUnion) et panneaux lat�raux (items).
+ * Gère l'assemblage des éléments de contenu en structures complètes
+ * for thes popups (detailPopup), tooltips (contentUnion) et panneaux latéraux (items).
  *
  * Organisation:
  * - Helpers: getCore, getRenderers, getResolveField, getEscapeHtml, etc.
@@ -27,11 +28,11 @@
  * const Assemblers = GeoLeaf._ContentBuilder.Assemblers;
  *
  * @example
- * // Construction d'un popup complet
+ * // Building of a popup complete
  * const popupHtml = Assemblers.buildPopupHTML(poi, config, options);
  *
  * @example
- * // Construction d'un tooltip
+ * // Building of a tooltip
  * const tooltipHtml = Assemblers.buildTooltipHTML(poi, contentUnion);
  */
 
@@ -47,7 +48,7 @@ import { ContentBuilderCore } from "./core.ts";
 import { ContentBuilderShared } from "./renderers-shared.ts";
 
 // ========================================
-//   ACC�S AUX MODULES
+//   ACCÈS AUX MODULES
 // ========================================
 
 /**
@@ -101,7 +102,7 @@ function renderItem(poi, config, options = {}) {
  * @param {Array<Object>} sortedConfig - Sorted config array
  * @param {Object} poi - POI data
  * @param {Object} renderOptions - Render options
- * @returns {Array<{type: string, html?: string, items?: Array<string>}>} Grouped sections
+ * @returns {Array<{type: string, html?: string, items?: Array<string>}>} Groupd sections
  *
  * @typedef {Object} PopupSection
  * @property {'hero'|'badges'|'content'} type - Section type
@@ -111,7 +112,7 @@ function renderItem(poi, config, options = {}) {
 function groupPopupSections(sortedConfig, poi, renderOptions) {
     const sections = [];
     let badgeGroup = [];
-    // ...logs [POPUP] supprim�s...
+    // ...logs [POPUP] supprimés...
     sortedConfig.forEach((item, index) => {
         const isHeroImage = item.type === "image" && item.variant === "hero";
         const isBadge = item.type === "badge";
@@ -135,13 +136,13 @@ function groupPopupSections(sortedConfig, poi, renderOptions) {
 }
 
 /**
- * Assemble popup HTML from grouped sections
+ * Assemble popup HTML from groupd sections
  * Extracted from buildPopupHTML to reduce complexity
  *
  * @private
  * @param {Object} poi - POI data with id property
- * @param {Array<PopupSection>} sections - Grouped popup sections
- * @returns {string} Complete popup HTML
+ * @param {Array<PopupSection>} sections - Groupd popup sections
+ * @returns {string} Completee popup HTML
  */
 function assemblePopupHTML(poi, sections) {
     let html = '<div class="gl-poi-popup">';
@@ -172,7 +173,7 @@ function assemblePopupHTML(poi, sections) {
         }
     });
 
-    // Lien "Voir plus"
+    // Link "See plus"
     if (!inBody) {
         html += '<div class="gl-poi-popup__body">';
         inBody = true;
@@ -191,29 +192,29 @@ function assemblePopupHTML(poi, sections) {
 }
 
 /**
- * Construit le HTML complet d'un popup avec structure et groupement de badges.
+ * Builds the HTML complete of a popup avec structure et groupment de badges.
  *
- * G�re la structure HTML du popup:
+ * Gère la structure HTML du popup:
  * 1. Images hero (en dehors du body)
- * 2. Body avec badges group�s + autres �l�ments
- * 3. Lien "Voir plus >>>" automatique
+ * 2. Body avec badges groupés + autres éléments
+ * 3. Link "See plus >>>" automatic
  *
- * Tri automatique par config.order, badges group�s si cons�cutifs.
+ * Tri automatic par config.order, badges groupés si consécutifs.
  *
  * @function buildPopupHTML
- * @param {Object} poi - Donn�es du POI normalis�
+ * @param {Object} poi - Données du POI normalisé
  * @param {Object} poi.id - ID du POI
- * @param {Object} poi.attributes - Attributs du POI
+ * @param {Object} poi.attributes - Attributes du POI
  * @param {Array<Object>} config - Configuration detailPopup (array de renderers)
- * @param {Object} config[].type - Type de renderer ('text', 'badge', 'image', etc.)
- * @param {number} config[].order - Ordre d'affichage (tri croissant)
+ * @param {Object} config[].type - Type of renderer ('text', 'badge', 'image', etc.)
+ * @param {number} config[].order - Ordre d'display (tri croissant)
  * @param {string} [config[].variant] - Variante (ex: 'hero' pour images)
  * @param {Object} [options={}] - Options de rendu
- * @param {Function} [options.resolveCategoryDisplay] - R�solution taxonomie personnalis�e
- * @returns {string} HTML complet du popup
+ * @param {Function} [options.resolveCategoryDisplay] - Résolution taxonomy personnalisée
+ * @returns {string} HTML complete du popup
  *
  * @example
- * // Popup avec image hero + badges + texte
+ * // Popup avec image hero + badges + text
  * const html = buildPopupHTML(
  *   poi,
  *   [
@@ -224,49 +225,55 @@ function assemblePopupHTML(poi, sections) {
  *   ],
  *   {}
  * );
- * // Retourne:
+ * // Returns:
  * // <div class="gl-poi-popup">
  * //   <img src="..." class="gl-poi-popup__hero"> (hero en dehors du body)
  * //   <div class="gl-poi-popup__body">
  * //     <div class="gl-poi-popup__badges">
  * //       <span class="gl-poi-badge">Restaurant</span>
- * //       <span class="gl-poi-badge">Ouvert</span>
+ * //       <span class="gl-poi-badge">Open</span>
  * //     </div>
  * //     <p>Description...</p>
- * //     <a href="#" class="gl-poi-popup__link" data-poi-id="123">Voir plus >>></a>
+ * //     <a href="#" class="gl-poi-popup__link" data-poi-id="123">See plus >>></a>
  * //   </div>
  * // </div>
+ *//**
+ * Returns the HTML popup par defaut (sans config).
+ * @private
  */
+function _getDefaultPopupHTML(poi, helpers, escapeHtml) {
+    const title = helpers.getDefaultTitle
+        ? helpers.getDefaultTitle(poi)
+        : poi.title || poi.label || poi.name || "Sans titre";
+    helpers.debugLog?.("popup", "No config provided, using default popup");
+    return (
+        '<div class="gl-poi-popup">' +
+        '<div class="gl-poi-popup__body">' +
+        '<h3 class="gl-poi-popup__title"><span class="gl-poi-popup__title-text">' +
+        escapeHtml(title) +
+        "</span></h3>" +
+        '<a href="#" class="gl-poi-popup__link" data-poi-id="' +
+        (poi.id || "") +
+        '">Voir plus >>></a>' +
+        "</div></div>"
+    );
+}
+
 function buildPopupHTML(poi, config, options = {}) {
     // Get helpers and utilities FIRST
     const helpers = getHelpers();
     const escapeHtml = getEscapeHtml();
 
     if (!poi) {
-        getLog().warn("[Assemblers] POI invalide pour buildPopupHTML");
+        getLog().warn("[Assemblers] Invalid POI for buildPopupHTML");
         return "";
     }
 
     if (!config || !Array.isArray(config) || config.length === 0) {
-        const title = helpers.getDefaultTitle
-            ? helpers.getDefaultTitle(poi)
-            : poi.title || poi.label || poi.name || "Sans titre";
-        helpers.debugLog?.("popup", "No config provided, using default popup");
-
-        return (
-            '<div class="gl-poi-popup">' +
-            '<div class="gl-poi-popup__body">' +
-            '<h3 class="gl-poi-popup__title"><span class="gl-poi-popup__title-text">' +
-            escapeHtml(title) +
-            "</span></h3>" +
-            '<a href="#" class="gl-poi-popup__link" data-poi-id="' +
-            (poi.id || "") +
-            '">Voir plus >>></a>' +
-            "</div></div>"
-        );
+        return _getDefaultPopupHTML(poi, helpers, escapeHtml);
     }
 
-    // ...log supprim� ([POPUP] buildPopupHTML - config items)...
+    // ...log supprimé ([POPUP] buildPopupHTML - config items)...
 
     // Use helpers for config sorting (Phase 4 dedup)
     const sortedConfig = helpers.sortConfigByOrder
@@ -279,19 +286,19 @@ function buildPopupHTML(poi, config, options = {}) {
         resolveCategoryDisplay: options.resolveCategoryDisplay,
     };
 
-    // ...log supprim� ([POPUP] buildPopupHTML - sorted config)...
+    // ...log supprimé ([POPUP] buildPopupHTML - sorted config)...
 
     // Group sections and assemble HTML
     try {
         const sections = groupPopupSections(sortedConfig, poi, renderOptions);
-        // ...log supprim� ([POPUP] buildPopupHTML - sections grouped)...
+        // ...log supprimé ([POPUP] buildPopupHTML - sections groupd)...
 
         const html = assemblePopupHTML(poi, sections);
-        // ...log supprim� ([POPUP] buildPopupHTML - HTML length)...
+        // ...log supprimé ([POPUP] buildPopupHTML - HTML length)...
 
         return html;
     } catch (err) {
-        // ...log supprim� ([POPUP] ERROR in buildPopupHTML)...
+        // ...log supprimé ([POPUP] ERROR in buildPopupHTML)...
         return (
             '<div class="gl-poi-popup"><div class="gl-poi-popup__body">Erreur: ' +
             escapeHtml(err.message) +
@@ -301,32 +308,32 @@ function buildPopupHTML(poi, config, options = {}) {
 }
 
 /**
- * Construit le HTML d'un tooltip (texte uniquement, limit�).
+ * Builds the HTML of a tooltip (text only, limité).
  *
- * G�n�re un tooltip simple avec valeurs textuelles s�par�es par " | ".
- * Pas de HTML complexe, optimis� pour tooltips Leaflet.
+ * Génère un tooltip simple avec values textualles séparées par " | ".
+ * Pas de HTML complexe, optimisé pour tooltips Leaflet.
  *
- * Processus:
- * 1. Si pas de config => utilise title/label/name par d�faut
- * 2. Sinon extrait les valeurs textuelles de chaque renderer
- * 3. G�re badge resolution via resolveBadgeTooltip
+ * Process:
+ * 1. Si pas de config => utilise title/label/name par défaut
+ * 2. Sinon extrait the values textualles de chaque renderer
+ * 3. Gère badge resolution via resolveBadgeTooltip
  * 4. Joint les parties avec " | "
  *
  * @function buildTooltipHTML
- * @param {Object} poi - Donn�es du POI normalis�
- * @param {Object} poi.title - Titre par d�faut
- * @param {Object} poi.attributes - Attributs du POI
+ * @param {Object} poi - Données du POI normalisé
+ * @param {Object} poi.title - Title par défaut
+ * @param {Object} poi.attributes - Attributes du POI
  * @param {Array<Object>} config - Configuration detailTooltip (array de renderers)
- * @param {string} config[].type - Type de renderer ('text', 'badge', 'number', etc.)
- * @param {string} config[].field - Chemin du champ (ex: 'attributes.name')
- * @param {number} [config[].order] - Ordre d'affichage (tri croissant)
+ * @param {string} config[].type - Type of renderer ('text', 'badge', 'number', etc.)
+ * @param {string} config[].field - Path du field (ex: 'attributes.name')
+ * @param {number} [config[].order] - Ordre d'display (tri croissant)
  * @param {Object} [options={}] - Options de rendu
- * @returns {string} Texte du tooltip (pas de HTML, texte plat)
+ * @returns {string} Text du tooltip (pas de HTML, text plat)
  *
  * @example
  * // Tooltip simple sans config
  * const text1 = buildTooltipHTML({ title: 'Restaurant Le Gourmet' }, []);
- * // Retourne: 'Restaurant Le Gourmet'
+ * // Returns: 'Restaurant Le Gourmet'
  *
  * @example
  * // Tooltip avec config (name + category + rating)
@@ -338,10 +345,10 @@ function buildPopupHTML(poi, config, options = {}) {
  *     { type: 'number', field: 'attributes.rating', order: 3 }
  *   ]
  * );
- * // Retourne: 'Le Gourmet | Restaurant | 4.5'
+ * // Returns: 'Le Gourmet | Restaurant | 4.5'
  *
  * @example
- * // Tooltip avec valeurs manquantes (skip�s)
+ * // Tooltip avec values manquantes (skipés)
  * const text3 = buildTooltipHTML(
  *   poi,
  *   [
@@ -349,11 +356,81 @@ function buildPopupHTML(poi, config, options = {}) {
  *     { type: 'text', field: 'attributes.missingField', order: 2 }
  *   ]
  * );
- * // Retourne: 'Le Gourmet' (missingField skipp�)
+ * // Returns: 'Le Gourmet' (missingField skippé)
+ *//**
+ * Returns the tooltip par defaut (sans config).
+ * @private
  */
+function _getDefaultTooltip(poi, helpers, resolveField, escapeHtml) {
+    const title = helpers.getDefaultTitle
+        ? helpers.getDefaultTitle(poi)
+        : poi.title ||
+          poi.label ||
+          poi.name ||
+          resolveField(
+              poi,
+              "attributes.name",
+              "attributes.nom",
+              "properties.name",
+              "properties.nom"
+          ) ||
+          "Sans titre";
+    return escapeHtml(String(title));
+}
+
+/**
+ * Returns the value affichable of a field badge dans un tooltip.
+ * @private
+ */
+function _resolveTooltipBadgeValue(item, poi, value, helpers, _resolveField) {
+    if (helpers.resolveBadgeLabel) return helpers.resolveBadgeLabel(poi, item.field, value);
+    const profile = getActiveProfile();
+    const taxonomy = profile?.taxonomy;
+    if (!taxonomy) return value;
+    const attrs = poi.attributes || {};
+    if (item.field.includes("subCategoryId")) {
+        const catId = attrs.categoryId || attrs.category;
+        const catData = taxonomy.categories?.[catId];
+        const subCatData = catData?.subcategories?.[value];
+        if (subCatData?.label) return subCatData.label;
+    } else if (item.field.includes("categoryId")) {
+        const catData = taxonomy.categories?.[value];
+        if (catData?.label) return catData.label;
+    }
+    return value;
+}
+
+/**
+ * Adds the representation of a item dans the table parts of a tooltip.
+ * @private
+ */
+function _addTooltipPart(item, poi, value, helpers, resolveField, escapeHtml, parts) {
+    if (item.type === "text" || item.type === "badge") {
+        const displayValue =
+            item.type === "badge"
+                ? _resolveTooltipBadgeValue(item, poi, value, helpers, resolveField)
+                : value;
+        parts.push(escapeHtml(String(displayValue)));
+    } else if (item.type === "number") {
+        const numValue = typeof value === "number" ? value : parseFloat(value);
+        if (!isNaN(numValue)) parts.push(numValue.toLocaleString("fr-FR"));
+    } else if (item.type === "image") {
+        parts.push(
+            '<img src="' +
+                escapeHtml(value) +
+                '" alt="" style="max-width:150px;max-height:100px;display:block;margin:4px 0;" />'
+        );
+    } else if (item.type === "link") {
+        const label = item.label || value;
+        parts.push(
+            '<a href="' + escapeHtml(value) + '" target="_blank">' + escapeHtml(label) + "</a>"
+        );
+    }
+}
+
 function buildTooltipHTML(poi, config, _options = {}) {
     if (!poi) {
-        getLog().warn("[Assemblers] POI invalide pour buildTooltipHTML");
+        getLog().warn("[Assemblers] Invalid POI for buildTooltipHTML");
         return "";
     }
 
@@ -361,22 +438,9 @@ function buildTooltipHTML(poi, config, _options = {}) {
     const escapeHtml = getEscapeHtml();
     const resolveField = getResolveField();
 
-    // Si pas de config, tooltip par d�faut - use helpers
+    // Si pas de config, tooltip par défaut - use helpers
     if (!config || !Array.isArray(config) || config.length === 0) {
-        const title = helpers.getDefaultTitle
-            ? helpers.getDefaultTitle(poi)
-            : poi.title ||
-              poi.label ||
-              poi.name ||
-              resolveField(
-                  poi,
-                  "attributes.name",
-                  "attributes.nom",
-                  "properties.name",
-                  "properties.nom"
-              ) ||
-              "Sans titre";
-        return escapeHtml(String(title));
+        return _getDefaultTooltip(poi, helpers, resolveField, escapeHtml);
     }
 
     // Use helpers for config sorting (Phase 4 dedup)
@@ -389,60 +453,12 @@ function buildTooltipHTML(poi, config, _options = {}) {
 
     sortedConfig.forEach((item, _index) => {
         if (!item || !item.type || !item.field) return;
-
         const value = resolveField(poi, item.field);
         if (value == null || value === "") return;
-
-        // Pour les tooltips, on extrait juste la valeur textuelle
-        if (item.type === "text" || item.type === "badge") {
-            let displayValue = value;
-
-            // Use helpers for badge resolution
-            if (item.type === "badge" && helpers.resolveBadgeLabel) {
-                displayValue = helpers.resolveBadgeLabel(poi, item.field, value);
-            } else if (item.type === "badge") {
-                // Fallback to inline resolution
-                const profile = getActiveProfile();
-                const taxonomy = profile?.taxonomy;
-                if (taxonomy) {
-                    const attrs = poi.attributes || {};
-                    if (item.field.includes("subCategoryId")) {
-                        const catId = attrs.categoryId || attrs.category;
-                        const catData = taxonomy.categories?.[catId];
-                        const subCatData = catData?.subcategories?.[value];
-                        if (subCatData?.label) displayValue = subCatData.label;
-                    } else if (item.field.includes("categoryId")) {
-                        const catData = taxonomy.categories?.[value];
-                        if (catData?.label) displayValue = catData.label;
-                    }
-                }
-            }
-
-            parts.push(escapeHtml(String(displayValue)));
-        } else if (item.type === "number") {
-            const numValue = typeof value === "number" ? value : parseFloat(value);
-            if (!isNaN(numValue)) {
-                parts.push(numValue.toLocaleString("fr-FR"));
-            }
-        } else if (item.type === "image") {
-            // Image en tooltip : afficher en ligne
-            parts.push(
-                '<img src="' +
-                    escapeHtml(value) +
-                    '" alt="" style="max-width:150px;max-height:100px;display:block;margin:4px 0;" />'
-            );
-        } else if (item.type === "link") {
-            const label = item.label || value;
-            parts.push(
-                '<a href="' + escapeHtml(value) + '" target="_blank">' + escapeHtml(label) + "</a>"
-            );
-        }
+        _addTooltipPart(item, poi, value, helpers, resolveField, escapeHtml, parts);
     });
 
-    if (parts.length === 0) {
-        const title = poi.title || poi.label || "Sans titre";
-        return escapeHtml(String(title));
-    }
+    if (parts.length === 0) return escapeHtml(String(poi.title || poi.label || "Sans titre"));
 
     // Joindre avec contentUnion ou espace
     let result = "";
@@ -462,37 +478,37 @@ function buildTooltipHTML(poi, config, _options = {}) {
 }
 
 /**
- * Construit les �l�ments DOM pour un panneau lat�ral (side panel / accordion).
+ * Builds thes éléments DOM pour a panel latéral (side panel / accordion).
  *
- * G�n�re un tableau d'objets pour chaque �l�ment du panneau:
- * - html: HTML rendu de l'�l�ment
+ * Génère un array d'objects pour chaque élément du panel:
+ * - html: HTML rendu of the élément
  * - config: Configuration renderer originale
- * - label: Label de l'�l�ment (pour accord�on)
- * - accordion: Si true, �l�ment dans un accord�on
- * - defaultOpen: Si true, accord�on ouvert par d�faut
+ * - label: Label of the élément (pour accordéon)
+ * - accordion: Si true, élément dans un accordéon
+ * - defaultOpen: Si true, accordéon open par défaut
  *
- * Tri automatique par config.order, �l�ments sans valeur skip�s.
+ * Tri automatic par config.order, éléments sans value skipés.
  *
  * @function buildPanelItems
- * @param {Object} poi - Donn�es du POI normalis�
- * @param {Object} poi.attributes - Attributs du POI
+ * @param {Object} poi - Données du POI normalisé
+ * @param {Object} poi.attributes - Attributes du POI
  * @param {Array<Object>} config - Configuration detailLayout (array de renderers)
- * @param {string} config[].type - Type de renderer ('text', 'list', 'image', etc.)
- * @param {string} config[].field - Chemin du champ (ex: 'attributes.description')
- * @param {number} [config[].order] - Ordre d'affichage (tri croissant)
- * @param {string} [config[].label] - Label de l'�l�ment (pour accord�on)
- * @param {boolean} [config[].accordion] - Si true, �l�ment dans un accord�on
- * @param {boolean} [config[].defaultOpen=true] - Si false, accord�on ferm� par d�faut
+ * @param {string} config[].type - Type of renderer ('text', 'list', 'image', etc.)
+ * @param {string} config[].field - Path du field (ex: 'attributes.description')
+ * @param {number} [config[].order] - Ordre d'display (tri croissant)
+ * @param {string} [config[].label] - Label of the élément (pour accordéon)
+ * @param {boolean} [config[].accordion] - Si true, élément dans un accordéon
+ * @param {boolean} [config[].defaultOpen=true] - Si false, accordéon fermé par défaut
  * @param {Object} [options={}] - Options de rendu
- * @returns {Array<Object>} Tableau d'objets {html, config, label, accordion, defaultOpen}
- * @returns {string} returns[].html - HTML rendu de l'�l�ment
+ * @returns {Array<Object>} Array d'objects {html, config, label, accordion, defaultOpen}
+ * @returns {string} returns[].html - HTML rendu of the élément
  * @returns {Object} returns[].config - Configuration renderer originale
- * @returns {string} returns[].label - Label de l'�l�ment
- * @returns {boolean} returns[].accordion - Si true, �l�ment dans un accord�on
- * @returns {boolean} returns[].defaultOpen - Si true, accord�on ouvert par d�faut
+ * @returns {string} returns[].label - Label of the élément
+ * @returns {boolean} returns[].accordion - Si true, élément dans un accordéon
+ * @returns {boolean} returns[].defaultOpen - Si true, accordéon open par défaut
  *
  * @example
- * // Panel simple sans accord�on
+ * // Panel simple sans accordéon
  * const items1 = buildPanelItems(
  *   poi,
  *   [
@@ -500,13 +516,13 @@ function buildTooltipHTML(poi, config, _options = {}) {
  *     { type: 'longtext', field: 'attributes.description', label: 'Description', order: 2 }
  *   ]
  * );
- * // Retourne: [
+ * // Returns: [
  * //   { html: '<p>...</p>', config: {...}, label: 'Nom', accordion: false, defaultOpen: true },
  * //   { html: '<div>...</div>', config: {...}, label: 'Description', accordion: false, defaultOpen: true }
  * // ]
  *
  * @example
- * // Panel avec accord�ons
+ * // Panel avec accordéons
  * const items2 = buildPanelItems(
  *   poi,
  *   [
@@ -515,12 +531,37 @@ function buildTooltipHTML(poi, config, _options = {}) {
  *     { type: 'gallery', field: 'attributes.photos', label: 'Photos', accordion: true, defaultOpen: false, order: 3 }
  *   ]
  * );
- * // Retourne: [
+ * // Returns: [
  * //   { html: '<p>...</p>', label: 'Nom', accordion: false, defaultOpen: true },
  * //   { html: '<ul>...</ul>', label: 'Tags', accordion: true, defaultOpen: true },
  * //   { html: '<div>...</div>', label: 'Photos', accordion: true, defaultOpen: false }
  * // ]
- */
+ */ /** @private Returns true if the field value is considered non-empty. */
+function _itemHasValue(value) {
+    return (
+        value !== null &&
+        value !== undefined &&
+        value !== "" &&
+        !(Array.isArray(value) && value.length === 0)
+    );
+}
+
+/** @private Builds a single panel item object, or null if it should be skipped. */
+function _processPanelItem(poi, itemConfig, renderOptions, resolveField) {
+    if (!itemConfig?.type) return null;
+    const value = resolveField(poi, itemConfig.field);
+    if (!_itemHasValue(value) && itemConfig.type !== "coordinates") return null;
+    const html = renderItem(poi, itemConfig, renderOptions);
+    if (!html) return null;
+    return {
+        html,
+        config: itemConfig,
+        label: itemConfig.label || "",
+        accordion: itemConfig.accordion === true,
+        defaultOpen: itemConfig.defaultOpen !== false,
+    };
+}
+
 function buildPanelItems(poi, config, options = {}) {
     if (!poi || !config || !Array.isArray(config)) {
         return [];
@@ -535,28 +576,8 @@ function buildPanelItems(poi, config, options = {}) {
     const items = [];
 
     sortedConfig.forEach((itemConfig) => {
-        if (!itemConfig || !itemConfig.type) return;
-
-        // V�rifier si la valeur existe
-        const value = resolveField(poi, itemConfig.field);
-        const hasValue =
-            value !== null &&
-            value !== undefined &&
-            value !== "" &&
-            !(Array.isArray(value) && value.length === 0);
-
-        if (!hasValue && itemConfig.type !== "coordinates") return;
-
-        const html = renderItem(poi, itemConfig, renderOptions);
-        if (html) {
-            items.push({
-                html: html,
-                config: itemConfig,
-                label: itemConfig.label || "",
-                accordion: itemConfig.accordion === true,
-                defaultOpen: itemConfig.defaultOpen !== false,
-            });
-        }
+        const item = _processPanelItem(poi, itemConfig, renderOptions, resolveField);
+        if (item) items.push(item);
     });
 
     return items;
@@ -572,6 +593,6 @@ const Assemblers = {
     buildPanelItems,
 };
 
-getLog().info("[GeoLeaf._ContentBuilder.Assemblers] Module Assemblers charg�");
+getLog().info("[GeoLeaf._ContentBuilder.Assemblers] Module Assemblers chargé");
 
 export { Assemblers };

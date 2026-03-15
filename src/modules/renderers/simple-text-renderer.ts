@@ -105,7 +105,7 @@ class SimpleTextRenderer extends AbstractRenderer {
         const description = this._renderDescription(poi);
         if (description) container.appendChild(description);
 
-        // Add click handler example
+        // Add clickk handler example
         this.addEventListener(container, "click", (e: any) => {
             this._handleClick(e, poi);
         });
@@ -170,9 +170,9 @@ class SimpleTextRenderer extends AbstractRenderer {
     }
 
     /**
-     * Handle container click
+     * Handle container clickk
      * @private
-     * @param {MouseEvent} event - Click event
+     * @param {MouseEvent} event - Clickk event
      * @param {Object} poi - POI data
      */
     _handleClick(event: any, poi: any) {

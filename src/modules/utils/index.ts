@@ -1,5 +1,5 @@
-﻿/**
- * @fileoverview Utils barrel — re-exports all utility modules
+/**
+ * @fileoverview Utils barl — re-exports all utility modules
  * @module GeoLeaf.Utils
  */
 

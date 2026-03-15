@@ -7,10 +7,11 @@
 
 /**
  * GeoLeaf UI Module - Theme Management
- * Gestion du thème dark/light avec persistance localStorage
+ * Gestion of the theme dark/light avec persistance localStorage
  */
 
 import { Log } from "../log/index.js";
+import { getLabel } from "../i18n/i18n.js";
 
 // ========================================
 //   CONSTANTES
@@ -21,11 +22,11 @@ const THEME_LIGHT = "light";
 const THEME_DARK = "dark";
 
 // ========================================
-//   ÉTAT INTERNE
+//   STATE INTERNE
 // ========================================
 
 /**
- * Source de vérité unique pour le thème actuel
+ * Single source of truth for the current theme
  * @type {string|null}
  * @private
  */
@@ -36,11 +37,11 @@ let _currentTheme: string | null = null;
 // ========================================
 
 /**
- * Retourne le thème courant ("light" ou "dark").
- * @returns {string} Theme actuel
+ * Returns the theme current ("light" ou "dark").
+ * @returns {string} Theme current
  */
 function getCurrentTheme() {
-    // Si déjà en mémoire, retourner directement
+    // Si already en memory, returnner directly
     if (_currentTheme) {
         return _currentTheme;
     }
@@ -61,7 +62,7 @@ function getCurrentTheme() {
 }
 
 /**
- * Applique un thème au <body> et synchronise le bouton.
+ * Applies a theme au <body> et synchronise le button.
  * @param {string} theme - "light" ou "dark"
  */
 function applyTheme(theme: string) {
@@ -69,14 +70,14 @@ function applyTheme(theme: string) {
 
     Log.debug("[UI.Theme] applyTheme:", theme, "→", normalized);
 
-    // Mettre à jour l'état centralisé AVANT le DOM
+    // Mettre up to date the state centralized AVANT le DOM
     _currentTheme = normalized;
 
-    // Mise à jour du DOM sur body
+    // Update du DOM sur body
     document.body.classList.remove("gl-theme-light", "gl-theme-dark");
     document.body.classList.add(normalized === THEME_DARK ? "gl-theme-dark" : "gl-theme-light");
 
-    // Appliquer aussi le thème au conteneur de carte (pour support fullscreen)
+    // Appliesr aussi the theme au conteneur de carte (pour support fullscreen)
     const mapContainer = document.getElementById("geoleaf-map");
     if (mapContainer) {
         mapContainer.classList.remove("gl-theme-light", "gl-theme-dark");
@@ -87,14 +88,14 @@ function applyTheme(theme: string) {
     try {
         localStorage.setItem(THEME_KEY, normalized);
     } catch (_e) {
-        // Gérer explicitement l'absence de localStorage
-        if (Log) Log.warn("[UI.Theme] localStorage non disponible, thème non persisté.");
+        // Handle explicitement l'absence de localStorage
+        if (Log) Log.warn("[UI.Theme] localStorage not available, theme not persisted.");
     }
 
-    // Synchronise le bouton si présent
+    // Synchronise le button si present
     updateToggleButton(normalized);
 
-    // Évènement global pour les autres modules
+    // Global event for other modules
     if (globalThis.dispatchEvent) {
         globalThis.dispatchEvent(
             new CustomEvent("geoleaf:ui-theme-changed", {
@@ -105,7 +106,7 @@ function applyTheme(theme: string) {
 }
 
 /**
- * Bascule le thème courant (light <-> dark).
+ * Switches the theme current (light <-> dark).
  */
 function toggleTheme() {
     const current = getCurrentTheme();
@@ -115,9 +116,9 @@ function toggleTheme() {
 }
 
 /**
- * Détermine le thème initial :
- * 1) localStorage si disponible
- * 2) class du <body> si déjà définie
+ * Determines the theme initial :
+ * 1) localStorage si available
+ * 2) class du <body> si already defined
  * 3) sinon, "dark"
  * @returns {string} Theme initial
  * @private
@@ -144,7 +145,7 @@ function resolveInitialTheme() {
 }
 
 /**
- * Récupère le bouton de thème dans le DOM.
+ * Retrieves the button de theme in the DOM.
  * Par convention on utilise l'attribut data-gl-role="theme-toggle".
  * @returns {HTMLElement|null}
  * @private
@@ -154,7 +155,7 @@ function getToggleButton() {
 }
 
 /**
- * Met à jour l'état visuel/ARIA du bouton de thème.
+ * Updates the state visuel/ARIA du button de theme.
  * @param {string} theme - "light" ou "dark"
  * @private
  */
@@ -166,14 +167,19 @@ function updateToggleButton(theme: string) {
 
     btn.setAttribute("data-gl-theme-state", isDark ? "dark" : "light");
     btn.setAttribute("aria-pressed", String(isDark));
-    btn.setAttribute("aria-label", isDark ? "Basculer en thème clair" : "Basculer en thème sombre");
-    (btn as HTMLElement).title = isDark ? "Thème clair" : "Thème sombre";
+    btn.setAttribute(
+        "aria-label",
+        isDark ? getLabel("aria.theme.toggle_to_light") : getLabel("aria.theme.toggle_to_dark")
+    );
+    (btn as HTMLElement).title = isDark
+        ? getLabel("aria.theme.toggle_to_light")
+        : getLabel("aria.theme.toggle_to_dark");
 }
 
 /**
- * Initialise la gestion du bouton de thème.
+ * Initializes the gestion du button de theme.
  * @param {object} [options] - Options de configuration
- * @param {string} [options.buttonSelector] - Sélecteur custom du bouton
+ * @param {string} [options.buttonSelector] - Selector custom du button
  * @param {boolean} [options.autoInitOnDomReady] - Si true, attend DOMContentLoaded
  */
 function initThemeToggle(options: { buttonSelector?: string; autoInitOnDomReady?: boolean } = {}) {
@@ -190,29 +196,29 @@ function initThemeToggle(options: { buttonSelector?: string; autoInitOnDomReady?
 
         const btn = document.querySelector(cfg.buttonSelector);
         if (!btn) {
-            Log.warn("[UI.Theme] Bouton de thème introuvable:", cfg.buttonSelector);
+            Log.warn("[UI.Theme] Theme button not found:", cfg.buttonSelector);
             return;
         }
 
-        Log.debug("[UI.Theme] Bouton de thème trouvé");
+        Log.debug("[UI.Theme] Theme button found");
 
-        // Accessibilité : <button> natif ou rôle "button"
+        // Accessibility: native <button> or role "button"
         const tag = (btn.tagName || "").toLowerCase();
         if (tag === "button") {
             try {
                 (btn as HTMLButtonElement).type = (btn as HTMLButtonElement).type || "button";
             } catch (_e) {
-                // Certains éléments custom peuvent lever une erreur
+                // Certains elements custom peuvent lever une error
             }
         } else {
             btn.setAttribute("role", "button");
             btn.setAttribute("tabindex", "0");
         }
 
-        // Première synchro de l'état visuel
+        // First sync of visual state
         updateToggleButton(initialTheme);
 
-        // Clic souris
+        // Click souris
         btn.addEventListener("click", (evt: Event) => {
             evt.preventDefault();
             toggleTheme();
@@ -246,7 +252,7 @@ const _UITheme = {
     toggleTheme,
     applyTheme,
     getCurrentTheme,
-    // Constantes exposées
+    // Constantes exposedes
     THEME_LIGHT,
     THEME_DARK,
 };

@@ -1,6 +1,6 @@
-﻿/**
+/**
  * GeoLeaf Lazy Chunk — Basemap Selector
- * Sélecteur de fond de carte, chargé conditionnellement selon la configuration.
+ * Base map selector, loaded conditionally based on configuration.
  * @module lazy/basemap-selector
  */
-import '../modules/layer-manager/basemap-selector.js';
+import "../modules/layer-manager/basemap-selector.js";

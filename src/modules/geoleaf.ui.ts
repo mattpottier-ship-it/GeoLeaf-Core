@@ -1,4 +1,4 @@
-﻿/*!
+/*!
  * GeoLeaf Core
  * (c) 2026 Mattieu Pottier
  * Released under the MIT License
@@ -6,7 +6,7 @@
  */
 /**
  * @module geoleaf.ui
- * @description Facade publique du module UI - re-exporte depuis le sous-module.
+ * @description Facade public of the module UI - re-exporte from the sous-module.
  */
 "use strict";
 

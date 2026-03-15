@@ -1,6 +1,6 @@
 /**
  * GeoLeaf Theme Applier - Deferred
- * Chargement différé de couches, résolution de profil, gestion du cache
+ * Loadsment deferred de layers, resolution de profile, gestion du cache
  *
  * @module themes/theme-applier/deferred
  */
@@ -10,15 +10,15 @@ import { ThemeApplierCore as TA } from "../theme-applier/core.js";
 import { Config } from "../../config/config-primitives.js";
 import { GeoJSONShared } from "../../shared/geojson-state.js";
 import { LoaderSingleLayer } from "../../geojson/loader/single-layer.js";
-import { ThemeCache } from '../theme-cache.js';
+import { ThemeCache } from "../theme-cache.js";
 import { Log } from "../../log/index.js";
 const _Config: any = Config;
 
 /**
- * Programme l'application d'une configuration de couche pour plus tard
- * @param {string} layerId - ID de la couche
- * @param {boolean} visible - Visibilité souhaitée
- * @param {string} styleId - ID du style à appliquer
+ * Programme l'application of a configuration de layer pour plus tard
+ * @param {string} layerId - ID de the layer
+ * @param {boolean} visible - Desired visibility
+ * @param {string} styleId - ID du style to appliquer
  * @returns {Promise<void>}
  * @private
  */
@@ -29,19 +29,19 @@ TA._scheduleLayerConfig = function (layerId: any, visible: any, styleId: any) {
 
     TA._pendingLayerConfigs.set(layerId, { visible, styleId });
 
-    // Programmer une vérification périodique
+    // Schedule a periodic check
     TA._schedulePendingCheck();
 
     return Promise.resolve();
 };
 
 /**
- * Planifie une vérification des couches en attente
+ * Planifie une verification des layers en attente
  * @private
  */
 TA._schedulePendingCheck = function () {
     if (TA._pendingCheckTimer) {
-        return; // Déjà planifié
+        return; // Already scheduled
     }
 
     TA._pendingCheckTimer = setTimeout(() => {
@@ -51,7 +51,7 @@ TA._schedulePendingCheck = function () {
 };
 
 /**
- * Vérifie et applique les configurations de couches en attente
+ * Checks and applies pending layer configurations
  * @private
  */
 TA._checkPendingLayerConfigs = function () {
@@ -69,148 +69,160 @@ TA._checkPendingLayerConfigs = function () {
         }
     }
 
-    // Supprimer les couches traitées
+    // Removes processed layers
     appliedLayers.forEach((layerId) => {
         TA._pendingLayerConfigs.delete(layerId);
     });
 
-    // S'il reste des couches en attente, programmer une nouvelle vérification
+    // S'il reste des layers en attente, programmer une nouvelle verification
     if (TA._pendingLayerConfigs.size > 0) {
         TA._schedulePendingCheck();
     }
 };
 
+function _getProfileLayers(activeProfile: any): any[] {
+    if (Array.isArray(activeProfile.geojsonLayers)) return activeProfile.geojsonLayers;
+    if (activeProfile.geojson && Array.isArray(activeProfile.geojson.layers))
+        return activeProfile.geojson.layers;
+    if (Array.isArray(activeProfile.layers)) return activeProfile.layers;
+    if (Array.isArray(activeProfile.Layers)) return activeProfile.Layers;
+    return [];
+}
+
+function _layerType(lc: any): string {
+    if (lc.geometryType) return lc.geometryType;
+    if (lc.type) return lc.type;
+    return "geojson";
+}
+
+function _applyDeferredClusteringNorm(layerDef: any, normalizedDef: any): void {
+    if (!(layerDef.clustering && typeof layerDef.clustering === "object")) return;
+    normalizedDef.clustering = layerDef.clustering.enabled !== false;
+    if (typeof layerDef.clustering.maxClusterRadius === "number") {
+        normalizedDef.maxClusterRadius = layerDef.clustering.maxClusterRadius;
+        normalizedDef.clusterRadius = layerDef.clustering.maxClusterRadius;
+    }
+    if (typeof layerDef.clustering.disableClusteringAtZoom === "number") {
+        normalizedDef.disableClusteringAtZoom = layerDef.clustering.disableClusteringAtZoom;
+    }
+}
+
+function _normalizeDeferredLayerDef(layerDef: any, cachedData: any): any {
+    const normalizedDef = { ...layerDef };
+    if (layerDef.popup && layerDef.popup.fields) normalizedDef.popupFields = layerDef.popup.fields;
+    if (layerDef.tooltip && layerDef.tooltip.fields)
+        normalizedDef.tooltipFields = layerDef.tooltip.fields;
+    if (layerDef.sidepanel && layerDef.sidepanel.detailLayout)
+        normalizedDef.sidepanelFields = layerDef.sidepanel.detailLayout;
+    _applyDeferredClusteringNorm(layerDef, normalizedDef);
+    if (cachedData) normalizedDef._cachedData = cachedData;
+    return normalizedDef;
+}
+
+async function _loadAndCache(
+    loader: any,
+    layerId: any,
+    layerLabel: any,
+    normalizedDef: any,
+    profileId: any,
+    cachedData: any
+): Promise<any> {
+    const layer = await loader.call(LoaderSingleLayer, layerId, layerLabel, normalizedDef, {});
+    if (cachedData && ThemeCache && typeof ThemeCache.store === "function") {
+        ThemeCache.store(layerId, profileId, cachedData);
+    }
+    return layer;
+}
+
+async function _getCachedData(layerId: any, profileId: any): Promise<any> {
+    if (ThemeCache && typeof ThemeCache.get === "function") {
+        return await ThemeCache.get(layerId, profileId);
+    }
+    return null;
+}
+
+async function _buildAndLoadLayer(
+    loader: any,
+    layerId: any,
+    layerConfig: any,
+    dataUrl: any,
+    profileId: any
+): Promise<any> {
+    const layerLabel = layerConfig.label ? layerConfig.label : layerId;
+    const cachedData = await _getCachedData(layerId, profileId);
+    const layerDef = {
+        ...layerConfig,
+        url: dataUrl,
+        type: _layerType(layerConfig),
+        _profileId: profileId,
+        _layerDirectory: layerConfig._layerDirectory,
+    };
+    const normalizedDef = _normalizeDeferredLayerDef(layerDef, cachedData);
+    try {
+        return await _loadAndCache(
+            loader,
+            layerId,
+            layerLabel,
+            normalizedDef,
+            profileId,
+            cachedData
+        );
+    } catch (err: any) {
+        Log.warn(
+            `[ThemeApplier._loadLayerFromProfile] Erreur loading layer "${layerId}":`,
+            err ? err.message : err
+        );
+        return null;
+    }
+}
+
+function _getActiveProfileAndLayers(
+    layerId: any
+): { layerConfig: any; dataUrl: any; profileId: any } | null {
+    const activeProfile = (Config as any).getActiveProfile();
+    if (!activeProfile || typeof activeProfile !== "object") return null;
+    const profileLayersConfig = _getProfileLayers(activeProfile);
+    if (profileLayersConfig.length === 0) return null;
+    const layerConfig = profileLayersConfig.find((config: any) => config.id === layerId);
+    if (!layerConfig) return null;
+    const dataUrl = TA._resolveDataFilePath(layerConfig);
+    if (!dataUrl) return null;
+    return { layerConfig, dataUrl, profileId: activeProfile.id ?? null };
+}
+
 /**
- * Charge une couche depuis le profil actif (avec tolérance aux erreurs)
- * @param {string} layerId - ID de la couche à charger
- * @returns {Promise<Object|null>} - Couche chargée ou null si erreur
+ * Loads a layer from the active profile (with error tolerance)
+ * @param {string} layerId - ID de the layer to load
+ * @returns {Promise<Object|null>} - Couche loadede ou null si error
  * @private
  */
 TA._loadLayerFromProfile = async function (layerId: any) {
-    if (!Config || typeof (Config as any).getActiveProfile !== "function") {
-        return null;
-    }
-
+    if (!Config || typeof (Config as any).getActiveProfile !== "function") return null;
     try {
-        const activeProfile = (Config as any).getActiveProfile();
-
-        if (!activeProfile || typeof activeProfile !== "object") {
-            return null;
-        }
-
-        const profileId = activeProfile.id || null;
-
-        // Get layers config from profile
-        let profileLayersConfig = [];
-        if (Array.isArray(activeProfile.geojsonLayers)) {
-            profileLayersConfig = activeProfile.geojsonLayers;
-        } else if (activeProfile.geojson && Array.isArray(activeProfile.geojson.layers)) {
-            profileLayersConfig = activeProfile.geojson.layers;
-        } else if (Array.isArray(activeProfile.layers)) {
-            profileLayersConfig = activeProfile.layers;
-        } else if (Array.isArray(activeProfile.Layers)) {
-            profileLayersConfig = activeProfile.Layers;
-        }
-
-        if (!Array.isArray(profileLayersConfig) || profileLayersConfig.length === 0) {
-            return null;
-        }
-
-        const layerConfig = profileLayersConfig.find((config) => config.id === layerId);
-
-        if (!layerConfig) {
-            return null;
-        }
-
-        const dataUrl = TA._resolveDataFilePath(layerConfig);
-
-        if (!dataUrl) {
-            return null;
-        }
-
-        const layerLabel = layerConfig.label || layerId;
-        const baseOptions = {};
-
+        const found = _getActiveProfileAndLayers(layerId);
+        if (!found) return null;
         const loader = LoaderSingleLayer._loadSingleLayer;
-
-        if (!loader) {
-            return null;
-        }
-
-        // Tentative cache avant réseau
-        let cachedData = null;
-        if (ThemeCache?.get) {
-            cachedData = await ThemeCache.get(layerId, profileId);
-        }
-
-        // Transmettre TOUTE la configuration de la couche
-        const layerDef = {
-            ...layerConfig,
-            url: dataUrl,
-            type: layerConfig.geometryType || layerConfig.type || "geojson",
-            _profileId: profileId,
-            _layerDirectory: layerConfig._layerDirectory,
-        };
-
-        // Normaliser les champs popup/tooltip/sidepanel
-        const normalizedDef = { ...layerDef };
-
-        if (layerDef.popup && layerDef.popup.fields) {
-            normalizedDef.popupFields = layerDef.popup.fields;
-        }
-
-        if (layerDef.tooltip && layerDef.tooltip.fields) {
-            normalizedDef.tooltipFields = layerDef.tooltip.fields;
-        }
-
-        if (layerDef.sidepanel && layerDef.sidepanel.detailLayout) {
-            normalizedDef.sidepanelFields = layerDef.sidepanel.detailLayout;
-        }
-
-        // Normaliser clustering (objet → booléen + champs top-level)
-        // Alignement avec la normalisation faite dans profile.js loadFromActiveProfile
-        if (layerDef.clustering && typeof layerDef.clustering === "object") {
-            normalizedDef.clustering = layerDef.clustering.enabled !== false;
-            if (typeof layerDef.clustering.maxClusterRadius === "number") {
-                normalizedDef.maxClusterRadius = layerDef.clustering.maxClusterRadius;
-                normalizedDef.clusterRadius = layerDef.clustering.maxClusterRadius;
-            }
-            if (typeof layerDef.clustering.disableClusteringAtZoom === "number") {
-                normalizedDef.disableClusteringAtZoom = layerDef.clustering.disableClusteringAtZoom;
-            }
-        }
-
-        if (cachedData) {
-            normalizedDef._cachedData = cachedData;
-        }
-
-        try {
-            const layer = await loader.call(
-                LoaderSingleLayer,
-                layerId,
-                layerLabel,
-                normalizedDef,
-                baseOptions
-            );
-            // Rafraîchir le cache pour prolonger la durée de vie
-            if (cachedData && ThemeCache?.store) {
-                ThemeCache.store(layerId, profileId, cachedData);
-            }
-            return layer;
-        } catch (err: any) {
-            if (Log) Log.warn(`[ThemeApplier._loadLayerFromProfile] Erreur chargement couche "${layerId}":`, err && (err as any).message);
-            return null;
-        }
+        if (!loader) return null;
+        return await _buildAndLoadLayer(
+            loader,
+            layerId,
+            found.layerConfig,
+            found.dataUrl,
+            found.profileId
+        );
     } catch (error: any) {
-        if (Log) Log.warn(`[ThemeApplier._loadLayerFromProfile] Erreur inattendue pour "${layerId}":`, error && (error as any).message);
+        Log.warn(
+            `[ThemeApplier._loadLayerFromProfile] Erreur inexpectede pour "${layerId}":`,
+            error ? error.message : error
+        );
         return null;
     }
 };
 
 /**
- * Résout le chemin du fichier de données d'une couche
- * @param {Object} layerConfig - Configuration de la couche
- * @returns {string|null} - URL complète du fichier de données
+ * Resolves le path du file de data d'a layer
+ * @param {Object} layerConfig - Configuration de the layer
+ * @returns {string|null} - URL complete du file de data
  * @private
  */
 TA._resolveDataFilePath = function (layerConfig: any) {
@@ -234,7 +246,7 @@ TA._resolveDataFilePath = function (layerConfig: any) {
 };
 
 /**
- * Résout le chemin de base des profils
+ * Resolves le path de base des profiles
  * @private
  */
 TA._getProfilesBasePath = function (activeProfile: any) {
@@ -252,7 +264,7 @@ TA._getProfilesBasePath = function (activeProfile: any) {
 };
 
 /**
- * Normalise un chemin (trim + supprime le / final)
+ * Normalise un path (trim + supprime le / final)
  * @private
  */
 TA._normalizeBasePath = function (path: any) {

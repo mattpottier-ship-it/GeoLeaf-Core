@@ -1,9 +1,9 @@
-﻿/**
- * GeoLeaf Themes — Barrel export
- * Point d'entrée unique pour le sous-module themes/
+/**
+ * GeoLeaf Themes — Barl export
+ * Point d'input unique for the sous-module themes/
  *
- * Note: Themes (namespace assemblé, stateful) n'est PAS exporté ici.
- * Utiliser la façade geoleaf.themes.js ou importer directement themes/themes-api.js.
+ * Note: Themes (namespace assembled, stateful) n'est PAS exported ici.
+ * Utiliser la facade geoleaf.themes.js ou importer directly themes/themes-api.js.
  *
  * @module themes
  */

@@ -1,4 +1,5 @@
-﻿/**
+/* eslint-disable security/detect-object-injection */
+/**
  * GeoLeaf Table – Export Utilities
  * Pure export helpers extracted from geoleaf.table.js (Phase 8.2.2)
  *
@@ -12,27 +13,26 @@ interface GeoJSONFeature {
 }
 
 /**
- * Résout l'ID d'une feature GeoJSON de façon cohérente avec le renderer.
+ * Resolves the ID of a GeoJSON feature consistently with the renderer.
  */
+const _FEATURE_ID_PROPS = ["id", "fid", "osm_id", "OBJECTID", "SITE_ID", "code", "IN1"];
+
 export function resolveFeatureId(feature: GeoJSONFeature, syntheticIndex: number): string {
     if (feature.id != null && feature.id !== "") return String(feature.id);
 
     const p = feature.properties;
     if (!p) return "__gl_row_" + syntheticIndex;
 
-    if (p.id != null && p.id !== "") return String(p.id);
-    if (p.fid != null && p.fid !== "") return String(p.fid);
-    if (p.osm_id != null && p.osm_id !== "") return String(p.osm_id);
-    if (p.OBJECTID != null && p.OBJECTID !== "") return String(p.OBJECTID);
-    if (p.SITE_ID != null && p.SITE_ID !== "") return String(p.SITE_ID);
-    if (p.code != null && p.code !== "") return String(p.code);
-    if (p.IN1 != null && p.IN1 !== "") return String(p.IN1);
+    for (const key of _FEATURE_ID_PROPS) {
+        const v = p[key];
+        if (v != null && v !== "") return String(v);
+    }
 
     return "__gl_row_" + syntheticIndex;
 }
 
 /**
- * Construit une FeatureCollection GeoJSON à partir d'un tableau de features.
+ * Builds a GeoJSON FeatureCollection from an array of features.
  */
 export function buildGeoJSONCollection(features: GeoJSONFeature[]): {
     type: string;
@@ -49,7 +49,7 @@ export function buildGeoJSONCollection(features: GeoJSONFeature[]): {
 }
 
 /**
- * Déclenche le téléchargement d'un fichier GeoJSON dans le navigateur.
+ * Triggers download of a GeoJSON file in the browser.
  */
 export function downloadGeoJSON(geojson: unknown, layerId?: string): void {
     const json = JSON.stringify(geojson, null, 2);

@@ -1,7 +1,20 @@
-﻿/**
- * globals.config.js — Bridge UMD/ESM : B3 + B4 — helpers, validators, renderers, data, loaders, config
+/**
+ * @module globals.config
  *
- * @see globals.js (orchestrateur)
+ * @description
+ * UMD/ESM bridge — B3 + B4 — Helpers, Validators, Renderers, Data, Config.
+ *
+ * This runtime initialization module registers configuration and data services
+ * on `globalThis.GeoLeaf`. It is imported as a side-effect by `globals.ts`.
+ *
+ * Registers:
+ *   - **B3** — Helpers (DOM, style resolver), Validators (schema, style),
+ *     Renderers (abstract, simple-text), Data normalizer, Loaders (style loader),
+ *     Map factory
+ *   - **B4** — Config (accessors, core, loaders, validation, primitives,
+ *     profile loader, data converter, taxonomy, debug flag, normalization, storage)
+ *
+ * @see globals for the orchestrator and import order
  */
 
 // B3 : helpers, validators, renderers, data, loaders, map

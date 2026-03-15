@@ -1,5 +1,5 @@
 /**
- * @fileoverview FetchHelper - Unified HTTP client with timeout, retry, and cache strategies
+ * @fileoverview FetchHelper - Unified HTTP clinkt with timeout, retry, and cache strategies
  * @module GeoLeaf.Utils.FetchHelper
  * @version 1.0.0
  */
@@ -97,31 +97,78 @@ export class FetchError extends Error {
     }
 }
 
+function _validateAndResolveUrl(url: string, config: FetchHelperOptions): string {
+    if (config.validateUrl && Security?.validateUrl) {
+        try {
+            return Security.validateUrl(url);
+        } catch (error) {
+            throw new FetchError(`URL validation failed: ${(error as Error).message}`, {
+                url,
+                cause: error,
+                type: "validation_error",
+            });
+        }
+    }
+    return url;
+}
+
+function _throwFinalRetryError(
+    url: string,
+    config: FetchHelperOptions,
+    error: unknown,
+    attempt: number
+): never {
+    throw new FetchError(
+        `Request failed after ${(config.retries ?? FETCH_DEFAULTS.retries) + 1} attempts: ${(error as Error).message}`,
+        {
+            url,
+            attempts: attempt,
+            cause: error,
+            type: (error as Error).name === "AbortError" ? "timeout" : "network_error",
+        }
+    );
+}
+
+async function _handleRetry(
+    url: string,
+    config: FetchHelperOptions,
+    error: unknown,
+    attempt: number
+): Promise<void> {
+    if (attempt > (config.retries ?? FETCH_DEFAULTS.retries)) {
+        _throwFinalRetryError(url, config, error, attempt);
+    }
+    const delay =
+        (config.retryDelay ?? FETCH_DEFAULTS.retryDelay) *
+        Math.pow(config.retryDelayMultiplier ?? FETCH_DEFAULTS.retryDelayMultiplier, attempt - 1);
+    if (config.onRetry && typeof config.onRetry === "function") {
+        try {
+            config.onRetry(attempt, error as Error, delay);
+        } catch (callbackError) {
+            Log.warn("[FetchHelper] onRetry callback failed:", callbackError);
+        }
+    }
+    const retries = config.retries ?? FETCH_DEFAULTS.retries;
+    if (Log)
+        Log.warn(
+            `[FetchHelper] Retry ${attempt}/${retries} for ${url} in ${delay}ms (${(error as Error).message})`
+        );
+    await new Promise<void>((resolve) => setTimeout(resolve, delay));
+}
+
 export const FetchHelper = {
     async fetch(url: string, options: FetchHelperOptions = {}): Promise<Response | unknown> {
         const config = { ...DEFAULT_CONFIG, ...options };
         let attempt = 0;
-        let resolvedUrl = url;
 
-        if (!_rateLimiter.allow(resolvedUrl)) {
+        if (!_rateLimiter.allow(url)) {
             throw new FetchError("Rate limit exceeded for this domain", {
-                url: resolvedUrl,
+                url,
                 type: "rate_limit_error",
             });
         }
 
-        if (config.validateUrl && Security?.validateUrl) {
-            try {
-                resolvedUrl = Security.validateUrl(resolvedUrl);
-            } catch (error) {
-                throw new FetchError(`URL validation failed: ${(error as Error).message}`, {
-                    url: resolvedUrl,
-                    cause: error,
-                    type: "validation_error",
-                });
-            }
-        }
-
+        const resolvedUrl = _validateAndResolveUrl(url, config);
         const maxRetries = config.retries ?? FETCH_DEFAULTS.retries;
         while (attempt <= maxRetries) {
             try {
@@ -131,39 +178,7 @@ export const FetchHelper = {
                 return result;
             } catch (error) {
                 attempt++;
-                if (attempt > (config.retries ?? FETCH_DEFAULTS.retries)) {
-                    throw new FetchError(
-                        `Request failed after ${(config.retries ?? FETCH_DEFAULTS.retries) + 1} attempts: ${(error as Error).message}`,
-                        {
-                            url: resolvedUrl,
-                            attempts: attempt,
-                            cause: error,
-                            type:
-                                (error as Error).name === "AbortError"
-                                    ? "timeout"
-                                    : "network_error",
-                        }
-                    );
-                }
-                const delay =
-                    (config.retryDelay ?? FETCH_DEFAULTS.retryDelay) *
-                    Math.pow(
-                        config.retryDelayMultiplier ?? FETCH_DEFAULTS.retryDelayMultiplier,
-                        attempt - 1
-                    );
-                if (config.onRetry && typeof config.onRetry === "function") {
-                    try {
-                        config.onRetry(attempt, error as Error, delay);
-                    } catch (callbackError) {
-                        Log.warn("[FetchHelper] onRetry callback failed:", callbackError);
-                    }
-                }
-                const retries = config.retries ?? FETCH_DEFAULTS.retries;
-                if (Log)
-                    Log.warn(
-                        `[FetchHelper] Retry ${attempt}/${retries} for ${resolvedUrl} in ${delay}ms (${(error as Error).message})`
-                    );
-                await this._delay(delay);
+                await _handleRetry(resolvedUrl, config, error, attempt);
             }
         }
 

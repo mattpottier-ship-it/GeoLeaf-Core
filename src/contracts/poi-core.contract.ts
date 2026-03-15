@@ -1,9 +1,9 @@
-﻿/**
+/**
  * GeoLeaf Contract — POI Core operations
  *
- * Interface ESM pour que les modules POI (add-form, sync…) puissent appeler
- * les opérations CRUD du module POI (addPoi, updatePoi, removePoi, notify)
- * sans couplage runtime vers le namespace global.
+ * Interface ESM pour que the modules POI (add-form, sync…) puissent appeler
+ * les operations CRUD of the module POI (addPoi, updatePoi, removePoi, notify)
+ * sans couplage runtime to the namespace global.
  *
  * Phase 10-E — Pattern G.
  *
@@ -25,8 +25,8 @@ let _notify: any = null;
  */
 const POICoreContract = {
     /**
-     * Enregistre les fonctions POI non-exportées et le système de notification.
-     * Appelé par globals.poi.js ou le plugin addpoi au chargement.
+     * Registers thes fonctions POI non-exportedes et the system de notification.
+     * Called by globals.poi.js or the addpoi plugin on loading.
      * @param {{updatePoi?: Function, removePoi?: Function}} extras
      * @param {{success: Function, error: Function}} [notifyInstance]
      */
@@ -52,7 +52,7 @@ const POICoreContract = {
         }
     },
     /**
-     * Enregistre l'instance UI.notify.
+     * Registers the instance UI.notify.
      * @param {{success: Function, error: Function}} notifyInstance
      */
     registerNotify(notifyInstance: any) {

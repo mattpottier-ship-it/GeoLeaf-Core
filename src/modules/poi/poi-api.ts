@@ -1,12 +1,12 @@
 /**
  * GeoLeaf POI API (assemblage namespace POI)
  *
- * Assemble GeoLeaf.POI depuis les sous-modules refactorisés :
- *   - poi/core.js      : Fonctions principales (init, load, display)
- *   - poi/sidepanel.js : Panneau latéral
- *   - poi/shared.js    : État partagé et constantes
+ * Assemble GeoLeaf.POI from thes sous-modules refactoreds :
+ *   - poi/core.js      : Fonctions maines (init, load, display)
+ *   - poi/sidepanel.js : Panneau side
+ *   - poi/shared.js    : Shared state et constantes
  *
- * Note : POI.Renderers est injecté séparément par globals.api.js après Object.assign.
+ * Note : POI.Renderers est injected separatedment par globals.api.js after Object.assign.
  *
  * @module poi/poi-api
  */
@@ -18,18 +18,18 @@ import { POISidepanel as POISidePanel } from "./sidepanel.ts";
 import { POIShared } from "./shared.ts";
 
 /**
- * API publique du module POI
- * Toutes les fonctions délèguent aux sous-modules appropriés
+ * API public of the module POI
+ * All functions delegate to the appropriate sub-modules
  */
 // NOTE: POI.Renderers is set explicitly by globals.js after Object.assign — do not set it here.
 const POI = {
     /**
-     * Initialise le module POI avec la carte et la configuration.
+     * Initializes the module POI avec the map et la configuration.
      * Supporte deux signatures: init(map, config) et init({map, config}).
      */
     init: function (mapOrOptions: any, config: any) {
         if (!POICore) {
-            if (Log) Log.error("[POI] Module Core non chargé.");
+            if (Log) Log.error("[POI] Core module not loaded.");
             return;
         }
         POICore.init(mapOrOptions, config);
@@ -37,7 +37,7 @@ const POI = {
 
     loadAndDisplay: function () {
         if (!POICore) {
-            if (Log) Log.error("[POI] Module Core non chargé.");
+            if (Log) Log.error("[POI] Core module not loaded.");
             return;
         }
         POICore.loadAndDisplay();
@@ -45,7 +45,7 @@ const POI = {
 
     displayPois: function (pois: any) {
         if (!POICore) {
-            if (Log) Log.error("[POI] Module Core non chargé.");
+            if (Log) Log.error("[POI] Core module not loaded.");
             return;
         }
         POICore.displayPois(pois);
@@ -53,7 +53,7 @@ const POI = {
 
     addPoi: function (poi: any) {
         if (!POICore) {
-            if (Log) Log.error("[POI] Module Core non chargé.");
+            if (Log) Log.error("[POI] Core module not loaded.");
             return null;
         }
         return POICore.addPoi(poi);
@@ -61,7 +61,7 @@ const POI = {
 
     add: function (poi: any) {
         if (!POICore) {
-            if (Log) Log.error("[POI] Module Core non chargé.");
+            if (Log) Log.error("[POI] Core module not loaded.");
             return false;
         }
         return POICore.addPoi(poi);
@@ -79,7 +79,7 @@ const POI = {
 
     reload: function (pois: any) {
         if (!POICore) {
-            if (Log) Log.error("[POI] Module Core non chargé.");
+            if (Log) Log.error("[POI] Core module not loaded.");
             return;
         }
         POICore.reload(pois);
@@ -87,7 +87,7 @@ const POI = {
 
     showPoiDetails: async function (poi: any, customLayout: any) {
         if (!POISidePanel) {
-            if (Log) Log.error("[POI] Module SidePanel non chargé.");
+            if (Log) Log.error("[POI] SidePanel module not loaded.");
             return;
         }
         await POISidePanel.openSidePanel(poi, customLayout);
@@ -95,7 +95,7 @@ const POI = {
 
     hideSidePanel: function () {
         if (!POISidePanel) {
-            if (Log) Log.error("[POI] Module SidePanel non chargé.");
+            if (Log) Log.error("[POI] SidePanel module not loaded.");
             return;
         }
         POISidePanel.closeSidePanel();
@@ -113,7 +113,7 @@ const POI = {
 
     getDisplayedPoisCount: function () {
         if (!POICore) {
-            if (Log) Log.error("[POI] Module Core non chargé.");
+            if (Log) Log.error("[POI] Core module not loaded.");
             return 0;
         }
         return POICore.getDisplayedPoisCount();
@@ -129,7 +129,7 @@ const POI = {
                 state.allPois.length,
                 "POI(s) et",
                 state.poiMarkers.size,
-                "marqueur(s)"
+                "marker(s)"
             );
         state.allPois = [];
         state.poiMarkers.clear();

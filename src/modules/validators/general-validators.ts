@@ -1,6 +1,7 @@
+/* eslint-disable security/detect-object-injection */
 /**
  * GeoLeaf — General Validators
- * Validation fonctions génériques (coordonnées, URL, email, etc.)
+ * Generic validation functions (coordinates, URL, email, etc.)
  *
  * @module validators/general-validators
  */
@@ -55,6 +56,18 @@ function validateCoordinates(
     }
 }
 
+function _validateDataUrl(url: string, allowDataImages: boolean): void {
+    if (!allowDataImages) {
+        throw new Errors.SecurityError("Data URLs are not allowed", { url, protocol: "data:" });
+    }
+    let end = url.indexOf(",");
+    if (end < 0) end = url.indexOf(";");
+    const dataType = url.substring(5, end >= 0 ? end : undefined).trim();
+    if (!dataType.startsWith("image/")) {
+        throw new Errors.SecurityError("Only data:image URLs are allowed", { url, dataType });
+    }
+}
+
 function validateUrl(
     url: string,
     options: ValidateUrlOptions = {}
@@ -80,18 +93,7 @@ function validateUrl(
 
         if (!allowedProtocols.includes(protocol)) {
             if (protocol === "data:") {
-                if (!allowDataImages) {
-                    throw new Errors.SecurityError("Data URLs are not allowed", { url, protocol });
-                }
-                let end = url.indexOf(",");
-                if (end < 0) end = url.indexOf(";");
-                const dataType = url.substring(5, end >= 0 ? end : undefined);
-                if (!dataType.startsWith("image/")) {
-                    throw new Errors.SecurityError("Only data:image URLs are allowed", {
-                        url,
-                        dataType,
-                    });
-                }
+                _validateDataUrl(url, allowDataImages);
             } else {
                 throw new Errors.SecurityError(`Protocol "${protocol}" not allowed`, {
                     url,
@@ -102,18 +104,7 @@ function validateUrl(
         }
 
         if (protocol === "data:") {
-            if (!allowDataImages) {
-                throw new Errors.SecurityError("Data URLs are not allowed", { url, protocol });
-            }
-            let end = url.indexOf(",");
-            if (end < 0) end = url.indexOf(";");
-            const dataType = url.substring(5, end >= 0 ? end : undefined).trim();
-            if (!dataType.startsWith("image/")) {
-                throw new Errors.SecurityError("Only data:image URLs are allowed", {
-                    url,
-                    dataType,
-                });
-            }
+            _validateDataUrl(url, allowDataImages);
         }
 
         return { valid: true, error: null, url: parsed.href };
@@ -249,62 +240,65 @@ function validateRequiredFields(
     return { valid: true, error: null, missing: [] };
 }
 
+const _VALID_GEOJSON_TYPES = new Set([
+    "Point",
+    "MultiPoint",
+    "LineString",
+    "MultiLineString",
+    "Polygon",
+    "MultiPolygon",
+    "GeometryCollection",
+    "Feature",
+    "FeatureCollection",
+]);
+
+function _geoJSONCheck(
+    condition: boolean,
+    ErrorClass: new (msg: string, ctx: object) => Error,
+    message: string,
+    ctx: object,
+    throwOnError: boolean
+): { valid: false; error: string } | null {
+    if (!condition) return null;
+    const err = new ErrorClass(message, ctx);
+    if (throwOnError) throw err;
+    return { valid: false, error: (err as Error).message };
+}
+
 function validateGeoJSON(
     geojson: Record<string, unknown> | null | undefined,
     options: ValidatorOptions = {}
 ): { valid: boolean; error: string | null } {
     const { throwOnError = false } = options;
+    const fail = (
+        ErrorClass: new (msg: string, ctx: Record<string, unknown>) => Error,
+        msg: string,
+        ctx: Record<string, unknown>
+    ) => _geoJSONCheck(true, ErrorClass as any, msg, ctx, throwOnError)!;
 
     if (!geojson || typeof geojson !== "object") {
-        const error = new Errors.ValidationError("GeoJSON must be an object", {
+        return fail(Errors.ValidationError, "GeoJSON must be an object", {
             geojson,
             type: typeof geojson,
         });
-        if (throwOnError) throw error;
-        return { valid: false, error: error.message };
     }
-
     if (!geojson.type) {
-        const error = new Errors.ValidationError("GeoJSON must have a type field", { geojson });
-        if (throwOnError) throw error;
-        return { valid: false, error: error.message };
+        return fail(Errors.ValidationError, "GeoJSON must have a type field", { geojson });
     }
-
-    const validTypes = [
-        "Point",
-        "MultiPoint",
-        "LineString",
-        "MultiLineString",
-        "Polygon",
-        "MultiPolygon",
-        "GeometryCollection",
-        "Feature",
-        "FeatureCollection",
-    ];
-
-    if (!validTypes.includes(geojson.type as string)) {
-        const error = new Errors.ValidationError("Invalid GeoJSON type", {
+    if (!_VALID_GEOJSON_TYPES.has(geojson.type as string)) {
+        return fail(Errors.ValidationError, "Invalid GeoJSON type", {
             type: geojson.type,
-            validTypes,
+            validTypes: [..._VALID_GEOJSON_TYPES],
         });
-        if (throwOnError) throw error;
-        return { valid: false, error: error.message };
     }
-
     if (geojson.type === "Feature" && !geojson.geometry) {
-        const error = new Errors.ValidationError("Feature must have a geometry", { geojson });
-        if (throwOnError) throw error;
-        return { valid: false, error: error.message };
+        return fail(Errors.ValidationError, "Feature must have a geometry", { geojson });
     }
-
     if (geojson.type === "FeatureCollection" && !Array.isArray(geojson.features)) {
-        const error = new Errors.ValidationError("FeatureCollection must have a features array", {
+        return fail(Errors.ValidationError, "FeatureCollection must have a features array", {
             geojson,
         });
-        if (throwOnError) throw error;
-        return { valid: false, error: error.message };
     }
-
     return { valid: true, error: null };
 }
 

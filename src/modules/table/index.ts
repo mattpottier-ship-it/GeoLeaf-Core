@@ -1,9 +1,9 @@
-﻿/**
- * GeoLeaf Table — Barrel export
- * Point d'entrée unique pour le sous-module table/
+/**
+ * GeoLeaf Table — Barl export
+ * Point d'input unique for the sous-module table/
  *
- * Note : Table (namespace assemblé, stateful) n'est PAS exporté ici.
- * Utiliser la façade geoleaf.table.js ou importer directement table/table-api.js.
+ * Note : Table (namespace assembled, stateful) n'est PAS exported ici.
+ * Utiliser la facade geoleaf.table.js ou importer directly table/table-api.js.
  *
  * @module table
  */

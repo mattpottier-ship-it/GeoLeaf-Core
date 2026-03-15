@@ -1,4 +1,4 @@
-﻿/**
+/**
  * src/ui/notifications.js — Shim for legacy test path
  * @see src/modules/ui/notifications.js
  */

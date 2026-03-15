@@ -1,7 +1,7 @@
-# GeoLeaf.Themes – Documentation du module Themes
+﻿# GeoLeaf.Themes – Documentation du module Themes
 
 Product Version: GeoLeaf Platform V1  
-**Version**: 1.1.0  
+**Version**: 1.1.1  
 **Fichiers**:
 
 - `src/modules/themes/` (theme-selector, theme-loader, theme-applier/)  
@@ -659,4 +659,4 @@ setInterval(autoSwitchTheme, 3600000);
 ---
 
 **Dernière mise à jour** : 19 janvier 2026  
-**Version GeoLeaf** : 1.1.0
+**Version GeoLeaf** : 1.1.1

@@ -1,10 +1,10 @@
-﻿/**
+/**
  * Module Legend Renderer
- * Rendu des symboles de légende cartographique
+ * Rendu des symboles de legend cartographical
  *
- * DÉPENDANCES:
+ * DEPENDENCIES:
  * - Leaflet (L.DomUtil)
- * - GeoLeaf.Log (optionnel)
+ * - GeoLeaf.Log (optional)
  *
  * EXPOSE:
  * - GeoLeaf._LegendRenderer
@@ -52,7 +52,7 @@ const L =
         : undefined;
 
 /**
- * Rendu d'une section de légende
+ * Rendu of a section de legend
  */
 function renderSection(container: HTMLElement, section: LegendSection): HTMLElement | undefined {
     if (!L?.DomUtil) return undefined;
@@ -72,7 +72,7 @@ function renderSection(container: HTMLElement, section: LegendSection): HTMLElem
 }
 
 /**
- * Rendu d'un item de légende
+ * Rendu of a item de legend
  */
 function renderItem(container: HTMLElement, item: LegendItem): HTMLElement | undefined {
     if (!L?.DomUtil) return undefined;
@@ -95,13 +95,13 @@ function renderItem(container: HTMLElement, item: LegendItem): HTMLElement | und
 }
 
 /**
- * Rendu d'un symbole selon son type
+ * Rendu of a symbole selon son type
  */
 function renderSymbol(container: HTMLElement, item: LegendItem): void {
     if (_UIComponents && typeof _UIComponents.renderSymbol === "function") {
         _UIComponents.renderSymbol(container, item);
     } else {
-        if (Log) Log.error("[LegendRenderer] Module _UIComponents non disponible");
+        if (Log) Log.error("[LegendRenderer] Module _UIComponents not available");
     }
 }
 
@@ -120,7 +120,7 @@ function renderFooter(container: HTMLElement, footer: LegendFooter | null | unde
 }
 
 /**
- * Rendu d'un accordéon pour une couche
+ * Rendu of a accordion pour a layer
  */
 function renderAccordion(container: HTMLElement, accordionData: LegendAccordionData): void {
     const _UIComponentsResolved = (
@@ -136,7 +136,7 @@ function renderAccordion(container: HTMLElement, accordionData: LegendAccordionD
         }
     ).GeoLeaf?._UIComponents;
     if (!_UIComponentsResolved) {
-        if (Log) Log.error("[LegendRenderer] Module _UIComponents non disponible");
+        if (Log) Log.error("[LegendRenderer] Module _UIComponents not available");
         return;
     }
 

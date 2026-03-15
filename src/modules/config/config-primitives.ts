@@ -1,15 +1,15 @@
-﻿/**
+/**
  * @module config/config-primitives
- * @description Re-export de l'interface publique de Config pour consommation
- * par les modules métier (POI, Storage, UI, Labels, Themes…).
+ * @description Re-export of the interface public de Config pour consommation
+ * by the business modules (POI, Storage, UI, Labels, Themes…).
  *
  * Phase 10-C — Pattern B : remplace le couplage runtime par import ESM direct de Config.
  *
- * UTILISATION RECOMMANDÉE :
+ * RECOMMENDED USAGE:
  *   import { Config } from '../config/config-primitives.js';
  *
- * ÉQUIVALENT DIRECT :
+ * DIRECT EQUIVALENT:
  *   import { Config } from '../config/geoleaf-config/config-core.js';
  */
 
-export { Config } from './geoleaf-config/config-core.js';
+export { Config } from "./geoleaf-config/config-core.js";

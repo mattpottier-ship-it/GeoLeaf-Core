@@ -1,6 +1,7 @@
-﻿/**
+/* eslint-disable security/detect-object-injection */
+/**
  * Module Label Renderer pour GeoLeaf
- * Crée et gère les tooltips permanents Leaflet pour les étiquettes
+ * Creates et manages les tooltips permanents Leaflet for thes labels
  * @private GeoLeaf._LabelRenderer
  */
 
@@ -26,6 +27,137 @@ interface LabelStyleLike {
     textTransform?: string;
 }
 
+function _resolvePositionFromBounds(featureLayer: any): { lat: number; lng: number } | null {
+    const bounds = featureLayer.getBounds();
+    if (!bounds) return null;
+    if (typeof bounds.getCenter !== "function") return null;
+    return bounds.getCenter();
+}
+
+function _resolvePositionFromLatLngs(featureLayer: any): { lat: number; lng: number } | null {
+    const latlngs = featureLayer.getLatLngs();
+    if (!latlngs || latlngs.length === 0) return null;
+    const flatLatlngs = Array.isArray(latlngs[0]) ? latlngs[0] : latlngs;
+    if (!flatLatlngs || flatLatlngs.length === 0) return null;
+    const middleIndex = Math.floor(flatLatlngs.length / 2);
+    return flatLatlngs[middleIndex];
+}
+
+function _resolveFeaturePosition(featureLayer: any): { lat: number; lng: number } | null {
+    if (typeof featureLayer.getLatLng === "function") return featureLayer.getLatLng();
+    if (typeof featureLayer.getBounds === "function")
+        return _resolvePositionFromBounds(featureLayer);
+    if (typeof featureLayer.getLatLngs === "function")
+        return _resolvePositionFromLatLngs(featureLayer);
+    return null;
+}
+
+function _extractLatLng(position: any): { lat: number; lng: number } {
+    const lat = typeof position.lat === "function" ? position.lat() : position.lat;
+    const lng = typeof position.lng === "function" ? position.lng() : position.lng;
+    return { lat, lng };
+}
+
+function _buildFeatureId(feature: any): string {
+    if (feature.id) return String(feature.id);
+    if (feature.properties && feature.properties.id) return String(feature.properties.id);
+    return `feature_${Date.now()}_${Math.random()}`;
+}
+
+function _applyFontStyles(element: HTMLElement, font: LabelStyleLike["font"]): void {
+    if (!font) return;
+    if (font.family)
+        element.style.setProperty(
+            "font-family",
+            `"${font.family}", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif`,
+            "important"
+        );
+    if (font.sizePt) element.style.setProperty("font-size", `${font.sizePt}pt`, "important");
+    if (font.bold) {
+        element.style.setProperty("font-weight", "bold", "important");
+    } else if (font.weight) {
+        element.style.setProperty(
+            "font-weight",
+            String(font.weight < 400 ? 500 : font.weight),
+            "important"
+        );
+    }
+    if (font.italic) element.style.setProperty("font-style", "italic", "important");
+}
+
+function _buildBufferShadow(
+    bufferColor: string,
+    bufferOpacity: number,
+    bufferSize: number,
+    hexToRgba: (hex: string, opacity: number) => string
+): string {
+    const rgba = hexToRgba(bufferColor, bufferOpacity);
+    const shadowParts: string[] = [];
+    for (let angle = 0; angle < 360; angle += 30) {
+        const rad = (angle * Math.PI) / 180;
+        shadowParts.push(
+            `${(Math.cos(rad) * bufferSize).toFixed(2)}px ${(Math.sin(rad) * bufferSize).toFixed(2)}px 0 ${rgba}`
+        );
+    }
+    for (let angle = 15; angle < 360; angle += 30) {
+        const rad = (angle * Math.PI) / 180;
+        shadowParts.push(
+            `${(Math.cos(rad) * bufferSize * 0.7).toFixed(2)}px ${(Math.sin(rad) * bufferSize * 0.7).toFixed(2)}px 0 ${rgba}`
+        );
+    }
+    shadowParts.push(`0 0 ${bufferSize * 0.8}px ${rgba}`, `0 0 ${bufferSize * 1.5}px ${rgba}`);
+    return shadowParts.join(", ");
+}
+
+function _applyBufferStyle(
+    element: HTMLElement,
+    buffer: NonNullable<LabelStyleLike["buffer"]>,
+    hexToRgba: (hex: string, opacity: number) => string
+): void {
+    if (!buffer.enabled) return;
+    const bufferColor = buffer.color || "#ffffff";
+    const bufferOpacity = buffer.opacity !== undefined ? buffer.opacity : 1;
+    const bufferSize = buffer.sizePx || 2;
+    const shadow = _buildBufferShadow(bufferColor, bufferOpacity, bufferSize, hexToRgba);
+    element.style.setProperty("text-shadow", shadow, "important");
+}
+
+function _isValidLatLng(lat: number, lng: number): boolean {
+    if (!lat || !lng) return false;
+    if (isNaN(lat)) return false;
+    if (isNaN(lng)) return false;
+    return true;
+}
+
+function _addLabelMarkerToMap(
+    L: any,
+    lat: number,
+    lng: number,
+    htmlContent: string,
+    className: string,
+    feature: any,
+    tooltipsMap: Map<string, unknown>
+): void {
+    const labelIcon = L.divIcon({
+        html: htmlContent,
+        className,
+        iconSize: null,
+        iconAnchor: [0, 0],
+    });
+    const labelMarker = L.marker([lat, lng], {
+        icon: labelIcon,
+        interactive: false,
+        keyboard: false,
+    });
+    const map = Core && (Core as any).getMap ? (Core as any).getMap() : null;
+    if (map) {
+        labelMarker.addTo(map);
+        tooltipsMap.set(_buildFeatureId(feature), labelMarker);
+    } else {
+        if (Log) Log.warn("[LabelRenderer] Map not available for label addition");
+    }
+}
+
 const _LabelRenderer = {
     createTooltipsForLayer(
         layerId: string,
@@ -36,7 +168,7 @@ const _LabelRenderer = {
     ): void {
         if (!leafletLayer || !labelConfig || !labelConfig.labelId) {
             if (Log)
-                Log.warn("[LabelRenderer] Paramètres invalides pour createTooltipsForLayer", {
+                Log.warn("[LabelRenderer] Invalid parameters for createTooltipsForLayer", {
                     layerId,
                     hasLeafletLayer: !!leafletLayer,
                     hasLabelConfig: !!labelConfig,
@@ -46,7 +178,7 @@ const _LabelRenderer = {
         }
         const labelField = labelConfig.labelId;
         if (Log)
-            Log.debug(`[LabelRenderer] Création tooltips pour ${layerId}, champ: ${labelField}`);
+            Log.debug(`[LabelRenderer] Creating tooltips for ${layerId}, field: ${labelField}`);
         let featureCount = 0;
         leafletLayer.eachLayer((featureLayer: unknown) => {
             featureCount++;
@@ -58,12 +190,12 @@ const _LabelRenderer = {
                     tooltipsMap
                 );
             } catch (err) {
-                if (Log) Log.warn("[LabelRenderer] Erreur création tooltip:", err);
+                if (Log) Log.warn("[LabelRenderer] Error creating tooltip:", err);
             }
         });
         if (Log)
             Log.debug(
-                `[LabelRenderer] ${tooltipsMap.size} tooltips créés pour ${layerId} (${featureCount} features parcourues)`
+                `[LabelRenderer] ${tooltipsMap.size} tooltips created for ${layerId} (${featureCount} features processed)`
             );
     },
 
@@ -74,67 +206,33 @@ const _LabelRenderer = {
         tooltipsMap: Map<string, unknown>
     ): void {
         const feature = featureLayer.feature;
-        if (!feature || !feature.properties) {
-            if (Log) Log.debug("[LabelRenderer] Feature ou properties manquant");
-            return;
-        }
+        if (!feature) return;
+        if (!feature.properties) return;
         const labelValue = (this as any)._extractFieldValue(feature.properties, labelField);
         if (!labelValue) return;
-        let position:
-            | { lat: number; lng: number }
-            | { lat: () => number; lng: () => number }
-            | null = null;
-        if (typeof featureLayer.getLatLng === "function") {
-            position = featureLayer.getLatLng();
-        } else if (typeof featureLayer.getBounds === "function") {
-            const bounds = featureLayer.getBounds();
-            if (bounds && typeof bounds.getCenter === "function") position = bounds.getCenter();
-        } else if (typeof featureLayer.getLatLngs === "function") {
-            const latlngs = featureLayer.getLatLngs();
-            if (latlngs && latlngs.length > 0) {
-                const flatLatlngs = Array.isArray(latlngs[0]) ? latlngs[0] : latlngs;
-                if (flatLatlngs && flatLatlngs.length > 0) {
-                    const middleIndex = Math.floor(flatLatlngs.length / 2);
-                    position = flatLatlngs[middleIndex];
-                }
-            }
-        }
+        const position = _resolveFeaturePosition(featureLayer);
         if (!position) {
             if (Log)
                 Log.debug(
-                    "[LabelRenderer] Position null pour feature, skipping label. Label:",
+                    "[LabelRenderer] Null position for feature, skipping label. Label:",
                     labelValue
                 );
             return;
         }
-        const lat =
-            typeof position.lat === "function" ? (position as any).lat() : (position as any).lat;
-        const lng =
-            typeof position.lng === "function" ? (position as any).lng() : (position as any).lng;
-        if (!lat || !lng || isNaN(lat) || isNaN(lng)) return;
+        const { lat, lng } = _extractLatLng(position);
+        if (!_isValidLatLng(lat, lng)) return;
         const htmlContent = (this as any)._formatLabelContent(labelValue, style);
         const L = (globalThis as any).L;
         if (!L) return;
-        const labelIcon = L.divIcon({
-            html: htmlContent,
-            className: (this as any)._buildClassName(style),
-            iconSize: null,
-            iconAnchor: [0, 0],
-        });
-        const labelMarker = L.marker([lat, lng], {
-            icon: labelIcon,
-            interactive: false,
-            keyboard: false,
-        });
-        const map = Core && (Core as any).getMap ? (Core as any).getMap() : null;
-        if (map) {
-            labelMarker.addTo(map);
-            const featureId =
-                feature.id || feature.properties.id || `feature_${Date.now()}_${Math.random()}`;
-            tooltipsMap.set(String(featureId), labelMarker);
-        } else {
-            if (Log) Log.warn("[LabelRenderer] Carte non disponible pour", labelValue);
-        }
+        _addLabelMarkerToMap(
+            L,
+            lat,
+            lng,
+            htmlContent,
+            (this as any)._buildClassName(style),
+            feature,
+            tooltipsMap
+        );
     },
 
     _extractFieldValue(properties: Record<string, unknown>, fieldPath: string): unknown {
@@ -182,51 +280,14 @@ const _LabelRenderer = {
 
     _applyInlineStyles(element: HTMLElement, style: LabelStyleLike): void {
         if (!element || !style) return;
-        if (style.font) {
-            if (style.font.family)
-                element.style.setProperty(
-                    "font-family",
-                    `"${style.font.family}", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif`,
-                    "important"
-                );
-            if (style.font.sizePt)
-                element.style.setProperty("font-size", `${style.font.sizePt}pt`, "important");
-            if (style.font.bold) element.style.setProperty("font-weight", "bold", "important");
-            else if (style.font.weight)
-                element.style.setProperty(
-                    "font-weight",
-                    String(style.font.weight < 400 ? 500 : style.font.weight),
-                    "important"
-                );
-            if (style.font.italic) element.style.setProperty("font-style", "italic", "important");
-        }
+        _applyFontStyles(element, style.font);
         if (style.color) element.style.setProperty("color", style.color, "important");
         if (style.opacity !== undefined)
             element.style.setProperty("opacity", String(style.opacity), "important");
-        if (style.buffer && style.buffer.enabled) {
-            const bufferColor = style.buffer.color || "#ffffff";
-            const bufferOpacity = style.buffer.opacity !== undefined ? style.buffer.opacity : 1;
-            const bufferSize = style.buffer.sizePx || 2;
-            const rgba = (this as any)._hexToRgba(bufferColor, bufferOpacity);
-            const shadowParts: string[] = [];
-            for (let angle = 0; angle < 360; angle += 30) {
-                const rad = (angle * Math.PI) / 180;
-                shadowParts.push(
-                    `${(Math.cos(rad) * bufferSize).toFixed(2)}px ${(Math.sin(rad) * bufferSize).toFixed(2)}px 0 ${rgba}`
-                );
-            }
-            for (let angle = 15; angle < 360; angle += 30) {
-                const rad = (angle * Math.PI) / 180;
-                shadowParts.push(
-                    `${(Math.cos(rad) * bufferSize * 0.7).toFixed(2)}px ${(Math.sin(rad) * bufferSize * 0.7).toFixed(2)}px 0 ${rgba}`
-                );
-            }
-            shadowParts.push(
-                `0 0 ${bufferSize * 0.8}px ${rgba}`,
-                `0 0 ${bufferSize * 1.5}px ${rgba}`
+        if (style.buffer)
+            _applyBufferStyle(element, style.buffer, (hex: string, op: number) =>
+                (this as any)._hexToRgba(hex, op)
             );
-            element.style.setProperty("text-shadow", shadowParts.join(", "), "important");
-        }
         if (style.textTransform)
             element.style.setProperty("text-transform", style.textTransform, "important");
     },

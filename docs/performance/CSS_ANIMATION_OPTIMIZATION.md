@@ -1,6 +1,6 @@
-# ðŸŽ¨ CSS Animation Optimization Guide
+﻿# ðŸŽ¨ CSS Animation Optimization Guide
 
-Product Version: GeoLeaf Platform V1 **Version**: 1.1.0  
+Product Version: GeoLeaf Platform V1 **Version**: 1.1.1  
 **Phase**: Phase 5 Section 5.2 - Animation Optimization  
 **Target**: 60 FPS on all devices
 

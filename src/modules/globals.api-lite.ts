@@ -1,12 +1,24 @@
 /**
- * globals.api-lite.ts � Bridge UMD/ESM : B11 � sans Route ni Table
- * PERF-02 build core lite
- */
-
-/**
- * globals.api.js � Bridge UMD/ESM : B11 � facades geoleaf.*.js + api, PluginRegistry
+ * @module globals.api-lite
  *
- * @see globals.js (orchestrateur)
+ * @description
+ * UMD/ESM bridge — B11 Lite — public facades without Route and Table.
+ *
+ * This runtime initialization module is the Lite variant of `globals.api.ts`.
+ * It is imported **last** by `globals-lite.ts` (PERF-02 build).
+ *
+ * Excluded vs full variant:
+ *   - `Route` facade (~18 KB min)
+ *   - `Table` facade (~26 KB min)
+ *
+ * Registers (same as `globals.api` minus Route/Table):
+ *   - APIController sub-managers, `Baselayers`, `Core`, `Filters`, `Helpers`,
+ *     `LayerManager`, `Legend`, `POI`, `UI`, `Validators`
+ *   - `PluginRegistry`, `BootInfo`
+ *   - Top-level shorthand methods (`init`, `loadConfig`, `setTheme`, `createMap`, …)
+ *
+ * @see globals.api for the full variant (includes Route and Table)
+ * @see globals-lite for the Lite orchestrator
  */
 
 // B11 : facades geoleaf.*.js + api/
@@ -24,7 +36,7 @@ import { LayerManager } from "./geoleaf.layer-manager.js";
 import { Legend } from "./geoleaf.legend.js";
 import { POI } from "./geoleaf.poi.js";
 // Route/Table exclu du build lite
-// Storage facade lives in GeoLeaf-Plugins (Phase 7 � premium separation)
+// Storage facade lives in GeoLeaf-Plugins (Phase 7 — premium separation)
 // Route/Table exclu du build lite
 import { UI } from "./geoleaf.ui.js";
 import { Validators } from "./geoleaf.validators.js";
@@ -52,7 +64,7 @@ _g.GeoLeaf.API.APIInitializationManager = APIInitializationManager;
 _g.GeoLeaf.API.APIFactoryManager = APIFactoryManager;
 // Top-level facade modules
 _g.GeoLeaf.Baselayers = Baselayers;
-_g.GeoLeaf.BaseLayers = Baselayers; // alias stabilis� Phase 7
+_g.GeoLeaf.BaseLayers = Baselayers; // alias stabilisé Phase 7
 _g.GeoLeaf.Core = Core;
 _g.GeoLeaf.Filters = Filters;
 _g.GeoLeaf.Helpers = Helpers;
@@ -65,17 +77,17 @@ if (!_g.GeoLeaf.POI || !_g.GeoLeaf.POI.init)
 if (!_g.GeoLeaf.POI.Renderers) _g.GeoLeaf.POI.Renderers = {};
 _g.GeoLeaf.POI.Renderers.FieldRenderers = FieldRenderers;
 _g.GeoLeaf.POI.Renderers.MediaRenderers = MediaRenderers;
-// Route/Table non assign�s dans le build lite
+// Route/Table non assignés in the build lite
 // Storage: namespace ensured by globals.storage.js; facade methods injected by the premium plugin at runtime
 _g.GeoLeaf.Storage = _g.GeoLeaf.Storage || {};
-// Route/Table non assign�s dans le build lite
-// UI: geoleaf.ui.js built _g.GeoLeaf.UI directly via mutations � re-sync reference
+// Route/Table non assignés in the build lite
+// UI: geoleaf.ui.js built _g.GeoLeaf.UI directly via mutations — re-sync reference
 _g.GeoLeaf.UI = UI || _g.GeoLeaf.UI;
 // Validators: override B8 SchemaValidators with full public Validators facade
 _g.GeoLeaf.Validators = Validators;
 _g.GeoLeaf.plugins = PluginRegistry;
 _g.GeoLeaf.bootInfo = BootInfo;
-// Enregistrer le core comme charg�
+// Registersr le core comme chargé
 PluginRegistry.register("core", { version: _g.GeoLeaf._version });
 
 // -- Public API entry points --------------------------------------------------
@@ -166,7 +178,7 @@ _g.GeoLeaf.getHealth = function () {
 _g.GeoLeaf.getMetrics = function () {
     return _g.GeoLeaf.getHealth();
 };
-// Alias version / CONSTANTS (set also by geoleaf-api.js for ESM � harmless duplicate)
+// Alias version / CONSTANTS (set also by geoleaf-api.js for ESM — harmless duplicate)
 if (!_g.GeoLeaf.version) {
     _g.GeoLeaf.version = (_g.GeoLeaf.CONSTANTS && _g.GeoLeaf.CONSTANTS.VERSION) || "1.1.0";
 }

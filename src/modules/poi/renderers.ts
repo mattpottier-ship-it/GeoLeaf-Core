@@ -1,4 +1,4 @@
-﻿/*!
+/*!
  * GeoLeaf Core
  *  2026 Mattieu Pottier
  * Released under the MIT License
@@ -6,17 +6,17 @@
  */
 
 /**
- * Module POI Renderers (Agrégateur)
- * Facade publique pour tous les renderers POI - Phase 10-D Pattern C
+ * Module POI Renderers (Aggregator)
+ * Facade public pour tous les renderers POI - Phase 10-D Pattern C
  */
 
 import { POIRenderersContract } from "../../contracts/poi-renderers.contract.ts";
 
 const _POIRenderers = {
     /**
-     * Rend le contenu complet d'un POI
-     * @param {Object} poi - Données du POI
-     * @param {Object} state - État
+     * Rend le contenu complete of a POI
+     * @param {Object} poi - Data du POI
+     * @param {Object} state - STATE
      * @returns {DocumentFragment}
      */
     renderContent(poi: any, state: any) {
@@ -24,7 +24,7 @@ const _POIRenderers = {
     },
 
     /**
-     * Rend un champ texte
+     * Rend un field text
      */
     renderText(section: any, poi: any, value: any) {
         return POIRenderersContract.renderText(section, poi, value);
@@ -45,21 +45,21 @@ const _POIRenderers = {
     },
 
     /**
-     * Rend une galerie
+     * Rend une gallery
      */
     renderGallery(section: any, gallery: any) {
         return POIRenderersContract.renderGallery(section, gallery);
     },
 
     /**
-     * Rend un lien
+     * Rend un link
      */
     renderLink(section: any, url: any) {
         return POIRenderersContract.renderLink(section, url);
     },
 
     /**
-     * Peuple le side panel avec les données du POI
+     * Peuple le side panel with thes data du POI
      * @returns {Promise<void>}
      */
     async populateSidePanel(poi: any, customLayout: any) {

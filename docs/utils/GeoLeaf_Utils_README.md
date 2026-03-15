@@ -1,9 +1,9 @@
-# 🛠️ GeoLeaf.Utils - Utilitaires Généraux
+﻿# 🛠️ GeoLeaf.Utils - Utilitaires Généraux
 
 Product Version: GeoLeaf Platform V1
 
 **Module** : `GeoLeaf.Utils`  
-**Version** : 1.1.0  
+**Version** : 1.1.1  
 **Fichiers source** : `src/modules/utils/*.js` (12 modules)  
 **Dernière mise à jour** : 14 février 2026
 
@@ -786,6 +786,6 @@ MapHelpers
 
 ---
 
-**Version** : 1.1.0  
+**Version** : 1.1.1  
 **Dernière mise à jour** : 19 janvier 2026  
 **Sprint 2** : Documentation complète des 13 modules utilitaires ✅

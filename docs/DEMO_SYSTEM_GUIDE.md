@@ -1,8 +1,8 @@
 # GeoLeaf Demo System Guide
 
 **Product Version:** GeoLeaf Platform V1  
-**Version:** 1.1.0  
-**Last Updated:** January 2026  
+**Version:** 1.1.1  
+**Last Updated:** March 2026  
 **Target Audience:** Developers testing and demonstrating GeoLeaf features
 
 > Versioning convention: **Platform V1** is the product label; technical package/release SemVer remains **1.1.x**. See [VERSIONING_POLICY.md](VERSIONING_POLICY.md).

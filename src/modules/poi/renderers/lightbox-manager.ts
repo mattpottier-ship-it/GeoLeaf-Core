@@ -1,13 +1,41 @@
 /**
  * GeoLeaf POI Module - Lightbox Manager
- * Gestion de l'affichage lightbox pour les images avec navigation galerie
- * Phase 6.2 - Extraction depuis core.js
+ * Gestion of the display lightbox for thes images avec navigation gallery
+ * Phase 6.2 - Extraction from core.js
  */
 
 /**
- * Gestionnaire de lightbox pour affichage d'images en plein écran
- * Supporte la navigation dans une galerie d'images (flèches gauche/droite)
+ * Manager for lightbox pour display d'images en fullscreen
+ * Supporte la navigation dans une gallery d'images (arrows gauche/droite)
  */
+function _buildLightboxDom(imageSrc: string): { lightbox: HTMLDivElement; img: HTMLImageElement } {
+    const lightbox = document.createElement("div") as HTMLDivElement;
+    lightbox.className = "gl-poi-lightbox-global";
+    lightbox.style.display = "flex";
+
+    const overlay = document.createElement("div");
+    overlay.className = "gl-poi-lightbox__overlay";
+    lightbox.appendChild(overlay);
+
+    const content = document.createElement("div");
+    content.className = "gl-poi-lightbox__content";
+    lightbox.appendChild(content);
+
+    const img = document.createElement("img") as HTMLImageElement;
+    img.className = "gl-poi-lightbox__image";
+    img.src = imageSrc;
+    img.alt = "";
+    content.appendChild(img);
+
+    const closeBtn = document.createElement("button");
+    closeBtn.className = "gl-poi-lightbox__close";
+    closeBtn.setAttribute("aria-label", "Fermer");
+    closeBtn.textContent = "×";
+    lightbox.appendChild(closeBtn);
+
+    return { lightbox, img };
+}
+
 class LightboxManager {
     currentLightbox: HTMLElement | null = null;
     keyHandler: ((e: KeyboardEvent) => void) | null = null;
@@ -32,17 +60,15 @@ class LightboxManager {
     }
 
     /**
-     * Ouvre une lightbox pour afficher une image en plein écran.
-     * Si un tableau d'images est fourni, active la navigation par flèches.
-     * @param {string} imageSrc - URL de l'image à afficher
-     * @param {string[]} [galleryImages] - Tableau d'URLs pour navigation galerie
-     * @param {number} [startIndex] - Index de départ dans la galerie
+     * Ouvre une lightbox pour display une image en fullscreen.
+     * If a array d'images est fourni, active la navigation par arrows.
+     * @param {string} imageSrc - URL of the image to display
+     * @param {string[]} [galleryImages] - Array d'URLs pour navigation gallery
+     * @param {number} [startIndex] - Starting index in the gallery
      */
     open(imageSrc: any, galleryImages?: any, startIndex?: any) {
-        // Fermer lightbox précédente si existe
         this.close();
 
-        // Configurer la galerie
         if (Array.isArray(galleryImages) && galleryImages.length > 1) {
             this.galleryImages = galleryImages;
             this.currentIndex =
@@ -53,42 +79,20 @@ class LightboxManager {
             this.currentIndex = 0;
         }
 
-        // Créer le conteneur principal (utilise les classes CSS existantes)
-        const lightbox = document.createElement("div");
-        lightbox.className = "gl-poi-lightbox-global";
-        lightbox.style.display = "flex";
-
-        // Overlay (clic pour fermer)
-        const overlay = document.createElement("div");
-        overlay.className = "gl-poi-lightbox__overlay";
-        overlay.addEventListener("click", () => this.close());
-        lightbox.appendChild(overlay);
-
-        // Conteneur de contenu
-        const content = document.createElement("div");
-        content.className = "gl-poi-lightbox__content";
-        lightbox.appendChild(content);
-
-        // Image
-        const img = document.createElement("img");
-        img.className = "gl-poi-lightbox__image";
-        img.src = imageSrc;
-        img.alt = "";
-        content.appendChild(img);
+        const { lightbox, img } = _buildLightboxDom(imageSrc);
+        {
+            const overlay = lightbox.querySelector(".gl-poi-lightbox__overlay") as HTMLElement;
+            if (overlay) overlay.addEventListener("click", () => this.close());
+        }
+        const closeBtn = lightbox.querySelector(".gl-poi-lightbox__close") as HTMLElement;
+        if (closeBtn) {
+            closeBtn.addEventListener("click", (e: any) => {
+                e.stopPropagation();
+                this.close();
+            });
+        }
         this._imgElement = img;
 
-        // Bouton fermer
-        const closeBtn = document.createElement("button");
-        closeBtn.className = "gl-poi-lightbox__close";
-        closeBtn.setAttribute("aria-label", "Fermer");
-        closeBtn.textContent = "\u00D7";
-        closeBtn.addEventListener("click", (e: any) => {
-            e.stopPropagation();
-            this.close();
-        });
-        lightbox.appendChild(closeBtn);
-
-        // Navigation galerie (flèches + compteur) si plusieurs images
         if (this.galleryImages.length > 1) {
             this._createNavigation(lightbox);
         }
@@ -96,7 +100,6 @@ class LightboxManager {
         document.body.appendChild(lightbox);
         this.currentLightbox = lightbox;
 
-        // Gestion clavier : Escape, flèches gauche/droite
         this.keyHandler = (e: any) => {
             if (e.key === "Escape") {
                 this.close();
@@ -112,15 +115,15 @@ class LightboxManager {
     }
 
     /**
-     * Crée les boutons de navigation et le compteur
+     * Creates thes buttons de navigation et le compteur
      * @private
      * @param {HTMLElement} lightbox - Conteneur lightbox
      */
     _createNavigation(lightbox: any) {
-        // Bouton précédent
+        // Button previous
         const prevBtn = document.createElement("button");
         prevBtn.className = "gl-poi-lightbox__prev";
-        prevBtn.setAttribute("aria-label", "Image précédente");
+        prevBtn.setAttribute("aria-label", "Image previous");
         prevBtn.textContent = "\u2039";
         prevBtn.addEventListener("click", (e: any) => {
             e.stopPropagation();
@@ -129,7 +132,7 @@ class LightboxManager {
         lightbox.appendChild(prevBtn);
         this._prevButton = prevBtn;
 
-        // Bouton suivant
+        // Button suivant
         const nextBtn = document.createElement("button");
         nextBtn.className = "gl-poi-lightbox__next";
         nextBtn.setAttribute("aria-label", "Image suivante");
@@ -151,7 +154,7 @@ class LightboxManager {
     }
 
     /**
-     * Navigue vers l'image précédente
+     * Navigue vers l'image previous
      */
     prev() {
         if (this.galleryImages.length <= 1) return;
@@ -170,7 +173,7 @@ class LightboxManager {
     }
 
     /**
-     * Met à jour l'image affichée et l'état de navigation
+     * Updates the image displayed et the state de navigation
      * @private
      */
     _updateImage() {
@@ -178,14 +181,14 @@ class LightboxManager {
         this._imgElement.src = this.galleryImages[this.currentIndex];
         this._updateNavState();
 
-        // Notifier le changement d'index (pour synchroniser les miniatures)
+        // Notifier le changement d'index (pour synchronize les thumbnails)
         if (typeof this.onIndexChange === "function") {
             this.onIndexChange(this.currentIndex);
         }
     }
 
     /**
-     * Met à jour le compteur et la visibilité des flèches
+     * Updates the compteur et la visibility des arrows
      * @private
      */
     _updateNavState() {
@@ -218,7 +221,7 @@ class LightboxManager {
     }
 
     /**
-     * Vérifie si une lightbox est actuellement ouverte
+     * Checks if une lightbox est currentlement opene
      * @returns {boolean}
      */
     isOpen() {

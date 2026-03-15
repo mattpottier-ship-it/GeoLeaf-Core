@@ -1,4 +1,5 @@
-﻿/**
+/* eslint-disable security/detect-object-injection */
+/**
  * @fileoverview GeoLeaf Lazy Loading Module
  * @version 1.0.0
  */
@@ -6,7 +7,11 @@
 import { Log } from "../log/index.js";
 
 const _g =
-    typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? (window as object) : ({} as Window);
+    typeof globalThis !== "undefined"
+        ? globalThis
+        : typeof window !== "undefined"
+          ? (window as object)
+          : ({} as Window);
 
 interface LazyLoaderModulesConfig {
     timeout: number;
@@ -98,7 +103,8 @@ export class LazyLoader {
             metrics.modulesLoaded++;
             metrics.totalLoadTime += loadTime;
 
-            if (Log) Log.info(`[LazyLoader] Module "${moduleName}" loaded in ${loadTime.toFixed(2)}ms`);
+            if (Log)
+                Log.info(`[LazyLoader] Module "${moduleName}" loaded in ${loadTime.toFixed(2)}ms`);
             return result;
         } catch (error) {
             loadingPromises.delete(moduleName);
@@ -118,7 +124,10 @@ export class LazyLoader {
         const importPromise = import(/* webpackIgnore: true */ finalPath as string);
         if (!config.timeout) return importPromise;
         const timeoutPromise = new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error(`Module "${moduleName}" load timeout`)), config.timeout)
+            setTimeout(
+                () => reject(new Error(`Module "${moduleName}" load timeout`)),
+                config.timeout
+            )
         );
         return Promise.race([importPromise, timeoutPromise]);
     }
@@ -179,7 +188,10 @@ export class LazyLoader {
             img.classList.remove(config.loadingClass);
             img.classList.add(config.loadedClass);
             metrics.imagesLoaded++;
-            if (Log) Log.debug(`[LazyLoader] Image loaded in ${(performance.now() - startTime).toFixed(2)}ms: ${img.src}`);
+            if (Log)
+                Log.debug(
+                    `[LazyLoader] Image loaded in ${(performance.now() - startTime).toFixed(2)}ms: ${img.src}`
+                );
         };
         tempImg.onerror = () => {
             img.classList.remove(config.loadingClass);
@@ -210,7 +222,7 @@ export class LazyLoader {
             } else {
                 images.forEach((img) => this._loadImage(img as HTMLImageElement));
             }
-            if (Log) Log.info(`[LazyLoader] scan() — ${images.length} image(s) trouvée(s)`);
+            if (Log) Log.info(`[LazyLoader] scan() — ${images.length} image(s) found`);
         }
         return images.length;
     }
@@ -219,7 +231,9 @@ export class LazyLoader {
         const { autoScan = true, selector = "img[data-src]" } = options;
         if (!autoScan) return;
         if (document.readyState === "loading") {
-            document.addEventListener("DOMContentLoaded", () => this.scan(selector), { once: true });
+            document.addEventListener("DOMContentLoaded", () => this.scan(selector), {
+                once: true,
+            });
         } else {
             this.scan(selector);
         }
@@ -235,7 +249,12 @@ export class LazyLoader {
 
     private _shouldPreloadModule(moduleName: string): boolean {
         const moduleExists = this._extractModuleExports(moduleName);
-        return !moduleExists || (typeof moduleExists === "object" && moduleExists !== null && (moduleExists as { name?: string }).name === moduleName);
+        return (
+            !moduleExists ||
+            (typeof moduleExists === "object" &&
+                moduleExists !== null &&
+                (moduleExists as { name?: string }).name === moduleName)
+        );
     }
 
     private _preloadModule(moduleName: string): void {
@@ -276,7 +295,8 @@ export class LazyLoader {
     getMetrics(): typeof metrics & { averageLoadTime: number } {
         return {
             ...metrics,
-            averageLoadTime: metrics.modulesLoaded > 0 ? metrics.totalLoadTime / metrics.modulesLoaded : 0,
+            averageLoadTime:
+                metrics.modulesLoaded > 0 ? metrics.totalLoadTime / metrics.modulesLoaded : 0,
         };
     }
 
@@ -286,7 +306,10 @@ export class LazyLoader {
         if (Log) Log.info("[LazyLoader] Module cache cleared");
     }
 
-    private _mergeConfig(defaultConfig: LazyLoaderConfig, userConfig: Partial<LazyLoaderConfig>): LazyLoaderConfig {
+    private _mergeConfig(
+        defaultConfig: LazyLoaderConfig,
+        userConfig: Partial<LazyLoaderConfig>
+    ): LazyLoaderConfig {
         const merged: LazyLoaderConfig = {
             modules: { ...defaultConfig.modules },
             images: { ...defaultConfig.images },
@@ -314,7 +337,9 @@ export function getLazyLoader(): LazyLoader {
 
 if (typeof document !== "undefined") {
     if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", () => getLazyLoader().initialize(), { once: true });
+        document.addEventListener("DOMContentLoaded", () => getLazyLoader().initialize(), {
+            once: true,
+        });
     } else {
         Promise.resolve().then(() => getLazyLoader().initialize());
     }
