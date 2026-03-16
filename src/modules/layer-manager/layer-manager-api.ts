@@ -1,158 +1,36 @@
-/* eslint-disable security/detect-object-injection */
+﻿/* eslint-disable security/detect-object-injection */
 /**
-
-
 
  * GeoLeaf LayerManager API (assemblage namespace LayerManager)
 
-
-
  * @module layer-manager/layer-manager-api
-
-
 
  */
 
 /*!
 
-
-
  * GeoLeaf Core
 
-
-
- * © 2026 Mattieu Pottier
-
-
+ * Â© 2026 Mattieu Pottier
 
  * Released under the MIT License
 
-
-
  * https://geoleaf.dev
-
-
 
  */
 
 "use strict";
 
 import { Log } from "../log/index.js";
-
-function _applyLayerManagerConfig(lmConfig: any, options: any): void {
-    if (lmConfig.title) options.title = lmConfig.title;
-
-    if (typeof lmConfig.collapsedByDefault === "boolean")
-        options.collapsed = lmConfig.collapsedByDefault;
-
-    if (!(Array.isArray(lmConfig.sections) && lmConfig.sections.length > 0)) return;
-
-    const configSections = lmConfig.sections
-
-        .slice()
-
-        .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
-
-        .map((s: any) => ({
-            id: s.id,
-            label: s.label,
-            order: s.order,
-            collapsedByDefault: s.collapsedByDefault,
-            items: [],
-        }));
-
-    if (!Array.isArray(options.sections)) options.sections = [];
-
-    configSections.forEach((configSection: any) => {
-        const existingSection = options.sections.find((s: any) => s.id === configSection.id);
-
-        if (!existingSection) {
-            options.sections.push(configSection);
-        } else if (configSection.label && !existingSection.label) {
-            existingSection.label = configSection.label;
-        }
-    });
-
-    options.sections.sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
-
-    Log?.info("[GeoLeaf.LayerManager] Sections merged with layerManagerConfig");
-}
-
-function _resolveBasemapDefs(g: any): Record<string, any> | null {
-    if (g.GeoLeaf?.Baselayers && typeof g.GeoLeaf.Baselayers.getBaseLayers === "function") {
-        return g.GeoLeaf.Baselayers.getBaseLayers() || {};
-    }
-
-    if (g.GeoLeaf.Config && typeof g.GeoLeaf.Config.get === "function") {
-        return g.GeoLeaf.Config.get("basemaps") || {};
-    }
-
-    return null;
-}
-
-function _buildAutoBasemapSections(g: any): any[] {
-    const defs = _resolveBasemapDefs(g);
-
-    if (!defs || Object.keys(defs).length === 0) return [];
-
-    const baseItems = Object.keys(defs).map((k) => ({ id: k, label: (defs[k] || {}).label || k }));
-
-    return baseItems.length ? [{ id: "basemap", label: "Fond de carte", items: baseItems }] : [];
-}
-
-function _createLayerEntry(layerId: any, options: any): any {
-    return {
-        id: layerId,
-
-        label: options.label || layerId,
-
-        toggleable: true,
-
-        themes: options.themes || null,
-
-        styles: options.styles || null,
-
-        labels: options.labels || null,
-    };
-}
-
-function _mergeItem(existing: any, newItem: any): void {
-    const idx = existing.items.findIndex((i: any) => i.id === newItem.id);
-
-    if (idx !== -1) {
-        existing.items[idx] = Object.assign({}, existing.items[idx], newItem);
-    } else {
-        existing.items.push(newItem);
-    }
-}
-
-function _mergeSection(existing: any, section: any): void {
-    if (Array.isArray(section.items)) {
-        if (!Array.isArray(existing.items)) existing.items = [];
-
-        section.items.forEach((item: any) => _mergeItem(existing, item));
-
-        existing.items.sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
-    }
-
-    if (section.label) existing.label = section.label;
-
-    if (section.order !== undefined) existing.order = section.order;
-
-    if (section.collapsedByDefault !== undefined)
-        existing.collapsedByDefault = section.collapsedByDefault;
-}
-
-function _resolveMap(options: any, g: any): any {
-    let map = options.map || null;
-
-    if (!map && g.GeoLeaf.Core && typeof g.GeoLeaf.Core.getMap === "function") {
-        map = g.GeoLeaf.Core.getMap();
-    }
-
-    return map;
-}
-
+import {
+    _applyLayerManagerConfig,
+    _resolveBasemapDefs,
+    _buildAutoBasemapSections,
+    _createLayerEntry,
+    _mergeItem,
+    _mergeSection,
+    _resolveMap,
+} from "./layer-manager-helpers.js";
 const _g: any =
     typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : {};
 
@@ -160,134 +38,72 @@ _g.GeoLeaf = _g.GeoLeaf || {};
 
 /**
 
-
-
  * Namespace global GeoLeaf
-
-
 
  */
 
 /**
-
-
 
  * Logger unified
 
-
-
  */
 
 /**
 
-
-
  * Module GeoLeaf.LayerManager (REFACTORED v3.0)
 
-
-
  *
-
-
 
  * ARCHITECTURE MODULAIRE :
 
-
-
  * - layer-manager/shared.js : Shared state
-
-
 
  * - layer-manager/control.js : Controle Leaflet (L.Control)
 
-
-
  * - layer-manager/renderer.js : Rendu des sections et items
-
-
 
  * - layer-manager/basemap-selector.js : Selector de base maps
 
-
-
  * - layer-manager/theme-selector.js : Selector de themes
-
-
 
  * - geoleaf.layer-manager.js (this file): Public aggregator/facade
 
-
-
  *
-
-
 
  * REQUIRED DEPENDENCIES (loadedes avant ce module) :
 
+ * - layer-manager/shared.js â†’ GeoLeaf._LayerManagerShared
 
+ * - layer-manager/renderer.js â†’ GeoLeaf._LayerManagerRenderer
 
- * - layer-manager/shared.js → GeoLeaf._LayerManagerShared
+ * - layer-manager/basemap-selector.js â†’ GeoLeaf._LayerManagerBasemapSelector
 
+ * - layer-manager/theme-selector.js â†’ GeoLeaf._LayerManagerThemeSelector
 
-
- * - layer-manager/renderer.js → GeoLeaf._LayerManagerRenderer
-
-
-
- * - layer-manager/basemap-selector.js → GeoLeaf._LayerManagerBasemapSelector
-
-
-
- * - layer-manager/theme-selector.js → GeoLeaf._LayerManagerThemeSelector
-
-
-
- * - layer-manager/control.js → GeoLeaf._LayerManagerControl
-
-
+ * - layer-manager/control.js â†’ GeoLeaf._LayerManagerControl
 
  *
 
-
-
  * Role :
-
-
 
  * - Createsr un controle Leaflet de manager for layers pour GeoLeaf
 
-
-
  * - Displays structured sections (basemaps, layers, categories)
-
-
 
  * - Handle un mode collapsible (collapsible)
 
-
-
  * - Preparation for integration with the Legend module (Phase 6)
-
-
 
  */
 
 const LayerManagerModule = {
     /**
 
-
-
      * Reference to the Leaflet map
-
-
 
      * @type {L.Map|null}
 
-
-
      * @private
-
-
 
      */
 
@@ -295,19 +111,11 @@ const LayerManagerModule = {
 
     /**
 
-
-
      * Reference to the Leaflet legend control
-
-
 
      * @type {L.Control|null}
 
-
-
      * @private
-
-
 
      */
 
@@ -315,19 +123,11 @@ const LayerManagerModule = {
 
     /**
 
-
-
      * Timeout for the debounce du refresh
-
-
 
      * @type {number|null}
 
-
-
      * @private
-
-
 
      */
 
@@ -335,19 +135,11 @@ const LayerManagerModule = {
 
     /**
 
-
-
      * Options internals of the module
-
-
 
      * @type {Object}
 
-
-
      * @private
-
-
 
      */
 
@@ -365,47 +157,25 @@ const LayerManagerModule = {
 
     /**
 
-
-
      * Initialization of the module LayerManager
-
-
 
      *
 
-
-
      * @param {Object} options
-
-
 
      * @param {L.Map} [options.map] - Carte Leaflet (si absent, tentative via GeoLeaf.Core.getMap())
 
-
-
      * @param {string} [options.position]
-
-
 
      * @param {string} [options.title]
 
-
-
      * @param {boolean} [options.collapsible]
-
-
 
      * @param {boolean} [options.collapsed]
 
-
-
      * @param {Array} [options.sections]
 
-
-
      * @returns {L.Control|null} - The control LayerManager ou null
-
-
 
      */
 
@@ -469,15 +239,9 @@ const LayerManagerModule = {
 
     /**
 
-
-
      * Loads thes sections from the configuration
 
-
-
      * @private
-
-
 
      */
 
@@ -500,15 +264,9 @@ const LayerManagerModule = {
 
     /**
 
-
-
      * Remplit automaticment la section basemap
 
-
-
      * @private
-
-
 
      */
 
@@ -541,15 +299,9 @@ const LayerManagerModule = {
 
     /**
 
-
-
      * Autofill minimum des sections
 
-
-
      * @private
-
-
 
      */
 
@@ -577,19 +329,11 @@ const LayerManagerModule = {
 
     /**
 
-
-
      * Registers ae GeoJSON layer dans the legend
-
-
 
      * @param {string} layerId - ID de the layer
 
-
-
      * @param {Object} options - Options de the layer
-
-
 
      */
 
@@ -635,15 +379,9 @@ const LayerManagerModule = {
 
     /**
 
-
-
      * Unregisters a GeoJSON layer from the legend
 
-
-
      * @param {string} layerId - ID de the layer
-
-
 
      */
 
@@ -669,15 +407,9 @@ const LayerManagerModule = {
 
     /**
 
-
-
      * Updates thes sections de the legend
 
-
-
      * @param {Array} sections - Nouvelles sections
-
-
 
      */
 
@@ -695,15 +427,9 @@ const LayerManagerModule = {
 
     /**
 
-
-
      * Adds ou met up to date une section dans the legend
 
-
-
      * @param {Object} section - Section to add {id, label, order, items}
-
-
 
      */
 
@@ -751,11 +477,7 @@ const LayerManagerModule = {
 
     /**
 
-
-
      * Switches the collapsed/expanded state of the legend
-
-
 
      */
 
@@ -773,15 +495,9 @@ const LayerManagerModule = {
 
     /**
 
-
-
      * Returns whether the legend is collapsed
 
-
-
      * @returns {boolean}
-
-
 
      */
 
@@ -791,15 +507,9 @@ const LayerManagerModule = {
 
     /**
 
-
-
      * Force le re-rendu du contenu
 
-
-
      * @private
-
-
 
      */
 
@@ -813,27 +523,15 @@ const LayerManagerModule = {
 
     /**
 
-
-
      * Refreshes l'display du LayerManager
-
-
 
      * Used in particular after applying a theme to update toggle button states
 
-
-
      * Version debounced pour groupr les appels multiples (ex: plusieurs layers changent de visibility au zoom)
-
-
 
      * @public
 
-
-
      * @param {boolean} [immediate=false] - Si true, force le refresh immediate sans debounce
-
-
 
      */
 
@@ -880,27 +578,15 @@ const LayerManagerModule = {
 
     /**
 
-
-
      * Fusion d'options (shallow + fusion lightweight pour sous-objects)
-
-
 
      * @param {Object} base
 
-
-
      * @param {Object} override
-
-
 
      * @returns {Object}
 
-
-
      * @private
-
-
 
      */
 

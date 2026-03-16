@@ -24,6 +24,8 @@ export interface FetchHelperOptions extends RequestInit {
     parseResponse?: boolean;
     throwOnError?: boolean;
     validateUrl?: boolean;
+    /** @default "strict-origin-when-cross-origin" */
+    referrerPolicy?: ReferrerPolicy;
     onRetry?: (attempt: number, error: Error, delay: number) => void;
     onTimeout?: (url: string, timeout: number, attempt: number) => void;
 }
@@ -35,6 +37,7 @@ const DEFAULT_CONFIG: FetchHelperOptions = {
     retryDelayMultiplier: FETCH_DEFAULTS.retryDelayMultiplier,
     cache: "default",
     credentials: "same-origin",
+    referrerPolicy: "strict-origin-when-cross-origin",
     parseResponse: true,
     throwOnError: true,
     validateUrl: true,

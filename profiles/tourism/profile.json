@@ -28,7 +28,7 @@
         "showThemeSelector": true,
         "showLegend": true,
         "showCacheButton": true,
-        "showAddPoi": true,
+        "showAddPoi": false,
         "showTable": true
     },
     "performance": {

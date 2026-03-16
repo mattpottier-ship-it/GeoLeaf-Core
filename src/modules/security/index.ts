@@ -43,10 +43,6 @@ export interface SanitizeHtmlOptions {
     stripAll?: boolean;
 
     allowedTags?: string[];
-
-    /** @deprecated Ignored — all content is now sanitized */
-
-    trusted?: boolean;
 }
 
 export interface SafeElementOptions {
@@ -67,7 +63,15 @@ export interface SafeElementOptions {
 
 
 
- * Escape dangerous HTML characters to prevent XSS
+ * Escape dangerous HTML characters to prevent XSS.
+
+
+
+ * @param str - The string to escape. Null or undefined returns `""`.
+
+
+
+ * @returns The HTML-escaped string, safe for use in DOM text contexts.
 
 
 
@@ -93,7 +97,15 @@ export function escapeHtml(str: string | null | undefined): string {
 
 
 
- * Escape HTML attributes for safe use in attribute values
+ * Escape HTML attributes for safe use in attribute values.
+
+
+
+ * @param str - The string to escape. Null or undefined returns `""`.
+
+
+
+ * @returns The escaped string, safe for use in HTML attribute values.
 
 
 
@@ -133,15 +145,15 @@ export interface ValidateUrlOptions {
 
 
 
- * Validate a URL strictly with protocol whitelist
+ * Resolve the base URL for relative URL parsing, defaulting to the current origin.
 
 
 
- * @param options - Optional: { httpsOnly: true } to reject http: (production hardening)
+ * @param baseUrl - Optional explicit base URL.
 
 
 
- * @throws {Error} If URL is invalid or protocol not allowed
+ * @returns The resolved base URL string.
 
 
 
@@ -180,6 +192,36 @@ function _validateDataUrl(url: string): void {
         );
     }
 }
+
+/**
+
+
+
+ * Validate a URL strictly against a protocol whitelist (http, https, data:image).
+
+
+
+ * @param url - The URL string to validate.
+
+
+
+ * @param baseUrl - Optional base URL for relative URL resolution. Defaults to `location.origin`.
+
+
+
+ * @param options - Optional: set `httpsOnly: true` to reject http: (production hardening).
+
+
+
+ * @returns The normalized absolute URL string.
+
+
+
+ * @throws {Error} If the URL is invalid or the protocol is not allowed.
+
+
+
+ */
 
 export function validateUrl(url: string, baseUrl?: string, options?: ValidateUrlOptions): string {
     if (!url || typeof url !== "string") {
@@ -221,6 +263,36 @@ export function validateUrl(url: string, baseUrl?: string, options?: ValidateUrl
     }
 }
 
+/**
+
+
+
+ * Validate geographic coordinates (latitude and longitude).
+
+
+
+ * @param lat - Latitude value, must be in range [-90, 90].
+
+
+
+ * @param lng - Longitude value, must be in range [-180, 180].
+
+
+
+ * @returns A tuple `[lat, lng]` if valid.
+
+
+
+ * @throws {TypeError} If values are not finite numbers.
+
+
+
+ * @throws {RangeError} If values are out of the allowed range.
+
+
+
+ */
+
 export function validateCoordinates(lat: number, lng: number): [number, number] {
     if (typeof lat !== "number" || typeof lng !== "number") {
         throw new TypeError(
@@ -256,15 +328,7 @@ type _PoiValue =
     | _PoiValue[]
     | { [key: string]: _PoiValue };
 
-/**
-
-
-
- * Sanitize a POI properties object — escapes text fields and validates URLs
-
-
-
- */
+// ── POI field constants and helpers ──
 
 const _TEXT_FIELDS = [
     "label",
@@ -329,6 +393,24 @@ function _sanitizeEntry(key: string, value: unknown, sanitized: Record<string, u
     }
 }
 
+/**
+
+
+
+ * Sanitize a POI properties object — escapes text fields and validates URLs.
+
+
+
+ * @param props - The raw POI properties object to sanitize. Null or undefined returns `{}`.
+
+
+
+ * @returns A new object with safely escaped values.
+
+
+
+ */
+
 export function sanitizePoiProperties(
     props: Record<string, unknown> | null | undefined
 ): Record<string, unknown> {
@@ -344,6 +426,24 @@ export function sanitizePoiProperties(
 
     return sanitized;
 }
+
+/**
+
+
+
+ * Check whether a string contains potentially dangerous HTML patterns (XSS vectors).
+
+
+
+ * @param str - The value to test. Non-string values return false.
+
+
+
+ * @returns `true` if dangerous patterns are detected, `false` otherwise.
+
+
+
+ */
 
 export function containsDangerousHtml(str: unknown): boolean {
     if (typeof str !== "string") return false;
@@ -379,7 +479,15 @@ export function containsDangerousHtml(str: unknown): boolean {
 
 
 
- * Strip all HTML from a string, keeping only text content
+ * Strip all HTML from a string, keeping only text content.
+
+
+
+ * @param html - The HTML string to strip. Non-string values return `""`.
+
+
+
+ * @returns The plain text content without any HTML tags.
 
 
 
@@ -401,7 +509,19 @@ export function stripHtml(html: string): string {
 
 
 
- * Create a DOM element safely with automatic content escaping
+ * Create a DOM element safely with automatic content escaping.
+
+
+
+ * @param tagName - The HTML tag name to create (e.g. `"div"`, `"span"`).
+
+
+
+ * @param options - Optional element properties: className, id, textContent, attributes, children.
+
+
+
+ * @returns The created DOM element with safely escaped content.
 
 
 
@@ -439,7 +559,15 @@ export function createSafeElement(tagName: string, options: SafeElementOptions =
 
 
 
- * Parse and sanitize SVG content safely
+ * Parse and sanitize SVG content safely, removing scripts and event handlers.
+
+
+
+ * @param svgContent - The raw SVG string to sanitize. Null or undefined returns null.
+
+
+
+ * @returns The sanitized `SVGElement`, or null if parsing fails or content is invalid.
 
 
 
@@ -514,7 +642,23 @@ export function sanitizeSvgContent(svgContent: string | null | undefined): SVGEl
 
 
 
- * Validate that a value is a number within a given range
+ * Validate that a value is a finite number within a given range.
+
+
+
+ * @param value - The value to validate; coerced to number via `Number()`.
+
+
+
+ * @param min - Minimum allowed value (inclusive). Defaults to `-Infinity`.
+
+
+
+ * @param max - Maximum allowed value (inclusive). Defaults to `Infinity`.
+
+
+
+ * @returns The validated number, or null if invalid or out of range.
 
 
 
@@ -544,7 +688,19 @@ const DEFAULT_ALLOWED_TAGS = ["p", "br", "strong", "em", "span", "a", "ul", "ol"
 
 
 
- * Parse HTML safely with tag whitelist
+ * Parse HTML safely with a tag allowlist, converting disallowed elements to text nodes.
+
+
+
+ * @param html - The HTML string to parse. Non-string or empty values return an empty fragment.
+
+
+
+ * @param allowedTags - Array of allowed tag names. Defaults to `["p","br","strong","em","span","a","ul","ol","li","b","i"]`.
+
+
+
+ * @returns A `DocumentFragment` containing the sanitized DOM nodes.
 
 
 
@@ -636,7 +792,19 @@ function clearElementContent(el: Element): void {
 
 
 
- * @returns The element for chaining, or null if invalid
+ * @param element - The target DOM element to inject content into.
+
+
+
+ * @param html - The HTML string to sanitize and inject. Null or undefined clears the element.
+
+
+
+ * @param options - Optional: `{ stripAll: true }` to strip all tags; `{ allowedTags: [...] }` to customize.
+
+
+
+ * @returns The element for chaining, or null if invalid.
 
 
 
@@ -658,12 +826,6 @@ export function sanitizeHTML(
     }
 
     const str = typeof html === "string" ? html : String(html);
-
-    if (options.trusted) {
-        Log.warn(
-            "[GeoLeaf.Security] sanitizeHTML({ trusted: true }) is deprecated and ignored. All content is now sanitized."
-        );
-    }
 
     if (options.stripAll) {
         (element as HTMLElement).textContent = stripHtml(str);

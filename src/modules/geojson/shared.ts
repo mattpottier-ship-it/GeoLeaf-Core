@@ -100,6 +100,25 @@ const GeoJSONShared = {
         },
     } as Record<string, (a: unknown, b: unknown) => boolean>,
 
+    /** Default styles for each geometry type (polygon, line, point). */
+    DEFAULT_STYLES: {
+        polygon: {
+            color: "#999999",
+            weight: 2,
+            opacity: 0.9,
+            fillColor: "#cccccc",
+            fillOpacity: 0.15,
+        },
+        line: {
+            color: "#999999",
+            weight: 2,
+            opacity: 0.9,
+            fillColor: "#cccccc",
+            fillOpacity: 0.15,
+        },
+        point: { radius: 6, color: "#999999", weight: 2, fillColor: "#cccccc", fillOpacity: 0.9 },
+    },
+
     reset(): void {
         const state = GeoJSONShared.state;
         state.map = null;

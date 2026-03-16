@@ -8,7 +8,6 @@
  * - ui-behaviors.js: UI behaviors (accordions, gallery)
  * - component-renderers.js: Renderers components (badges, links, lists, tables, tags)
  * - section-orchestrator.js: Dispatcher de sections + extraction values
- * - field-renderers-v2.js: Renderers text
  * - media-renderers-v2.js: Renderers media
  */
 import { Log } from "../../log/index.js";

@@ -304,6 +304,11 @@ function _detectPoiType(firstItem: Record<string, unknown>): "poi" | "route" | "
 }
 
 const DataConverterModule = {
+    /**
+     * Convert an array of POI objects to a GeoJSON FeatureCollection.
+     * @param poiArray - Array of POI objects with `id`, `latlng` (or `location`), and optional `attributes`.
+     * @returns A GeoJSON FeatureCollection. Items without an id or valid coordinates are skipped.
+     */
     convertPoiArrayToGeoJSON(poiArray: unknown): GeoJSONFeatureCollection {
         if (!Array.isArray(poiArray)) {
             Log.warn(
@@ -368,6 +373,11 @@ const DataConverterModule = {
         return { type: "FeatureCollection", features };
     },
 
+    /**
+     * Convert an array of route objects to a GeoJSON FeatureCollection (LineString features).
+     * @param routeArray - Array of route objects with `id` and a `geometry.type === "LineString"`.
+     * @returns A GeoJSON FeatureCollection. Items without valid LineString geometry are skipped.
+     */
     convertRouteArrayToGeoJSON(routeArray: unknown): GeoJSONFeatureCollection {
         if (!Array.isArray(routeArray)) {
             Log.warn(
@@ -439,6 +449,11 @@ const DataConverterModule = {
         return { type: "FeatureCollection", features };
     },
 
+    /**
+     * Convert an array of zone objects to a GeoJSON FeatureCollection (Polygon features).
+     * @param zoneArray - Array of zone objects with `id` and a `geometry.type === "Polygon"`.
+     * @returns A GeoJSON FeatureCollection. Items without valid Polygon geometry are skipped.
+     */
     convertZoneArrayToGeoJSON(zoneArray: unknown): GeoJSONFeatureCollection {
         if (!Array.isArray(zoneArray)) {
             Log.warn(
@@ -506,6 +521,11 @@ const DataConverterModule = {
         return { type: "FeatureCollection", features };
     },
 
+    /**
+     * Convert a GPX XML string to a GeoJSON FeatureCollection (waypoints + tracks).
+     * @param gpxString - The GPX XML string to parse.
+     * @returns A GeoJSON FeatureCollection with Point (waypoints) and LineString (track segments) features.
+     */
     convertGpxToGeoJSON(gpxString: string): GeoJSONFeatureCollection {
         if (!gpxString || typeof gpxString !== "string") {
             Log.warn("[DataConverter.convertGpxToGeoJSON] Invalid GPX string");
@@ -551,6 +571,12 @@ const DataConverterModule = {
         }
     },
 
+    /**
+     * Auto-detect the input data type and convert to a GeoJSON FeatureCollection.
+     * Handles: existing GeoJSON pass-through, POI arrays, route arrays, zone arrays.
+     * @param data - The input data. Can be a GeoJSON object or an array of POI/route/zone items.
+     * @returns A GeoJSON FeatureCollection, or an empty one if the type cannot be determined.
+     */
     autoConvert(data: unknown): GeoJSONFeatureCollection {
         if (!data) {
             Log.warn("[DataConverter.autoConvert] Null data, returning empty FeatureCollection");

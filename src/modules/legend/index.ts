@@ -10,4 +10,4 @@
 export { LegendControl } from "./legend-control.js";
 export { LegendGenerator } from "./legend-generator.js";
 export { LegendRenderer } from "./legend-renderer.js";
-export { BasemapSelector } from "./basemap-selector.js";
+export { BasemapSelector } from "../layer-manager/basemap-selector.js";

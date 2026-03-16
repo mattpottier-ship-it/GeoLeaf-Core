@@ -8,7 +8,6 @@
 /**
  * GeoLeaf POI Module - Side Panel
  * Management of the detailed display side panel for POI
- * TODO Phase 4: Split complex functions into sub-functions <80 lines
  */
 import { Log } from "../log/index.js";
 import { POIShared } from "./shared.ts";

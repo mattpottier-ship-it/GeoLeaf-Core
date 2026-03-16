@@ -50,6 +50,15 @@ function _extractRawLayers(layersFileData: Record<string, unknown> | null): unkn
 }
 
 const ProfileLoader = {
+    /**
+     * Loads and hydrates a modular GeoLeaf profile by fetching taxonomy, themes, layer files, and individual layer configs.
+     * @param profile - The base profile object (Files or inline taxonomy/themes/layers properties).
+     * @param baseUrl - Base URL for resolving relative file paths.
+     * @param profileId - Identifier used for logging and the enriched profile metadata.
+     * @param timestamp - Cache-busting timestamp appended to fetch URLs. Defaults to `Date.now()`.
+     * @param fetchOptions - Optional fetch configuration (headers, strictContentType).
+     * @returns The enriched profile record with resolved taxonomy, themes, and layer configs.
+     */
     async loadModularProfile(
         profile: ProfileWithFiles,
         baseUrl: string,
@@ -94,6 +103,14 @@ const ProfileLoader = {
         }
     },
 
+    /**
+     * Fetches the taxonomy file or returns the inline taxonomy from the profile.
+     * @param profile - The profile object.
+     * @param baseUrl - Base URL for resolving the taxonomy file path.
+     * @param timestamp - Cache-busting timestamp.
+     * @param fetchOptions - Optional fetch configuration.
+     * @returns The taxonomy record, or null if unavailable.
+     */
     async _loadTaxonomy(
         profile: ProfileWithFiles,
         baseUrl: string,
@@ -119,6 +136,14 @@ const ProfileLoader = {
         return (profile.taxonomy as Record<string, unknown>) ?? null;
     },
 
+    /**
+     * Fetches the themes file or returns the inline themes from the profile.
+     * @param profile - The profile object.
+     * @param baseUrl - Base URL for resolving the themes file path.
+     * @param timestamp - Cache-busting timestamp.
+     * @param fetchOptions - Optional fetch configuration.
+     * @returns The themes record, or null if unavailable.
+     */
     async _loadThemes(
         profile: ProfileWithFiles,
         baseUrl: string,
@@ -143,6 +168,14 @@ const ProfileLoader = {
         return (profile.themes as Record<string, unknown>) ?? null;
     },
 
+    /**
+     * Fetches the layers index file defined in `profile.Files.layersFile`.
+     * @param profile - The profile object.
+     * @param baseUrl - Base URL for resolving the layers file path.
+     * @param timestamp - Cache-busting timestamp.
+     * @param fetchOptions - Optional fetch configuration.
+     * @returns The layers file record, or null if no `layersFile` is defined.
+     */
     async _loadLayersFile(
         profile: ProfileWithFiles,
         baseUrl: string,
@@ -167,6 +200,14 @@ const ProfileLoader = {
         return null;
     },
 
+    /**
+     * Fetches individual layer configuration files for each layer reference.
+     * @param layersSource - Array of layer references with optional `configFile` paths.
+     * @param baseUrl - Base URL for resolving layer config file paths.
+     * @param timestamp - Cache-busting timestamp.
+     * @param fetchOptions - Optional fetch configuration.
+     * @returns Array of layer config results with resolved config objects and layer directories.
+     */
     async _loadLayerConfigs(
         layersSource: LayerRef[],
         baseUrl: string,
@@ -209,6 +250,11 @@ const ProfileLoader = {
         return Promise.all(promises);
     },
 
+    /**
+     * Assembles the final enriched profile from all fetched sub-resources.
+     * @param params - Object containing the base profile, taxonomy, themes, layersSource, and layersConfigs.
+     * @returns The enriched profile record with resolved layers, taxonomy, themes, and metadata.
+     */
     _buildEnrichedProfile(params: EnrichedProfileParams): Record<string, unknown> {
         const { profile, baseUrl, profileId, taxonomy, themes, layersSource, layersConfigs } =
             params;
@@ -245,6 +291,11 @@ const ProfileLoader = {
         return enrichedProfile;
     },
 
+    /**
+     * Determines whether a profile uses the modular format (has `Files` object or version ≥ 3).
+     * @param profile - The profile object to inspect.
+     * @returns `true` if the profile is modular, `false` otherwise.
+     */
     isModularProfile(profile: unknown): boolean {
         if (!profile || typeof profile !== "object") return false;
         const p = profile as ProfileWithFiles;

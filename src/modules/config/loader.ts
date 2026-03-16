@@ -96,6 +96,12 @@ function _doFetch(
  * - Helper generic _fetchJson()
  */
 const LoaderModule = {
+    /**
+     * Fetch a JSON configuration file from a validated URL.
+     * @param url - Absolute or relative URL of the JSON resource.
+     * @param options - Optional fetch options (headers, strictContentType). Defaults to `{}`.
+     * @returns The parsed JSON record, or an empty object `{}` if the URL is missing.
+     */
     loadUrl(url: string, options: LoadUrlOptions = {}): Promise<Record<string, unknown>> {
         if (!url) {
             Log.warn("[GeoLeaf.Config.Loader] Missing JSON URL in loadUrl().");
@@ -115,6 +121,12 @@ const LoaderModule = {
         );
     },
 
+    /**
+     * Fetch a JSON resource from a validated URL, returning null instead of throwing on empty.
+     * @param url - Absolute or relative URL of the JSON resource.
+     * @param options - Optional fetch options (headers, strictContentType). Defaults to `{}`.
+     * @returns The parsed JSON record, or null if the URL is missing or the resource cannot be parsed.
+     */
     fetchJson(url: string, options: LoadUrlOptions = {}): Promise<Record<string, unknown> | null> {
         if (!url) {
             Log.warn("[GeoLeaf.Config.Loader] fetchJson() called without URL.");

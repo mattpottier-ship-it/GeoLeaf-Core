@@ -1,4 +1,4 @@
-/* eslint-disable security/detect-object-injection */
+﻿/* eslint-disable security/detect-object-injection */
 /**
 
  * GeoLeaf GeoJSON Module - Aggregator
@@ -35,9 +35,29 @@ import { GeoJSONShared as SharedModule } from "./shared.ts";
 
 import { GeoJSONStyleResolver } from "./style-resolver.js";
 
-import { PopupTooltip as _PopupTooltip } from "./popup-tooltip.js";
-
 import { GeoJSONClustering } from "./clustering.js";
+import {
+    _hideCasingLayer,
+    _hideLayerElement,
+    _hideSingleLayer,
+    _showCasingLayer,
+    _restoreLayerStyle,
+    _showLayerElement,
+    _showSingleLayer,
+} from "./geojson-visibility.js";
+import { _resolveGeometryFilteredIds, _applyFeatureVisibilityForLayer } from "./geojson-filter.js";
+import {
+    evaluateStyleCondition,
+    getFeatureProperty,
+    getGeometryType,
+    isPointGeometry,
+    isLineGeometry,
+    isPolygonGeometry,
+    validateFeature,
+    validateFeatureCollection,
+    extractCoordinates,
+    calculateBounds,
+} from "./geojson-utils.ts";
 
 const _g: any =
     typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : {};
@@ -77,120 +97,6 @@ function _mergeInitOptions(current: any, incoming: any, g: any): any {
     return g.GeoLeaf && g.GeoLeaf.Utils && g.GeoLeaf.Utils.mergeOptions
         ? g.GeoLeaf.Utils.mergeOptions(current, incoming)
         : Object.assign({}, current, incoming);
-}
-
-function _hideCasingLayer(casingLayer: any): void {
-    const el = casingLayer.getElement?.();
-
-    if (el) {
-        el.style.display = "none";
-        return;
-    }
-
-    if (typeof casingLayer.setStyle === "function") {
-        if (casingLayer.options._originalCasingOpacity === undefined) {
-            casingLayer.options._originalCasingOpacity = casingLayer.options.opacity;
-        }
-
-        casingLayer.setStyle({ opacity: 0 });
-    }
-}
-
-function _hideLayerElement(leafletLayer: any): void {
-    if (leafletLayer.getElement) {
-        const el = leafletLayer.getElement();
-
-        if (el) el.style.display = "none";
-
-        if (leafletLayer._casingLayer) _hideCasingLayer(leafletLayer._casingLayer);
-    } else if (leafletLayer.setStyle) {
-        if (leafletLayer.options._originalOpacity === undefined) {
-            leafletLayer.options._originalOpacity = leafletLayer.options.opacity;
-
-            leafletLayer.options._originalFillOpacity = leafletLayer.options.fillOpacity;
-
-            leafletLayer.options._originalColor = leafletLayer.options.color;
-
-            leafletLayer.options._originalWeight = leafletLayer.options.weight;
-
-            leafletLayer.options._originalDashArray = leafletLayer.options.dashArray;
-        }
-
-        leafletLayer.setStyle({ opacity: 0, fillOpacity: 0 });
-
-        if (leafletLayer._casingLayer) _hideCasingLayer(leafletLayer._casingLayer);
-    }
-}
-
-function _hideSingleLayer(leafletLayer: any, layerData: any, clusterGroup: any): void {
-    if (clusterGroup) {
-        if (!layerData._filteredOutLayers.has(leafletLayer)) {
-            clusterGroup.removeLayer(leafletLayer);
-
-            layerData._filteredOutLayers.add(leafletLayer);
-        }
-
-        return;
-    }
-
-    _hideLayerElement(leafletLayer);
-}
-
-function _showCasingLayer(casingLayer: any): void {
-    const el = casingLayer.getElement?.();
-
-    if (el) {
-        el.style.display = "";
-        return;
-    }
-
-    if (typeof casingLayer.setStyle === "function") {
-        const origOpacity = casingLayer.options._originalCasingOpacity;
-
-        casingLayer.setStyle({ opacity: origOpacity !== undefined ? origOpacity : 1 });
-    }
-}
-
-function _restoreLayerStyle(leafletLayer: any): void {
-    leafletLayer.setStyle({
-        opacity: leafletLayer.options._originalOpacity,
-
-        fillOpacity: leafletLayer.options._originalFillOpacity ?? 0,
-
-        color: leafletLayer.options._originalColor ?? leafletLayer.options.color,
-
-        weight: leafletLayer.options._originalWeight ?? leafletLayer.options.weight,
-
-        dashArray: leafletLayer.options._originalDashArray ?? leafletLayer.options.dashArray,
-    });
-}
-
-function _showLayerElement(leafletLayer: any): void {
-    if (leafletLayer.getElement) {
-        const el = leafletLayer.getElement();
-
-        if (el) el.style.display = "";
-
-        if (leafletLayer._casingLayer) _showCasingLayer(leafletLayer._casingLayer);
-    } else if (leafletLayer.setStyle && leafletLayer.options._originalOpacity !== undefined) {
-        _restoreLayerStyle(leafletLayer);
-
-        if (leafletLayer._casingLayer) _showCasingLayer(leafletLayer._casingLayer);
-    }
-}
-
-function _showSingleLayer(leafletLayer: any, layerData: any, clusterGroup: any): void {
-    if (clusterGroup) {
-        if (layerData._filteredOutLayers.has(leafletLayer)) {
-            clusterGroup.addLayer(leafletLayer);
-
-            layerData._filteredOutLayers.delete(leafletLayer);
-        }
-
-        return;
-    }
-
-    _showLayerElement(leafletLayer);
 }
 
 function _setupGeoJSONPanes(map: any, PaneConfig: any, PaneHelpers: any): void {
@@ -247,94 +153,6 @@ function _setupLayerGroupsAndZoom(state: any): void {
     }
 }
 
-function _resolveGeometryFilteredIds(state: any, options: any): any[] {
-    const layerIds: any[] = options.layerIds
-        ? Array.isArray(options.layerIds)
-            ? options.layerIds
-            : [options.layerIds]
-        : Array.from(state.layers.keys());
-
-    if (!options.geometryType) return layerIds;
-
-    const geoType = options.geometryType.toLowerCase();
-
-    const typeAliases: any = {
-        poi: "point",
-        route: "line",
-        linestring: "line",
-        area: "polygon",
-    };
-
-    const normalizedType = typeAliases[geoType] || geoType;
-
-    return layerIds.filter((id) => {
-        const data = state.layers.get(id);
-
-        if (!data) return false;
-
-        const layerGeoType = (data.geometryType || "").toLowerCase();
-
-        const normalizedLayerType = typeAliases[layerGeoType] || layerGeoType;
-
-        return normalizedLayerType === normalizedType;
-    });
-}
-
-function _applyFeatureVisibilityForLayer(
-    layerData: any,
-    filterFn: any,
-    layerId: any,
-    stats: any
-): void {
-    const isLineLayer = ["line", "linestring", "polyline"].includes(
-        (layerData.geometryType || "").toLowerCase()
-    );
-
-    const bypassFilter =
-        layerData.config?.search?.enabled === false ||
-        (isLineLayer && layerData.config?.search?.enabled !== true);
-
-    if (!layerData._filteredOutLayers) {
-        layerData._filteredOutLayers = new Set();
-    }
-
-    const toShow: any[] = [];
-
-    const toHide: any[] = [];
-
-    layerData.layer.eachLayer((leafletLayer: any) => {
-        if (!leafletLayer.feature) return;
-
-        stats.total++;
-
-        const shouldShow = bypassFilter || filterFn(leafletLayer.feature, layerId);
-
-        if (shouldShow) {
-            toShow.push(leafletLayer);
-
-            stats.visible++;
-        } else {
-            toHide.push(leafletLayer);
-
-            stats.filtered++;
-        }
-    });
-
-    const clusterGroup = layerData.clusterGroup;
-
-    toHide.forEach((leafletLayer) => {
-        leafletLayer._geoleafFiltered = true;
-
-        _hideSingleLayer(leafletLayer, layerData, clusterGroup);
-    });
-
-    toShow.forEach((leafletLayer) => {
-        leafletLayer._geoleafFiltered = false;
-
-        _showSingleLayer(leafletLayer, layerData, clusterGroup);
-    });
-}
-
 const GeoJSONModule = {
     /**
 
@@ -361,6 +179,22 @@ const GeoJSONModule = {
     get _options() {
         return getState() ? getState().options : {};
     },
+
+    get DEFAULT_STYLES() {
+        return SharedModule.DEFAULT_STYLES;
+    },
+
+    STYLE_OPERATORS: SharedModule.STYLE_OPERATORS,
+    evaluateStyleCondition,
+    getFeatureProperty,
+    getGeometryType,
+    isPointGeometry,
+    isLineGeometry,
+    isPolygonGeometry,
+    validateFeature,
+    validateFeatureCollection,
+    extractCoordinates,
+    calculateBounds,
 
     /**
 

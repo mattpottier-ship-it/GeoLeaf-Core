@@ -169,6 +169,10 @@ export const CSRFToken: CSRFTokenInternal = {
 
         if (secure && _g.location?.protocol === "https:") {
             cookie += "; Secure";
+        } else if (secure) {
+            Log.warn(
+                "[CSRF] setSecureCookie: 'secure' option ignored — HTTP context detected. Cookie will not have the Secure flag."
+            );
         }
 
         document.cookie = cookie;
